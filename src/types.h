@@ -118,6 +118,25 @@ enum class CursorShape {
   RowBackground // 行全体の背景色を変える
 };
 
+// パネルの表示モード。FileListPane が QStackedWidget で切替える。
+// - List:      現状の QTableView ベースの詳細リスト表示。
+// - Thumbnail: QListView::IconMode ベースのサムネイルグリッド表示。
+//              画像ファイル (Image Viewer 拡張子に該当) は実画像をスケールした
+//              サムネイル、それ以外は QFileIconProvider のアイコンを使う。
+enum class ListViewMode {
+  List,
+  Thumbnail
+};
+
+// サムネイル表示モード時のサムネイルサイズ (3 段階)。
+// 値はピクセル単位の「外接サイズ」で、アスペクト比を保ったまま内接するように
+// QImageReader::setScaledSize() に渡す。
+enum class ThumbnailSize {
+  Small  = 96,
+  Medium = 160,
+  Large  = 256
+};
+
 // ビュアーの表示方法。
 // - Inline:   メインウィンドウ内の ViewerPanel で表示 (現状の動作)。Enter / Esc
 //             でファイルマネージャパネルに戻る。同時に 1 ファイルしか開けないが

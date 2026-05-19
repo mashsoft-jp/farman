@@ -1,6 +1,7 @@
 #include "FileListPane.h"
 #include "FileListDelegate.h"
 #include "FileListView.h"
+#include "FileListThumbnailView.h"
 #include "ClickableLabel.h"
 #include "core/FileItem.h"
 #include "BookmarkEditDialog.h"
@@ -21,6 +22,7 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
+#include <QStackedWidget>
 #include <QStyle>
 #include <QTableView>
 #include <QTimer>
@@ -161,7 +163,8 @@ void FileListPane::setupUi() {
   m_view = new FileListView(this);
   // Drag-out 用の URL プロバイダ。farman の選択状態 (FileItem::isSelected) を
   // 優先し、選択が無ければカーソル行 1 件を返す。'..' は除外。
-  m_view->setUrlsProvider([this]() -> QList<QUrl> {
+  // List / Thumbnail どちらのビューからも同じロジックで呼べるようにラムダ化。
+  auto urlsProvider = [this]() -> QList<QUrl> {
     QList<QUrl> urls;
     if (!m_model) return urls;
     bool anySelected = false;
@@ -178,7 +181,8 @@ void FileListPane::setupUi() {
         }
       }
     } else {
-      const QModelIndex cur = m_view->currentIndex();
+      QAbstractItemView* av = activeView();
+      const QModelIndex cur = av ? av->currentIndex() : QModelIndex();
       if (cur.isValid()) {
         const FileItem* it = m_model->itemAt(cur.row());
         if (it && !it->isDotDot()) {
@@ -187,7 +191,8 @@ void FileListPane::setupUi() {
       }
     }
     return urls;
-  });
+  };
+  m_view->setUrlsProvider(urlsProvider);
   // Drop 受信時は FileManagerPanel まで bubble させる
   connect(m_view, &FileListView::externalUrlsDropped, this,
           &FileListPane::externalUrlsDropped);
@@ -206,6 +211,20 @@ void FileListPane::setupUi() {
 
   m_delegate = new FileListDelegate(this);
   m_view->setItemDelegate(m_delegate);
+
+  // サムネイル表示モード用ビュー。同じ FileListModel と同じ selectionModel を
+  // 共有するので、モード切替で選択状態 / カーソル行は維持される (Phase 1 以降で
+  // model 側の DecorationRole にサムネイル pixmap を載せる)。Phase 0 では空の
+  // QListView::IconMode として並べておくだけ。
+  m_thumbnailView = new FileListThumbnailView(this);
+  m_thumbnailView->setModel(m_model);
+  m_thumbnailView->setSelectionModel(m_view->selectionModel());
+  m_thumbnailView->setSelectionMode(QAbstractItemView::NoSelection);
+  m_thumbnailView->setIconSize(QSize(static_cast<int>(ThumbnailSize::Medium),
+                                    static_cast<int>(ThumbnailSize::Medium)));
+  m_thumbnailView->setUrlsProvider(urlsProvider);
+  connect(m_thumbnailView, &FileListThumbnailView::externalUrlsDropped, this,
+          &FileListPane::externalUrlsDropped);
 
   connect(m_view->selectionModel(), &QItemSelectionModel::currentChanged,
           this, &FileListPane::onCurrentChanged);
@@ -239,7 +258,13 @@ void FileListPane::setupUi() {
   setTabOrder(m_folderButton, m_bookmarkLabel);
   setTabOrder(m_bookmarkLabel, m_view);
 
-  mainLayout->addWidget(m_view);
+  // StackedWidget で List ビュー / Thumbnail ビューを切替える。
+  // 初期は List (index 0)。setViewMode() で currentIndex を切替えるだけ。
+  m_viewStack = new QStackedWidget(this);
+  m_viewStack->addWidget(m_view);            // index 0: List
+  m_viewStack->addWidget(m_thumbnailView);   // index 1: Thumbnail
+  m_viewStack->setCurrentIndex(0);
+  mainLayout->addWidget(m_viewStack);
 
   // 即時フィルタ (Quick Filter Bar): デフォルト非表示。`Ctrl+I`
   // (= view.quick_filter コマンド) で toggleQuickFilter() が呼ばれて表示される。
@@ -602,6 +627,25 @@ bool FileListPane::eventFilter(QObject* watched, QEvent* event) {
 
 QTableView* FileListPane::view() const {
   return m_view;
+}
+
+QAbstractItemView* FileListPane::activeView() const {
+  if (m_viewMode == ListViewMode::Thumbnail && m_thumbnailView) {
+    return m_thumbnailView;
+  }
+  return m_view;
+}
+
+void FileListPane::setViewMode(ListViewMode mode) {
+  if (mode == m_viewMode) return;
+  m_viewMode = mode;
+  if (m_viewStack) {
+    m_viewStack->setCurrentIndex(mode == ListViewMode::Thumbnail ? 1 : 0);
+  }
+  // 切替先のビューにフォーカスを渡しておく (キーナビゲーションを継続できるように)。
+  if (QAbstractItemView* av = activeView()) {
+    av->setFocus(Qt::OtherFocusReason);
+  }
 }
 
 void FileListPane::onExternalDirectoryChanged() {

@@ -138,6 +138,11 @@ QList<QPair<QKeySequence, QString>> defaultBindingList() {
     // bare `/` をデフォルトに採用。"?" (Shift+/) は help.shortcuts に既に
     // 割当があるが、修飾子無しの `/` 自体は他とぶつからない。
     { QKeySequence(Qt::Key_Slash),              "view.quick_filter" },
+    // サムネイル表示モードのトグル。"Grid view" の頭文字 G を採用。
+    // macOS では Cmd+T が NSWindow システム標準の Toggle Toolbar に取られて
+    // しまうため、Cmd+G (= Ctrl+G) を採用する。Cmd+G は macOS の "Find Next"
+    // 既定だが farman は検索ダイアログで shortcut として使っていない。
+    { QKeySequence(Qt::CTRL | Qt::Key_G),       "view.toggle_thumbnails" },
 
     // Bookmark
     { QKeySequence(Qt::Key_B),            "bookmark.toggle" },
@@ -226,6 +231,10 @@ void KeyBindingManager::loadFromSettings() {
   // version < 15: view.compare_directories のレイアウト対応を強化。Key_Equal
   // 単押しに加えて Shift+Equal / Shift+Minus (JIS) / Key_Plus も同じコマンドに
   // 紐付けるよう default に追加。既存バインドは保持。
+  // version < 16: view.toggle_thumbnails (Ctrl+G) を新規追加。既存バインドは
+  // 保持されるが、Ctrl+G が空いていれば下の merge ロジックで自動補完される。
+  // (Ctrl+T は macOS の NSWindow システム標準の Toggle Toolbar と衝突するため
+  //  避けて Cmd+G / Ctrl+G を採用。"Grid view" の頭文字。)
   if (version < 13) {
     qDebug() << "KeyBindingManager: migrating bindings from version" << version;
     loadDefaults();
@@ -284,7 +293,7 @@ void KeyBindingManager::saveToSettings() const {
 
   QJsonObject root;
   root["bindings"] = bindings;
-  root["version"] = 15;
+  root["version"] = 16;
 
   QJsonDocument doc(root);
   QString jsonData = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));

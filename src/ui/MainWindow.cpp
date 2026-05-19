@@ -1067,6 +1067,25 @@ void MainWindow::registerCommands() {
     tr("Toggle between in-window viewer panel and separate viewer windows.")
   ));
 
+  // サムネイル表示モードのトグル (現アクティブペインのみ切替)。Phase 0 では
+  // QFileIconProvider の既定アイコンが大サイズで並ぶだけだが、後続フェーズで
+  // ThumbnailCache から実画像の縮小をはめ込む。Settings 保存は Phase 1 以降。
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "view.toggle_thumbnails",
+    tr("Thumbnails"),
+    [this]() {
+      if (auto* pane = m_fileManagerPanel ? m_fileManagerPanel->activePane() : nullptr) {
+        const ListViewMode next =
+          pane->viewMode() == ListViewMode::Thumbnail
+            ? ListViewMode::List
+            : ListViewMode::Thumbnail;
+        pane->setViewMode(next);
+      }
+    },
+    "view",
+    tr("Switch the active pane between list and thumbnail view.")
+  ));
+
   // ディレクトリ比較: 左右ペインの内容差分を着色表示するモードに入る。
   // モード ON 中はもう一度同じコマンドを実行すると OFF (トグル動作)。
   // ペイン遷移時は自動 OFF (FileManagerPanel::navigatePane 側で stop を呼ぶ)。
@@ -1326,6 +1345,14 @@ void MainWindow::createMenus() {
   viewMenu->addSeparator();
   addCmd(viewMenu, "view.file", tr("View File"));
   addCmd(viewMenu, "view.choose", tr("Open With Viewer..."));
+  // サムネイル表示モードのトグル。aboutToShow でアクティブペインの状態を反映。
+  QAction* thumbnailsAction = addCmd(viewMenu, "view.toggle_thumbnails", tr("Thumbnails"));
+  thumbnailsAction->setCheckable(true);
+  connect(viewMenu, &QMenu::aboutToShow, this, [this, thumbnailsAction]() {
+    QSignalBlocker blocker(thumbnailsAction);
+    const auto* pane = m_fileManagerPanel ? m_fileManagerPanel->activePane() : nullptr;
+    thumbnailsAction->setChecked(pane && pane->viewMode() == ListViewMode::Thumbnail);
+  });
   addCmd(viewMenu, "view.toggle_log", tr("Toggle Log Pane"));
   addCmd(viewMenu, "view.quick_filter", tr("Quick Filter"));
   // ツールバー表示のトグル。aboutToShow で Settings の現状を反映させる。

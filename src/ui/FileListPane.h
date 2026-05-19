@@ -1,10 +1,14 @@
 #pragma once
 
+#include "types.h"
+
 #include <QUrl>
 #include <QWidget>
 
+class QAbstractItemView;
 class QLabel;
 class QLineEdit;
+class QStackedWidget;
 class QToolButton;
 class QTableView;
 class QFileSystemWatcher;
@@ -15,6 +19,7 @@ namespace Farman {
 class FileListModel;
 class FileListDelegate;
 class FileListView;
+class FileListThumbnailView;
 class ClickableLabel;
 
 class FileListPane : public QWidget {
@@ -25,10 +30,21 @@ public:
   ~FileListPane() override;
 
   // アクセサ。view() は QTableView* で公開し、D&D 等の派生機能は
-  // 内部で FileListView を使って実現している。
+  // 内部で FileListView を使って実現している (List モード時の中身)。
+  // サムネイル表示モード時も視点を切替えたいときは activeView() を使う。
   QTableView* view() const;
+  // 現在の表示モードに応じた active な item view を返す (Thumbnail モード時は
+  // 内部 QListView)。selection / current / scroll bar の取得など、ビュー型を
+  // 問わない API はこちらを使う。
+  QAbstractItemView* activeView() const;
   FileListModel* model() const { return m_model; }
   FileListDelegate* delegate() const { return m_delegate; }
+
+  // 表示モード (List / Thumbnail) の取得と切替。setViewMode は QStackedWidget を
+  // 切替えるだけで、Settings への保存は呼び出し側 (MainWindow のコマンド) 経由
+  // でやる。
+  ListViewMode viewMode() const { return m_viewMode; }
+  void setViewMode(ListViewMode mode);
 
   // パス操作
   QString currentPath() const;
@@ -104,7 +120,14 @@ private:
   bool             m_addressEditing = false;  // 現在編集モードか
   ClickableLabel*  m_bookmarkLabel;
   QToolButton*     m_folderButton;
+  // 表示の中心: QStackedWidget で List ビュー (FileListView/QTableView) と
+  // Thumbnail ビュー (FileListThumbnailView/QListView) を切替える。両方とも
+  // 同じ FileListModel と同じ selectionModel を共有しているので、選択 / カーソル
+  // 行位置はモード切替で失われない。
+  QStackedWidget* m_viewStack = nullptr;
   FileListView* m_view;
+  FileListThumbnailView* m_thumbnailView = nullptr;
+  ListViewMode m_viewMode = ListViewMode::List;
   QLabel* m_sortFilterStatusLabel;
   // 即時フィルタの 1 行入力欄。デフォルトは非表示。
   QLineEdit*       m_quickFilterEdit = nullptr;
