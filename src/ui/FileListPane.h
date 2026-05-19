@@ -18,6 +18,7 @@ namespace Farman {
 
 class FileListModel;
 class FileListDelegate;
+class FileListThumbnailDelegate;
 class FileListView;
 class FileListThumbnailView;
 class ClickableLabel;
@@ -127,6 +128,7 @@ private:
   QStackedWidget* m_viewStack = nullptr;
   FileListView* m_view;
   FileListThumbnailView* m_thumbnailView = nullptr;
+  FileListThumbnailDelegate* m_thumbnailDelegate = nullptr;
   ListViewMode m_viewMode = ListViewMode::List;
   QLabel* m_sortFilterStatusLabel;
   // 即時フィルタの 1 行入力欄。デフォルトは非表示。

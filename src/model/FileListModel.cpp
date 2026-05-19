@@ -2,14 +2,19 @@
 #include "settings/Settings.h"
 #include "core/ArchiveContext.h"
 #include "utils/ArchivePath.h"
+#include "utils/MediaMatchers.h"
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QColor>
 #include <QFont>
 #include <QGuiApplication>
+#include <QIcon>
+#include <QImage>
+#include <QImageReader>
 #include <QInputDialog>
 #include <QLineEdit>
+#include <QPixmap>
 #include "utils/Dialogs.h"
 #include <QProgressDialog>
 #include <QTimer>
@@ -47,6 +52,29 @@ void FileListModel::setSinglePaneMode(bool single) {
       index(0, Size),
       index(m_entries.size() - 1, LastModified),
       { Qt::DisplayRole });
+  }
+}
+
+void FileListModel::setThumbnailEnabled(bool enabled) {
+  if (m_thumbnailEnabled == enabled) return;
+  m_thumbnailEnabled = enabled;
+  if (!m_entries.isEmpty()) {
+    // Name 列の DecorationRole が変わる (実画像 ⇔ 既定アイコン)
+    emit dataChanged(
+      index(0, Name),
+      index(m_entries.size() - 1, Name),
+      { Qt::DecorationRole });
+  }
+}
+
+void FileListModel::setThumbnailPixelSize(int sizePx) {
+  if (m_thumbnailPixelSize == sizePx) return;
+  m_thumbnailPixelSize = sizePx;
+  if (m_thumbnailEnabled && !m_entries.isEmpty()) {
+    emit dataChanged(
+      index(0, Name),
+      index(m_entries.size() - 1, Name),
+      { Qt::DecorationRole });
   }
 }
 
@@ -678,6 +706,41 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
   else if (role == Qt::DecorationRole) {
     // Name列にファイルアイコンを表示
     if (index.column() == Name) {
+      // サムネイル表示モード ON + 画像ファイル + アーカイブ外 ⇒ 実画像を
+      // スケール decode してアイコンとして返す。Phase 1 は同期 decode なので
+      // 大規模ディレクトリではスクロールがブロックする。Phase 2 で
+      // ThumbnailCache + worker thread に切替えて解消予定。
+      // 非画像ファイル / ディレクトリ / アーカイブ内エントリ / 失敗時は
+      // 既存の QFileIconProvider 経由のアイコンに自然フォールバックする。
+      if (m_thumbnailEnabled && !item->isDir() && !item->isDotDot()
+          && m_archiveContext == nullptr) {
+        const QString path = item->absolutePath();
+        if (MediaMatchers::isImageFile(path)) {
+          QImageReader reader(path);
+          reader.setAutoTransform(true);  // EXIF 回転を自動適用
+          const int target = m_thumbnailPixelSize;
+          const QSize src = reader.size();
+          if (src.isValid() && !src.isEmpty()) {
+            // 外接サイズに内接するよう scaled size を計算 (アスペクト維持)
+            QSize scaled = src.scaled(target, target, Qt::KeepAspectRatio);
+            if (!scaled.isEmpty()) reader.setScaledSize(scaled);
+          }
+          QImage img = reader.read();
+          if (!img.isNull()) {
+            // setScaledSize は decoder ヒントで、実際の出力が target を超える
+            // ことがある (SVG はサイズ概念がベクターなのでヒントが効かない /
+            // libjpeg-turbo は 1/2, 1/4, 1/8 のような coarse scale に丸める)。
+            // 縦長 / 横長の極端なアスペクトで grid セルの icon 領域 (target px)
+            // を超えると、IconMode のテキスト領域が画像に隠れる。確実に target
+            // 内に収まるよう最終 scale をかける。
+            if (img.width() > target || img.height() > target) {
+              img = img.scaled(target, target, Qt::KeepAspectRatio,
+                               Qt::SmoothTransformation);
+            }
+            return QIcon(QPixmap::fromImage(std::move(img)));
+          }
+        }
+      }
       return m_iconProvider.icon(item->fileInfo());
     }
   }

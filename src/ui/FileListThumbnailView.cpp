@@ -5,6 +5,7 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
+#include <QFontMetrics>
 #include <QMimeData>
 #include <QMouseEvent>
 
@@ -19,12 +20,30 @@ FileListThumbnailView::FileListThumbnailView(QWidget* parent) : QListView(parent
   setSpacing(8);
   setSelectionBehavior(QAbstractItemView::SelectRows);
   setFrameShape(QFrame::NoFrame);
+  // 長いファイル名は中央省略 (例: "very_long_..._name.jpg")。両端から内容が
+  // 読めて拡張子が見えるので、サムネイル一覧で識別しやすい。
+  setTextElideMode(Qt::ElideMiddle);
 
   // D&D 周りの設定は FileListView と同じ
   setDragEnabled(true);
   setAcceptDrops(true);
   setDropIndicatorShown(true);
   setDragDropMode(QAbstractItemView::DragDrop);
+}
+
+void FileListThumbnailView::setThumbnailSizePx(int sizePx) {
+  setIconSize(QSize(sizePx, sizePx));
+  // セル全体サイズを固定する。FileListThumbnailDelegate::sizeHint と完全に
+  // 同じ計算式にすることで、delegate が描画する icon / text レイアウトが
+  // grid からはみ出さない (= 隣の item のファイル名と被らない)。
+  //   kHPadding = 8, kIconTopPad = 4, kIconText = 4 (delegate と同じ)
+  //   textHeight = fm.height() * 2     (テキスト最大 2 行 = Finder 風)
+  //   余白 = +2 (テキスト下端の microspace)
+  const QFontMetrics fm = fontMetrics();
+  const int textHeight  = fm.height() * 2;
+  const int cellWidth   = sizePx + 2 * 8;
+  const int cellHeight  = 4 + sizePx + 4 + textHeight + 2;
+  setGridSize(QSize(cellWidth, cellHeight));
 }
 
 void FileListThumbnailView::mousePressEvent(QMouseEvent* event) {

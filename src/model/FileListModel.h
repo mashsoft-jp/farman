@@ -55,6 +55,18 @@ public:
   void setSinglePaneMode(bool single);
   bool isSinglePaneMode() const { return m_singlePane; }
 
+  // サムネイル表示モードの ON/OFF。FileListPane::setViewMode から呼ばれ、
+  // Thumbnail のとき data(DecorationRole) が画像ファイルに対し実画像を
+  // setScaledSize で decode したアイコンを返すようになる。Phase 1 では
+  // 同期 decode で、スクロール時のブロッキングは Phase 2 の非同期キャッシュ
+  // で解消する。切替時は dataChanged を発火して再描画させる。
+  void setThumbnailEnabled(bool enabled);
+  bool thumbnailEnabled() const { return m_thumbnailEnabled; }
+  // サムネイルの外接サイズ (px)。アスペクト比を保ったまま内接させる。
+  // 変更時は dataChanged を発火する。
+  void setThumbnailPixelSize(int sizePx);
+  int  thumbnailPixelSize() const { return m_thumbnailPixelSize; }
+
   // ── パス操作 ──────────────────────────────
   QString currentPath() const;
   bool    setPath(const QString& path);  // false = アクセス不可
@@ -199,6 +211,10 @@ private:
   bool            m_active = true;
   // 現在のペイン表示モード（サイズ・日時のフォーマット切替用）
   bool            m_singlePane = false;
+
+  // サムネイル表示モード関連 (Phase 1: 同期 decode、Phase 2 で非同期化)。
+  bool            m_thumbnailEnabled    = false;
+  int             m_thumbnailPixelSize  = 160;  // Medium の px 値
 
   // ── アーカイブ内ブラウジング ────────────────
   // 非 null のときアーカイブモード。元 zip の全エントリメタデータを

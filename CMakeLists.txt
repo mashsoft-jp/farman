@@ -71,6 +71,7 @@ qt_add_executable(farman
   src/ui/FileListView.cpp
   src/ui/FileListThumbnailView.cpp
   src/ui/FileListDelegate.cpp
+  src/ui/FileListThumbnailDelegate.cpp
   src/ui/FileManagerPanel.cpp
   src/ui/ViewerPanel.cpp
   src/ui/LogPane.cpp
@@ -111,6 +112,7 @@ qt_add_executable(farman
   src/utils/FarmanMessageBox.cpp
   src/utils/EnterClickFilter.cpp
   src/utils/ArchivePath.cpp
+  src/utils/MediaMatchers.cpp
   src/core/workers/WorkerBase.cpp
   src/core/workers/CopyWorker.cpp
   src/core/workers/MoveWorker.cpp

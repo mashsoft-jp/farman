@@ -763,6 +763,28 @@ void Settings::setViewerMode(ViewerMode mode) {
   m_viewerMode = mode;
 }
 
+ListViewMode Settings::paneViewMode(PaneType pane) const {
+  const int idx = static_cast<int>(pane);
+  if (idx < 0 || idx >= static_cast<int>(PaneType::Count)) {
+    return ListViewMode::List;
+  }
+  return m_paneViewMode[idx];
+}
+
+void Settings::setPaneViewMode(PaneType pane, ListViewMode mode) {
+  const int idx = static_cast<int>(pane);
+  if (idx < 0 || idx >= static_cast<int>(PaneType::Count)) return;
+  m_paneViewMode[idx] = mode;
+}
+
+ThumbnailSize Settings::thumbnailSize() const {
+  return m_thumbnailSize;
+}
+
+void Settings::setThumbnailSize(ThumbnailSize size) {
+  m_thumbnailSize = size;
+}
+
 bool Settings::showToolbar() const {
   return m_showToolbar;
 }
@@ -1557,6 +1579,25 @@ void Settings::load() {
     else if (langStr == "ja") m_language = LanguageMode::Japanese;
     else                       m_language = LanguageMode::Auto;
   }
+  // ペインの表示モード (List / Thumbnail) を左右別々に復元
+  {
+    auto parsePaneMode = [](const QString& s) {
+      return (s == QLatin1String("thumbnail"))
+               ? ListViewMode::Thumbnail
+               : ListViewMode::List;
+    };
+    m_paneViewMode[static_cast<int>(PaneType::Left)] =
+      parsePaneMode(behavior.value("leftPaneViewMode").toString("list"));
+    m_paneViewMode[static_cast<int>(PaneType::Right)] =
+      parsePaneMode(behavior.value("rightPaneViewMode").toString("list"));
+  }
+  // サムネイルサイズ (グローバル)。"small" / "medium" / "large"。
+  {
+    const QString s = behavior.value("thumbnailSize").toString("medium");
+    if      (s == QLatin1String("small"))  m_thumbnailSize = ThumbnailSize::Small;
+    else if (s == QLatin1String("large"))  m_thumbnailSize = ThumbnailSize::Large;
+    else                                    m_thumbnailSize = ThumbnailSize::Medium;
+  }
   m_cursorLoop = behavior.value("cursorLoop").toBool(false);
   m_typeAheadIncludeDotfiles = behavior.value("typeAheadIncludeDotfiles").toBool(true);
   m_persistHistory = behavior.value("persistHistory").toBool(false);
@@ -1990,6 +2031,25 @@ void Settings::save() const {
     case LanguageMode::English:  behavior["language"] = "en";   break;
     case LanguageMode::Japanese: behavior["language"] = "ja";   break;
     case LanguageMode::Auto:     behavior["language"] = "auto"; break;
+  }
+  {
+    auto paneModeStr = [](ListViewMode m) {
+      return (m == ListViewMode::Thumbnail)
+               ? QStringLiteral("thumbnail")
+               : QStringLiteral("list");
+    };
+    behavior["leftPaneViewMode"]  = paneModeStr(m_paneViewMode[static_cast<int>(PaneType::Left)]);
+    behavior["rightPaneViewMode"] = paneModeStr(m_paneViewMode[static_cast<int>(PaneType::Right)]);
+  }
+  {
+    QString s;
+    switch (m_thumbnailSize) {
+      case ThumbnailSize::Small:  s = QStringLiteral("small");  break;
+      case ThumbnailSize::Large:  s = QStringLiteral("large");  break;
+      case ThumbnailSize::Medium:
+      default:                    s = QStringLiteral("medium"); break;
+    }
+    behavior["thumbnailSize"] = s;
   }
   behavior["cursorLoop"] = m_cursorLoop;
   behavior["typeAheadIncludeDotfiles"] = m_typeAheadIncludeDotfiles;

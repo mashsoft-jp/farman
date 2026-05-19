@@ -201,6 +201,17 @@ public:
   ViewerMode viewerMode()               const;
   void       setViewerMode(ViewerMode mode);
 
+  // ペインの表示モード (List / Thumbnail)。Left/Right で独立に保持。
+  // 起動時に各ペインへ復元され、Ctrl+G コマンドや View メニューから切替えると
+  // 即座に保存される。デフォルトは List。
+  ListViewMode paneViewMode(PaneType pane)               const;
+  void         setPaneViewMode(PaneType pane, ListViewMode mode);
+
+  // サムネイル表示モード時のサムネイル外接サイズ。ペインごとではなくグローバル
+  // (左右で同じサイズ)。デフォルトは Medium。
+  ThumbnailSize thumbnailSize()                          const;
+  void          setThumbnailSize(ThumbnailSize size);
+
   // メニューバーの下に表示するツールバー (頻出操作のボタン群) の表示/非表示。
   // View メニューの "Toolbar" 項目および Settings → General からトグルできる。
   bool showToolbar()                    const;
@@ -456,6 +467,12 @@ private:
   QString          m_pluginsDirectory;
   // ビュアー表示モード。デフォルトは Inline (ビュアーパネルでの表示)。
   ViewerMode       m_viewerMode      = ViewerMode::Inline;
+  // ペインごとの表示モード (List / Thumbnail)。
+  ListViewMode     m_paneViewMode[static_cast<int>(PaneType::Count)] = {
+    ListViewMode::List, ListViewMode::List
+  };
+  // サムネイルサイズ (グローバル、両ペイン共通)。
+  ThumbnailSize    m_thumbnailSize   = ThumbnailSize::Medium;
   // メニュー下のツールバーの表示。デフォルトは ON (新機能を見つけてもらう)。
   // 不要なら View → Toolbar / Settings → General からオフにできる。
   bool             m_showToolbar     = true;

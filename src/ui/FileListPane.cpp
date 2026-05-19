@@ -1,5 +1,6 @@
 #include "FileListPane.h"
 #include "FileListDelegate.h"
+#include "FileListThumbnailDelegate.h"
 #include "FileListView.h"
 #include "FileListThumbnailView.h"
 #include "ClickableLabel.h"
@@ -220,8 +221,13 @@ void FileListPane::setupUi() {
   m_thumbnailView->setModel(m_model);
   m_thumbnailView->setSelectionModel(m_view->selectionModel());
   m_thumbnailView->setSelectionMode(QAbstractItemView::NoSelection);
-  m_thumbnailView->setIconSize(QSize(static_cast<int>(ThumbnailSize::Medium),
-                                    static_cast<int>(ThumbnailSize::Medium)));
+  m_thumbnailDelegate = new FileListThumbnailDelegate(this);
+  m_thumbnailView->setItemDelegate(m_thumbnailDelegate);
+  {
+    const int px = static_cast<int>(Settings::instance().thumbnailSize());
+    m_thumbnailDelegate->setThumbnailSizePx(px);
+    m_thumbnailView->setThumbnailSizePx(px);
+  }
   m_thumbnailView->setUrlsProvider(urlsProvider);
   connect(m_thumbnailView, &FileListThumbnailView::externalUrlsDropped, this,
           &FileListPane::externalUrlsDropped);
@@ -639,6 +645,23 @@ QAbstractItemView* FileListPane::activeView() const {
 void FileListPane::setViewMode(ListViewMode mode) {
   if (mode == m_viewMode) return;
   m_viewMode = mode;
+
+  // model に thumbnail 状態を反映 (Thumbnail のときだけ実画像 decode が走る)。
+  const int px = static_cast<int>(Settings::instance().thumbnailSize());
+  if (m_model) {
+    m_model->setThumbnailPixelSize(px);
+    m_model->setThumbnailEnabled(mode == ListViewMode::Thumbnail);
+  }
+  // ThumbnailView 側の icon サイズ + gridSize + delegate のレイアウトを揃える。
+  // setThumbnailSizePx (view) はセル全体の矩形を固定、delegate は描画レイアウト
+  // (icon 領域 / text 領域) を固定するので、両方をセットしないと不整合が出る。
+  if (m_thumbnailDelegate) {
+    m_thumbnailDelegate->setThumbnailSizePx(px);
+  }
+  if (m_thumbnailView) {
+    m_thumbnailView->setThumbnailSizePx(px);
+  }
+
   if (m_viewStack) {
     m_viewStack->setCurrentIndex(mode == ListViewMode::Thumbnail ? 1 : 0);
   }

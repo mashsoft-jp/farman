@@ -31,6 +31,13 @@ public:
 
   void setUrlsProvider(UrlsProvider provider) { m_urlsProvider = std::move(provider); }
 
+  // サムネイルサイズの設定。iconSize と gridSize を一括で更新する。
+  // gridSize を設定しないと IconMode では各セル幅が画像のアスペクト比やファイル名
+  // 長に依存して可変になり、長いファイル名が隣のサムネイルの上に被って描画される。
+  // 引数は外接サイズ (px)。実際のセルは内側に icon (sizePx) + 下に 2 行分のテキスト
+  // 領域を確保した固定矩形になる。
+  void setThumbnailSizePx(int sizePx);
+
 signals:
   void externalUrlsDropped(const QList<QUrl>& urls);
 

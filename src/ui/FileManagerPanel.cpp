@@ -189,6 +189,12 @@ void FileManagerPanel::loadInitialPath() {
     return home;
   };
 
+  // 表示モード (List / Thumbnail) を Settings から復元する。navigatePane が
+  // model->setPath を呼ぶよりも前にやれば、ディレクトリ読込時点で正しい
+  // DecorationRole 経路 (thumbnail decode) が走る。
+  m_leftPane->setViewMode(settings.paneViewMode(PaneType::Left));
+  m_rightPane->setViewMode(settings.paneViewMode(PaneType::Right));
+
   navigatePane(PaneType::Left,  resolveInitialPath(PaneType::Left));
   navigatePane(PaneType::Right, resolveInitialPath(PaneType::Right));
 
@@ -244,6 +250,12 @@ void FileManagerPanel::applySettings() {
   // 列表示 (Behavior の Columns 設定) を現在のモードで再適用
   m_leftPane->applyColumnVisibility(m_singlePaneMode);
   m_rightPane->applyColumnVisibility(m_singlePaneMode);
+
+  // 表示モード (List / Thumbnail) を Settings から再適用。view.toggle_thumbnails
+  // コマンド経由以外 (Settings ダイアログから直接編集された場合 / 起動直後の
+  // 初回適用) も同じ経路に乗る。setViewMode は同一モードなら no-op。
+  m_leftPane->setViewMode(Settings::instance().paneViewMode(PaneType::Left));
+  m_rightPane->setViewMode(Settings::instance().paneViewMode(PaneType::Right));
 
   m_leftPane->model()->refresh();
   m_rightPane->model()->refresh();

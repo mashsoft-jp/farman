@@ -1067,20 +1067,27 @@ void MainWindow::registerCommands() {
     tr("Toggle between in-window viewer panel and separate viewer windows.")
   ));
 
-  // サムネイル表示モードのトグル (現アクティブペインのみ切替)。Phase 0 では
-  // QFileIconProvider の既定アイコンが大サイズで並ぶだけだが、後続フェーズで
-  // ThumbnailCache から実画像の縮小をはめ込む。Settings 保存は Phase 1 以降。
+  // サムネイル表示モードのトグル (現アクティブペインのみ切替)。Phase 1 以降は
+  // FileListModel が DecorationRole で QImageReader::setScaledSize 経由の
+  // 同期 decode を返す。Settings に paneViewMode を保存して再起動時に復元する。
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "view.toggle_thumbnails",
     tr("Thumbnails"),
     [this]() {
-      if (auto* pane = m_fileManagerPanel ? m_fileManagerPanel->activePane() : nullptr) {
-        const ListViewMode next =
-          pane->viewMode() == ListViewMode::Thumbnail
-            ? ListViewMode::List
-            : ListViewMode::Thumbnail;
-        pane->setViewMode(next);
-      }
+      if (!m_fileManagerPanel) return;
+      auto* pane = m_fileManagerPanel->activePane();
+      if (!pane) return;
+      const ListViewMode next =
+        pane->viewMode() == ListViewMode::Thumbnail
+          ? ListViewMode::List
+          : ListViewMode::Thumbnail;
+      pane->setViewMode(next);
+      // どのペインを切替えたかを Settings に記録
+      const PaneType pt =
+        (pane == m_fileManagerPanel->leftPane()) ? PaneType::Left : PaneType::Right;
+      auto& s = Settings::instance();
+      s.setPaneViewMode(pt, next);
+      s.save();
     },
     "view",
     tr("Switch the active pane between list and thumbnail view.")
