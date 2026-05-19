@@ -3,9 +3,11 @@
 #include "types.h"
 #include "core/FileItem.h"
 #include "core/DirectoryCompare.h"
+#include "core/ThumbnailCache.h"
 #include <QAbstractItemModel>
 #include <QFileSystemWatcher>
 #include <QFileIconProvider>
+#include <QPixmap>
 #include <memory>
 
 namespace Farman {
@@ -173,6 +175,13 @@ public:
 signals:
   void pathChanged(const QString& newPath);
   void loadFailed(const QString& path, const QString& reason);
+
+private slots:
+  // ThumbnailCache::thumbnailReady を受けて、該当 row の DecorationRole を
+  // 再描画させる。key.path が m_entries にあれば dataChanged を発火、無ければ
+  // 無視 (ディレクトリ移動でこのモデルが別 path を表示中のときに古い結果が
+  // 届くケース)。
+  void onThumbnailReady(const Farman::ThumbnailKey& key, const QPixmap& pixmap);
 
 private:
   // m_allEntries (setPath で読み込んだ全件) から m_entries (フィルタ後の表示用) を

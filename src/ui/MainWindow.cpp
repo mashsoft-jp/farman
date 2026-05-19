@@ -188,9 +188,18 @@ void MainWindow::setupUi() {
   connect(m_fileManagerPanel, &FileManagerPanel::fileActivated, this, &MainWindow::onFileActivated);
   // pathChanged はステータスバー側で扱う。タイトルには反映しない。
 
-  // Install event filter on both panes
+  // Install event filter on both panes. List ビュー (QTableView) と Thumbnail
+  // ビュー (QListView) の両方に仕掛けないと、Thumbnail モード時にキーが届かず
+  // 矢印キー等が機能しない。selectionModel は共有しているので、どちらに
+  // setCurrentIndex してももう一方に同期する。
   m_fileManagerPanel->leftPane()->view()->installEventFilter(this);
   m_fileManagerPanel->rightPane()->view()->installEventFilter(this);
+  if (auto* lt = m_fileManagerPanel->leftPane()->thumbnailView()) {
+    lt->installEventFilter(this);
+  }
+  if (auto* rt = m_fileManagerPanel->rightPane()->thumbnailView()) {
+    rt->installEventFilter(this);
+  }
 
   m_stack->addWidget(m_fileManagerPanel);
 
@@ -517,8 +526,11 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
 
     // ファイルマネージャーパネル表示中
     if (m_stack->currentWidget() == m_fileManagerPanel) {
-      if (obj == m_fileManagerPanel->leftPane()->view() ||
-          obj == m_fileManagerPanel->rightPane()->view()) {
+      auto* lv = m_fileManagerPanel->leftPane()->view();
+      auto* rv = m_fileManagerPanel->rightPane()->view();
+      auto* lt = m_fileManagerPanel->leftPane()->thumbnailView();
+      auto* rt = m_fileManagerPanel->rightPane()->thumbnailView();
+      if (obj == lv || obj == rv || obj == lt || obj == rt) {
         // Try to route through KeyBindingManager first
         QKeySequence keySeq(keyEvent->key() | keyEvent->modifiers());
         QString commandId = KeyBindingManager::instance().commandFor(keySeq);

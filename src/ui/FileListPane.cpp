@@ -642,6 +642,10 @@ QAbstractItemView* FileListPane::activeView() const {
   return m_view;
 }
 
+QAbstractItemView* FileListPane::thumbnailView() const {
+  return m_thumbnailView;
+}
+
 void FileListPane::setViewMode(ListViewMode mode) {
   if (mode == m_viewMode) return;
   m_viewMode = mode;
@@ -871,8 +875,10 @@ void FileListPane::refreshSortFilterStatus() {
 
 void FileListPane::setActive(bool active) {
   m_delegate->setActive(active);
+  if (m_thumbnailDelegate) m_thumbnailDelegate->setActive(active);
   m_model->setActive(active);
   m_view->viewport()->update();
+  if (m_thumbnailView) m_thumbnailView->viewport()->update();
 }
 
 void FileListPane::onFolderButtonClicked() {

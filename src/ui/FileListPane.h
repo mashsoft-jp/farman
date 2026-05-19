@@ -38,6 +38,9 @@ public:
   // 内部 QListView)。selection / current / scroll bar の取得など、ビュー型を
   // 問わない API はこちらを使う。
   QAbstractItemView* activeView() const;
+  // サムネイル表示用の内部 QListView を返す。MainWindow が両ビューにキー
+  // event filter を仕掛けるための accessor。
+  QAbstractItemView* thumbnailView() const;
   FileListModel* model() const { return m_model; }
   FileListDelegate* delegate() const { return m_delegate; }
 

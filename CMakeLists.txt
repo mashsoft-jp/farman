@@ -108,6 +108,8 @@ qt_add_executable(farman
   src/core/UserCommandManager.cpp
   src/core/AppPresets.cpp
   src/core/ArchiveContext.cpp
+  src/core/ThumbnailCache.cpp
+  src/core/ThumbnailWorker.cpp
   src/utils/Dialogs.cpp
   src/utils/FarmanMessageBox.cpp
   src/utils/EnterClickFilter.cpp

@@ -27,6 +27,11 @@ public:
   void setThumbnailSizePx(int sizePx) { m_sizePx = sizePx; }
   int  thumbnailSizePx() const { return m_sizePx; }
 
+  // ペインのアクティブ状態。List 側の FileListDelegate と揃え、カーソル色を
+  // Settings::cursorColor(active) から取得する。
+  void setActive(bool active) { m_active = active; }
+  bool isActive() const { return m_active; }
+
   void paint(QPainter* painter,
              const QStyleOptionViewItem& option,
              const QModelIndex& index) const override;
@@ -35,7 +40,8 @@ public:
                  const QModelIndex& index) const override;
 
 private:
-  int m_sizePx = 160;
+  int  m_sizePx = 160;
+  bool m_active = true;
 };
 
 } // namespace Farman

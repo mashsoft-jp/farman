@@ -687,39 +687,44 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
 
   FileListPane* pane = activePane();
   FileListModel* model = pane->model();
+  // List / Thumbnail の両モードで動くよう active な view を経由する。
+  // 両ビューは selectionModel を共有しているので、片方 setCurrentIndex すれば
+  // もう一方も同期する。scrollTo は active 側でしか走らないため active を使う。
+  QAbstractItemView* av = pane->activeView();
+  if (!av) av = pane->view();
 
   switch (event->key()) {
     case Qt::Key_Up: {
-      QModelIndex current = pane->view()->currentIndex();
+      QModelIndex current = av->currentIndex();
       if (!current.isValid()) {
         return true;
       }
       int rows = model->rowCount();
       if (current.row() > 0) {
-        pane->view()->setCurrentIndex(model->index(current.row() - 1, 0));
+        av->setCurrentIndex(model->index(current.row() - 1, 0));
       } else if (Settings::instance().cursorLoop() && rows > 0) {
-        pane->view()->setCurrentIndex(model->index(rows - 1, 0));
+        av->setCurrentIndex(model->index(rows - 1, 0));
       }
       return true;
     }
 
     case Qt::Key_Down: {
-      QModelIndex current = pane->view()->currentIndex();
+      QModelIndex current = av->currentIndex();
       if (!current.isValid()) {
         return true;
       }
       int rows = model->rowCount();
       if (current.row() < rows - 1) {
-        pane->view()->setCurrentIndex(model->index(current.row() + 1, 0));
+        av->setCurrentIndex(model->index(current.row() + 1, 0));
       } else if (Settings::instance().cursorLoop() && rows > 0) {
-        pane->view()->setCurrentIndex(model->index(0, 0));
+        av->setCurrentIndex(model->index(0, 0));
       }
       return true;
     }
 
     case Qt::Key_Home: {
       if (model->rowCount() > 0) {
-        pane->view()->setCurrentIndex(model->index(0, 0));
+        av->setCurrentIndex(model->index(0, 0));
       }
       return true;
     }
@@ -727,7 +732,7 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
     case Qt::Key_End: {
       int lastRow = model->rowCount() - 1;
       if (lastRow >= 0) {
-        pane->view()->setCurrentIndex(model->index(lastRow, 0));
+        av->setCurrentIndex(model->index(lastRow, 0));
       }
       return true;
     }
@@ -761,8 +766,8 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
       if (event->modifiers() & Qt::ShiftModifier) {
         const int rowCount = model->rowCount();
         if (rowCount > 0) {
-          const int startRow = pane->view()->currentIndex().isValid()
-                                   ? pane->view()->currentIndex().row()
+          const int startRow = av->currentIndex().isValid()
+                                   ? av->currentIndex().row()
                                    : -1;
           for (int i = 1; i <= rowCount; ++i) {
             const int row = (startRow + i) % rowCount;
@@ -775,7 +780,7 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
               match = name.at(1).toLower() == ch.toLower();
             }
             if (match) {
-              pane->view()->setCurrentIndex(model->index(row, 0));
+              av->setCurrentIndex(model->index(row, 0));
               break;
             }
           }

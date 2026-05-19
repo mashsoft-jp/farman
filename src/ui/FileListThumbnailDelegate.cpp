@@ -1,6 +1,9 @@
 #include "FileListThumbnailDelegate.h"
+#include "settings/Settings.h"
 
+#include <QAbstractItemView>
 #include <QApplication>
+#include <QBrush>
 #include <QFontMetrics>
 #include <QIcon>
 #include <QPainter>
@@ -84,20 +87,45 @@ void FileListThumbnailDelegate::paint(QPainter* painter,
                                        const QModelIndex& index) const {
   if (!painter || !index.isValid()) return;
 
-  QStyleOptionViewItem opt = option;
-  initStyleOption(&opt, index);
-  // 標準の icon / text 描画は使わず、自前で領域を区切って描く。
-  // QStyledItemDelegate::paint が draw する text/decoration を抑制する。
-  opt.text       = QString();
-  opt.icon       = QIcon();
-  opt.features  &= ~QStyleOptionViewItem::HasDecoration;
-  opt.features  &= ~QStyleOptionViewItem::HasDisplay;
-
-  // 背景 / 選択ハイライト / focus rect を style 経由で描く。
-  QStyle* style = opt.widget ? opt.widget->style() : QApplication::style();
-  style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, opt.widget);
-
   const QRect cell = option.rect;
+
+  // ── カーソル判定 (FileListDelegate と同じパターン) ──
+  const QAbstractItemView* view =
+    qobject_cast<const QAbstractItemView*>(option.widget);
+  bool isCurrentRow = false;
+  if (view) {
+    const QModelIndex cur = view->currentIndex();
+    isCurrentRow = cur.isValid() && cur.row() == index.row();
+  }
+
+  const Settings& s = Settings::instance();
+  QColor cursorColor = s.cursorColor(m_active);
+  if (!cursorColor.isValid()) {
+    cursorColor = m_active ? Qt::black : Qt::lightGray;
+  }
+
+  // ── 背景描画 ──
+  // 優先順位: 1) RowBackground 形状のカーソル, 2) 選択 / 比較 etc の
+  //          BackgroundRole, 3) 何もしない (transparent)。
+  // List モードでは BackgroundRole は QBrush で返るので、QListView もそれを
+  // 描画してくれる前提だったが、QStyledItemDelegate::paint を呼ばない経路で
+  // 描いているので、ここで明示的に fillRect する必要がある。
+  if (isCurrentRow && s.cursorShape() == CursorShape::RowBackground) {
+    painter->fillRect(cell, cursorColor);
+  } else {
+    const QVariant bgVar = index.data(Qt::BackgroundRole);
+    if (bgVar.isValid()) {
+      QBrush brush;
+      if (bgVar.canConvert<QBrush>()) {
+        brush = bgVar.value<QBrush>();
+      } else if (bgVar.canConvert<QColor>()) {
+        brush = QBrush(bgVar.value<QColor>());
+      }
+      if (brush.color().isValid() && brush.color().alpha() > 0) {
+        painter->fillRect(cell, brush);
+      }
+    }
+  }
 
   // ── 上: icon 領域 (sizePx x sizePx 固定で中央寄せ) ──
   const int iconLeft = cell.left() + (cell.width() - m_sizePx) / 2;
@@ -132,13 +160,43 @@ void FileListThumbnailDelegate::paint(QPainter* painter,
   const QString text = index.data(Qt::DisplayRole).toString();
   if (!text.isEmpty() && textWidth > 0 && textHeight > 0) {
     painter->save();
-    QColor textColor = (option.state & QStyle::State_Selected)
-      ? option.palette.color(QPalette::HighlightedText)
-      : option.palette.color(QPalette::Text);
+    // テキスト色は model の ForegroundRole を優先 (FileListModel が category
+    // color / 比較 highlight 等を返す)。無効なら palette の Text 色を使う。
+    QColor textColor;
+    const QVariant fgVar = index.data(Qt::ForegroundRole);
+    if (fgVar.canConvert<QBrush>()) {
+      textColor = fgVar.value<QBrush>().color();
+    } else if (fgVar.canConvert<QColor>()) {
+      textColor = fgVar.value<QColor>();
+    }
+    if (!textColor.isValid()) {
+      textColor = option.palette.color(QPalette::Text);
+    }
     painter->setPen(textColor);
     painter->setFont(option.font);
     drawElidedMultilineText(*painter, text, textRect, kTextLines,
                             option.font, Qt::AlignHCenter);
+    painter->restore();
+  }
+
+  // ── Underline 形状はサムネイル表示では「四角く囲む」に置換する ──
+  // テキスト下に細い下線を引く List モードの表現は、サムネイルグリッドでは
+  // どの item が選択中か視認しにくい。Settings::cursorShape() を尊重しつつ、
+  // サムネイル文脈では「item を矩形で囲む」と読み替える。
+  // RowBackground 形状は List と同じくセル全体塗り (= 既に上で描画済み)。
+  if (isCurrentRow && s.cursorShape() == CursorShape::Underline) {
+    painter->save();
+    const int thickness = qMax(1, s.cursorThickness());
+    QPen pen(cursorColor);
+    pen.setWidth(thickness);
+    pen.setJoinStyle(Qt::MiterJoin);
+    painter->setPen(pen);
+    painter->setBrush(Qt::NoBrush);
+    // 太線が cell からはみ出さないよう半幅だけ内側に inset する。
+    const int half = thickness / 2;
+    const QRect rectInside = cell.adjusted(half, half, -half - (thickness % 2),
+                                            -half - (thickness % 2));
+    painter->drawRect(rectInside);
     painter->restore();
   }
 }

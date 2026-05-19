@@ -1,6 +1,7 @@
 #include "FileListModel.h"
 #include "settings/Settings.h"
 #include "core/ArchiveContext.h"
+#include "core/ThumbnailCache.h"
 #include "utils/ArchivePath.h"
 #include "utils/MediaMatchers.h"
 #include <QApplication>
@@ -28,6 +29,9 @@ namespace Farman {
 
 FileListModel::FileListModel(QObject* parent)
   : QAbstractItemModel(parent) {
+  // ThumbnailCache の非同期 decode 結果を受けて、対象 row を再描画する。
+  connect(&ThumbnailCache::instance(), &ThumbnailCache::thumbnailReady,
+          this, &FileListModel::onThumbnailReady);
 }
 
 FileListModel::~FileListModel() = default;
@@ -75,6 +79,24 @@ void FileListModel::setThumbnailPixelSize(int sizePx) {
       index(0, Name),
       index(m_entries.size() - 1, Name),
       { Qt::DecorationRole });
+  }
+}
+
+void FileListModel::onThumbnailReady(const ThumbnailKey& key,
+                                      const QPixmap& /*pixmap*/) {
+  if (!m_thumbnailEnabled) return;
+  if (key.sizePx != m_thumbnailPixelSize) return;
+  // path が現ディレクトリ内のいずれかの row にあるか線形検索 (rows は O(数百)
+  // 程度で問題にならない)。あれば DecorationRole を再描画させる。
+  // sizeMatch / pathMatch どちらも問わず、データソースは cache 経由で取り直す
+  // ので dataChanged を投げるだけで OK。
+  for (int r = 0; r < m_entries.size(); ++r) {
+    const FileItem* it = m_entries.at(r).get();
+    if (it && it->absolutePath() == key.path) {
+      const QModelIndex idx = index(r, Name);
+      emit dataChanged(idx, idx, { Qt::DecorationRole });
+      break;
+    }
   }
 }
 
@@ -146,6 +168,9 @@ std::shared_ptr<ArchiveContext> loadArchiveBlocking(const QString& archivePath,
 
 bool FileListModel::setPath(const QString& path) {
   m_lastLoadError.clear();
+  // ディレクトリ移動でキュー上の古いサムネイル要求を破棄させる
+  // (cache 自体は残すので、戻ったときに再利用できる)。
+  ThumbnailCache::instance().bumpGeneration();
   // ── アーカイブ内パスの判定 (`!` 区切り) ──────────
   const auto split = ArchivePath::splitArchivePath(path);
   if (split.valid) {
@@ -706,39 +731,29 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
   else if (role == Qt::DecorationRole) {
     // Name列にファイルアイコンを表示
     if (index.column() == Name) {
-      // サムネイル表示モード ON + 画像ファイル + アーカイブ外 ⇒ 実画像を
-      // スケール decode してアイコンとして返す。Phase 1 は同期 decode なので
-      // 大規模ディレクトリではスクロールがブロックする。Phase 2 で
-      // ThumbnailCache + worker thread に切替えて解消予定。
-      // 非画像ファイル / ディレクトリ / アーカイブ内エントリ / 失敗時は
-      // 既存の QFileIconProvider 経由のアイコンに自然フォールバックする。
+      // サムネイル表示モード ON + 画像ファイル + アーカイブ外 ⇒ ThumbnailCache
+      // 経由で実画像のサムネイルを返す。cache hit なら即返す、miss なら
+      // 既定アイコンを placeholder にして非同期 decode を依頼。受信時は
+      // thumbnailReady → onThumbnailReady で該当 row の dataChanged を emit
+      // して再描画される。
       if (m_thumbnailEnabled && !item->isDir() && !item->isDotDot()
           && m_archiveContext == nullptr) {
         const QString path = item->absolutePath();
         if (MediaMatchers::isImageFile(path)) {
-          QImageReader reader(path);
-          reader.setAutoTransform(true);  // EXIF 回転を自動適用
-          const int target = m_thumbnailPixelSize;
-          const QSize src = reader.size();
-          if (src.isValid() && !src.isEmpty()) {
-            // 外接サイズに内接するよう scaled size を計算 (アスペクト維持)
-            QSize scaled = src.scaled(target, target, Qt::KeepAspectRatio);
-            if (!scaled.isEmpty()) reader.setScaledSize(scaled);
+          ThumbnailKey key{
+            path,
+            item->fileInfo().lastModified().toMSecsSinceEpoch(),
+            m_thumbnailPixelSize
+          };
+          QPixmap pm;
+          auto& cache = ThumbnailCache::instance();
+          if (cache.peek(key, &pm)) {
+            return QIcon(pm);
           }
-          QImage img = reader.read();
-          if (!img.isNull()) {
-            // setScaledSize は decoder ヒントで、実際の出力が target を超える
-            // ことがある (SVG はサイズ概念がベクターなのでヒントが効かない /
-            // libjpeg-turbo は 1/2, 1/4, 1/8 のような coarse scale に丸める)。
-            // 縦長 / 横長の極端なアスペクトで grid セルの icon 領域 (target px)
-            // を超えると、IconMode のテキスト領域が画像に隠れる。確実に target
-            // 内に収まるよう最終 scale をかける。
-            if (img.width() > target || img.height() > target) {
-              img = img.scaled(target, target, Qt::KeepAspectRatio,
-                               Qt::SmoothTransformation);
-            }
-            return QIcon(QPixmap::fromImage(std::move(img)));
-          }
+          // miss: 非同期 decode 要求。受信は thumbnailReady シグナル経由で
+          // dataChanged を発火する (constructor で接続済み)。
+          cache.request(key);
+          // placeholder として既定の拡張子別アイコンを返す
         }
       }
       return m_iconProvider.icon(item->fileInfo());
