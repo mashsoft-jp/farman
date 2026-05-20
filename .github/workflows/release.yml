@@ -483,6 +483,24 @@ jobs:
           mv windows/farman-setup-windows-x64.exe   "farman-${TAG}-windows-x64-setup.exe"
           ls -la
 
+      - name: Generate SHA256 checksums
+        run: |
+          # 各配布アセットに対して "<asset>.sha256" を作成する。farman 本体の
+          # 自動アップデート (UpdateDownloader) が同名 + .sha256 のアセットを
+          # 取得してダウンロード本体と照合する。
+          cd dist
+          for f in farman-*-macos-arm64.dmg \
+                   farman-*-linux-x86_64.AppImage \
+                   farman-*-linux-x86_64.deb \
+                   farman-*-windows-x64.zip \
+                   farman-*-windows-x64-setup.exe ; do
+            [ -e "$f" ] || continue
+            shasum -a 256 "$f" > "$f.sha256"
+            echo "Generated $f.sha256:"
+            cat "$f.sha256"
+          done
+          ls -la *.sha256
+
       - name: Create GitHub Release (draft)
         uses: softprops/action-gh-release@v2
         with:
@@ -493,7 +511,12 @@ jobs:
           generate_release_notes: true
           files: |
             dist/farman-*-macos-arm64.dmg
+            dist/farman-*-macos-arm64.dmg.sha256
             dist/farman-*-linux-x86_64.AppImage
+            dist/farman-*-linux-x86_64.AppImage.sha256
             dist/farman-*-linux-x86_64.deb
+            dist/farman-*-linux-x86_64.deb.sha256
             dist/farman-*-windows-x64.zip
+            dist/farman-*-windows-x64.zip.sha256
             dist/farman-*-windows-x64-setup.exe
+            dist/farman-*-windows-x64-setup.exe.sha256

@@ -11,6 +11,7 @@
 #include "../core/FileItem.h"
 #include "../core/Logger.h"
 #include "../core/UpdateChecker.h"
+#include "../core/UpdateDownloader.h"
 #include "../core/UserCommand.h"
 #include "UpdateAvailableDialog.h"
 #include "../core/UserCommandManager.h"
@@ -40,6 +41,7 @@
 #include <QCloseEvent>
 #include <QTableView>
 #include <QApplication>
+#include <QProgressDialog>
 #include <QClipboard>
 #include <QMenuBar>
 #include <QMenu>
@@ -1861,9 +1863,7 @@ void MainWindow::onUpdateCheckFinished(bool ok, const ReleaseInfo& info,
   dlg.exec();
   switch (dlg.lastAction()) {
     case UpdateAvailableDialog::Action::UpdateNow: {
-      // Phase B では Release page をブラウザで開く (= ユーザー手動 DL)。
-      // Phase C で本格的なダウンロード + インストールに置き換える。
-      QDesktopServices::openUrl(QUrl(info.htmlUrl));
+      startUpdateDownload(info);
       break;
     }
     case UpdateAvailableDialog::Action::Skip: {
@@ -1879,6 +1879,52 @@ void MainWindow::onUpdateCheckFinished(bool ok, const ReleaseInfo& info,
       // 何もしない: 次回 24h 後のチェックで再表示される
       break;
   }
+}
+
+void MainWindow::startUpdateDownload(const ReleaseInfo& info) {
+  // 進捗ダイアログを 1 個用意。UpdateDownloader の phaseChanged / progress を
+  // 反映し、finished で閉じる。キャンセルボタンは現状未実装 (中断ロジックを
+  // 入れるなら QNetworkReply::abort() を経由する必要)。
+  auto* progressDlg = new QProgressDialog(this);
+  progressDlg->setWindowTitle(tr("Updating farman..."));
+  progressDlg->setLabelText(tr("Preparing download..."));
+  progressDlg->setRange(0, 0);  // 不確定スピナー (downloadProgress で確定値に切替)
+  progressDlg->setMinimumDuration(0);
+  progressDlg->setAutoClose(false);
+  progressDlg->setAutoReset(false);
+  progressDlg->setCancelButton(nullptr);  // Phase C では中断不可
+  progressDlg->setAttribute(Qt::WA_DeleteOnClose);
+
+  auto* dl = new UpdateDownloader(this);
+  connect(dl, &UpdateDownloader::phaseChanged, progressDlg,
+          &QProgressDialog::setLabelText);
+  connect(dl, &UpdateDownloader::progress, progressDlg,
+          [progressDlg](qint64 received, qint64 total) {
+    if (total > 0) {
+      progressDlg->setRange(0, 100);
+      progressDlg->setValue(static_cast<int>((received * 100) / total));
+    } else {
+      progressDlg->setRange(0, 0);  // 引き続き不確定
+    }
+  });
+  connect(dl, &UpdateDownloader::finished, this,
+          [this, dl, progressDlg](bool ok, const QString& errorReason) {
+    progressDlg->close();
+    dl->deleteLater();
+    if (!ok) {
+      Logger::instance().warn(tr("Update download failed: %1").arg(errorReason));
+      warn(this, tr("Update Failed"),
+           tr("Could not install the update: %1").arg(errorReason));
+      return;
+    }
+    Logger::instance().info(tr("Update install launched, exiting"));
+    // インストーラ / ヘルパースクリプトを startDetached したので、自プロセスを
+    // 終了させて旧バイナリを開放する。
+    QApplication::quit();
+  });
+
+  progressDlg->show();
+  dl->start(info);
 }
 
 void MainWindow::toggleShortcutList() {

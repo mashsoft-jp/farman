@@ -53,6 +53,10 @@ private:
   // 起動シーケンスから呼ばれる、24h スロットル付きの自動チェック。
   // Settings::autoUpdateCheckOnStartup が ON のときだけ実行する。
   void maybeCheckForUpdatesOnStartup();
+  // UpdateAvailableDialog で "Update Now" が押されたあとのダウンロード +
+  // インストール起動。完了で QApplication::quit() してインストール側に
+  // 制御を移す。
+  void startUpdateDownload(const Farman::ReleaseInfo& info);
   // ショートカット一覧ウィンドウのトグル表示。
   void toggleShortcutList();
 
