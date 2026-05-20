@@ -10,6 +10,7 @@
 #include "SearchDialog.h"
 #include "../core/FileItem.h"
 #include "../core/Logger.h"
+#include "../core/UpdateChecker.h"
 #include "../core/UserCommand.h"
 #include "../core/UserCommandManager.h"
 #include "../core/PlaceholderExpander.h"
@@ -930,6 +931,19 @@ void MainWindow::registerCommands() {
     "application"
   ));
 
+  // 手動アップデートチェック (Help メニュー → "Check for Updates...")。
+  // UpdateChecker で GitHub Releases API を叩いて、結果を simple ダイアログで表示。
+  // Phase B 以降で本格的な通知ダイアログ (Update Now / Remind / Skip) に置き換える。
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "app.check_for_updates",
+    tr("Check for Updates..."),
+    [this]() {
+      checkForUpdatesManually();
+    },
+    "application",
+    tr("Manually check GitHub for a newer farman release.")
+  ));
+
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "view.file",
     tr("View File"),
@@ -1477,6 +1491,11 @@ void MainWindow::createMenus() {
   QMenu* helpMenu = bar->addMenu(tr("&Help"));
   // ショートカット一覧 (`?` キー)
   addCmd(helpMenu, "help.shortcuts", tr("Keyboard Shortcuts"), /*global=*/true);
+  helpMenu->addSeparator();
+  // 手動アップデートチェック (macOS の慣習で menuRole = ApplicationSpecific
+  // を当てると標準で Help メニューに残る。Help → "Check for Updates..." は
+  // Sparkle 系アプリの慣習で違和感ない位置)。
+  addCmd(helpMenu, "app.check_for_updates", tr("Check for Updates..."), /*global=*/true);
   QAction* aboutAction = new QAction(tr("About farman..."), this);
   aboutAction->setMenuRole(QAction::AboutRole);
   connect(aboutAction, &QAction::triggered, this, &MainWindow::showAboutDialog);
@@ -1742,6 +1761,63 @@ void MainWindow::showAboutDialog() {
        "Copyright &copy; Mashsoft Inc.<br>"
        "<a href=\"https://www.mashsoft.co.jp\">https://www.mashsoft.co.jp</a>")
       .arg(version));
+}
+
+void MainWindow::checkForUpdatesManually() {
+  // 多重起動を避けるため、1 つの UpdateChecker を使い回す。
+  if (!m_updateChecker) {
+    m_updateChecker = new UpdateChecker(this);
+    connect(m_updateChecker, &UpdateChecker::finished, this,
+            [this](bool ok, const ReleaseInfo& info, bool isNewer,
+                    const QString& errorReason) {
+      if (!ok) {
+        Logger::instance().info(tr("Update check failed: %1").arg(errorReason));
+        // よくある特殊ケースを分かりやすいメッセージに翻訳。それ以外 (ネット
+        // ワークエラー / 5xx 等) は原因文字列をそのまま見せる。
+        QString userMessage;
+        if (errorReason == QLatin1String("no_published_release")) {
+          userMessage = tr(
+            "No published stable release was found yet.\n\n"
+            "Draft and prerelease (e.g. v0.9.0-test) tags are not returned\n"
+            "by GitHub's \"latest release\" API. Once a stable release is\n"
+            "published, this check will pick it up.");
+        } else if (errorReason.startsWith(QLatin1String("latest is draft/prerelease"))) {
+          userMessage = tr(
+            "The latest release on GitHub is a draft or prerelease and\n"
+            "will not be offered as an update. Stable releases will be\n"
+            "picked up here.");
+        } else if (errorReason.startsWith(QLatin1String("skipped: dev build"))) {
+          userMessage = tr(
+            "This is a development build. The auto-update check is skipped.");
+        } else {
+          userMessage = tr("Could not check for updates.\n\nReason: %1").arg(errorReason);
+        }
+        inform(this, tr("Check for Updates"), userMessage);
+        return;
+      }
+      Logger::instance().info(
+        tr("Update check: latest=%1, current=%2, newer=%3")
+          .arg(info.version,
+                QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)),
+                isNewer ? QStringLiteral("yes") : QStringLiteral("no")));
+      if (isNewer) {
+        inform(this, tr("Update available"),
+          tr("A new version of farman is available.\n\n"
+             "Current:  %1\n"
+             "Latest:   %2\n\n"
+             "Visit %3 to download.")
+            .arg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)),
+                  info.version,
+                  info.htmlUrl));
+      } else {
+        inform(this, tr("You're up to date"),
+               tr("farman %1 is the latest version.")
+                 .arg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION))));
+      }
+    });
+  }
+  if (m_updateChecker->isChecking()) return;
+  m_updateChecker->checkLatest();
 }
 
 void MainWindow::toggleShortcutList() {
