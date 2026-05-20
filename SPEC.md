@@ -1695,12 +1695,13 @@ OS 別の現状:
 
 ---
 
-## 自動アップデート *（未実装）*
+## 自動アップデート
 
 farman を起動したまま手動でリリースを追わずに済むよう、新しいバージョン
-が出たら知らせて取り込む仕組みを用意する。**インストーラ** と組で
-動く機能で、署名済みの正規アーティファクトを GitHub Releases から
-取りに行く前提。
+が出たら知らせて取り込む仕組みを用意している。**インストーラ** と組で
+動く機能で、正規アーティファクトを GitHub Releases から取りに行く。
+SHA256 チェックサム (`<asset>.sha256` という名前で同じリリースに添付)
+で検証する。
 
 ### チェック方針
 
@@ -1775,10 +1776,28 @@ Last checked: 2026-05-10 09:42
 }
 ```
 
-### 既存の状態
+### 実装状況
 
-未実装。バックログにある `release.yml` (タグ push → GitHub Releases
-自動公開) を整備するのが前提条件。
+実装済み (2026-05-20)。
+
+- `src/core/UpdateChecker` — GitHub Releases API 経由のバージョン
+  チェック。`User-Agent: farman/<version> <os>/<arch>` を付与。
+  4xx / オフライン / タイムアウトは静かに諦める (手動チェック時のみ
+  簡潔なステータスを表示)。`prerelease` / `draft` リリースは無視。
+  リポジトリにまだリリースが無い (404) 場合も「最新バージョンを
+  使用しています」として扱う。
+- `src/ui/UpdateAvailableDialog` — 通知ダイアログ。リリースノートは
+  `QTextBrowser::setMarkdown` で表示。Update Now / Remind Me Later /
+  Skip This Version の 3 択。
+- `src/core/UpdateDownloader` — プラットフォーム別アセット選択
+  (`macos-<arch>.dmg` / `windows-<arch>-setup.exe` /
+  `linux-<arch>.AppImage`) と SHA256 検証、各 OS 向けインストール
+  スクリプトの生成・起動 (macOS: hdiutil + cp、Windows: 新インス
+  トーラを `/SILENT` 起動、Linux: 旧 AppImage を新ファイルで置換)。
+- `release.yml` (CI) — `v*` タグ push でアセット + `.sha256` を
+  自動添付。
+- 開発ビルド (`Settings::version()` が `0.0.0` ないし `0.0.0-dev`)
+  では起動時の自動チェックをスキップ。手動チェックは可能。
 
 ---
 

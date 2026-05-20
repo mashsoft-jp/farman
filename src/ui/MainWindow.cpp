@@ -1858,6 +1858,17 @@ void MainWindow::onUpdateCheckFinished(bool ok, const ReleaseInfo& info,
     return;
   }
 
+  // silent モード ON のとき (Settings から有効化されている) は、確認 dialog を
+  // 出さずに即ダウンロードを開始する。SPEC.md "自動アップデート" 節の
+  // "silent モード" 相当。manual チェック経由のときは silent でも一応 dialog を
+  // 見せる (= 明示的に「今チェック」を押したユーザーには結果と選択肢を見せる)。
+  if (!manual && s.autoUpdateSilent()) {
+    Logger::instance().info(
+      tr("Silent auto-update: downloading %1").arg(info.version));
+    startUpdateDownload(info);
+    return;
+  }
+
   // 通知ダイアログをポップアップ。
   UpdateAvailableDialog dlg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)), info, this);
   dlg.exec();

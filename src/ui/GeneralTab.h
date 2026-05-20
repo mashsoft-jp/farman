@@ -4,6 +4,7 @@
 
 class QComboBox;
 class QCheckBox;
+class QLabel;
 class QSpinBox;
 class QLineEdit;
 class QToolButton;
@@ -95,6 +96,16 @@ private:
 
   // 直前の save() で言語が変更されたか
   bool         m_languageChangedOnSave     = false;
+
+  // ── 自動アップデート (SPEC.md "自動アップデート" 節) ──
+  // checkOnStartup: 起動時に最大 1 日 1 回 GitHub をチェック
+  // silent:         確認ダイアログを出さずバックグラウンド更新
+  // lastCheckedLabel: 前回チェック日時を読みやすい形式で表示
+  // checkNowButton:   「今すぐチェック」ボタン
+  QCheckBox*  m_autoUpdateCheckOnStartupCheck = nullptr;
+  QCheckBox*  m_autoUpdateSilentCheck         = nullptr;
+  QLabel*     m_autoUpdateLastCheckedLabel    = nullptr;
+  QToolButton* m_autoUpdateCheckNowButton     = nullptr;
 };
 
 } // namespace Farman

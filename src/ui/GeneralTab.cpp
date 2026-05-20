@@ -1,5 +1,7 @@
 #include "GeneralTab.h"
 #include "settings/Settings.h"
+#include "keybinding/CommandRegistry.h"
+#include <QDateTime>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -277,6 +279,50 @@ void GeneralTab::setupUi() {
   languageRow->addStretch(1);
   mainLayout->addLayout(languageRow);
 
+  // ─── Auto-Update group ─────────────────────────
+  // GitHub Releases から最新 stable 版を検出 → ダイアログで通知 → ダウンロード +
+  // インストールまで自動化する。SPEC.md "自動アップデート" 節参照。
+  QGroupBox* autoUpdateGroup = new QGroupBox(tr("Auto-Update"), this);
+  QVBoxLayout* auLayout = new QVBoxLayout(autoUpdateGroup);
+
+  m_autoUpdateCheckOnStartupCheck = new QCheckBox(
+    tr("Check for updates automatically (once per day)"), autoUpdateGroup);
+  m_autoUpdateCheckOnStartupCheck->setToolTip(
+    tr("On startup, query GitHub for a newer release (at most once every 24 h)."
+       " If a newer version is found, a notification dialog is shown."));
+  auLayout->addWidget(m_autoUpdateCheckOnStartupCheck);
+
+  m_autoUpdateSilentCheck = new QCheckBox(
+    tr("Download and install updates without asking"), autoUpdateGroup);
+  m_autoUpdateSilentCheck->setToolTip(
+    tr("Skip the confirmation dialog when an update is found. The new version "
+       "is downloaded, verified by SHA256, and installed automatically."));
+  auLayout->addWidget(m_autoUpdateSilentCheck);
+
+  // 1 個目を外したら 2 個目を grey out
+  connect(m_autoUpdateCheckOnStartupCheck, &QCheckBox::toggled,
+          this, [this](bool on) {
+    if (m_autoUpdateSilentCheck) m_autoUpdateSilentCheck->setEnabled(on);
+  });
+
+  // 最終チェック日時 + 「今すぐチェック」
+  QHBoxLayout* auActionRow = new QHBoxLayout();
+  auActionRow->setContentsMargins(0, 0, 0, 0);
+  m_autoUpdateLastCheckedLabel = new QLabel(autoUpdateGroup);
+  auActionRow->addWidget(m_autoUpdateLastCheckedLabel, 1);
+  m_autoUpdateCheckNowButton = new QToolButton(autoUpdateGroup);
+  m_autoUpdateCheckNowButton->setText(tr("Check for Updates Now"));
+  m_autoUpdateCheckNowButton->setToolTip(
+    tr("Run an update check right now (same as Help → Check for Updates...)."));
+  auActionRow->addWidget(m_autoUpdateCheckNowButton);
+  // ボタン押下時は CommandRegistry 経由で同じ手動チェックコマンドを実行する。
+  connect(m_autoUpdateCheckNowButton, &QToolButton::clicked, this, []() {
+    CommandRegistry::instance().execute(QStringLiteral("app.check_for_updates"));
+  });
+  auLayout->addLayout(auActionRow);
+
+  mainLayout->addWidget(autoUpdateGroup);
+
   mainLayout->addStretch();
 }
 
@@ -332,6 +378,21 @@ void GeneralTab::loadSettings() {
   onWindowSizeModeChanged(m_windowSizeModeCombo->currentIndex());
   onWindowPositionModeChanged(m_windowPositionModeCombo->currentIndex());
 
+  // Auto-Update
+  m_autoUpdateCheckOnStartupCheck->setChecked(settings.autoUpdateCheckOnStartup());
+  m_autoUpdateSilentCheck->setChecked(settings.autoUpdateSilent());
+  m_autoUpdateSilentCheck->setEnabled(settings.autoUpdateCheckOnStartup());
+  {
+    const QDateTime last = settings.autoUpdateLastCheckedAt();
+    if (last.isValid()) {
+      m_autoUpdateLastCheckedLabel->setText(
+        tr("Last checked: %1").arg(last.toLocalTime().toString(
+          QStringLiteral("yyyy-MM-dd HH:mm"))));
+    } else {
+      m_autoUpdateLastCheckedLabel->setText(tr("Last checked: (never)"));
+    }
+  }
+
   m_logVisibleCheck->setChecked(settings.logVisible());
   m_logPaneHeightSpin->setValue(settings.logPaneHeight());
   m_logToFileCheck->setChecked(settings.logToFile());
@@ -376,6 +437,10 @@ void GeneralTab::save() {
   WindowPositionMode posMode = static_cast<WindowPositionMode>(m_windowPositionModeCombo->currentData().toInt());
   settings.setWindowPositionMode(posMode);
   settings.setCustomWindowPosition(QPoint(m_windowXSpin->value(), m_windowYSpin->value()));
+
+  // Auto-Update
+  settings.setAutoUpdateCheckOnStartup(m_autoUpdateCheckOnStartupCheck->isChecked());
+  settings.setAutoUpdateSilent(m_autoUpdateSilentCheck->isChecked());
 
   settings.setLogVisible(m_logVisibleCheck->isChecked());
   settings.setLogPaneHeight(m_logPaneHeightSpin->value());
