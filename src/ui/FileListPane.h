@@ -50,6 +50,18 @@ public:
   ListViewMode viewMode() const { return m_viewMode; }
   void setViewMode(ListViewMode mode);
 
+  // 自分が Left / Right のどちらのペインかを設定する。FileManagerPanel が
+  // 各ペイン構築直後に 1 回だけ呼ぶ。フッタのモード切替ボタンが Settings に
+  // 自ペインの設定を保存するときに使う。
+  void setPaneType(PaneType pt) { m_paneType = pt; }
+  PaneType paneType() const { return m_paneType; }
+
+  // Settings::thumbnailSize() の現在値を model / view / delegate に再適用する。
+  // ツールバーや Appearance タブからサイズ変更が起きたときに呼ばれる。
+  // モードが List のときも内部状態は更新するので、後で Thumbnail モードに
+  // 切り替えた瞬間から正しいサイズが反映される。
+  void reapplyThumbnailMetrics();
+
   // パス操作
   QString currentPath() const;
   bool setPath(const QString& path);
@@ -72,6 +84,10 @@ public:
   void focusAddressBar();
   // ★ ブックマークラベルへフォーカス。Tab 連鎖の起点として使う。
   void focusBookmarkLabel();
+  // フッタのサムネイル表示モード切替ボタンへフォーカス。Tab 連鎖で「ファイル
+  // リスト → モード切替 (→ サイズ) → ★」と巡るために使う。List モード時でも
+  // モード切替ボタンは常に visible なので、ここに到達する。
+  void focusFooterControls();
 
   // 即時フィルタ (Quick Filter Bar) のトグル表示。
   //   - 非表示 → 表示 + フォーカス + テキスト全選択
@@ -133,7 +149,13 @@ private:
   FileListThumbnailView* m_thumbnailView = nullptr;
   FileListThumbnailDelegate* m_thumbnailDelegate = nullptr;
   ListViewMode m_viewMode = ListViewMode::List;
+  // 左右どちらのペインか (FileManagerPanel が constructor 後に setPaneType で設定)。
+  PaneType     m_paneType = PaneType::Left;
   QLabel* m_sortFilterStatusLabel;
+  // フッタ右端の View Mode 切替 (List / Thumbnail S/M/L の 4 値を 1 つの
+  // popup から選択)。クリック / Space / Enter で popup を開き、↑↓ で項目
+  // 移動、Enter で確定。Cmd+G ショートカットは 4 段階を順に巡回する。
+  QToolButton* m_viewModeButton = nullptr;
   // 即時フィルタの 1 行入力欄。デフォルトは非表示。
   QLineEdit*       m_quickFilterEdit = nullptr;
   FileListModel* m_model;

@@ -21,6 +21,7 @@
 #include "../viewer/TextViewerWindow.h"
 #include "../viewer/ImageViewerWindow.h"
 #include "../viewer/BinaryViewerWindow.h"
+#include <QActionGroup>
 #include <QDesktopServices>
 #include <QDir>
 #include <QLocale>
@@ -40,6 +41,7 @@
 #include <QClipboard>
 #include <QMenuBar>
 #include <QMenu>
+#include <QToolButton>
 #include <QAction>
 #include <QToolBar>
 
@@ -1079,22 +1081,52 @@ void MainWindow::registerCommands() {
     tr("Toggle between in-window viewer panel and separate viewer windows.")
   ));
 
-  // サムネイル表示モードのトグル (現アクティブペインのみ切替)。Phase 1 以降は
-  // FileListModel が DecorationRole で QImageReader::setScaledSize 経由の
-  // 同期 decode を返す。Settings に paneViewMode を保存して再起動時に復元する。
+  // 表示モード切替コマンド群。Cmd+1/2/3/4 で List / Thumbnail S/M/L を
+  // それぞれ直接選択する (Finder 風)。アクティブペインに対して動作する。
+  // 巡回ショートカット (`view.toggle_thumbnails`) も互換のため残すが、
+  // デフォルトキーは外す (ユーザーが任意に再割当可能)。
+  auto applyPaneViewMode = [this](ListViewMode mode) {
+    if (!m_fileManagerPanel) return;
+    auto* pane = m_fileManagerPanel->activePane();
+    if (!pane) return;
+    if (pane->viewMode() == mode) return;
+    pane->setViewMode(mode);
+    const PaneType pt =
+      (pane == m_fileManagerPanel->leftPane()) ? PaneType::Left : PaneType::Right;
+    auto& s = Settings::instance();
+    s.setPaneViewMode(pt, mode);
+    s.save();
+  };
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "view.list",            tr("View as List"),
+    [applyPaneViewMode]() { applyPaneViewMode(ListViewMode::List); },
+    "view", tr("Show the active pane as a detailed list.")
+  ));
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "view.thumbnail_small", tr("View as Thumbnails (Small)"),
+    [applyPaneViewMode]() { applyPaneViewMode(ListViewMode::ThumbnailSmall); },
+    "view", tr("Show the active pane as small thumbnails (96 px).")
+  ));
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "view.thumbnail_medium", tr("View as Thumbnails (Medium)"),
+    [applyPaneViewMode]() { applyPaneViewMode(ListViewMode::ThumbnailMedium); },
+    "view", tr("Show the active pane as medium thumbnails (160 px).")
+  ));
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "view.thumbnail_large", tr("View as Thumbnails (Large)"),
+    [applyPaneViewMode]() { applyPaneViewMode(ListViewMode::ThumbnailLarge); },
+    "view", tr("Show the active pane as large thumbnails (256 px).")
+  ));
+  // 巡回コマンド (互換): デフォルトキー無し。
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "view.toggle_thumbnails",
-    tr("Thumbnails"),
+    tr("Cycle View Mode"),
     [this]() {
       if (!m_fileManagerPanel) return;
       auto* pane = m_fileManagerPanel->activePane();
       if (!pane) return;
-      const ListViewMode next =
-        pane->viewMode() == ListViewMode::Thumbnail
-          ? ListViewMode::List
-          : ListViewMode::Thumbnail;
+      const ListViewMode next = nextListViewMode(pane->viewMode());
       pane->setViewMode(next);
-      // どのペインを切替えたかを Settings に記録
       const PaneType pt =
         (pane == m_fileManagerPanel->leftPane()) ? PaneType::Left : PaneType::Right;
       auto& s = Settings::instance();
@@ -1102,7 +1134,7 @@ void MainWindow::registerCommands() {
       s.save();
     },
     "view",
-    tr("Switch the active pane between list and thumbnail view.")
+    tr("Cycle the active pane through List / Thumbnail (S/M/L).")
   ));
 
   // ディレクトリ比較: 左右ペインの内容差分を着色表示するモードに入る。
@@ -1364,14 +1396,39 @@ void MainWindow::createMenus() {
   viewMenu->addSeparator();
   addCmd(viewMenu, "view.file", tr("View File"));
   addCmd(viewMenu, "view.choose", tr("Open With Viewer..."));
-  // サムネイル表示モードのトグル。aboutToShow でアクティブペインの状態を反映。
-  QAction* thumbnailsAction = addCmd(viewMenu, "view.toggle_thumbnails", tr("Thumbnails"));
-  thumbnailsAction->setCheckable(true);
-  connect(viewMenu, &QMenu::aboutToShow, this, [this, thumbnailsAction]() {
-    QSignalBlocker blocker(thumbnailsAction);
+  // 表示モード切替: List / Thumbnail S/M/L を 4 個のメニュー項目で直接選択。
+  // Cmd+1〜4 のショートカットがメニュー横に表示される。aboutToShow で現在
+  // モードに ✓ を付ける。
+  QMenu* viewModeMenu = viewMenu->addMenu(tr("View Mode"));
+  QAction* vmListAct  = addCmd(viewModeMenu, "view.list",
+                                tr("List"));
+  QAction* vmSAct     = addCmd(viewModeMenu, "view.thumbnail_small",
+                                tr("Thumbnails (Small)"));
+  QAction* vmMAct     = addCmd(viewModeMenu, "view.thumbnail_medium",
+                                tr("Thumbnails (Medium)"));
+  QAction* vmLAct     = addCmd(viewModeMenu, "view.thumbnail_large",
+                                tr("Thumbnails (Large)"));
+  vmListAct->setIcon(QIcon(QStringLiteral(":/icons/toolbar/view-list-rows.svg")));
+  vmSAct->setIcon   (QIcon(QStringLiteral(":/icons/toolbar/view-grid-3.svg")));
+  vmMAct->setIcon   (QIcon(QStringLiteral(":/icons/toolbar/view-grid-2.svg")));
+  vmLAct->setIcon   (QIcon(QStringLiteral(":/icons/toolbar/view-grid-1.svg")));
+  for (QAction* a : { vmListAct, vmSAct, vmMAct, vmLAct }) a->setCheckable(true);
+  QActionGroup* vmGroup = new QActionGroup(this);
+  vmGroup->setExclusive(true);
+  vmGroup->addAction(vmListAct);
+  vmGroup->addAction(vmSAct);
+  vmGroup->addAction(vmMAct);
+  vmGroup->addAction(vmLAct);
+  connect(viewMenu, &QMenu::aboutToShow, this, [this, vmListAct, vmSAct, vmMAct, vmLAct]() {
     const auto* pane = m_fileManagerPanel ? m_fileManagerPanel->activePane() : nullptr;
-    thumbnailsAction->setChecked(pane && pane->viewMode() == ListViewMode::Thumbnail);
+    const ListViewMode cur = pane ? pane->viewMode() : ListViewMode::List;
+    QSignalBlocker bL(vmListAct), bS(vmSAct), bM(vmMAct), bLg(vmLAct);
+    vmListAct->setChecked(cur == ListViewMode::List);
+    vmSAct->setChecked   (cur == ListViewMode::ThumbnailSmall);
+    vmMAct->setChecked   (cur == ListViewMode::ThumbnailMedium);
+    vmLAct->setChecked   (cur == ListViewMode::ThumbnailLarge);
   });
+
   addCmd(viewMenu, "view.toggle_log", tr("Toggle Log Pane"));
   addCmd(viewMenu, "view.quick_filter", tr("Quick Filter"));
   // ツールバー表示のトグル。aboutToShow で Settings の現状を反映させる。
@@ -1625,6 +1682,12 @@ void MainWindow::createMainToolBar() {
     QSignalBlocker b(logAct);
     logAct->setChecked(visible);
   });
+
+  // サムネイル表示モードはペイン固有の状態 (左右で独立にトグル) なので、
+  // ツールバーには出さず、各 FileListPane のフッタにモード切替ボタン + サイズ
+  // 切替ボタンを並べる構成にしている (ペインごとの「sort / filter / view mode /
+  // size」を 1 か所で一望できる)。ツールバーは両ペイン / アプリ全体に関わる
+  // 操作 (Single Pane / Sync Browse / Compare / Log etc.) に限定する。
 
   m_toolbar->addSeparator();
   addBtn("help.shortcuts",          tr("Shortcuts"),    QStringLiteral("shortcuts.svg"));

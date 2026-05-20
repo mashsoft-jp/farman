@@ -312,6 +312,9 @@ QWidget* AppearanceTab::buildMainPage() {
   cursorRow->addStretch();
   mainLayout->addWidget(cursorGroup);
 
+  // サムネイルサイズはペインのフッタ View Mode popup (List / Thumbnail S/M/L)
+  // で選ぶ運用に統一したため、Appearance タブには UI を出さない。
+
   // ─── File List グループ: フォント/表示形式 + ファイル種別カラー ──
   QGroupBox* fileListGroup = new QGroupBox(tr("File List"), this);
   QVBoxLayout* fileListOuter = new QVBoxLayout(fileListGroup);

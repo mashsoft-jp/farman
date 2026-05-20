@@ -47,6 +47,12 @@
     <file alias="line-numbers.svg">icons/toolbar/line-numbers.svg</file>
     <file alias="word-wrap.svg">icons/toolbar/word-wrap.svg</file>
     <file alias="case-sensitive.svg">icons/toolbar/case-sensitive.svg</file>
+    <file alias="view-thumbnails.svg">icons/toolbar/view-thumbnails.svg</file>
+    <file alias="thumbnail-size.svg">icons/toolbar/thumbnail-size.svg</file>
+    <file alias="view-list-rows.svg">icons/toolbar/view-list-rows.svg</file>
+    <file alias="view-grid-3.svg">icons/toolbar/view-grid-3.svg</file>
+    <file alias="view-grid-2.svg">icons/toolbar/view-grid-2.svg</file>
+    <file alias="view-grid-1.svg">icons/toolbar/view-grid-1.svg</file>
   </qresource>
   <!--
     プリセット (キーバインド / テーマ / ユーザコマンド) の同梱 JSON。

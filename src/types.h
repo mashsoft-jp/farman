@@ -118,24 +118,57 @@ enum class CursorShape {
   RowBackground // 行全体の背景色を変える
 };
 
-// パネルの表示モード。FileListPane が QStackedWidget で切替える。
-// - List:      現状の QTableView ベースの詳細リスト表示。
-// - Thumbnail: QListView::IconMode ベースのサムネイルグリッド表示。
-//              画像ファイル (Image Viewer 拡張子に該当) は実画像をスケールした
-//              サムネイル、それ以外は QFileIconProvider のアイコンを使う。
+// パネルの表示モード。「リスト」+「サムネイル 3 サイズ」の合計 4 値で、
+// FileListPane のフッタ popup から 1 つを選択する。ショートカット
+// (view.toggle_thumbnails) で List → Small → Medium → Large → List の順に
+// 巡回する。
+//
+// 内部実装上は QStackedWidget で List ビュー (QTableView) と Thumbnail ビュー
+// (QListView::IconMode) を切替える。Thumbnail* のときだけ実画像のサムネイル
+// 描画が走り、Small/Medium/Large の値で外接サイズ (px) が決まる。
 enum class ListViewMode {
-  List,
-  Thumbnail
+  List            = 0,
+  ThumbnailSmall  = 1,
+  ThumbnailMedium = 2,
+  ThumbnailLarge  = 3
 };
 
-// サムネイル表示モード時のサムネイルサイズ (3 段階)。
-// 値はピクセル単位の「外接サイズ」で、アスペクト比を保ったまま内接するように
-// QImageReader::setScaledSize() に渡す。
+// サムネイル描画時の外接サイズ (px)。ListViewMode から導出するヘルパとして
+// 使う (Settings には直接保存しない、ListViewMode が真の保持先)。
 enum class ThumbnailSize {
   Small  = 96,
   Medium = 160,
   Large  = 256
 };
+
+// ListViewMode が Thumbnail*いずれかを表すか。
+inline bool isThumbnailMode(ListViewMode m) {
+  return m != ListViewMode::List;
+}
+
+// ListViewMode から描画用の外接 px を取り出す。List のときは Medium 相当を返す
+// (ビューは hidden だが内部状態として持っておく)。
+inline int thumbnailPixelSizeFor(ListViewMode m) {
+  switch (m) {
+    case ListViewMode::ThumbnailSmall:  return static_cast<int>(ThumbnailSize::Small);
+    case ListViewMode::ThumbnailLarge:  return static_cast<int>(ThumbnailSize::Large);
+    case ListViewMode::ThumbnailMedium:
+    case ListViewMode::List:
+    default:                            return static_cast<int>(ThumbnailSize::Medium);
+  }
+}
+
+// 4 値を List → S → M → L → List の順に巡回する。Cmd+G が 1 回押されるごとに
+// 1 段階進む。
+inline ListViewMode nextListViewMode(ListViewMode m) {
+  switch (m) {
+    case ListViewMode::List:            return ListViewMode::ThumbnailSmall;
+    case ListViewMode::ThumbnailSmall:  return ListViewMode::ThumbnailMedium;
+    case ListViewMode::ThumbnailMedium: return ListViewMode::ThumbnailLarge;
+    case ListViewMode::ThumbnailLarge:
+    default:                            return ListViewMode::List;
+  }
+}
 
 // ビュアーの表示方法。
 // - Inline:   メインウィンドウ内の ViewerPanel で表示 (現状の動作)。Enter / Esc

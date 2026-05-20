@@ -70,6 +70,7 @@ void FileManagerPanel::setupUi() {
 
   // ===== Left Pane =====
   m_leftPane = new FileListPane(this);
+  m_leftPane->setPaneType(PaneType::Left);
   connect(m_leftPane, &FileListPane::currentChanged, this, &FileManagerPanel::onLeftPaneCurrentChanged);
   connect(m_leftPane, &FileListPane::folderButtonClicked, this, &FileManagerPanel::onLeftFolderButtonClicked);
   // ステータスバー更新: カーソル移動・モデル変化・選択変化を監視
@@ -86,6 +87,7 @@ void FileManagerPanel::setupUi() {
 
   // ===== Right Pane =====
   m_rightPane = new FileListPane(this);
+  m_rightPane->setPaneType(PaneType::Right);
   connect(m_rightPane, &FileListPane::currentChanged, this, &FileManagerPanel::onRightPaneCurrentChanged);
   connect(m_rightPane, &FileListPane::folderButtonClicked, this, &FileManagerPanel::onRightFolderButtonClicked);
   connect(m_rightPane, &FileListPane::currentChanged, this, [this](const QModelIndex&, const QModelIndex&) {
@@ -256,6 +258,10 @@ void FileManagerPanel::applySettings() {
   // 初回適用) も同じ経路に乗る。setViewMode は同一モードなら no-op。
   m_leftPane->setViewMode(Settings::instance().paneViewMode(PaneType::Left));
   m_rightPane->setViewMode(Settings::instance().paneViewMode(PaneType::Right));
+  // サムネイルサイズ (グローバル) も再適用。Appearance タブからの変更を
+  // 両ペインの delegate / view / model に反映する。
+  m_leftPane->reapplyThumbnailMetrics();
+  m_rightPane->reapplyThumbnailMetrics();
 
   m_leftPane->model()->refresh();
   m_rightPane->model()->refresh();
@@ -626,15 +632,12 @@ void FileManagerPanel::syncActiveToOther() {
 }
 
 bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
-  // Tab: ファイルリストから ★ ブックマークへフォーカスを移す
-  // (Tab 連鎖の起点)。以降は FileListPane の eventFilter が
-  //   ★ → アドレスバー → フォルダボタン → ファイルリスト
-  // と循環させる。
-  // (旧仕様の「Tab で左右ペイン切替」は廃止。ペイン切替は ← / → や
-  // マウスクリックで行う。)
+  // Tab: ファイルリスト上の Tab はフッタコントロール (モード切替ボタン →
+  // (Thumbnail 時) サイズボタン → ★) へ。FileListPane::eventFilter が以降の
+  // ★ → addr → 📁 → view と循環させる。
   if (event->key() == Qt::Key_Tab) {
     if (FileListPane* pane = activePane()) {
-      pane->focusBookmarkLabel();
+      pane->focusFooterControls();
       return true;
     }
   }

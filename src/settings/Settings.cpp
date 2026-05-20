@@ -1579,24 +1579,39 @@ void Settings::load() {
     else if (langStr == "ja") m_language = LanguageMode::Japanese;
     else                       m_language = LanguageMode::Auto;
   }
-  // ペインの表示モード (List / Thumbnail) を左右別々に復元
+  // ペインの表示モード (4 値: list / thumbnail-small / thumbnail-medium /
+  // thumbnail-large) を左右別々に復元。旧フォーマット ("thumbnail") は
+  // 旧グローバル thumbnailSize 値があればそれを反映、無ければ Medium として
+  // 復元 (mig 互換)。
   {
-    auto parsePaneMode = [](const QString& s) {
-      return (s == QLatin1String("thumbnail"))
-               ? ListViewMode::Thumbnail
-               : ListViewMode::List;
+    // 旧形式互換: グローバル thumbnailSize ("small" / "medium" / "large") を一旦解釈。
+    ThumbnailSize legacySize = ThumbnailSize::Medium;
+    {
+      const QString s = behavior.value("thumbnailSize").toString("medium");
+      if      (s == QLatin1String("small"))  legacySize = ThumbnailSize::Small;
+      else if (s == QLatin1String("large"))  legacySize = ThumbnailSize::Large;
+      else                                    legacySize = ThumbnailSize::Medium;
+    }
+    auto parsePaneMode = [legacySize](const QString& s) -> ListViewMode {
+      if (s == QLatin1String("thumbnail-small"))  return ListViewMode::ThumbnailSmall;
+      if (s == QLatin1String("thumbnail-medium")) return ListViewMode::ThumbnailMedium;
+      if (s == QLatin1String("thumbnail-large"))  return ListViewMode::ThumbnailLarge;
+      if (s == QLatin1String("thumbnail")) {
+        // 旧フォーマット (List / Thumbnail の 2 値時代)。グローバル thumbnailSize
+        // と組み合わせて 4 値に展開する。
+        switch (legacySize) {
+          case ThumbnailSize::Small:  return ListViewMode::ThumbnailSmall;
+          case ThumbnailSize::Large:  return ListViewMode::ThumbnailLarge;
+          case ThumbnailSize::Medium:
+          default:                     return ListViewMode::ThumbnailMedium;
+        }
+      }
+      return ListViewMode::List;
     };
     m_paneViewMode[static_cast<int>(PaneType::Left)] =
       parsePaneMode(behavior.value("leftPaneViewMode").toString("list"));
     m_paneViewMode[static_cast<int>(PaneType::Right)] =
       parsePaneMode(behavior.value("rightPaneViewMode").toString("list"));
-  }
-  // サムネイルサイズ (グローバル)。"small" / "medium" / "large"。
-  {
-    const QString s = behavior.value("thumbnailSize").toString("medium");
-    if      (s == QLatin1String("small"))  m_thumbnailSize = ThumbnailSize::Small;
-    else if (s == QLatin1String("large"))  m_thumbnailSize = ThumbnailSize::Large;
-    else                                    m_thumbnailSize = ThumbnailSize::Medium;
   }
   m_cursorLoop = behavior.value("cursorLoop").toBool(false);
   m_typeAheadIncludeDotfiles = behavior.value("typeAheadIncludeDotfiles").toBool(true);
@@ -2033,23 +2048,17 @@ void Settings::save() const {
     case LanguageMode::Auto:     behavior["language"] = "auto"; break;
   }
   {
-    auto paneModeStr = [](ListViewMode m) {
-      return (m == ListViewMode::Thumbnail)
-               ? QStringLiteral("thumbnail")
-               : QStringLiteral("list");
+    auto paneModeStr = [](ListViewMode m) -> QString {
+      switch (m) {
+        case ListViewMode::ThumbnailSmall:  return QStringLiteral("thumbnail-small");
+        case ListViewMode::ThumbnailMedium: return QStringLiteral("thumbnail-medium");
+        case ListViewMode::ThumbnailLarge:  return QStringLiteral("thumbnail-large");
+        case ListViewMode::List:
+        default:                            return QStringLiteral("list");
+      }
     };
     behavior["leftPaneViewMode"]  = paneModeStr(m_paneViewMode[static_cast<int>(PaneType::Left)]);
     behavior["rightPaneViewMode"] = paneModeStr(m_paneViewMode[static_cast<int>(PaneType::Right)]);
-  }
-  {
-    QString s;
-    switch (m_thumbnailSize) {
-      case ThumbnailSize::Small:  s = QStringLiteral("small");  break;
-      case ThumbnailSize::Large:  s = QStringLiteral("large");  break;
-      case ThumbnailSize::Medium:
-      default:                    s = QStringLiteral("medium"); break;
-    }
-    behavior["thumbnailSize"] = s;
   }
   behavior["cursorLoop"] = m_cursorLoop;
   behavior["typeAheadIncludeDotfiles"] = m_typeAheadIncludeDotfiles;

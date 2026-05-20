@@ -138,11 +138,13 @@ QList<QPair<QKeySequence, QString>> defaultBindingList() {
     // bare `/` をデフォルトに採用。"?" (Shift+/) は help.shortcuts に既に
     // 割当があるが、修飾子無しの `/` 自体は他とぶつからない。
     { QKeySequence(Qt::Key_Slash),              "view.quick_filter" },
-    // サムネイル表示モードのトグル。"Grid view" の頭文字 G を採用。
-    // macOS では Cmd+T が NSWindow システム標準の Toggle Toolbar に取られて
-    // しまうため、Cmd+G (= Ctrl+G) を採用する。Cmd+G は macOS の "Find Next"
-    // 既定だが farman は検索ダイアログで shortcut として使っていない。
-    { QKeySequence(Qt::CTRL | Qt::Key_G),       "view.toggle_thumbnails" },
+    // 表示モード切替: List / Thumbnail S/M/L を Cmd+1〜4 で直接選択 (Finder 風)。
+    // 4 段階の巡回コマンド (view.toggle_thumbnails) はデフォルトキーを当てず、
+    // ユーザーが好みで割り当てる運用 (互換のため CommandRegistry には残す)。
+    { QKeySequence(Qt::CTRL | Qt::Key_1),       "view.list"             },
+    { QKeySequence(Qt::CTRL | Qt::Key_2),       "view.thumbnail_small"  },
+    { QKeySequence(Qt::CTRL | Qt::Key_3),       "view.thumbnail_medium" },
+    { QKeySequence(Qt::CTRL | Qt::Key_4),       "view.thumbnail_large"  },
 
     // Bookmark
     { QKeySequence(Qt::Key_B),            "bookmark.toggle" },
@@ -235,6 +237,10 @@ void KeyBindingManager::loadFromSettings() {
   // 保持されるが、Ctrl+G が空いていれば下の merge ロジックで自動補完される。
   // (Ctrl+T は macOS の NSWindow システム標準の Toggle Toolbar と衝突するため
   //  避けて Cmd+G / Ctrl+G を採用。"Grid view" の頭文字。)
+  // version < 17: view.list / view.thumbnail_small / view.thumbnail_medium /
+  // view.thumbnail_large を新規追加し、Cmd+1〜4 をデフォルトに。view.toggle_
+  // thumbnails の Ctrl+G デフォルトは外す (コマンド自体は互換のため残る)。
+  // ユーザーが Ctrl+G を view.toggle_thumbnails に手動で残していた場合は維持。
   if (version < 13) {
     qDebug() << "KeyBindingManager: migrating bindings from version" << version;
     loadDefaults();
@@ -260,6 +266,20 @@ void KeyBindingManager::loadFromSettings() {
     if (!key.isEmpty()) {
       m_bindings.insert(key, commandId);
       savedCommands.insert(commandId);
+    }
+  }
+
+  // version < 17: view.toggle_thumbnails の旧デフォルト Ctrl+G を外す。
+  // ユーザーが Ctrl+G を view.toggle_thumbnails のままにしていた場合のみ削除し、
+  // 別コマンドに再割当していた場合は維持する。merge 前に処理することで、
+  // 下の merge ロジックで Cmd+1〜4 等の新規デフォルトが補完される。
+  if (version < 17) {
+    const QKeySequence oldKey(Qt::CTRL | Qt::Key_G);
+    auto it = m_bindings.find(oldKey);
+    if (it != m_bindings.end()
+        && it.value() == QStringLiteral("view.toggle_thumbnails")) {
+      savedCommands.remove(QStringLiteral("view.toggle_thumbnails"));
+      m_bindings.erase(it);
     }
   }
 
@@ -293,7 +313,7 @@ void KeyBindingManager::saveToSettings() const {
 
   QJsonObject root;
   root["bindings"] = bindings;
-  root["version"] = 16;
+  root["version"] = 17;
 
   QJsonDocument doc(root);
   QString jsonData = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));

@@ -9,6 +9,7 @@
 #include "model/FileListModel.h"
 #include "settings/Settings.h"
 #include "core/BookmarkManager.h"
+#include "keybinding/CommandRegistry.h"
 #include "utils/Dialogs.h"
 #include "types.h"
 #include <QApplication>
@@ -17,12 +18,15 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QFileSystemWatcher>
+#include <QActionGroup>
+#include <QDebug>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QInputDialog>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
 #include <QStackedWidget>
 #include <QStyle>
 #include <QTableView>
@@ -202,6 +206,12 @@ void FileListPane::setupUi() {
   m_view->setAlternatingRowColors(false);
   m_view->setFrameShape(QFrame::NoFrame);
   m_view->setShowGrid(false);
+  // QAbstractItemView の tabKeyNavigation がデフォルト true で、Tab キーが
+  // セル間移動に消費されて次の widget へフォーカスが移らない。farman は
+  // ファイルリスト上の Tab は eventFilter 経由で focusBookmarkLabel に飛ばす
+  // 設計だが、それ以前にビュー自身が Tab を握って外部 widget (アドレスバー /
+  // 📁 / サイズボタン) に Tab で行けなくなるため、両ビューとも off にする。
+  m_view->setTabKeyNavigation(false);
   m_view->horizontalHeader()->setStretchLastSection(true);
   m_view->horizontalHeader()->setSectionsClickable(true);
   m_view->horizontalHeader()->setSortIndicatorShown(true);
@@ -221,10 +231,17 @@ void FileListPane::setupUi() {
   m_thumbnailView->setModel(m_model);
   m_thumbnailView->setSelectionModel(m_view->selectionModel());
   m_thumbnailView->setSelectionMode(QAbstractItemView::NoSelection);
+  m_thumbnailView->setTabKeyNavigation(false);  // 上記 m_view と同じ理由
+  // QListView デフォルトの focusPolicy は WheelFocus (= TabFocus 含む) だが、
+  // 念のため明示的に StrongFocus にしておく。これで setFocus(TabFocusReason)
+  // を呼んだときに確実にフォーカス可能。
+  m_thumbnailView->setFocusPolicy(Qt::StrongFocus);
   m_thumbnailDelegate = new FileListThumbnailDelegate(this);
   m_thumbnailView->setItemDelegate(m_thumbnailDelegate);
   {
-    const int px = static_cast<int>(Settings::instance().thumbnailSize());
+    // 構築時は List モード (default) なので Medium 相当を初期値にしておく。
+    // setViewMode 経由で正しい mode が後から反映される。
+    const int px = thumbnailPixelSizeFor(m_viewMode);
     m_thumbnailDelegate->setThumbnailSizePx(px);
     m_thumbnailView->setThumbnailSizePx(px);
   }
@@ -257,12 +274,9 @@ void FileListPane::setupUi() {
   // 選んだときにこの値に戻す。
   m_defaultRowHeight = m_view->verticalHeader()->defaultSectionSize();
 
-  // Tab 順 (補助): アドレスバー → フォルダボタン → ★ → ファイルリスト本体
-  // (本体はアクティブペインに切替えるロジックも絡むので、最終的な遷移は
-  // eventFilter / FileManagerPanel::handleKeyEvent 側で制御する)。
-  setTabOrder(m_addressEdit, m_folderButton);
-  setTabOrder(m_folderButton, m_bookmarkLabel);
-  setTabOrder(m_bookmarkLabel, m_view);
+  // Tab 順は widget 構築 + reparent (StackedWidget への addWidget は内部で
+  // reparent する) がすべて終わった後にまとめて設定する。setupUi() 末尾の
+  // setTabOrder ブロック参照。
 
   // StackedWidget で List ビュー / Thumbnail ビューを切替える。
   // 初期は List (index 0)。setViewMode() で currentIndex を切替えるだけ。
@@ -285,16 +299,110 @@ void FileListPane::setupUi() {
           this, &FileListPane::onQuickFilterTextEdited);
   mainLayout->addWidget(m_quickFilterEdit);
 
-  // ソート・フィルタ条件の現在値をリスト下部に表示
-  m_sortFilterStatusLabel = new QLabel(this);
+  // ソート・フィルタ条件の現在値をリスト下部に表示 (左) +
+  // サムネイル表示モード時はサイズ切替ボタン (右) を同じ行に並べる。
+  // フッタ全体に薄いグレーの背景を当てて、リスト本体と視覚的に分離する。
+  QWidget* footerWidget = new QWidget(this);
+  footerWidget->setStyleSheet(
+    "QWidget { background-color: #e8e8e8; }"
+  );
+  QHBoxLayout* footerLayout = new QHBoxLayout(footerWidget);
+  footerLayout->setContentsMargins(0, 0, 0, 0);
+  footerLayout->setSpacing(0);
+
+  m_sortFilterStatusLabel = new QLabel(footerWidget);
   m_sortFilterStatusLabel->setStyleSheet(
-    "QLabel { background-color: #e8e8e8; color: #333; padding: 2px 5px; }"
+    "QLabel { color: #333; padding: 2px 5px; background-color: transparent; }"
   );
   m_sortFilterStatusLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
   QFont statusFont = m_sortFilterStatusLabel->font();
   statusFont.setPointSize(qMax(statusFont.pointSize() - 1, 9));
   m_sortFilterStatusLabel->setFont(statusFont);
-  mainLayout->addWidget(m_sortFilterStatusLabel);
+  footerLayout->addWidget(m_sortFilterStatusLabel, /*stretch=*/1);
+
+  // ── View Mode 選択ボタン (4 値の popup) ──
+  // クリック / Space / Enter で popup → 1 項目選択。
+  // 4 値: List / Thumbnail Small / Thumbnail Medium / Thumbnail Large。
+  m_viewModeButton = new QToolButton(footerWidget);
+  m_viewModeButton->setToolTip(tr("View Mode"));
+  // 初期アイコンは List 用 (m_viewMode の default = List)。setViewMode 内で
+  // 現在モードに応じて差し替える。
+  m_viewModeButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/view-list-rows.svg")));
+  m_viewModeButton->setIconSize(QSize(14, 14));
+  m_viewModeButton->setAutoRaise(true);
+  m_viewModeButton->setPopupMode(QToolButton::InstantPopup);
+  m_viewModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  m_viewModeButton->setFont(statusFont);
+  m_viewModeButton->setStyleSheet(
+    "QToolButton { background-color: transparent; border: 1px solid transparent; padding: 2px 6px; color: #333; }"
+    "QToolButton:hover { background-color: #d0d0d0; }"
+    "QToolButton:focus { background-color: #d0d0d0; border: 1px solid #5b8def; }"
+    "QToolButton::menu-indicator { width: 0; }"
+  );
+  m_viewModeButton->setFocusPolicy(Qt::StrongFocus);
+  m_viewModeButton->installEventFilter(this);
+  {
+    QMenu* menu = new QMenu(m_viewModeButton);
+    auto addItem = [&](const QString& label, const QString& iconPath,
+                       ListViewMode mode) {
+      QAction* a = new QAction(QIcon(iconPath), label, menu);
+      a->setCheckable(true);
+      connect(a, &QAction::triggered, this, [this, mode]() {
+        if (m_viewMode == mode) return;
+        setViewMode(mode);
+        auto& s = Settings::instance();
+        s.setPaneViewMode(m_paneType, mode);
+        s.save();
+      });
+      menu->addAction(a);
+      return a;
+    };
+    QAction* listAct  = addItem(tr("List"),                QStringLiteral(":/icons/toolbar/view-list-rows.svg"), ListViewMode::List);
+    QAction* sAct     = addItem(tr("Thumbnail (Small)"),   QStringLiteral(":/icons/toolbar/view-grid-3.svg"),    ListViewMode::ThumbnailSmall);
+    QAction* mAct     = addItem(tr("Thumbnail (Medium)"),  QStringLiteral(":/icons/toolbar/view-grid-2.svg"),    ListViewMode::ThumbnailMedium);
+    QAction* lAct     = addItem(tr("Thumbnail (Large)"),   QStringLiteral(":/icons/toolbar/view-grid-1.svg"),    ListViewMode::ThumbnailLarge);
+    QActionGroup* grp = new QActionGroup(menu);
+    grp->setExclusive(true);
+    grp->addAction(listAct);
+    grp->addAction(sAct);
+    grp->addAction(mAct);
+    grp->addAction(lAct);
+    auto sync = [this, listAct, sAct, mAct, lAct]() {
+      QSignalBlocker bL(listAct), bS(sAct), bM(mAct), bLg(lAct);
+      listAct->setChecked(m_viewMode == ListViewMode::List);
+      sAct->setChecked   (m_viewMode == ListViewMode::ThumbnailSmall);
+      mAct->setChecked   (m_viewMode == ListViewMode::ThumbnailMedium);
+      lAct->setChecked   (m_viewMode == ListViewMode::ThumbnailLarge);
+      const QString label =
+        m_viewMode == ListViewMode::List            ? tr("List")             :
+        m_viewMode == ListViewMode::ThumbnailSmall  ? tr("Thumbnail (S)")    :
+        m_viewMode == ListViewMode::ThumbnailLarge  ? tr("Thumbnail (L)")    :
+                                                       tr("Thumbnail (M)");
+      m_viewModeButton->setText(label);
+    };
+    sync();
+    connect(menu, &QMenu::aboutToShow, this, sync);
+    m_viewModeButton->setMenu(menu);
+    // setViewMode 内から後でラベル更新したいので、sync を保持するための
+    // メンバ化はせず、設定変更時に再 sync する経路で済ます (Settings::
+    // settingsChanged だけだと自ペイン setViewMode 時に届かないので、
+    // setViewMode 内で直接 setText する)。
+  }
+  footerLayout->addWidget(m_viewModeButton, 0);
+
+  mainLayout->addWidget(footerWidget);
+
+  // Tab 順 (アドレスバー → 📁 → ★ → ファイルリスト → モード切替 → サイズ → 循環)。
+  // QStackedWidget::addWidget は子を内部 widget の子として reparent するので、
+  // setTabOrder は reparent 完了後にまとめて呼ばないと効かない。よって全 widget
+  // 構築 + addWidget をすべて終えてからここで設定する。
+  // QStackedWidget の current でない側 (List モード時の m_thumbnailView 等) は
+  // Tab フォーカス対象から自動的に除外される。
+  setTabOrder(m_addressEdit, m_folderButton);
+  setTabOrder(m_folderButton, m_bookmarkLabel);
+  setTabOrder(m_bookmarkLabel, m_view);
+  setTabOrder(m_view, m_thumbnailView);
+  setTabOrder(m_thumbnailView, m_viewModeButton);
 
   refreshSortFilterStatus();
   refreshAppearance();
@@ -420,6 +528,16 @@ void FileListPane::focusBookmarkLabel() {
   }
 }
 
+void FileListPane::focusFooterControls() {
+  // 1 つの popup button にまとめたので、ここに setFocus するだけ。Space /
+  // Enter で popup を開いて選択できる。
+  if (m_viewModeButton && m_viewModeButton->isVisible()) {
+    m_viewModeButton->setFocus(Qt::TabFocusReason);
+  } else {
+    focusBookmarkLabel();
+  }
+}
+
 void FileListPane::toggleQuickFilter() {
   if (!m_quickFilterEdit) return;
   if (m_quickFilterEdit->isVisible()) {
@@ -513,21 +631,78 @@ bool FileListPane::eventFilter(QObject* watched, QEvent* event) {
                                           | Qt::AltModifier  | Qt::MetaModifier);
 
     // Tab / Backtab の連鎖
+    // forward: ★ → addr → 📁 → activeView → (Thumbnail なら sizeButton →) ★
+    // backward: 逆順
+    // activeView() は List/Thumbnail モードに応じた現在の view を返す。
+    // sizeButton は Thumbnail モードのときだけ visible で、List モード時は
+    // chain からスキップする。
+    // View Mode 選択ボタン (List / Thumbnail S/M/L の 4 値 popup):
+    // - Space / Enter: popup を開く
+    // - ↑↓: その場で 1 段階巡回 (4 値を List → S → M → L → List の順)
+    //   ↑↓ をスルーすると handleKeyEvent でファイルリストのカーソル移動に
+    //   なってしまうため、focus が ViewMode ボタンにある間は明示的に消費する。
+    if (watched == m_viewModeButton) {
+      if (key == Qt::Key_Space || key == Qt::Key_Return || key == Qt::Key_Enter) {
+        if (isKeyPress) {
+          m_viewModeButton->showMenu();
+        }
+        event->accept();
+        return true;
+      }
+      if (key == Qt::Key_Up || key == Qt::Key_Down) {
+        if (isKeyPress) {
+          // ↓ は順方向 (List → S → M → L → List)、↑ は逆方向。
+          ListViewMode next = m_viewMode;
+          if (key == Qt::Key_Down) {
+            next = nextListViewMode(m_viewMode);
+          } else {
+            // 逆向きは「3 回 next を回す」で簡素実装。
+            next = nextListViewMode(nextListViewMode(nextListViewMode(m_viewMode)));
+          }
+          if (next != m_viewMode) {
+            setViewMode(next);
+            auto& s = Settings::instance();
+            s.setPaneViewMode(m_paneType, next);
+            s.save();
+          }
+        }
+        event->accept();
+        return true;
+      }
+    }
+
     if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
       const bool back = (key == Qt::Key_Backtab) || (mods & Qt::ShiftModifier);
       QWidget* next = nullptr;
+      QAbstractItemView* av = activeView();
+
       if (watched == m_bookmarkLabel) {
-        next = back ? static_cast<QWidget*>(m_view) : static_cast<QWidget*>(m_addressEdit);
+        next = back ? static_cast<QWidget*>(m_viewModeButton)
+                    : static_cast<QWidget*>(m_addressEdit);
       } else if (watched == m_addressEdit) {
-        next = back ? static_cast<QWidget*>(m_bookmarkLabel) : static_cast<QWidget*>(m_folderButton);
+        next = back ? static_cast<QWidget*>(m_bookmarkLabel)
+                    : static_cast<QWidget*>(m_folderButton);
       } else if (watched == m_folderButton) {
-        next = back ? static_cast<QWidget*>(m_addressEdit) : static_cast<QWidget*>(m_view);
+        next = back ? static_cast<QWidget*>(m_addressEdit)
+                    : static_cast<QWidget*>(av);
+      } else if (watched == m_viewModeButton) {
+        next = back ? static_cast<QWidget*>(av)
+                    : static_cast<QWidget*>(m_bookmarkLabel);
       }
       if (next) {
         if (isKeyPress) {
           if (next == m_addressEdit) {
             // アドレスバーは編集モードに入って全選択
             enterAddressEdit();
+          } else if (next == av) {
+            // ファイルリストへの遷移は activeView() に直接 setFocus すると
+            // 何故か Thumbnail モード時 (QListView 派生) に効かないことが
+            // あるので、QStackedWidget 経由で current widget へ転送させる。
+            // QStackedWidget は子の current にフォーカスを自動で渡す。
+            if (m_viewStack) {
+              m_viewStack->setFocus(Qt::TabFocusReason);
+            }
+            av->setFocus(Qt::TabFocusReason);
           } else {
             next->setFocus(Qt::TabFocusReason);
           }
@@ -636,7 +811,7 @@ QTableView* FileListPane::view() const {
 }
 
 QAbstractItemView* FileListPane::activeView() const {
-  if (m_viewMode == ListViewMode::Thumbnail && m_thumbnailView) {
+  if (isThumbnailMode(m_viewMode) && m_thumbnailView) {
     return m_thumbnailView;
   }
   return m_view;
@@ -646,15 +821,27 @@ QAbstractItemView* FileListPane::thumbnailView() const {
   return m_thumbnailView;
 }
 
+void FileListPane::reapplyThumbnailMetrics() {
+  // ListViewMode 自体に size が含まれているので、現在の m_viewMode から
+  // 派生するだけで OK。Settings 側にグローバル thumbnailSize は持たない。
+  const int px = thumbnailPixelSizeFor(m_viewMode);
+  if (m_thumbnailDelegate) m_thumbnailDelegate->setThumbnailSizePx(px);
+  if (m_thumbnailView)     m_thumbnailView->setThumbnailSizePx(px);
+  if (m_model)             m_model->setThumbnailPixelSize(px);
+  if (m_thumbnailView && isThumbnailMode(m_viewMode)) {
+    m_thumbnailView->viewport()->update();
+  }
+}
+
 void FileListPane::setViewMode(ListViewMode mode) {
   if (mode == m_viewMode) return;
   m_viewMode = mode;
 
-  // model に thumbnail 状態を反映 (Thumbnail のときだけ実画像 decode が走る)。
-  const int px = static_cast<int>(Settings::instance().thumbnailSize());
+  // model に thumbnail 状態を反映 (Thumbnail* のときだけ実画像 decode が走る)。
+  const int px = thumbnailPixelSizeFor(mode);
   if (m_model) {
     m_model->setThumbnailPixelSize(px);
-    m_model->setThumbnailEnabled(mode == ListViewMode::Thumbnail);
+    m_model->setThumbnailEnabled(isThumbnailMode(mode));
   }
   // ThumbnailView 側の icon サイズ + gridSize + delegate のレイアウトを揃える。
   // setThumbnailSizePx (view) はセル全体の矩形を固定、delegate は描画レイアウト
@@ -667,12 +854,27 @@ void FileListPane::setViewMode(ListViewMode mode) {
   }
 
   if (m_viewStack) {
-    m_viewStack->setCurrentIndex(mode == ListViewMode::Thumbnail ? 1 : 0);
+    m_viewStack->setCurrentIndex(isThumbnailMode(mode) ? 1 : 0);
   }
-  // 切替先のビューにフォーカスを渡しておく (キーナビゲーションを継続できるように)。
-  if (QAbstractItemView* av = activeView()) {
-    av->setFocus(Qt::OtherFocusReason);
+  // フッタの View Mode ボタンのラベル + アイコンを最新化 (現在モード表示)。
+  if (m_viewModeButton) {
+    const QString label =
+      mode == ListViewMode::List            ? tr("List")          :
+      mode == ListViewMode::ThumbnailSmall  ? tr("Thumbnail (S)") :
+      mode == ListViewMode::ThumbnailLarge  ? tr("Thumbnail (L)") :
+                                                tr("Thumbnail (M)");
+    m_viewModeButton->setText(label);
+    const QString iconPath =
+      mode == ListViewMode::List            ? QStringLiteral(":/icons/toolbar/view-list-rows.svg")  :
+      mode == ListViewMode::ThumbnailSmall  ? QStringLiteral(":/icons/toolbar/view-grid-3.svg")    :
+      mode == ListViewMode::ThumbnailLarge  ? QStringLiteral(":/icons/toolbar/view-grid-1.svg")    :
+                                                QStringLiteral(":/icons/toolbar/view-grid-2.svg");
+    m_viewModeButton->setIcon(QIcon(iconPath));
   }
+  // フォーカスは現状を維持する (Cmd+G で連続モード切替する際に
+  // フォーカス位置が動かない方が UX が良い)。Tab 経由で view モード button
+  // に focus している状態で popup から選択した場合も button にフォーカスを
+  // 残す。フォーカスを active view に移したい場合は呼び出し元で行う。
 }
 
 void FileListPane::onExternalDirectoryChanged() {
