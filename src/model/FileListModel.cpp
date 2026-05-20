@@ -731,29 +731,33 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
   else if (role == Qt::DecorationRole) {
     // Name列にファイルアイコンを表示
     if (index.column() == Name) {
-      // サムネイル表示モード ON + 画像ファイル + アーカイブ外 ⇒ ThumbnailCache
-      // 経由で実画像のサムネイルを返す。cache hit なら即返す、miss なら
-      // 既定アイコンを placeholder にして非同期 decode を依頼。受信時は
+      // サムネイル表示モード ON + 画像ファイル ⇒ ThumbnailCache 経由で
+      // 実画像のサムネイルを返す。cache hit なら即返す、miss なら placeholder
+      // (既定の拡張子別アイコン) を返して非同期 decode を依頼。受信時は
       // thumbnailReady → onThumbnailReady で該当 row の dataChanged を emit
-      // して再描画される。
-      if (m_thumbnailEnabled && !item->isDir() && !item->isDotDot()
-          && m_archiveContext == nullptr) {
+      // して再描画される。アーカイブ内エントリも対応 (ThumbnailWorker が
+      // libarchive で entry を抽出して画像化する)。
+      if (m_thumbnailEnabled && !item->isDir() && !item->isDotDot()) {
         const QString path = item->absolutePath();
         if (MediaMatchers::isImageFile(path)) {
-          ThumbnailKey key{
-            path,
-            item->fileInfo().lastModified().toMSecsSinceEpoch(),
-            m_thumbnailPixelSize
-          };
+          // mtime はアーカイブ内のときアーカイブ自身の mtime を使う (entry の
+          // 個別 mtime はサムネイル無効化の粒度として細かすぎる + ArchiveEntry
+          // からの取得経路が異なる)。アーカイブが更新されたら全 entry の cache
+          // も自然に無効化される。
+          qint64 mtimeMs = 0;
+          if (m_archiveContext) {
+            QFileInfo afi(m_archiveContext->archivePath);
+            mtimeMs = afi.lastModified().toMSecsSinceEpoch();
+          } else {
+            mtimeMs = item->fileInfo().lastModified().toMSecsSinceEpoch();
+          }
+          ThumbnailKey key{ path, mtimeMs, m_thumbnailPixelSize };
           QPixmap pm;
           auto& cache = ThumbnailCache::instance();
           if (cache.peek(key, &pm)) {
             return QIcon(pm);
           }
-          // miss: 非同期 decode 要求。受信は thumbnailReady シグナル経由で
-          // dataChanged を発火する (constructor で接続済み)。
           cache.request(key);
-          // placeholder として既定の拡張子別アイコンを返す
         }
       }
       return m_iconProvider.icon(item->fileInfo());
