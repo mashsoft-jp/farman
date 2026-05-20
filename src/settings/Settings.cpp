@@ -797,6 +797,23 @@ void Settings::setSingleInstance(bool enabled) {
   m_singleInstance = enabled;
 }
 
+// ── 自動アップデート ─────────────────────────
+bool Settings::autoUpdateCheckOnStartup() const { return m_autoUpdateCheckOnStartup; }
+void Settings::setAutoUpdateCheckOnStartup(bool on) { m_autoUpdateCheckOnStartup = on; }
+bool Settings::autoUpdateSilent() const { return m_autoUpdateSilent; }
+void Settings::setAutoUpdateSilent(bool on) { m_autoUpdateSilent = on; }
+QDateTime Settings::autoUpdateLastCheckedAt() const { return m_autoUpdateLastCheckedAt; }
+void Settings::setAutoUpdateLastCheckedAt(const QDateTime& at) { m_autoUpdateLastCheckedAt = at; }
+QStringList Settings::autoUpdateSkippedVersions() const { return m_autoUpdateSkippedVersions; }
+void Settings::setAutoUpdateSkippedVersions(const QStringList& versions) { m_autoUpdateSkippedVersions = versions; }
+void Settings::addAutoUpdateSkippedVersion(const QString& version) {
+  if (!m_autoUpdateSkippedVersions.contains(version)) {
+    m_autoUpdateSkippedVersions.append(version);
+  }
+}
+QString Settings::autoUpdateChannel() const { return m_autoUpdateChannel; }
+void Settings::setAutoUpdateChannel(const QString& channel) { m_autoUpdateChannel = channel; }
+
 QString Settings::pluginsDirectory() const {
   return m_pluginsDirectory;
 }
@@ -1573,6 +1590,23 @@ void Settings::load() {
                      : ViewerMode::Inline;
   }
   m_showToolbar = behavior.value("showToolbar").toBool(true);
+  // 自動アップデート関連 ("autoUpdate" サブオブジェクト下にまとめる)。
+  {
+    const QJsonObject au = behavior.value("autoUpdate").toObject();
+    m_autoUpdateCheckOnStartup = au.value("checkOnStartup").toBool(true);
+    m_autoUpdateSilent         = au.value("silent").toBool(false);
+    const QString iso = au.value("lastCheckedAt").toString();
+    m_autoUpdateLastCheckedAt = iso.isEmpty()
+      ? QDateTime()
+      : QDateTime::fromString(iso, Qt::ISODate);
+    m_autoUpdateSkippedVersions.clear();
+    const QJsonArray skipped = au.value("skipped").toArray();
+    for (const QJsonValue& v : skipped) {
+      const QString s = v.toString();
+      if (!s.isEmpty()) m_autoUpdateSkippedVersions.append(s);
+    }
+    m_autoUpdateChannel = au.value("channel").toString(QStringLiteral("stable"));
+  }
   {
     const QString langStr = behavior.value("language").toString("auto");
     if      (langStr == "en") m_language = LanguageMode::English;
@@ -2042,6 +2076,19 @@ void Settings::save() const {
                              ? QStringLiteral("external")
                              : QStringLiteral("inline");
   behavior["showToolbar"] = m_showToolbar;
+  {
+    QJsonObject au;
+    au["checkOnStartup"] = m_autoUpdateCheckOnStartup;
+    au["silent"]         = m_autoUpdateSilent;
+    au["lastCheckedAt"]  = m_autoUpdateLastCheckedAt.isValid()
+      ? m_autoUpdateLastCheckedAt.toString(Qt::ISODate)
+      : QString();
+    QJsonArray skipped;
+    for (const QString& s : m_autoUpdateSkippedVersions) skipped.append(s);
+    au["skipped"] = skipped;
+    au["channel"] = m_autoUpdateChannel;
+    behavior["autoUpdate"] = au;
+  }
   switch (m_language) {
     case LanguageMode::English:  behavior["language"] = "en";   break;
     case LanguageMode::Japanese: behavior["language"] = "ja";   break;

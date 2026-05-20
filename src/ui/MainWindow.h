@@ -4,6 +4,7 @@
 #include <QPointer>
 #include "types.h"
 #include "../settings/Settings.h"
+#include "../core/UpdateChecker.h"
 #include "../keybinding/CommandRegistry.h"
 #include "../keybinding/KeyBindingManager.h"
 #include "ViewerPanel.h"
@@ -17,7 +18,6 @@ namespace Farman {
 
 class FileManagerPanel;
 class ShortcutListDialog;
-class UpdateChecker;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -49,10 +49,10 @@ private:
   void createMenus();
   void showAboutDialog();
   // Help メニュー → "Check for Updates..." の手動チェック。
-  // UpdateChecker で GitHub Releases API を叩き、結果を modal ダイアログで
-  // 表示する (Phase A: simple な MessageBox)。Phase B 以降で本格的な通知
-  // ダイアログ + 起動時自動チェックに置き換わる。
   void checkForUpdatesManually();
+  // 起動シーケンスから呼ばれる、24h スロットル付きの自動チェック。
+  // Settings::autoUpdateCheckOnStartup が ON のときだけ実行する。
+  void maybeCheckForUpdatesOnStartup();
   // ショートカット一覧ウィンドウのトグル表示。
   void toggleShortcutList();
 
@@ -99,8 +99,17 @@ private:
   // ショートカット一覧ウィンドウ (遅延生成)。
   ShortcutListDialog* m_shortcutListDialog = nullptr;
   // 更新チェッカ (Help → "Check for Updates..." 用)。初回 click で生成して
-  // 以降は使い回す。Phase B 以降では起動時自動チェックでも同じインスタンスを使う。
+  // 以降は使い回す。起動時自動チェックでも同じインスタンスを使う。
   UpdateChecker* m_updateChecker = nullptr;
+  // 直前の checkLatest() 起動が手動 (= "Check for Updates...") か自動かを覚えて
+  // おく。失敗時のメッセージ表示 / Skip 抑止の挙動を切り替えるため。
+  bool m_updateCheckIsManual = false;
+
+  // UpdateChecker の生成 + signal 接続を共通化。
+  void ensureUpdateChecker();
+  // finished シグナルハンドラ。manual / 自動の両経路で共有。
+  void onUpdateCheckFinished(bool ok, const Farman::ReleaseInfo& info,
+                              bool isNewer, const QString& errorReason);
 
   // メインツールバー (View → Toolbar / Settings からトグル可能)。
   // CommandRegistry の既存コマンドを呼び出すボタンを並べる。表示/非表示は

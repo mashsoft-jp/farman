@@ -4,6 +4,7 @@
 #include "ColorScheme.h"
 #include "core/UserCommand.h"
 #include <QObject>
+#include <QDateTime>
 #include <QFont>
 #include <QColor>
 #include <QMap>
@@ -222,6 +223,21 @@ public:
   // チェックを ON にした時にもこのフラグが false になる。デフォは true。
   bool syncBrowseShowDisabledDialog()        const;
   void setSyncBrowseShowDisabledDialog(bool show);
+
+  // ── 自動アップデート ─────────────────────────
+  // 起動時に最大 1 日 1 回 GitHub Releases をチェックして最新版があればダイアログ
+  // で通知する。SPEC.md "自動アップデート" 節参照。
+  bool      autoUpdateCheckOnStartup()         const;
+  void      setAutoUpdateCheckOnStartup(bool on);
+  bool      autoUpdateSilent()                 const;  // 確認なしで適用
+  void      setAutoUpdateSilent(bool on);
+  QDateTime autoUpdateLastCheckedAt()          const;
+  void      setAutoUpdateLastCheckedAt(const QDateTime& at);
+  QStringList autoUpdateSkippedVersions()      const;
+  void        setAutoUpdateSkippedVersions(const QStringList& versions);
+  void        addAutoUpdateSkippedVersion(const QString& version);
+  QString   autoUpdateChannel()                const;  // 現状 "stable" 固定
+  void      setAutoUpdateChannel(const QString& channel);
 
   // ── 言語設定 ─────────────────────────────
   // UI 言語。変更は次回起動時に反映される (実装上の制限、再起動を促す)。
@@ -463,6 +479,12 @@ private:
   bool             m_confirmOnExit   = false;
   bool             m_singleInstance  = true;
   bool             m_syncBrowseShowDisabledDialog = true;
+  // 自動アップデート関連 (SPEC.md "自動アップデート" 節参照)。
+  bool             m_autoUpdateCheckOnStartup = true;
+  bool             m_autoUpdateSilent          = false;
+  QDateTime        m_autoUpdateLastCheckedAt;       // null = 未チェック
+  QStringList      m_autoUpdateSkippedVersions;     // ["1.2.3", ...]
+  QString          m_autoUpdateChannel = QStringLiteral("stable");
   // ビュアープラグインを置くディレクトリ。空文字 = defaultPluginsDirectory()。
   QString          m_pluginsDirectory;
   // ビュアー表示モード。デフォルトは Inline (ビュアーパネルでの表示)。

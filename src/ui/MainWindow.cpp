@@ -12,6 +12,7 @@
 #include "../core/Logger.h"
 #include "../core/UpdateChecker.h"
 #include "../core/UserCommand.h"
+#include "UpdateAvailableDialog.h"
 #include "../core/UserCommandManager.h"
 #include "../core/PlaceholderExpander.h"
 #include "../keybinding/ICommand.h"
@@ -144,6 +145,11 @@ void MainWindow::setupUi() {
   // Sync Browse が ON のときは末尾 "[Sync]" を付けるため、ベース部分は別途保持。
   m_windowTitleBase = QStringLiteral("farman ") + QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
   updateWindowTitle();
+
+  // 自動アップデートチェック (Settings::autoUpdateCheckOnStartup が ON で
+  // 前回チェックから 24h 経過していれば実行)。失敗時はサイレント、新版が
+  // あれば UpdateAvailableDialog を表示する。
+  maybeCheckForUpdatesOnStartup();
 
   // Apply window size settings
   auto& settings = Settings::instance();
@@ -1763,61 +1769,116 @@ void MainWindow::showAboutDialog() {
       .arg(version));
 }
 
+void MainWindow::ensureUpdateChecker() {
+  if (m_updateChecker) return;
+  m_updateChecker = new UpdateChecker(this);
+  connect(m_updateChecker, &UpdateChecker::finished, this,
+          &MainWindow::onUpdateCheckFinished);
+}
+
 void MainWindow::checkForUpdatesManually() {
-  // 多重起動を避けるため、1 つの UpdateChecker を使い回す。
-  if (!m_updateChecker) {
-    m_updateChecker = new UpdateChecker(this);
-    connect(m_updateChecker, &UpdateChecker::finished, this,
-            [this](bool ok, const ReleaseInfo& info, bool isNewer,
-                    const QString& errorReason) {
-      if (!ok) {
-        Logger::instance().info(tr("Update check failed: %1").arg(errorReason));
-        // よくある特殊ケースを分かりやすいメッセージに翻訳。それ以外 (ネット
-        // ワークエラー / 5xx 等) は原因文字列をそのまま見せる。
-        QString userMessage;
-        if (errorReason == QLatin1String("no_published_release")) {
-          userMessage = tr(
-            "No published stable release was found yet.\n\n"
-            "Draft and prerelease (e.g. v0.9.0-test) tags are not returned\n"
-            "by GitHub's \"latest release\" API. Once a stable release is\n"
-            "published, this check will pick it up.");
-        } else if (errorReason.startsWith(QLatin1String("latest is draft/prerelease"))) {
-          userMessage = tr(
-            "The latest release on GitHub is a draft or prerelease and\n"
-            "will not be offered as an update. Stable releases will be\n"
-            "picked up here.");
-        } else if (errorReason.startsWith(QLatin1String("skipped: dev build"))) {
-          userMessage = tr(
-            "This is a development build. The auto-update check is skipped.");
-        } else {
-          userMessage = tr("Could not check for updates.\n\nReason: %1").arg(errorReason);
-        }
-        inform(this, tr("Check for Updates"), userMessage);
-        return;
-      }
-      Logger::instance().info(
-        tr("Update check: latest=%1, current=%2, newer=%3")
-          .arg(info.version,
-                QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)),
-                isNewer ? QStringLiteral("yes") : QStringLiteral("no")));
-      if (isNewer) {
-        inform(this, tr("Update available"),
-          tr("A new version of farman is available.\n\n"
-             "Current:  %1\n"
-             "Latest:   %2\n\n"
-             "Visit %3 to download.")
-            .arg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)),
-                  info.version,
-                  info.htmlUrl));
-      } else {
-        inform(this, tr("You're up to date"),
-               tr("farman %1 is the latest version.")
-                 .arg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION))));
-      }
-    });
-  }
+  ensureUpdateChecker();
   if (m_updateChecker->isChecking()) return;
+  m_updateCheckIsManual = true;
   m_updateChecker->checkLatest();
+}
+
+void MainWindow::maybeCheckForUpdatesOnStartup() {
+  auto& s = Settings::instance();
+  if (!s.autoUpdateCheckOnStartup()) return;
+  // 24h スロットル: 前回チェックから 24 時間経っていなければスキップ。
+  const QDateTime last = s.autoUpdateLastCheckedAt();
+  if (last.isValid() && last.secsTo(QDateTime::currentDateTime()) < 24 * 3600) {
+    return;
+  }
+  // 起動直後にネットワーク I/O が走るのでメインループが安定してから少し遅延。
+  QTimer::singleShot(1500, this, [this]() {
+    ensureUpdateChecker();
+    if (m_updateChecker->isChecking()) return;
+    m_updateCheckIsManual = false;
+    m_updateChecker->checkLatest();
+  });
+}
+
+void MainWindow::onUpdateCheckFinished(bool ok, const ReleaseInfo& info,
+                                        bool isNewer,
+                                        const QString& errorReason) {
+  // lastCheckedAt は成功時のみ更新 (失敗はリトライ可能なので前回値を残す)。
+  if (ok) {
+    auto& s = Settings::instance();
+    s.setAutoUpdateLastCheckedAt(QDateTime::currentDateTime());
+    s.save();
+  }
+  const bool manual = m_updateCheckIsManual;
+  m_updateCheckIsManual = false;
+
+  if (!ok) {
+    Logger::instance().info(tr("Update check failed: %1").arg(errorReason));
+    // 失敗時は manual のときだけ理由を見せる (自動チェックはサイレント、SPEC 通り)。
+    if (!manual) return;
+    QString userMessage;
+    if (errorReason == QLatin1String("no_published_release")
+        || errorReason.startsWith(QLatin1String("latest is draft/prerelease"))) {
+      // GitHub 側に stable release が無い / draft / prerelease のみ → 利用者から
+      // 見れば「これ以上新しい版は無い」と等価なので「最新を使用中」と表示。
+      userMessage = tr("You're using the latest version of farman.");
+    } else if (errorReason.startsWith(QLatin1String("skipped: dev build"))) {
+      userMessage = tr("This is a development build.");
+    } else {
+      userMessage = tr("Could not check for updates: %1").arg(errorReason);
+    }
+    inform(this, tr("Check for Updates"), userMessage);
+    return;
+  }
+
+  Logger::instance().info(
+    tr("Update check: latest=%1, current=%2, newer=%3")
+      .arg(info.version,
+            QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)),
+            isNewer ? QStringLiteral("yes") : QStringLiteral("no")));
+
+  if (!isNewer) {
+    // 同等 or 古い (= dev build 等)。manual のときだけ「最新です」を出す。
+    if (manual) {
+      inform(this, tr("Check for Updates"),
+             tr("You're using the latest version of farman."));
+    }
+    return;
+  }
+
+  // 新版あり。自動チェックの場合、ユーザーが Skip This Version で記録した
+  // バージョンなら表示を抑止する。manual のときは Skip 状態でも常に出す。
+  auto& s = Settings::instance();
+  const bool isSkipped = s.autoUpdateSkippedVersions().contains(info.version);
+  if (!manual && isSkipped) {
+    Logger::instance().info(
+      tr("Update %1 is in skip list, suppressing notification").arg(info.version));
+    return;
+  }
+
+  // 通知ダイアログをポップアップ。
+  UpdateAvailableDialog dlg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)), info, this);
+  dlg.exec();
+  switch (dlg.lastAction()) {
+    case UpdateAvailableDialog::Action::UpdateNow: {
+      // Phase B では Release page をブラウザで開く (= ユーザー手動 DL)。
+      // Phase C で本格的なダウンロード + インストールに置き換える。
+      QDesktopServices::openUrl(QUrl(info.htmlUrl));
+      break;
+    }
+    case UpdateAvailableDialog::Action::Skip: {
+      s.addAutoUpdateSkippedVersion(info.version);
+      s.save();
+      Logger::instance().info(
+        tr("User chose to skip update %1").arg(info.version));
+      break;
+    }
+    case UpdateAvailableDialog::Action::RemindLater:
+    case UpdateAvailableDialog::Action::Closed:
+    default:
+      // 何もしない: 次回 24h 後のチェックで再表示される
+      break;
+  }
 }
 
 void MainWindow::toggleShortcutList() {
