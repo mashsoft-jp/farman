@@ -7,9 +7,12 @@
 #include <atomic>
 #include <memory>
 
+class QTemporaryDir;
+
 namespace Farman {
 
 class PreviewPane;
+class ArchiveContext;
 
 // プレビューモード時の「カーソル変化 → 右ペインのビュアー切替」を
 // オーケストレートするコントローラ。
@@ -31,11 +34,13 @@ class PreviewController : public QObject {
   Q_OBJECT
 public:
   PreviewController(PreviewPane* pane, QObject* parent = nullptr);
-  ~PreviewController() override = default;
+  // QTemporaryDir を unique_ptr で保持しているため、デストラクタは .cpp 側で
+  // 完全型を見せた状態で生成する必要がある (前方宣言だけだと未定義型エラー)。
+  ~PreviewController() override;
 
-  // 左ペインのカーソル変化時に呼ばれる入口。
-  //   filePath   : ディスク上の絶対パス (アーカイブ内ファイルは Phase 4 で対応)
-  //   displayPath: ステータス表示用 (アーカイブ仮想パスなど、空なら filePath 流用)
+  // 左ペインのカーソル変化時に呼ばれる入口 (通常ファイル / ディレクトリ用)。
+  //   filePath   : ディスク上の絶対パス
+  //   displayPath: ステータス表示用 (空なら filePath 流用)
   //   isDirectory: ディレクトリにカーソルがある場合 true
   //   isDotDot   : ".." 擬似行
   //   fileSize   : ディスク上のサイズ (バイト)。ディレクトリのときは 0 でよい
@@ -44,6 +49,17 @@ public:
                       bool           isDirectory,
                       bool           isDotDot,
                       qint64         fileSize);
+
+  // アーカイブ内エントリ向けの requestPreview。デバウンス窓内に一時展開して
+  // 通常の prepareLoad 経路に流す。
+  //   ctx        : 展開元のアーカイブコンテキスト (FileListModel が保有)
+  //   entryPath  : アーカイブ内の相対パス (例: "inner/foo.txt")
+  //   displayPath: ステータス表示用 (例: "/path/x.zip!/inner/foo.txt")
+  //   uncompressedSize: エントリの元サイズ。previewMaxFileSizeBytes 判定に使う
+  void requestArchivePreview(const ArchiveContext* ctx,
+                             const QString&        entryPath,
+                             const QString&        displayPath,
+                             qint64                uncompressedSize);
 
   // 何も表示しない状態へ戻す (Preview レイアウトを抜けたとき等)。
   // 進行中のジョブは generation を 1 進めて結果を捨てさせる。
@@ -70,6 +86,11 @@ private:
   qint64  m_pendingFileSize    = 0;
   bool    m_hasPending         = false;
 
+  // アーカイブ内エントリの場合に追加でセットされる。
+  // m_pendingArchiveCtx が non-null なら archive モード、null なら通常ファイル。
+  const ArchiveContext* m_pendingArchiveCtx = nullptr;
+  QString               m_pendingArchiveEntryPath;
+
   // 直近で実際に PreviewPane に流したパス。同じものを再要求された場合は
   // ロードをスキップしてチラつきを抑える。
   QString m_lastShownPath;
@@ -85,6 +106,13 @@ private:
   // shared_ptr にする理由: ワーカースレッドがアクセス中に PreviewController が
   // 解放されても寿命が保証されるようにするため。
   std::shared_ptr<std::atomic<bool>> m_currentCancelToken;
+
+  // アーカイブ内エントリを一時展開しておく作業ディレクトリ。
+  // 初回アーカイブプレビュー要求時に lazy 生成し、PreviewController の
+  // デストラクタで丸ごと削除される (= QTemporaryDir のセマンティクス)。
+  // ファイル名は <archiveHash>/<entryHashPath> 形式で決定論的にし、
+  // 同じエントリへの再要求では再展開を行わない。
+  std::unique_ptr<QTemporaryDir> m_archiveTempDir;
 };
 
 } // namespace Farman

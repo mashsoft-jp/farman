@@ -831,6 +831,23 @@ void FileManagerPanel::onLeftPaneCurrentChanged(const QModelIndex& current, cons
     m_previewController->clearPreview();
     return;
   }
+  FileListModel* lmodel = m_leftPane->model();
+  // アーカイブ内ブラウジング中なら、エントリを一時展開して通常の prepareLoad
+  // 経路に流す経路を取る。ディレクトリ / `..` は通常 API で状態表示に流す。
+  if (lmodel->isInArchiveMode() && item->isInArchive()
+      && !item->isDir() && !item->isDotDot()) {
+    const ArchiveEntry*   ae  = item->archiveEntry();
+    const ArchiveContext* ctx = lmodel->archiveContext();
+    if (ae && ctx) {
+      m_previewController->requestArchivePreview(
+        ctx,
+        ae->pathInArchive,
+        /*displayPath=*/ item->absolutePath(),   // "<archive>!/<inner>"
+        ae->size);
+      return;
+    }
+    // ae / ctx が取れない異常系は通常経路にフォールバック
+  }
   m_previewController->requestPreview(
     item->absolutePath(),
     /*displayPath=*/ QString(),
@@ -1203,18 +1220,30 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
   if (m_previewController) {
     if (previewMode) {
       // Preview に入った直後の左ペインカーソルに対して 1 回プレビューを発火。
-      // onLeftPaneCurrentChanged を再利用するため、selectionModel から現在の
-      // インデックスを取り直して同じ経路を通す。
       if (m_leftPane && m_leftPane->view() && m_leftPane->model()) {
         const QModelIndex idx = m_leftPane->view()->currentIndex();
+        FileListModel* lmodel = m_leftPane->model();
         if (idx.isValid()) {
-          if (const FileItem* item = m_leftPane->model()->itemAt(idx)) {
-            m_previewController->requestPreview(
-              item->absolutePath(),
-              /*displayPath=*/ QString(),
-              item->isDir(),
-              item->isDotDot(),
-              item->size());
+          if (const FileItem* item = lmodel->itemAt(idx)) {
+            if (lmodel->isInArchiveMode() && item->isInArchive()
+                && !item->isDir() && !item->isDotDot()) {
+              const ArchiveEntry*   ae  = item->archiveEntry();
+              const ArchiveContext* ctx = lmodel->archiveContext();
+              if (ae && ctx) {
+                m_previewController->requestArchivePreview(
+                  ctx, ae->pathInArchive, item->absolutePath(),
+                  ae->size);
+              } else {
+                m_previewController->clearPreview();
+              }
+            } else {
+              m_previewController->requestPreview(
+                item->absolutePath(),
+                /*displayPath=*/ QString(),
+                item->isDir(),
+                item->isDotDot(),
+                item->size());
+            }
           } else {
             m_previewController->clearPreview();
           }

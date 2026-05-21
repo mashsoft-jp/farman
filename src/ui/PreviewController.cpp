@@ -1,16 +1,19 @@
 #include "PreviewController.h"
 
 #include "PreviewPane.h"
+#include "core/ArchiveContext.h"
+#include "core/Logger.h"
 #include "settings/Settings.h"
 #include "ui/ViewerPanel.h"
+#include "utils/ArchivePath.h"
 
+#include <QCryptographicHash>
+#include <QDir>
 #include <QFileInfo>
 #include <QFutureWatcher>
 #include <QPointer>
-#include <QVariant>
+#include <QTemporaryDir>
 #include <QtConcurrent/QtConcurrentRun>
-
-#include <variant>
 
 namespace Farman {
 
@@ -104,6 +107,8 @@ PreviewController::PreviewController(PreviewPane* pane, QObject* parent)
           this,             &PreviewController::onDebounceTimeout);
 }
 
+PreviewController::~PreviewController() = default;
+
 void PreviewController::requestPreview(const QString& filePath,
                                        const QString& displayPath,
                                        bool           isDirectory,
@@ -123,6 +128,30 @@ void PreviewController::requestPreview(const QString& filePath,
   m_pendingIsDirectory = isDirectory;
   m_pendingIsDotDot    = isDotDot;
   m_pendingFileSize    = fileSize;
+  m_pendingArchiveCtx       = nullptr;       // 通常ファイル経路にリセット
+  m_pendingArchiveEntryPath.clear();
+  m_hasPending         = true;
+
+  m_debounceTimer.setInterval(Settings::instance().previewDebounceMs());
+  m_debounceTimer.start();
+}
+
+void PreviewController::requestArchivePreview(const ArchiveContext* ctx,
+                                              const QString&        entryPath,
+                                              const QString&        displayPath,
+                                              qint64                uncompressedSize) {
+  m_generation.fetch_add(1, std::memory_order_acq_rel);
+  if (m_currentCancelToken) {
+    m_currentCancelToken->store(true, std::memory_order_release);
+  }
+
+  m_pendingFilePath    .clear();   // 展開先パスは onDebounceTimeout で決める
+  m_pendingDisplayPath = displayPath.isEmpty() ? entryPath : displayPath;
+  m_pendingIsDirectory = false;
+  m_pendingIsDotDot    = false;
+  m_pendingFileSize    = uncompressedSize;
+  m_pendingArchiveCtx  = ctx;
+  m_pendingArchiveEntryPath = entryPath;
   m_hasPending         = true;
 
   m_debounceTimer.setInterval(Settings::instance().previewDebounceMs());
@@ -158,12 +187,75 @@ void PreviewController::onDebounceTimeout() {
     return;
   }
 
-  // 3. 同じファイルが連続で要求されたら何もしない。
+  // 3. 上限超過チェック (アーカイブ・通常共通)。
+  const qint64 maxBytes = Settings::instance().previewMaxFileSizeBytes();
+  if (m_pendingFileSize > maxBytes) {
+    m_pane->showUnsupported(tr("File too large to preview (%1).\n"
+                               "Press Enter to open in viewer.")
+                              .arg(humanReadableSize(m_pendingFileSize)));
+    m_lastShownPath = m_pendingDisplayPath;
+    return;
+  }
+
+  // 4-A. アーカイブ内エントリ: 一時展開してから通常ロード経路へ。
+  if (m_pendingArchiveCtx) {
+    // 同じエントリの再要求はスキップ (lastShownPath は表示用パスで比較)。
+    if (!m_pendingDisplayPath.isEmpty()
+        && m_pendingDisplayPath == m_lastShownPath) {
+      return;
+    }
+
+    // 一時ディレクトリは初回要求時に lazy 生成 (Preview を全く使わない
+    // セッションで余計な temp dir を作らないため)。
+    if (!m_archiveTempDir) {
+      m_archiveTempDir = std::make_unique<QTemporaryDir>(
+        QDir::tempPath() + QStringLiteral("/farman-preview-arch-XXXXXX"));
+    }
+    if (!m_archiveTempDir->isValid()) {
+      m_pane->showUnsupported(tr("Failed to prepare temp directory for archive."));
+      m_lastShownPath = m_pendingDisplayPath;
+      return;
+    }
+
+    // 決定論的命名: archive path の SHA1 prefix をサブディレクトリ名にして
+    // 衝突回避 + 同じエントリは再展開しない。
+    const QByteArray archHash = QCryptographicHash::hash(
+      m_pendingArchiveCtx->archivePath.toUtf8(),
+      QCryptographicHash::Sha1).toHex().left(8);
+    const QString tempRoot = m_archiveTempDir->path()
+      + QStringLiteral("/") + QString::fromLatin1(archHash);
+    const QString tempPath = ArchivePath::safeJoinExtractPath(
+      tempRoot, m_pendingArchiveEntryPath);
+    if (tempPath.isEmpty()) {
+      m_pane->showUnsupported(tr("Unsafe archive entry path: %1")
+                                .arg(m_pendingArchiveEntryPath));
+      m_lastShownPath = m_pendingDisplayPath;
+      return;
+    }
+
+    // 既に同じ展開先が存在し、サイズが合うならそのまま使う (再展開しない)。
+    const QFileInfo existing(tempPath);
+    if (!existing.exists() || existing.size() != m_pendingFileSize) {
+      if (!m_pendingArchiveCtx->extractEntryTo(m_pendingArchiveEntryPath, tempPath)) {
+        m_pane->showUnsupported(tr("Failed to extract '%1' from archive.")
+                                  .arg(m_pendingArchiveEntryPath));
+        m_lastShownPath = m_pendingDisplayPath;
+        return;
+      }
+    }
+
+    // 展開済みパスを使って通常のワーカー経路へ。lastShownPath は表示用パスで
+    // 更新するので、同じエントリへの繰返し要求は 3 行上でスキップされる。
+    startLoadJob(tempPath, m_pendingDisplayPath);
+    m_lastShownPath = m_pendingDisplayPath;
+    return;
+  }
+
+  // 4-B. 通常ファイル: 同じファイルが連続で要求されたら何もしない。
   if (!m_pendingFilePath.isEmpty() && m_pendingFilePath == m_lastShownPath) {
     return;
   }
 
-  // 4. 通常ファイル以外を弾く。
   const QFileInfo fi(m_pendingFilePath);
   if (!fi.exists()) {
     m_pane->showUnsupported(tr("File not found."));
@@ -176,17 +268,6 @@ void PreviewController::onDebounceTimeout() {
     return;
   }
 
-  // 5. 上限超過チェック。
-  const qint64 maxBytes = Settings::instance().previewMaxFileSizeBytes();
-  if (m_pendingFileSize > maxBytes) {
-    m_pane->showUnsupported(tr("File too large to preview (%1).\n"
-                               "Press Enter to open in viewer.")
-                              .arg(humanReadableSize(m_pendingFileSize)));
-    m_lastShownPath = m_pendingFilePath;
-    return;
-  }
-
-  // 6. 通常ファイル → ワーカーへ投げる。
   startLoadJob(m_pendingFilePath, m_pendingDisplayPath);
 }
 
