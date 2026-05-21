@@ -1,8 +1,10 @@
 # GitHub Actions: macOS / Linux / Windows の 3 OS で farman をビルドする matrix CI。
 #
 #   トリガ:
-#     - main / staging / develop への push
-#     - 上記ブランチ向けの PR
+#     - staging / develop への push
+#       (main への push はビルドしない: リリースは release.yml がタグ push で
+#       走らせる。main がマージ直後にもう一度ビルドする意味は薄いため除外)
+#     - main / staging / develop 向けの PR
 #     - GitHub UI からの手動実行 (workflow_dispatch)
 #
 #   ブランチモデル:
@@ -29,7 +31,7 @@ name: Build
 
 on:
   push:
-    branches: [main, staging, develop]
+    branches: [staging, develop]
   pull_request:
     branches: [main, staging, develop]
   workflow_dispatch:
