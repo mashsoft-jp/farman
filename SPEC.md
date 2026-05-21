@@ -1727,6 +1727,39 @@ List Display へ移動済み。ビュアー固有の設定は Viewers タブへ�
 - `MACOSX_BUNDLE_BUNDLE_VERSION` / Windows のリソース VERSIONINFO /
   AppImage の `*.desktop` の `X-AppImage-Version` にそれぞれ反映。
 
+### リリースフロー (運用)
+
+タグの命名規約:
+- **`vX.Y.Z-test`**: テストビルド用のプレリリースタグ。`release.yml` が
+  CI で 3 OS のアセットを作って GitHub Releases に Draft 公開する。
+  ビルド時に `FARMAN_VERSION_SUFFIX=test` がタグから抽出されて
+  バイナリ FARMAN_VERSION も `X.Y.Z-test` になる (semver の
+  prerelease ルールで `X.Y.Z-test < X.Y.Z` と判定されるため、テスト
+  ビルドから安定版への auto-update 検知が正しく働く)。
+- **`vX.Y.Z`**: 正式リリースタグ。同じ `release.yml` が走り、
+  サフィックスなしの正式リリースの Draft を作る。
+
+リリース時の手順 (この順序で進める):
+1. 作業ブランチで実装 + コミット + `CMakeLists.txt` の `VERSION` を bump。
+2. **`vX.Y.Z-test` を作業ブランチの先端に直接** 打って push
+   (main にはまだマージしない)。
+3. CI のビルド + macOS / Windows / Linux での動作確認。
+4. 問題が見つかったら作業ブランチに修正コミット →
+   `git tag -f vX.Y.Z-test` + `git push --force origin vX.Y.Z-test`
+   で Draft Release を新ビルドで更新。
+5. テスト完了後、作業ブランチを **main に fast-forward マージ** + push。
+6. **main の HEAD に `vX.Y.Z` 正式タグ** を打って push →
+   release.yml が正式リリースの Draft を生成。
+7. Draft の中身を UI で確認してから手動 Publish。
+
+ポリシー:
+- main へのマージは「テスト完了後の正式リリース直前」に限る (= main は
+  常に「直近の正式リリース or その候補」を指す状態を保つ)。
+- `build.yml` は push trigger から main を外してある (PR は残す)。main
+  マージで CI が走らないので、リリース系の `release.yml` だけが走る。
+- **force push** は `v*-test` タグに限る運用。`vX.Y.Z` 正式タグや main
+  ブランチへの force push はしない。
+
 ### 既存の状態
 
 [release.yml](.github/workflows/release.yml) で `v*` タグ push をトリガに
