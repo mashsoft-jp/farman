@@ -2,6 +2,7 @@
 #include "FileListPane.h"
 #include "LogPane.h"
 #include "PreviewPane.h"
+#include "PreviewController.h"
 #include "ProgressDialog.h"
 #include "core/Logger.h"
 #include "SortFilterDialog.h"
@@ -119,6 +120,9 @@ void FileManagerPanel::setupUi() {
   m_previewPane = new PreviewPane(this);
   m_previewPane->hide();
   m_splitter->addWidget(m_previewPane);
+
+  // 左ペインのカーソル変化 → PreviewController に通知 (Preview 中のみ実行)。
+  m_previewController = new PreviewController(m_previewPane, this);
 
   // Splitterのサイズを均等に (Preview ペインは 3 番目のスロットだが
   // hide 中なので幅 0 扱いになる)。
@@ -810,9 +814,29 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
 }
 
 void FileManagerPanel::onLeftPaneCurrentChanged(const QModelIndex& current, const QModelIndex& previous) {
-  Q_UNUSED(current);
   Q_UNUSED(previous);
   m_leftPane->view()->viewport()->update();
+
+  // Preview レイアウト中だけ、カーソル変化をプレビューコントローラに転送する。
+  // (Single / Dual では右ペインはファイルリストなのでプレビュー対象外)
+  if (m_layoutMode != LayoutMode::Preview || !m_previewController) {
+    return;
+  }
+  if (!current.isValid() || !m_leftPane->model()) {
+    m_previewController->clearPreview();
+    return;
+  }
+  const FileItem* item = m_leftPane->model()->itemAt(current);
+  if (!item) {
+    m_previewController->clearPreview();
+    return;
+  }
+  m_previewController->requestPreview(
+    item->absolutePath(),
+    /*displayPath=*/ QString(),
+    item->isDir(),
+    item->isDotDot(),
+    item->size());
 }
 
 void FileManagerPanel::onRightPaneCurrentChanged(const QModelIndex& current, const QModelIndex& previous) {
@@ -1154,6 +1178,34 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
     m_rightPane->model()->setSinglePaneMode(fullWidth);
   if (m_leftPane)  m_leftPane->applyColumnVisibility(fullWidth);
   if (m_rightPane) m_rightPane->applyColumnVisibility(fullWidth);
+
+  // Preview に入った瞬間 / 抜けた瞬間のプレビュー表示制御
+  if (m_previewController) {
+    if (previewMode) {
+      // Preview に入った直後の左ペインカーソルに対して 1 回プレビューを発火。
+      // onLeftPaneCurrentChanged を再利用するため、selectionModel から現在の
+      // インデックスを取り直して同じ経路を通す。
+      if (m_leftPane && m_leftPane->view() && m_leftPane->model()) {
+        const QModelIndex idx = m_leftPane->view()->currentIndex();
+        if (idx.isValid()) {
+          if (const FileItem* item = m_leftPane->model()->itemAt(idx)) {
+            m_previewController->requestPreview(
+              item->absolutePath(),
+              /*displayPath=*/ QString(),
+              item->isDir(),
+              item->isDotDot(),
+              item->size());
+          } else {
+            m_previewController->clearPreview();
+          }
+        } else {
+          m_previewController->clearPreview();
+        }
+      }
+    } else {
+      m_previewController->clearPreview();
+    }
+  }
 
   // 互換シグナル: Single ⇔ それ以外 の bool 変化があった場合に emit。
   const bool prevSingleLike = (prev != LayoutMode::Dual);
