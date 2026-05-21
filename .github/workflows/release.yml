@@ -133,9 +133,34 @@ jobs:
             | Out-File -FilePath $env:GITHUB_ENV -Append
 
       # ──────── Configure / Build ────────
+      # タグ名から prerelease サフィックスを抽出してバイナリ FARMAN_VERSION に
+      # 埋め込む。`v0.9.1-test` → suffix=test → FARMAN_VERSION=0.9.1-test。
+      # semver 規約 (x.y.z-suffix < x.y.z) によって、test ビルドから安定版への
+      # 自動アップデート検知が正しく動くようになる。`v0.9.1` のようなサフィックス
+      # なしタグの場合は空文字で CMake 側がそのまま PROJECT_VERSION を使う。
+      - name: Determine FARMAN_VERSION_SUFFIX from tag
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          tag_no_v="${tag#v}"
+          if [[ "${tag_no_v}" == *-* ]]; then
+            suffix="${tag_no_v#*-}"
+          else
+            suffix=""
+          fi
+          echo "FARMAN_VERSION_SUFFIX=${suffix}" >> "$GITHUB_ENV"
+          echo "Resolved suffix='${suffix}' from tag='${tag}'"
+
       - name: Configure (Unix)
         if: runner.os != 'Windows'
-        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DFARMAN_VERSION_SUFFIX="${FARMAN_VERSION_SUFFIX}"
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
@@ -143,7 +168,8 @@ jobs:
         run: |
           cmake -B build `
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DFARMAN_VERSION_SUFFIX="$env:FARMAN_VERSION_SUFFIX"
 
       - name: Build (Linux)
         if: runner.os == 'Linux'

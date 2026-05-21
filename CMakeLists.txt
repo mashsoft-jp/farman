@@ -163,8 +163,23 @@ target_include_directories(farman PRIVATE
   ${CMAKE_SOURCE_DIR}/src
 )
 
+# FARMAN_VERSION: 実行ファイルに埋め込むバージョン文字列。
+#   - 通常は project() の VERSION (x.y.z) をそのまま使う
+#   - CI でテストタグ (`v0.9.1-test` 等) から作る test ビルドでは、
+#     `-DFARMAN_VERSION_SUFFIX=test` を渡すと "0.9.1-test" になる。
+#     semver の prerelease 規約 ("0.9.1-test < 0.9.1") に乗るので、
+#     test ビルドから安定版へのアップデート検知が正しく働く。
+set(FARMAN_VERSION_SUFFIX "" CACHE STRING
+  "Optional prerelease suffix appended to FARMAN_VERSION (e.g. \"test\" → 0.9.1-test)")
+if(FARMAN_VERSION_SUFFIX)
+  set(FARMAN_VERSION_STRING "${PROJECT_VERSION}-${FARMAN_VERSION_SUFFIX}")
+else()
+  set(FARMAN_VERSION_STRING "${PROJECT_VERSION}")
+endif()
+message(STATUS "FARMAN_VERSION = ${FARMAN_VERSION_STRING}")
+
 target_compile_definitions(farman PRIVATE
-  FARMAN_VERSION=${PROJECT_VERSION}
+  FARMAN_VERSION=${FARMAN_VERSION_STRING}
 )
 
 # GUI アプリとしてビルド:
