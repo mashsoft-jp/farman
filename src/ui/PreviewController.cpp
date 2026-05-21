@@ -217,9 +217,15 @@ void PreviewController::startLoadJob(const QString& filePath,
 
   // 150ms 経っても結果が返ってこないときだけ Loading 表示を出す
   // (短時間で完了する小ファイルでは Loading をチカチカさせない)。
-  QTimer::singleShot(150, this, [this, myGen]() {
+  // ジョブ完了時に止められるよう、共有フラグで「完了したか」を伝える。
+  auto jobFinished = std::make_shared<std::atomic<bool>>(false);
+  QTimer::singleShot(150, this, [this, myGen, jobFinished]() {
+    if (jobFinished->load(std::memory_order_acquire)) {
+      // ジョブが先に完了していたら Loading は出さない。
+      return;
+    }
     if (myGen != m_generation.load(std::memory_order_acquire)) {
-      // 既により新しい要求が来ている → このジョブの Loading は出さない
+      // 既により新しい要求が来ている → このジョブの Loading は出さない。
       return;
     }
     if (m_pane) m_pane->showLoading();
@@ -230,7 +236,9 @@ void PreviewController::startLoadJob(const QString& filePath,
   auto* watcher = new QFutureWatcher<PreviewResult>(this);
   QPointer<PreviewController> self(this);
   connect(watcher, &QFutureWatcher<PreviewResult>::finished,
-          this, [this, self, watcher, myGen]() {
+          this, [this, self, watcher, myGen, jobFinished]() {
+    // まず「ジョブ完了」フラグを立てて、150ms Loading 表示の発火を抑止する。
+    jobFinished->store(true, std::memory_order_release);
     watcher->deleteLater();
     if (!self) return;
     // 世代不一致なら結果を捨てる ("読込み途中でカーソル移動 → 中断" 相当)
