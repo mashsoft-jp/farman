@@ -13,6 +13,8 @@ namespace Farman {
 class FileListPane;
 class FileListModel;
 class LogPane;
+class PreviewPane;
+class PreviewController;
 
 class FileManagerPanel : public QWidget {
   Q_OBJECT
@@ -35,8 +37,16 @@ public:
 
   // ペイン操作
   void setActivePane(PaneType pane);
+
+  // レイアウトモード (Dual / Single / Preview)。setSinglePaneMode は
+  // 互換 API: 既存呼び出しを壊さないため Single ⇔ Dual の二値トグルとして
+  // 残してあるが、内部は setLayoutMode に流す。
+  void setLayoutMode(LayoutMode mode);
+  LayoutMode layoutMode() const { return m_layoutMode; }
+  bool isSinglePaneMode() const { return m_layoutMode == LayoutMode::Single; }
+  bool isPreviewMode()    const { return m_layoutMode == LayoutMode::Preview; }
+  bool isDualPaneMode()   const { return m_layoutMode == LayoutMode::Dual; }
   void setSinglePaneMode(bool single);
-  bool isSinglePaneMode() const { return m_singlePaneMode; }
   void togglePaneMode();
 
   // 同期ブラウズ (Sync Browse): 片方のペインで cd すると、もう一方も
@@ -139,7 +149,10 @@ signals:
   // バーの UI 更新トリガ)。
   void directoryCompareChanged(bool active);
   // 1 / 2 ペインモードが切り替わったとき (ツールバーのトグル状態同期に使う)。
+  // 互換のため bool 版も残すが、新規受信側は layoutModeChanged を使うべき。
   void singlePaneModeChanged(bool single);
+  // 3 値のレイアウトモード遷移通知 (Dual / Single / Preview)。
+  void layoutModeChanged(LayoutMode mode);
   // ログペインの表示が切り替わったとき (同上)。
   void logPaneVisibleChanged(bool visible);
 
@@ -180,7 +193,11 @@ private:
   LogPane*      m_logPane = nullptr;
 
   PaneType m_activePane;
-  bool m_singlePaneMode;
+  LayoutMode m_layoutMode = LayoutMode::Dual;
+
+  // Preview レイアウト用 (右ペイン位置に常駐し、Dual/Single 時は hide される)。
+  PreviewPane*       m_previewPane       = nullptr;
+  PreviewController* m_previewController = nullptr;
 
   // ── Sync Browse ─────────────────────
   // ON/OFF はメニュー (View → Sync Browse) または `y` キーで切替。

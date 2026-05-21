@@ -93,6 +93,7 @@ QList<QPair<QKeySequence, QString>> defaultBindingList() {
     // pane.switch のデフォルトバインドからは外している。ペイン切り替えは
     // ← / → の端到達 / マウスクリック / ユーザーが任意キーをバインドすれば良い。
     { QKeySequence(Qt::CTRL | Qt::Key_O),      "pane.toggle_single"        },
+    { QKeySequence(Qt::CTRL | Qt::Key_P),      "pane.toggle_preview"       },
     { QKeySequence(Qt::Key_S),                 "pane.sort_filter"          },
     { QKeySequence(Qt::CTRL | Qt::Key_Right),  "pane.sync_other_to_active" },
     { QKeySequence(Qt::CTRL | Qt::Key_Left),   "pane.sync_active_to_other" },
@@ -241,6 +242,8 @@ void KeyBindingManager::loadFromSettings() {
   // view.thumbnail_large を新規追加し、Cmd+1〜4 をデフォルトに。view.toggle_
   // thumbnails の Ctrl+G デフォルトは外す (コマンド自体は互換のため残る)。
   // ユーザーが Ctrl+G を view.toggle_thumbnails に手動で残していた場合は維持。
+  // version < 18: pane.toggle_preview (Ctrl+P) を新規追加。下の merge ロジックで
+  // Ctrl+P が空いていれば自動補完される。既存バインドは保持。
   if (version < 13) {
     qDebug() << "KeyBindingManager: migrating bindings from version" << version;
     loadDefaults();
@@ -313,7 +316,7 @@ void KeyBindingManager::saveToSettings() const {
 
   QJsonObject root;
   root["bindings"] = bindings;
-  root["version"] = 17;
+  root["version"] = 18;
 
   QJsonDocument doc(root);
   QString jsonData = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));

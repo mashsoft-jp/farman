@@ -218,6 +218,20 @@ public:
   bool showToolbar()                    const;
   void setShowToolbar(bool show);
 
+  // ファイルマネージャパネルのレイアウト (Dual / Single / Preview)。
+  // View メニュー / ツールバー / Ctrl+O (Single) / Ctrl+P (Preview) で切替。
+  // 起動時の復元に使うため永続化する。
+  LayoutMode layoutMode() const;
+  void       setLayoutMode(LayoutMode mode);
+
+  // プレビューモードの動作パラメタ。
+  // - debounceMs: カーソル変化からプレビュー切替までの待ち時間 (50〜1000)
+  // - maxFileSizeBytes: これを超えるファイルはプレビューせず "Too large" 表示
+  int     previewDebounceMs() const;
+  void    setPreviewDebounceMs(int ms);
+  qint64  previewMaxFileSizeBytes() const;
+  void    setPreviewMaxFileSizeBytes(qint64 bytes);
+
   // 同期ブラウズが「追従先が存在しないため自動 OFF」した瞬間に通知
   // ダイアログを出すかどうか。ダイアログ側の「次回以降表示しない」
   // チェックを ON にした時にもこのフラグが false になる。デフォは true。
@@ -498,6 +512,11 @@ private:
   // メニュー下のツールバーの表示。デフォルトは ON (新機能を見つけてもらう)。
   // 不要なら View → Toolbar / Settings → General からオフにできる。
   bool             m_showToolbar     = true;
+  // ファイルマネージャパネルのレイアウト。Dual がデフォルト。Preview / Single
+  // は永続化されるので、終了時に Preview なら次回も Preview で起動する。
+  LayoutMode       m_layoutMode      = LayoutMode::Dual;
+  int              m_previewDebounceMs = 200;            // 50〜1000
+  qint64           m_previewMaxFileSizeBytes = 10LL * 1024 * 1024; // 10 MB
   LanguageMode     m_language         = LanguageMode::Auto;
   bool             m_logVisible       = true;
   int              m_logPaneHeight    = 120;  // px

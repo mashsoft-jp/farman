@@ -1,6 +1,7 @@
 #include "FileManagerPanel.h"
 #include "FileListPane.h"
 #include "LogPane.h"
+#include "PreviewPane.h"
 #include "ProgressDialog.h"
 #include "core/Logger.h"
 #include "SortFilterDialog.h"
@@ -53,7 +54,7 @@ FileManagerPanel::FileManagerPanel(QWidget* parent)
   , m_leftPane(nullptr)
   , m_rightPane(nullptr)
   , m_activePane(PaneType::Left)
-  , m_singlePaneMode(false) {
+  , m_layoutMode(LayoutMode::Dual) {
 
   setupUi();
 }
@@ -109,8 +110,19 @@ void FileManagerPanel::setupUi() {
 
   m_splitter->addWidget(m_rightPane);
 
-  // Splitterのサイズを均等に
-  m_splitter->setSizes(QList<int>() << 600 << 600);
+  // ===== Preview Pane (Phase 0 骨組み) =====
+  // 右ペイン位置に常駐させておく (= Splitter の同じスロットに重ねる)。
+  // 通常時 (Dual/Single) は hide() しておき、Preview モードに切替えた瞬間に
+  // show() + m_rightPane->hide() で見せる。Splitter のサイズ記憶は
+  // 「FileListPane 用」と「PreviewPane 用」が別物になるが、Phase 0 では
+  // 共通サイズを使う (Phase 4 で別保存に分離)。
+  m_previewPane = new PreviewPane(this);
+  m_previewPane->hide();
+  m_splitter->addWidget(m_previewPane);
+
+  // Splitterのサイズを均等に (Preview ペインは 3 番目のスロットだが
+  // hide 中なので幅 0 扱いになる)。
+  m_splitter->setSizes(QList<int>() << 600 << 600 << 600);
 
   // 非アクティブペインのビューをマウスクリックされたら、そのペインを
   // アクティブに切り替える。QTableView はマウスイベントを viewport に
@@ -250,8 +262,8 @@ void FileManagerPanel::applySettings() {
   m_rightPane->refreshAppearance();
 
   // 列表示 (Behavior の Columns 設定) を現在のモードで再適用
-  m_leftPane->applyColumnVisibility(m_singlePaneMode);
-  m_rightPane->applyColumnVisibility(m_singlePaneMode);
+  m_leftPane->applyColumnVisibility(isSinglePaneMode());
+  m_rightPane->applyColumnVisibility(isSinglePaneMode());
 
   // 表示モード (List / Thumbnail) を Settings から再適用。view.toggle_thumbnails
   // コマンド経由以外 (Settings ダイアログから直接編集された場合 / 起動直後の
@@ -371,7 +383,7 @@ void FileManagerPanel::maybeSyncFollow(PaneType navigatedPane,
                                        const QString& newPath) {
   if (!m_syncBrowseEnabled)    return;
   if (m_syncBrowseInProgress)  return;  // 反対ペイン navigate からの再帰を防ぐ
-  if (m_singlePaneMode)        return;
+  if (!isDualPaneMode())       return;  // Single / Preview では相方が居ない
   if (oldPath == newPath)      return;  // 実質変化なし
 
   const PaneType otherType = (navigatedPane == PaneType::Left) ? PaneType::Right : PaneType::Left;
@@ -449,7 +461,7 @@ void FileManagerPanel::maybeSyncFollow(PaneType navigatedPane,
 void FileManagerPanel::setSyncBrowseEnabled(bool enabled) {
   if (m_syncBrowseEnabled == enabled) return;
 
-  if (enabled && m_singlePaneMode) {
+  if (enabled && !isDualPaneMode()) {
     Logger::instance().warn(
       tr("Sync Browse cannot be enabled while single pane mode is active."));
     return;
@@ -464,7 +476,7 @@ void FileManagerPanel::setSyncBrowseEnabled(bool enabled) {
 }
 
 void FileManagerPanel::toggleSyncBrowse() {
-  if (m_singlePaneMode) {
+  if (!isDualPaneMode()) {
     Logger::instance().info(
       tr("Sync Browse toggle ignored: single pane mode is active."));
     return;
@@ -644,8 +656,8 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
 
   // 左キーの処理
   if (event->key() == Qt::Key_Left) {
-    if (m_singlePaneMode) {
-      // シングルペインモード: 親ディレクトリに移動
+    if (!isDualPaneMode()) {
+      // シングル / プレビュー: 親ディレクトリに移動
       handleBackspaceKey();
       return true;
     } else {
@@ -664,8 +676,8 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
 
   // 右キーの処理
   if (event->key() == Qt::Key_Right) {
-    if (m_singlePaneMode) {
-      // シングルペインモード: 何もしない
+    if (!isDualPaneMode()) {
+      // シングル / プレビュー: 何もしない (相方ペインが居ない / ビュアー)
       return true;
     } else {
       // 2ペインモード
@@ -1055,60 +1067,100 @@ void FileManagerPanel::handleSelectAllKey() {
 }
 
 void FileManagerPanel::handleTabKey() {
-  // アクティブペインを切り替え（2ペイン表示時のみ）
-  if (!m_singlePaneMode) {
-    if (m_activePane == PaneType::Left) {
-      setActivePane(PaneType::Right);
-    } else {
-      setActivePane(PaneType::Left);
-    }
+  // アクティブペインを切り替え（2ペイン表示時のみ）。
+  // Single / Preview では反対側にファイルリストが居ないので no-op。
+  if (m_layoutMode != LayoutMode::Dual) {
+    return;
+  }
+  if (m_activePane == PaneType::Left) {
+    setActivePane(PaneType::Right);
+  } else {
+    setActivePane(PaneType::Left);
   }
 }
 
 void FileManagerPanel::togglePaneMode() {
-  setSinglePaneMode(!m_singlePaneMode);
+  // 互換: 既存呼び出しは Single ↔ Dual の二値トグルのまま。
+  // Preview 中だった場合は Dual に戻して終わり (Preview ↔ X はメニュー側で
+  // 明示的に setLayoutMode() を呼ぶ運用)。
+  if (m_layoutMode == LayoutMode::Preview) {
+    setLayoutMode(LayoutMode::Dual);
+  } else if (m_layoutMode == LayoutMode::Single) {
+    setLayoutMode(LayoutMode::Dual);
+  } else {
+    setLayoutMode(LayoutMode::Single);
+  }
 }
 
 void FileManagerPanel::setSinglePaneMode(bool single) {
-  const bool prev = m_singlePaneMode;
-  m_singlePaneMode = single;
+  setLayoutMode(single ? LayoutMode::Single : LayoutMode::Dual);
+}
 
-  // シングルペインに入ったら同期ブラウズを強制 OFF にする
-  // (1 ペインで「相方」がいないため意味を成さない)。
-  // 2 ペインに戻っても自動復元はしない (ユーザーが明示的に再 ON する想定)。
-  if (single && m_syncBrowseEnabled) {
+void FileManagerPanel::setLayoutMode(LayoutMode mode) {
+  const LayoutMode prev = m_layoutMode;
+  if (prev == mode) return;
+  m_layoutMode = mode;
+
+  const bool singleLike  = (mode != LayoutMode::Dual);  // Single または Preview
+  const bool previewMode = (mode == LayoutMode::Preview);
+
+  // Dual 以外に入る瞬間に Sync Browse は強制 OFF
+  // (相方ペインが居ないので意味を成さない)。
+  if (singleLike && m_syncBrowseEnabled) {
     setSyncBrowseEnabled(false);
   }
+  // Preview に入る瞬間は Directory Compare も停止 (右ペインがプレビュー化する)。
+  if (previewMode && m_compareMode) {
+    stopDirectoryCompare();
+  }
 
-  if (single) {
-    // 1ペインモード: 非アクティブなペインを非表示
-    if (m_activePane == PaneType::Left) {
-      m_rightPane->hide();
+  // ── ウィジェットの可視性 ──
+  // 右ペイン位置の物理スロットは「FileListPane (m_rightPane)」と
+  // 「PreviewPane (m_previewPane)」の 2 種を排他で見せる。
+  switch (mode) {
+    case LayoutMode::Dual:
       m_leftPane->show();
-    } else {
-      m_leftPane->hide();
       m_rightPane->show();
-    }
-  } else {
-    // 2ペインモード: 両方のペインを表示
-    m_leftPane->show();
-    m_rightPane->show();
+      if (m_previewPane) m_previewPane->hide();
+      break;
+    case LayoutMode::Single:
+      if (m_activePane == PaneType::Left) {
+        m_leftPane->show();
+        m_rightPane->hide();
+      } else {
+        m_leftPane->hide();
+        m_rightPane->show();
+      }
+      if (m_previewPane) m_previewPane->hide();
+      break;
+    case LayoutMode::Preview:
+      // Preview は常に左にファイル一覧、右にプレビュー。アクティブペインは
+      // 強制で Left に揃える。
+      if (m_activePane != PaneType::Left) {
+        setActivePane(PaneType::Left);
+      }
+      m_leftPane->show();
+      m_rightPane->hide();
+      if (m_previewPane) m_previewPane->show();
+      break;
   }
 
-  // サイズ・更新日時の表示形式を Single / Dual で切替えるため、
-  // 両ペインのモデルにも伝える。
+  // 列表示・size/mtime のフォーマットは「ペインが全幅かどうか」で決まる。
+  // Single だけが全幅 (= 広い表示)。Dual / Preview はどちらも半幅 (= 狭い)。
+  const bool fullWidth = (mode == LayoutMode::Single);
   if (m_leftPane && m_leftPane->model())
-    m_leftPane->model()->setSinglePaneMode(single);
+    m_leftPane->model()->setSinglePaneMode(fullWidth);
   if (m_rightPane && m_rightPane->model())
-    m_rightPane->model()->setSinglePaneMode(single);
+    m_rightPane->model()->setSinglePaneMode(fullWidth);
+  if (m_leftPane)  m_leftPane->applyColumnVisibility(fullWidth);
+  if (m_rightPane) m_rightPane->applyColumnVisibility(fullWidth);
 
-  // 列表示も Single / Dual で切替え。
-  if (m_leftPane)  m_leftPane->applyColumnVisibility(single);
-  if (m_rightPane) m_rightPane->applyColumnVisibility(single);
-
-  if (prev != single) {
-    emit singlePaneModeChanged(single);
+  // 互換シグナル: Single ⇔ それ以外 の bool 変化があった場合に emit。
+  const bool prevSingleLike = (prev != LayoutMode::Dual);
+  if (prevSingleLike != singleLike) {
+    emit singlePaneModeChanged(singleLike);
   }
+  emit layoutModeChanged(mode);
 }
 
 FileListPane* FileManagerPanel::activePane() const {
@@ -1257,7 +1309,7 @@ void FileManagerPanel::copySelectedFiles() {
   //     親ディレクトリ (currentPath() は archive.zip!/inner 形式なので
   //     そのままだと QFile 系操作の宛先には使えない)
   QString destDir;
-  if (!m_singlePaneMode) {
+  if (isDualPaneMode()) {
     destDir = destPane->currentPath();
   } else if (srcModel->isInArchiveMode()) {
     destDir = QFileInfo(srcModel->archivePath()).absolutePath();
@@ -1270,7 +1322,7 @@ void FileManagerPanel::copySelectedFiles() {
   // ただし 1 ペイン時は相手ペインが hide() されているだけで、過去のアーカイブ
   // 表示状態を残しているだけのことがある。1 ペイン時の出力先は srcPane なので
   // 相手ペインの状態は無関係 → ガードをスキップする。
-  if (!m_singlePaneMode && destModel->isInArchiveMode()) {
+  if (isDualPaneMode() && destModel->isInArchiveMode()) {
     warn(this, tr("Read-only archive"),
       tr("Cannot copy into a read-only archive."));
     return;
@@ -1494,7 +1546,7 @@ void FileManagerPanel::moveSelectedFiles() {
   // ただし 1 ペイン時の destPane は hide() されているだけで実際の出力先は
   // srcPane なので、destPane のアーカイブ状態は無関係 → ガードをスキップ。
   if (srcModel->isInArchiveMode()
-      || (!m_singlePaneMode && destPane->model()->isInArchiveMode())) {
+      || (isDualPaneMode() && destPane->model()->isInArchiveMode())) {
     warn(this, tr("Read-only archive"),
       tr("Cannot move files to or from a read-only archive."));
     return;
@@ -1504,7 +1556,7 @@ void FileManagerPanel::moveSelectedFiles() {
   // そのまま実 FS の宛先には使えないので、アーカイブが置かれている実
   // ディレクトリにフォールバックする。
   QString destDir;
-  if (!m_singlePaneMode) {
+  if (isDualPaneMode()) {
     destDir = destPane->currentPath();
   } else if (srcModel->isInArchiveMode()) {
     destDir = QFileInfo(srcModel->archivePath()).absolutePath();
@@ -1916,7 +1968,7 @@ void FileManagerPanel::createArchive() {
       tr("Cannot create an archive from entries inside another archive."));
     return;
   }
-  if (!m_singlePaneMode && destPane->model()->isInArchiveMode()) {
+  if (isDualPaneMode() && destPane->model()->isInArchiveMode()) {
     warn(this, tr("Read-only archive"),
       tr("Cannot write a new archive into a read-only archive."));
     return;
@@ -1935,10 +1987,11 @@ void FileManagerPanel::createArchive() {
 
   // 既定の出力先は「相手ペイン」のカレント (Copy/Move と同じ UX)。
   // ダイアログ内で ↑/↓ により「自分ペイン (srcPane)」とトグルできる。
-  // 1 ペイン時はアクティブペインを既定出力先に (相手ペインは見えないため)。
-  const QString defaultOutputDir = m_singlePaneMode
-                                 ? srcPane->currentPath()
-                                 : destPane->currentPath();
+  // 1 ペイン / プレビュー時はアクティブペインを既定出力先に
+  // (相手ペインがファイルリストではないため)。
+  const QString defaultOutputDir = isDualPaneMode()
+                                 ? destPane->currentPath()
+                                 : srcPane->currentPath();
   CreateArchiveDialog dlg(paths,
                           defaultOutputDir,
                           srcPane->currentPath(),
@@ -2012,7 +2065,7 @@ void FileManagerPanel::extractArchive() {
       tr("Cannot extract an archive that lives inside another archive."));
     return;
   }
-  if (!m_singlePaneMode && destPane->model()->isInArchiveMode()) {
+  if (isDualPaneMode() && destPane->model()->isInArchiveMode()) {
     warn(this, tr("Read-only archive"),
       tr("Cannot extract into a read-only archive."));
     return;
@@ -2031,10 +2084,11 @@ void FileManagerPanel::extractArchive() {
   const QString archivePath = item->absolutePath();
   // 展開先の既定は「相手ペイン」(Copy/Move と同じ UX)。↑/↓ でアーカイブが
   // 置かれているディレクトリ (= srcPane のカレント) にトグルできる。
-  // 1 ペイン時はアクティブペインを既定展開先に (相手ペインは見えないため)。
-  const QString defaultOutputDir = m_singlePaneMode
-                                 ? srcPane->currentPath()
-                                 : destPane->currentPath();
+  // 1 ペイン / プレビュー時はアクティブペインを既定展開先に
+  // (相手ペインがファイルリストではないため)。
+  const QString defaultOutputDir = isDualPaneMode()
+                                 ? destPane->currentPath()
+                                 : srcPane->currentPath();
   ExtractArchiveDialog dlg(archivePath,
                            defaultOutputDir,
                            srcPane->currentPath(),
@@ -2391,7 +2445,7 @@ void FileManagerPanel::startDirectoryCompare() {
          "browsing an archive."));
     return;
   }
-  if (m_singlePaneMode) {
+  if (!isDualPaneMode()) {
     warn(this, tr("Cannot compare"),
       tr("Directory compare requires two panes."));
     return;

@@ -28,6 +28,7 @@
     <file alias="bookmarks.svg">icons/toolbar/bookmarks.svg</file>
     <file alias="history.svg">icons/toolbar/history.svg</file>
     <file alias="single-pane.svg">icons/toolbar/single-pane.svg</file>
+    <file alias="preview-pane.svg">icons/toolbar/preview-pane.svg</file>
     <file alias="sync-browse.svg">icons/toolbar/sync-browse.svg</file>
     <file alias="compare-directories.svg">icons/toolbar/compare-directories.svg</file>
     <file alias="log.svg">icons/toolbar/log.svg</file>

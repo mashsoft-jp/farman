@@ -793,6 +793,21 @@ void Settings::setShowToolbar(bool show) {
   m_showToolbar = show;
 }
 
+LayoutMode Settings::layoutMode() const { return m_layoutMode; }
+void Settings::setLayoutMode(LayoutMode mode) { m_layoutMode = mode; }
+int  Settings::previewDebounceMs() const { return m_previewDebounceMs; }
+void Settings::setPreviewDebounceMs(int ms) {
+  if (ms < 50)   ms = 50;
+  if (ms > 1000) ms = 1000;
+  m_previewDebounceMs = ms;
+}
+qint64 Settings::previewMaxFileSizeBytes() const { return m_previewMaxFileSizeBytes; }
+void   Settings::setPreviewMaxFileSizeBytes(qint64 bytes) {
+  if (bytes < 1024LL * 1024)        bytes = 1024LL * 1024;          // 下限 1MB
+  if (bytes > 500LL * 1024 * 1024)  bytes = 500LL * 1024 * 1024;    // 上限 500MB
+  m_previewMaxFileSizeBytes = bytes;
+}
+
 void Settings::setSingleInstance(bool enabled) {
   m_singleInstance = enabled;
 }
@@ -1590,6 +1605,16 @@ void Settings::load() {
                      : ViewerMode::Inline;
   }
   m_showToolbar = behavior.value("showToolbar").toBool(true);
+  // レイアウト (dual / single / preview)。未指定は dual。
+  m_layoutMode = layoutModeFromKey(behavior.value("layoutMode").toString());
+  // プレビュー動作パラメタ
+  {
+    const QJsonObject preview = behavior.value("preview").toObject();
+    setPreviewDebounceMs(preview.value("debounceMs").toInt(200));
+    const qint64 defaultMax = 10LL * 1024 * 1024;
+    setPreviewMaxFileSizeBytes(static_cast<qint64>(
+      preview.value("maxFileSizeBytes").toDouble(static_cast<double>(defaultMax))));
+  }
   // 自動アップデート関連 ("autoUpdate" サブオブジェクト下にまとめる)。
   {
     const QJsonObject au = behavior.value("autoUpdate").toObject();
@@ -2076,6 +2101,13 @@ void Settings::save() const {
                              ? QStringLiteral("external")
                              : QStringLiteral("inline");
   behavior["showToolbar"] = m_showToolbar;
+  behavior["layoutMode"]  = QString::fromLatin1(layoutModeKey(m_layoutMode));
+  {
+    QJsonObject preview;
+    preview["debounceMs"]       = m_previewDebounceMs;
+    preview["maxFileSizeBytes"] = static_cast<double>(m_previewMaxFileSizeBytes);
+    behavior["preview"] = preview;
+  }
   {
     QJsonObject au;
     au["checkOnStartup"] = m_autoUpdateCheckOnStartup;

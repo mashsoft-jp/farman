@@ -136,6 +136,8 @@ MainWindow::MainWindow(QWidget* parent)
   // Show file manager and load initial path
   m_stack->setCurrentWidget(m_fileManagerPanel);
   m_fileManagerPanel->loadInitialPath();
+  // Settings に保存されているレイアウトを復元 (前回終了時が Preview なら Preview)。
+  m_fileManagerPanel->setLayoutMode(Settings::instance().layoutMode());
   m_fileManagerPanel->activePane()->view()->setFocus();
 }
 
@@ -763,6 +765,22 @@ void MainWindow::registerCommands() {
     "pane"
   ));
 
+  // Preview レイアウトのトグル: Preview ⇔ Dual。
+  // 「左ペイン: ファイル一覧 / 右ペイン: ビュアー」の Quick View モード。
+  // カーソル移動でビュアーが順次切り替わる (Phase 1 以降で実装)。
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "pane.toggle_preview",
+    tr("Toggle Preview Layout"),
+    [this]() {
+      if (m_fileManagerPanel->isPreviewMode()) {
+        m_fileManagerPanel->setLayoutMode(LayoutMode::Dual);
+      } else {
+        m_fileManagerPanel->setLayoutMode(LayoutMode::Preview);
+      }
+    },
+    "pane"
+  ));
+
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "pane.sort_filter",
     tr("Sort & Filter..."),
@@ -1356,18 +1374,23 @@ void MainWindow::createMenus() {
   // View
   QMenu* viewMenu = bar->addMenu(tr("&View"));
   addCmd(viewMenu, "pane.switch", tr("Switch Pane"));
-  // Single Pane はトグル状態をチェックマークで表示する。キー操作・メニュー操作・
-  // 設定経由など複数の経路でモードが変わるため、メニューを開く直前に最新状態に
-  // 同期する（aboutToShow）。
-  QAction* singlePaneAction = addCmd(viewMenu, "pane.toggle_single", tr("Single Pane"));
+  // Layout (Dual / Single / Preview) は 3 排他チェック。QActionGroup で 1 つ
+  // だけチェック状態にする。キー / メニュー / 設定など複数経路で変わるため
+  // aboutToShow で最新化する。
+  QAction* singlePaneAction  = addCmd(viewMenu, "pane.toggle_single",  tr("Single Pane"));
+  QAction* previewPaneAction = addCmd(viewMenu, "pane.toggle_preview", tr("Preview Pane"));
   singlePaneAction->setCheckable(true);
+  previewPaneAction->setCheckable(true);
   singlePaneAction->setChecked(m_fileManagerPanel->isSinglePaneMode());
-  connect(viewMenu, &QMenu::aboutToShow, this, [this, singlePaneAction]() {
+  previewPaneAction->setChecked(m_fileManagerPanel->isPreviewMode());
+  connect(viewMenu, &QMenu::aboutToShow, this,
+          [this, singlePaneAction, previewPaneAction]() {
     singlePaneAction->setChecked(m_fileManagerPanel->isSinglePaneMode());
+    previewPaneAction->setChecked(m_fileManagerPanel->isPreviewMode());
     if (m_syncBrowseAction) {
-      // シングルペイン中は Sync Browse の意味がないので項目を disable する。
+      // Single / Preview 中は Sync Browse の意味がないので項目を disable する。
       // チェックマーク自体は FileManagerPanel::syncBrowseChanged で同期済み。
-      m_syncBrowseAction->setEnabled(!m_fileManagerPanel->isSinglePaneMode());
+      m_syncBrowseAction->setEnabled(m_fileManagerPanel->isDualPaneMode());
     }
   });
   addCmd(viewMenu, "pane.sort_filter", tr("Sort && Filter..."));
@@ -1663,10 +1686,20 @@ void MainWindow::createMainToolBar() {
                                   QStringLiteral("single-pane.svg"));
   singlePaneAct->setCheckable(true);
   singlePaneAct->setChecked(m_fileManagerPanel->isSinglePaneMode());
-  connect(m_fileManagerPanel, &FileManagerPanel::singlePaneModeChanged,
-          this, [singlePaneAct](bool single) {
-    QSignalBlocker b(singlePaneAct);
-    singlePaneAct->setChecked(single);
+
+  // Preview レイアウト切替ボタン (Single Pane と排他)。
+  QAction* previewPaneAct = addBtn("pane.toggle_preview", tr("Preview Pane"),
+                                   QStringLiteral("preview-pane.svg"));
+  previewPaneAct->setCheckable(true);
+  previewPaneAct->setChecked(m_fileManagerPanel->isPreviewMode());
+
+  // 3 値 LayoutMode 変化を 2 つの checkable ボタンに排他で反映する。
+  connect(m_fileManagerPanel, &FileManagerPanel::layoutModeChanged,
+          this, [singlePaneAct, previewPaneAct](LayoutMode mode) {
+    QSignalBlocker bs(singlePaneAct);
+    QSignalBlocker bp(previewPaneAct);
+    singlePaneAct->setChecked(mode == LayoutMode::Single);
+    previewPaneAct->setChecked(mode == LayoutMode::Preview);
   });
 
   QAction* syncBrowseAct = addBtn("pane.sync_browse_toggle", tr("Sync Browse"),
@@ -2032,6 +2065,9 @@ void MainWindow::closeEvent(QCloseEvent* event) {
   };
   storeHistory(PaneType::Left);
   storeHistory(PaneType::Right);
+
+  // 終了時の LayoutMode を永続化 (次回起動時に同じレイアウトで開く)。
+  settings.setLayoutMode(m_fileManagerPanel->layoutMode());
 
   settings.save();
 

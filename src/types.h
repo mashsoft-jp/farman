@@ -13,6 +13,36 @@ enum class PaneType {
   Count
 };
 
+// ファイルマネージャパネルのレイアウト。
+//   - Dual:    左右 2 ペイン (従来のデフォルト)。
+//   - Single:  シングルペイン (反対側ペインを非表示)。
+//   - Preview: 左ペイン (ファイル一覧) + 右ペイン (ビュアー)。
+//              カーソル移動でビュアー内容が逐次切り替わる Quick View モード。
+//              Sync Browse / Directory Compare は強制 OFF、Tab キーは no-op。
+//              Phase 1 ではフォーカスは常に左ペイン側に固定 (プレビューでの
+//              文字選択 / コピーは Enter で本来のビュアーを開いてから行う)。
+enum class LayoutMode {
+  Dual = 0,
+  Single,
+  Preview
+};
+
+inline const char* layoutModeKey(LayoutMode m) {
+  switch (m) {
+    case LayoutMode::Single:  return "single";
+    case LayoutMode::Preview: return "preview";
+    case LayoutMode::Dual:
+    default:                  return "dual";
+  }
+}
+
+inline LayoutMode layoutModeFromKey(const QString& key, LayoutMode fallback = LayoutMode::Dual) {
+  if (key == QLatin1String("single"))  return LayoutMode::Single;
+  if (key == QLatin1String("preview")) return LayoutMode::Preview;
+  if (key == QLatin1String("dual"))    return LayoutMode::Dual;
+  return fallback;
+}
+
 // ソートキー
 enum class SortKey {
   None,          // ソートなし（第2キー用）

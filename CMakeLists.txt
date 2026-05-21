@@ -73,6 +73,7 @@ qt_add_executable(farman
   src/ui/FileListDelegate.cpp
   src/ui/FileListThumbnailDelegate.cpp
   src/ui/FileManagerPanel.cpp
+  src/ui/PreviewPane.cpp
   src/ui/ViewerPanel.cpp
   src/ui/LogPane.cpp
   src/ui/ProgressDialog.cpp
