@@ -199,6 +199,12 @@ private:
   PreviewPane*       m_previewPane       = nullptr;
   PreviewController* m_previewController = nullptr;
 
+  // Splitter のサイズ記憶 (Dual / Preview を独立に保存)。
+  // setLayoutMode で切替前のサイズを退避し、復帰時に元のサイズに戻す。
+  // Single は片側が hide されてサイズが歪むため記録対象外。
+  QList<int> m_savedSplitterSizesDual;
+  QList<int> m_savedSplitterSizesPreview;
+
   // ── Sync Browse ─────────────────────
   // ON/OFF はメニュー (View → Sync Browse) または `y` キーで切替。
   // アンカー (起点) は持たず、片方のペインがディレクトリを移動した瞬間に

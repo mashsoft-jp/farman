@@ -48,6 +48,16 @@ All notable changes to **farman** are documented in this file.
   - 画像 (svg / webp 含む) と PDF (1 ページ目) に対応
   - 非同期ワーカー + LRU キャッシュ (サイズ別の世代カウンタで取り違え防止)、
     アーカイブ内画像にも対応 (仮想 FS パスから直接サムネイル生成)
+- **プレビューモード (Quick View)**
+  - Single / Dual と並ぶ 3 つ目のレイアウト。左にファイル一覧、右に
+    ビュアーを並べ、カーソル移動で右ペインの内容が逐次切り替わる
+  - 切替: `Cmd/Ctrl+P` / View メニュー / ツールバーの Preview ボタン
+  - ロード戦略: デバウンス 200ms + QtConcurrent ワーカー + 世代カウンタ +
+    協調キャンセル (TextView / BinaryView)。読み込み中にカーソルが動いたら
+    即座に次のファイルへ
+  - 上限を超えるファイル (既定 10 MB) はプレビューせず "Too large" 表示。
+    プレビューサイズ / デバウンス時間は Settings から変更可能
+  - レイアウトは永続化、Splitter のサイズは Dual / Preview で独立記憶
 - **自動アップデート**
   - 起動時に最大 1 日 1 回、GitHub Releases の最新タグをチェック
   - 新バージョンを検出したら通知ダイアログを表示 (リリースノートを

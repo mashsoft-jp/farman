@@ -1138,6 +1138,15 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
     stopDirectoryCompare();
   }
 
+  // ── Splitter サイズ記憶 (Dual / Preview を独立に保存) ──
+  // 切替前のサイズをモード別キャッシュに退避してから、切替先のキャッシュを
+  // 復元する。Single は片側が非表示なので Splitter サイズ記憶は不要。
+  if (m_splitter) {
+    const QList<int> sizes = m_splitter->sizes();
+    if (prev == LayoutMode::Dual)         m_savedSplitterSizesDual    = sizes;
+    else if (prev == LayoutMode::Preview) m_savedSplitterSizesPreview = sizes;
+  }
+
   // ── ウィジェットの可視性 ──
   // 右ペイン位置の物理スロットは「FileListPane (m_rightPane)」と
   // 「PreviewPane (m_previewPane)」の 2 種を排他で見せる。
@@ -1167,6 +1176,17 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
       m_rightPane->hide();
       if (m_previewPane) m_previewPane->show();
       break;
+  }
+
+  // 切替先のキャッシュサイズを適用 (空のときは未介入、Splitter 自身の
+  // 自動レイアウトに任せる)。
+  if (m_splitter) {
+    if (mode == LayoutMode::Dual && !m_savedSplitterSizesDual.isEmpty()) {
+      m_splitter->setSizes(m_savedSplitterSizesDual);
+    } else if (mode == LayoutMode::Preview
+               && !m_savedSplitterSizesPreview.isEmpty()) {
+      m_splitter->setSizes(m_savedSplitterSizesPreview);
+    }
   }
 
   // 列表示・size/mtime のフォーマットは「ペインが全幅かどうか」で決まる。

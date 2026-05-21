@@ -190,6 +190,56 @@ Krusader / Total Commander の Sync Browse 相当。
   - 2 ペインに戻っても自動復元はしない (ユーザーが明示再 ON)。
 - トグル状態は持ち越さない (起動時は OFF)。Settings に保存しない。
 
+### プレビューモード (Quick View)
+
+Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
+デュアルと並ぶ 3 つ目のレイアウト。
+
+- レイアウト: **左ペイン = ファイル一覧 / 右ペイン = ビュアー**。
+- 切替方法:
+  - `Ctrl+P` (デフォルト、`pane.toggle_preview`)
+  - View メニュー → "Preview Pane"
+  - ツールバーの Preview ボタン (Single Pane と排他チェック)
+- カーソルが移動するたびに右ペインの内容が切り替わる。種別判定 (ViewerPanel::
+  resolveAuto) でテキスト / 画像 / バイナリのどれかを表示。
+- ロード戦略 (`src/ui/PreviewController`):
+  - **デバウンス** (既定 200ms / Settings::previewDebounceMs で 50〜1000ms 可変)
+    でカーソル連打を吸収。
+  - **非同期ロード**: prepareLoad を QtConcurrent::run でワーカースレッドに
+    投げる。結果到着時、内部の世代カウンタ (atomic) が一致していれば
+    PreviewPane に流す、合わなければ捨てる (= 「読込中にカーソル移動 → 次へ」
+    要件)。
+  - **協調キャンセル**: TextView / BinaryView の prepareLoad は
+    `std::atomic<bool>` のキャンセルトークンを受け取り、各ステージ間や
+    重い hex 整形ループ (256 行ごと) でチェックして早期 return する。
+    ImageView は QImageReader::read() の途中中断不可なので世代チェック
+    だけに任せる。
+  - **Loading 表示の遅延**: 150ms 経っても結果が返らないときだけ Loading
+    page を表示 (小ファイルでチカチカさせない)。
+- 上限超過時の挙動:
+  - `Settings::previewMaxFileSizeBytes` (既定 10 MB) を超えるファイルは
+    "File too large to preview" メッセージを表示。プレビューせずに通常の
+    Enter 操作でビュアー起動を促す。
+- 特殊なカーソル位置:
+  - `..` 行: 空表示
+  - ディレクトリ: "Directory: \<path\>" 状態表示 (将来課題: 再帰統計を出す)
+  - 非通常ファイル / 存在しないファイル: "Not a regular file." / "File not found."
+- 制約:
+  - プレビュー中は **Sync Browse / Directory Compare は強制 OFF** (右ペインが
+    ビュアーなので意味を成さない)。
+  - `Tab` キーは no-op、`←` は親ディレクトリへ、`→` は no-op (シングルペインと
+    同じ挙動)。
+  - コピー / 移動 / 抽出の既定宛先はアクティブペイン (= 左) を使う。
+- フォーカス: Phase 1 では常に左ペイン固定。文字選択 / コピーをしたい場合は
+  `Enter` で本来のビュアーを開く運用。
+- レイアウトは Settings (`behavior.layoutMode = "preview"`) に永続化されるため、
+  プレビューモード中に終了すれば次回起動時もプレビューレイアウトで開く。
+- Splitter のドラッグ位置は Dual / Preview それぞれ独立に記憶される。
+- 将来課題 (Phase 5 以降):
+  - アーカイブ内ファイルのプレビュー (現状は対象外)
+  - ディレクトリ統計 (含むファイル数 / 合計サイズの再帰計算)
+  - Preview ペインへの Tab フォーカス移動 (文字選択 / コピー対応)
+
 ### アクティブペインの切替
 
 - **マウスクリック**: 非アクティブ側ペインのファイルリスト上で MouseButtonPress
