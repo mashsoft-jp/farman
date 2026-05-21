@@ -322,9 +322,20 @@ bool TextView::loadFile(const QString& filePath) {
 }
 
 TextView::PreparedLoad TextView::prepareLoad(const QString& filePath,
-                                             const QString& userEncoding) {
+                                             const QString& userEncoding,
+                                             const std::atomic<bool>* cancelToken) {
   PreparedLoad r;
   r.filePath = filePath;
+
+  // 各ステージの合間に cancelToken をチェックして早期 return する。
+  // file.readAll() / decode の最中は中断できないが、開始前にチェックすれば
+  // 「カーソル連打で生成されたジョブが順番待ちでスタックしているところを
+  // まとめてスキップさせる」効果が得られる。
+  auto cancelled = [&]() {
+    return cancelToken && cancelToken->load(std::memory_order_acquire);
+  };
+
+  if (cancelled()) return r;
 
   QFile file(filePath);
   if (!file.open(QIODevice::ReadOnly)) {
@@ -332,6 +343,8 @@ TextView::PreparedLoad TextView::prepareLoad(const QString& filePath,
   }
   r.data = file.readAll();
   file.close();
+
+  if (cancelled()) return r;
 
   if (userEncoding.compare(QStringLiteral("Auto"), Qt::CaseInsensitive) == 0) {
     uchardet_t det = uchardet_new();
@@ -348,7 +361,13 @@ TextView::PreparedLoad TextView::prepareLoad(const QString& filePath,
   } else {
     r.actualEncoding = userEncoding;
   }
+
+  if (cancelled()) return r;
+
   r.text = decodeBytes(r.data, r.actualEncoding);
+
+  if (cancelled()) return r;
+
   r.ok = true;
   return r;
 }

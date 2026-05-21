@@ -111,7 +111,8 @@ QString decodeStringColumn(const QByteArray& chunk, const QString& encoding) {
 }
 
 QString formatHexDump(const QByteArray& data, BinaryViewerUnit unit,
-                      BinaryViewerEndian endian, const QString& encoding) {
+                      BinaryViewerEndian endian, const QString& encoding,
+                      const std::atomic<bool>* cancelToken = nullptr) {
   const int unitBytes  = binaryViewerUnitToBytes(unit);
   const int unitsPerLine = kBytesPerLine / unitBytes;
   const int midUnit    = unitsPerLine / 2;
@@ -120,7 +121,13 @@ QString formatHexDump(const QByteArray& data, BinaryViewerUnit unit,
   QString out;
   out.reserve(lineCount * (8 + 2 + unitsPerLine * (unitBytes * 2 + 1) + 2 + kBytesPerLine + 1));
 
+  // 8 MB の hex 整形は数秒オーダで走るので、256 行 (= 4 KB データ) おきに
+  // cancelToken を確認して早期 return できるようにする。
   for (int line = 0; line < lineCount; ++line) {
+    if (cancelToken && (line & 0xFF) == 0
+        && cancelToken->load(std::memory_order_acquire)) {
+      return QString();
+    }
     const int off  = line * kBytesPerLine;
     const qint64 addr = static_cast<qint64>(off);
 
@@ -340,9 +347,16 @@ bool BinaryView::loadFile(const QString& filePath) {
 BinaryView::PreparedLoad BinaryView::prepareLoad(const QString&     filePath,
                                                  BinaryViewerUnit   unit,
                                                  BinaryViewerEndian endian,
-                                                 const QString&     encoding) {
+                                                 const QString&     encoding,
+                                                 const std::atomic<bool>* cancelToken) {
   PreparedLoad r;
   r.filePath = filePath;
+
+  auto cancelled = [&]() {
+    return cancelToken && cancelToken->load(std::memory_order_acquire);
+  };
+
+  if (cancelled()) return r;
 
   QFile file(filePath);
   if (!file.open(QIODevice::ReadOnly)) {
@@ -353,11 +367,22 @@ BinaryView::PreparedLoad BinaryView::prepareLoad(const QString&     filePath,
   r.data       = file.read(r.loadedSize);
   file.close();
 
+  if (cancelled()) return r;
+
   // "Auto" 指定なら uchardet で実エンコードを判定。それ以外は素通し。
   r.actualEncoding = resolveEncoding(r.data, encoding);
 
+  if (cancelled()) return r;
+
   // 重い hex 整形をワーカースレッドで先に済ませる。actualEncoding を使う。
-  r.text = formatHexDump(r.data, unit, endian, r.actualEncoding);
+  // formatHexDump は cancelToken を見ながら 256 行おきに途中で中断できる。
+  r.text = formatHexDump(r.data, unit, endian, r.actualEncoding, cancelToken);
+
+  if (cancelled() || r.text.isEmpty()) {
+    // formatHexDump がキャンセルで空を返した場合 (or 実際に空) は ok=false。
+    return r;
+  }
+
   if (r.totalSize > r.loadedSize) {
     r.text.append(QStringLiteral("...\n[truncated: showing first %1 of %2 bytes]\n")
                     .arg(r.loadedSize)

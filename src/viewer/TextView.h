@@ -4,6 +4,8 @@
 #include <QString>
 #include <QWidget>
 
+#include <atomic>
+
 class QComboBox;
 class QToolButton;
 class QLineEdit;
@@ -39,8 +41,14 @@ public:
 
   // ワーカースレッドで実行可能なロード処理 (UI 非依存)。
   // QtConcurrent::run などから呼び、戻り値を applyPreparedLoad に渡す。
+  //
+  // cancelToken を渡すと、各 stage (open / read / encoding detect / decode)
+  // の合間に true を確認した時点で早期 return して PreparedLoad{ ok=false }
+  // を返す。プレビューモードでカーソル移動が起きたとき、進行中のロードを
+  // 「中断」したいときに使う (旧 API 互換のため nullptr 既定)。
   static PreparedLoad prepareLoad(const QString& filePath,
-                                  const QString& userEncoding);
+                                  const QString& userEncoding,
+                                  const std::atomic<bool>* cancelToken = nullptr);
   // ワーカーの結果を UI に反映する。必ずメインスレッドから呼ぶこと。
   void applyPreparedLoad(const PreparedLoad& result);
 

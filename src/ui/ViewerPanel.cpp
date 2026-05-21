@@ -250,7 +250,8 @@ T waitForFutureWithEventLoop(QFuture<T> future) {
 bool ViewerPanel::openTextFile(const QString& filePath, const QString& displayPath) {
   auto future = QtConcurrent::run(&TextView::prepareLoad,
                                    filePath,
-                                   m_textView->currentUserEncoding());
+                                   m_textView->currentUserEncoding(),
+                                   /*cancelToken=*/ nullptr);
   TextView::PreparedLoad p = waitForFutureWithEventLoop(future);
   if (!p.ok) return false;
 
@@ -282,7 +283,8 @@ bool ViewerPanel::openBinaryFile(const QString& filePath, const QString& display
                                    filePath,
                                    m_binaryView->currentUnit(),
                                    m_binaryView->currentEndian(),
-                                   m_binaryView->currentEncoding());
+                                   m_binaryView->currentEncoding(),
+                                   /*cancelToken=*/ nullptr);
   BinaryView::PreparedLoad p = waitForFutureWithEventLoop(future);
   if (!p.ok) return false;
 

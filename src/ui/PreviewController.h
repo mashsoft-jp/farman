@@ -5,6 +5,7 @@
 #include <QTimer>
 
 #include <atomic>
+#include <memory>
 
 namespace Farman {
 
@@ -77,6 +78,13 @@ private:
   // ワーカーは開始時の世代をキャプチャし、結果到着時に m_generation と一致
   // すれば適用、不一致なら破棄。スレッド間で読まれるので atomic。
   std::atomic<quint64> m_generation{0};
+
+  // 直近 in-flight ジョブのキャンセルトークン。新しい requestPreview /
+  // clearPreview が来た瞬間に *m_currentCancelToken = true をセットして、
+  // prepareLoad の中の cancelToken チェックポイントで早期 return させる。
+  // shared_ptr にする理由: ワーカースレッドがアクセス中に PreviewController が
+  // 解放されても寿命が保証されるようにするため。
+  std::shared_ptr<std::atomic<bool>> m_currentCancelToken;
 };
 
 } // namespace Farman

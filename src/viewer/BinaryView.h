@@ -5,6 +5,8 @@
 #include <QString>
 #include <QWidget>
 
+#include <atomic>
+
 class QComboBox;
 class QPlainTextEdit;
 
@@ -43,10 +45,13 @@ public:
   bool loadFile(const QString& filePath);
 
   // ワーカースレッドで実行可能なロード処理 (UI 非依存)。
+  // cancelToken が指す atomic が true になった時点で早期 return する
+  // (プレビューモードのカーソル移動による中断用)。
   static PreparedLoad prepareLoad(const QString&     filePath,
                                   BinaryViewerUnit   unit,
                                   BinaryViewerEndian endian,
-                                  const QString&     encoding);
+                                  const QString&     encoding,
+                                  const std::atomic<bool>* cancelToken = nullptr);
   // ワーカーの結果を UI に反映する。必ずメインスレッドから呼ぶこと。
   void applyPreparedLoad(const PreparedLoad& result);
 

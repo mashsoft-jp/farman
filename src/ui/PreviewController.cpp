@@ -43,16 +43,25 @@ struct PreviewResult {
 };
 
 // ワーカースレッドで走る本体。UI には触らないので static の自由関数にする。
+// cancelToken は shared_ptr で受けて lifetime を確実にする (PreviewController が
+// 破棄されてもワーカー実行中は生存)。
 PreviewResult runPreviewLoad(QString             filePath,
                              QString             userEncoding,
                              BinaryViewerUnit    binUnit,
                              BinaryViewerEndian  binEndian,
-                             QString             binEncoding) {
+                             QString             binEncoding,
+                             std::shared_ptr<std::atomic<bool>> cancelToken) {
   PreviewResult r;
+  const std::atomic<bool>* tokPtr = cancelToken.get();
+  // 早期キャンセル: ジョブが投入から実行までの間にキャンセルされていたら何もしない。
+  if (tokPtr && tokPtr->load(std::memory_order_acquire)) {
+    r.kind = PreviewResult::Kind::Unsupported;
+    return r;
+  }
   const ViewerPanel::ViewerKind kind = ViewerPanel::resolveAuto(filePath);
   switch (kind) {
     case ViewerPanel::ViewerKind::Text:
-      r.text = TextView::prepareLoad(filePath, userEncoding);
+      r.text = TextView::prepareLoad(filePath, userEncoding, tokPtr);
       r.kind = PreviewResult::Kind::Text;
       if (!r.text.ok) {
         r.kind = PreviewResult::Kind::Unsupported;
@@ -60,6 +69,8 @@ PreviewResult runPreviewLoad(QString             filePath,
       }
       return r;
     case ViewerPanel::ViewerKind::Image:
+      // ImageView::prepareLoad は QImageReader::read() の最中に中断不可。
+      // 開始前にだけキャンセルチェックを掛ける。
       r.image = ImageView::prepareLoad(filePath);
       r.kind  = PreviewResult::Kind::Image;
       if (!r.image.ok) {
@@ -68,7 +79,7 @@ PreviewResult runPreviewLoad(QString             filePath,
       }
       return r;
     case ViewerPanel::ViewerKind::Binary:
-      r.binary = BinaryView::prepareLoad(filePath, binUnit, binEndian, binEncoding);
+      r.binary = BinaryView::prepareLoad(filePath, binUnit, binEndian, binEncoding, tokPtr);
       r.kind   = PreviewResult::Kind::Binary;
       if (!r.binary.ok) {
         r.kind = PreviewResult::Kind::Unsupported;
@@ -102,6 +113,11 @@ void PreviewController::requestPreview(const QString& filePath,
   // (= 「読込み途中でカーソルが移動した場合は読込みを中断して次へ」要件)
   m_generation.fetch_add(1, std::memory_order_acq_rel);
 
+  // 直前のジョブにキャンセルを通知する (Phase 3: 真の中断)。
+  if (m_currentCancelToken) {
+    m_currentCancelToken->store(true, std::memory_order_release);
+  }
+
   m_pendingFilePath    = filePath;
   m_pendingDisplayPath = displayPath.isEmpty() ? filePath : displayPath;
   m_pendingIsDirectory = isDirectory;
@@ -117,6 +133,9 @@ void PreviewController::clearPreview() {
   m_debounceTimer.stop();
   m_hasPending = false;
   m_generation.fetch_add(1, std::memory_order_acq_rel);
+  if (m_currentCancelToken) {
+    m_currentCancelToken->store(true, std::memory_order_release);
+  }
   m_lastShownPath.clear();
   if (m_pane) m_pane->clear();
 }
@@ -178,6 +197,12 @@ void PreviewController::startLoadJob(const QString& filePath,
   // ワーカー投入時点での世代をキャプチャ。
   const quint64 myGen = m_generation.load(std::memory_order_acquire);
 
+  // このジョブ用の新しいキャンセルトークンを発行する。
+  // 次の requestPreview / clearPreview で *this token = true がセットされ、
+  // ワーカーが prepareLoad の中で見て早期 return する仕組み。
+  auto token = std::make_shared<std::atomic<bool>>(false);
+  m_currentCancelToken = token;
+
   // ビュアー用のローカル設定をメインスレッドで取得 (UI 触れる)。
   const QString userEnc = m_pane->textView()
                             ? m_pane->textView()->currentUserEncoding()
@@ -237,7 +262,8 @@ void PreviewController::startLoadJob(const QString& filePath,
                                        userEnc,
                                        binUnit,
                                        binEndian,
-                                       binEncoding));
+                                       binEncoding,
+                                       token));
 }
 
 } // namespace Farman
