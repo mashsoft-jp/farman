@@ -55,8 +55,13 @@ All notable changes to **farman** are documented in this file.
   - ロード戦略: デバウンス 200ms + QtConcurrent ワーカー + 世代カウンタ +
     協調キャンセル (TextView / BinaryView)。読み込み中にカーソルが動いたら
     即座に次のファイルへ
-  - 上限を超えるファイル (既定 10 MB) はプレビューせず "Too large" 表示。
-    プレビューサイズ / デバウンス時間は Settings から変更可能
+  - 上限超え (既定 10 MB) のテキスト / バイナリは**先頭 N バイトだけ読み込んで
+    truncate 注記付きで表示**。画像は部分デコードできないので "Too large"
+    メッセージ表示
+  - プレビューサイズ / デバウンス時間は Settings から変更可能
+  - **アーカイブ内エントリも対応**: zip / tar 等を開いた状態でカーソル移動
+    すると、エントリを一時展開して通常ビュアー経路でプレビュー
+  - ディレクトリは Finder Quick Look 風 (フォルダアイコン + パス + "N items")
   - レイアウトは永続化、Splitter のサイズは Dual / Preview で独立記憶
 - **自動アップデート**
   - 起動時に最大 1 日 1 回、GitHub Releases の最新タグをチェック

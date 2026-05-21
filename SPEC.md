@@ -216,14 +216,32 @@ Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
     だけに任せる。
   - **Loading 表示の遅延**: 150ms 経っても結果が返らないときだけ Loading
     page を表示 (小ファイルでチカチカさせない)。
-- 上限超過時の挙動:
-  - `Settings::previewMaxFileSizeBytes` (既定 10 MB) を超えるファイルは
-    "File too large to preview" メッセージを表示。プレビューせずに通常の
+- 上限超過時の挙動 (`Settings::previewMaxFileSizeBytes`、既定 10 MB):
+  - **テキスト / バイナリ**: 先頭 N バイトだけ読み込んで表示し、末尾に
+    `[truncated: showing first X of Y bytes]` 注記を付ける。
+    BinaryView は元々 8 MB 内蔵上限を持っていたが、プレビュー経由なら
+    Settings 値が優先される。
+  - **画像**: QImageReader::read() は部分デコードできないため
+    "File too large to preview" メッセージで拒否。プレビューせず通常の
     Enter 操作でビュアー起動を促す。
 - 特殊なカーソル位置:
-  - `..` 行: 空表示
-  - ディレクトリ: "Directory: \<path\>" 状態表示 (将来課題: 再帰統計を出す)
-  - 非通常ファイル / 存在しないファイル: "Not a regular file." / "File not found."
+  - `..` 行: 空表示。
+  - ディレクトリ: macOS Finder Quick Look 風のページ
+    (大きめフォルダアイコン + パス + 浅い件数 "N items")。
+    合計サイズの **再帰計算は将来課題**。
+  - 非通常ファイル / 存在しないファイル: "Not a regular file." /
+    "File not found." メッセージ。
+- アーカイブ内エントリのプレビュー (実装済):
+  - 左ペインがアーカイブ内ブラウジング (`archive.zip!/inner/`) になっている
+    状態でカーソル移動すると、エントリを **`PreviewController` の
+    `QTemporaryDir` に一時展開** してから通常の prepareLoad 経路に流す。
+  - 展開先は `<archiveSha1[0..7]>/<safeJoin(entryPath)>` 形式の決定論的命名で、
+    同じエントリへの再要求では再展開を行わない (サイズが一致すれば再利用)。
+  - `safeJoinExtractPath` で Zip-Slip 攻撃を多層防御する (Enter で開く本来の
+    ビュアー経路と同じ防御線)。
+  - 一時ディレクトリは `PreviewController` 破棄時に丸ごと削除される。
+  - 上限超過チェックは展開前のサイズ (= アーカイブの uncompressed size) で
+    行うので、巨大エントリを展開してから捨てる無駄が発生しない。
 - 制約:
   - プレビュー中は **Sync Browse / Directory Compare は強制 OFF** (右ペインが
     ビュアーなので意味を成さない)。
@@ -235,9 +253,8 @@ Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
 - レイアウトは Settings (`behavior.layoutMode = "preview"`) に永続化されるため、
   プレビューモード中に終了すれば次回起動時もプレビューレイアウトで開く。
 - Splitter のドラッグ位置は Dual / Preview それぞれ独立に記憶される。
-- 将来課題 (Phase 5 以降):
-  - アーカイブ内ファイルのプレビュー (現状は対象外)
-  - ディレクトリ統計 (含むファイル数 / 合計サイズの再帰計算)
+- 将来課題:
+  - ディレクトリ統計の合計サイズ (再帰計算、Properties Worker 流用)
   - Preview ペインへの Tab フォーカス移動 (文字選択 / コピー対応)
 
 ### アクティブペインの切替
