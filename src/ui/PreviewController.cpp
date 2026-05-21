@@ -9,6 +9,7 @@
 
 #include <QCryptographicHash>
 #include <QDir>
+#include <QDir>
 #include <QFileInfo>
 #include <QFutureWatcher>
 #include <QPointer>
@@ -48,12 +49,15 @@ struct PreviewResult {
 // ワーカースレッドで走る本体。UI には触らないので static の自由関数にする。
 // cancelToken は shared_ptr で受けて lifetime を確実にする (PreviewController が
 // 破棄されてもワーカー実行中は生存)。
+// maxBytes > 0 のときはテキスト/バイナリの読み込みを先頭 maxBytes に絞り、
+// truncate 注記付きで返す (プレビューモードの上限処理用)。
 PreviewResult runPreviewLoad(QString             filePath,
                              QString             userEncoding,
                              BinaryViewerUnit    binUnit,
                              BinaryViewerEndian  binEndian,
                              QString             binEncoding,
-                             std::shared_ptr<std::atomic<bool>> cancelToken) {
+                             std::shared_ptr<std::atomic<bool>> cancelToken,
+                             qint64              maxBytes) {
   PreviewResult r;
   const std::atomic<bool>* tokPtr = cancelToken.get();
   // 早期キャンセル: ジョブが投入から実行までの間にキャンセルされていたら何もしない。
@@ -64,7 +68,7 @@ PreviewResult runPreviewLoad(QString             filePath,
   const ViewerPanel::ViewerKind kind = ViewerPanel::resolveAuto(filePath);
   switch (kind) {
     case ViewerPanel::ViewerKind::Text:
-      r.text = TextView::prepareLoad(filePath, userEncoding, tokPtr);
+      r.text = TextView::prepareLoad(filePath, userEncoding, tokPtr, maxBytes);
       r.kind = PreviewResult::Kind::Text;
       if (!r.text.ok) {
         r.kind = PreviewResult::Kind::Unsupported;
@@ -73,7 +77,8 @@ PreviewResult runPreviewLoad(QString             filePath,
       return r;
     case ViewerPanel::ViewerKind::Image:
       // ImageView::prepareLoad は QImageReader::read() の最中に中断不可。
-      // 開始前にだけキャンセルチェックを掛ける。
+      // 開始前にだけキャンセルチェックを掛ける。画像は途中切り取りができない
+      // (デコーダがファイル末尾までを要求する) ので、maxBytes は無視する。
       r.image = ImageView::prepareLoad(filePath);
       r.kind  = PreviewResult::Kind::Image;
       if (!r.image.ok) {
@@ -82,7 +87,8 @@ PreviewResult runPreviewLoad(QString             filePath,
       }
       return r;
     case ViewerPanel::ViewerKind::Binary:
-      r.binary = BinaryView::prepareLoad(filePath, binUnit, binEndian, binEncoding, tokPtr);
+      r.binary = BinaryView::prepareLoad(filePath, binUnit, binEndian,
+                                          binEncoding, tokPtr, maxBytes);
       r.kind   = PreviewResult::Kind::Binary;
       if (!r.binary.ok) {
         r.kind = PreviewResult::Kind::Unsupported;
@@ -180,16 +186,31 @@ void PreviewController::onDebounceTimeout() {
     return;
   }
 
-  // 2. ディレクトリは状態表示。
+  // 2. ディレクトリは Finder Quick Look 風の "アイコン + パス + 件数" 表示。
+  //    件数は浅い (再帰しない) entryList で取る。.. / . は除外。アクセス権が
+  //    無くて読めないディレクトリは -1 で件数行を省略させる。
   if (m_pendingIsDirectory) {
-    m_pane->showUnsupported(tr("Directory: %1").arg(m_pendingDisplayPath));
+    int itemCount = -1;
+    QDir dir(m_pendingFilePath);
+    if (dir.exists()) {
+      itemCount = dir.entryList(QDir::AllEntries | QDir::Hidden
+                                 | QDir::System | QDir::NoDotAndDotDot).size();
+    }
+    m_pane->showDirectory(m_pendingDisplayPath, itemCount);
     m_lastShownPath = m_pendingFilePath;
     return;
   }
 
-  // 3. 上限超過チェック (アーカイブ・通常共通)。
+  // 3. 上限超過: テキスト/バイナリは先頭 N バイトに truncate して表示、
+  //    画像は途中切り取りできないので「too large」で拒否。
+  //    種別判定は resolveAuto なので、表示用パスではなく実パスで判定する。
+  //    アーカイブ内エントリは entryPath の拡張子で判定する。
   const qint64 maxBytes = Settings::instance().previewMaxFileSizeBytes();
-  if (m_pendingFileSize > maxBytes) {
+  const QString pathForKind = m_pendingArchiveCtx
+                                ? m_pendingArchiveEntryPath
+                                : m_pendingFilePath;
+  if (m_pendingFileSize > maxBytes
+      && ViewerPanel::resolveAuto(pathForKind) == ViewerPanel::ViewerKind::Image) {
     m_pane->showUnsupported(tr("File too large to preview (%1).\n"
                                "Press Enter to open in viewer.")
                               .arg(humanReadableSize(m_pendingFileSize)));
@@ -346,13 +367,20 @@ void PreviewController::startLoadJob(const QString& filePath,
     }
   });
 
+  // 上限超え (Text/Binary を先頭 truncate で見せる場合) の maxBytes を決定。
+  // ファイルサイズが上限以下のときは -1 (フル読み) を渡してフォーマッタの
+  // 内蔵上限に任せる。
+  const qint64 settingsMax = Settings::instance().previewMaxFileSizeBytes();
+  const qint64 maxBytes = (m_pendingFileSize > settingsMax) ? settingsMax : -1;
+
   watcher->setFuture(QtConcurrent::run(&runPreviewLoad,
                                        filePath,
                                        userEnc,
                                        binUnit,
                                        binEndian,
                                        binEncoding,
-                                       token));
+                                       token,
+                                       maxBytes));
 }
 
 } // namespace Farman

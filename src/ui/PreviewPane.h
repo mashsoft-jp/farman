@@ -32,8 +32,13 @@ public:
   // 空表示に戻す。
   void clear();
 
-  // 非対応ファイル / ディレクトリ / 大きすぎ等を、説明テキスト付きで表示。
+  // 非対応ファイル / 大きすぎ等を、説明テキスト付きで表示。
   void showUnsupported(const QString& reason);
+
+  // ディレクトリにカーソルがあるときの表示 (Finder Quick Look 風)。
+  //   path       : 表示用パス
+  //   itemCount  : 「N 個のアイテム」表示用 (-1 で件数行を省略)
+  void showDirectory(const QString& path, int itemCount);
 
   // 非同期ロード中の表示 (Phase 2 で使う)。
   void showLoading();
@@ -57,6 +62,11 @@ private:
   QLabel*         m_emptyLabel        = nullptr;
   QLabel*         m_loadingLabel      = nullptr;
   QLabel*         m_unsupportedLabel  = nullptr;
+  // ディレクトリ専用ページ (アイコン + パス + 件数の縦並び)。
+  QWidget*        m_directoryPage     = nullptr;
+  QLabel*         m_directoryIcon     = nullptr;
+  QLabel*         m_directoryPathLabel  = nullptr;
+  QLabel*         m_directoryCountLabel = nullptr;
   TextView*       m_textView          = nullptr;
   ImageView*      m_imageView         = nullptr;
   BinaryView*     m_binaryView        = nullptr;

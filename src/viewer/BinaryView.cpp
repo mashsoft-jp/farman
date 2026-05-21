@@ -348,7 +348,8 @@ BinaryView::PreparedLoad BinaryView::prepareLoad(const QString&     filePath,
                                                  BinaryViewerUnit   unit,
                                                  BinaryViewerEndian endian,
                                                  const QString&     encoding,
-                                                 const std::atomic<bool>* cancelToken) {
+                                                 const std::atomic<bool>* cancelToken,
+                                                 qint64             maxBytes) {
   PreparedLoad r;
   r.filePath = filePath;
 
@@ -362,8 +363,10 @@ BinaryView::PreparedLoad BinaryView::prepareLoad(const QString&     filePath,
   if (!file.open(QIODevice::ReadOnly)) {
     return r;
   }
+  // 上限: 引数 maxBytes > 0 ならそれ、未指定なら内蔵 kMaxBytes (8 MB)。
+  const qint64 effectiveMax = (maxBytes > 0) ? maxBytes : kMaxBytes;
   r.totalSize  = file.size();
-  r.loadedSize = qMin<qint64>(r.totalSize, kMaxBytes);
+  r.loadedSize = qMin<qint64>(r.totalSize, effectiveMax);
   r.data       = file.read(r.loadedSize);
   file.close();
 

@@ -1,7 +1,11 @@
 #include "PreviewPane.h"
 
+#include <QApplication>
+#include <QFileIconProvider>
+#include <QFileInfo>
 #include <QLabel>
 #include <QStackedWidget>
+#include <QStyle>
 #include <QVBoxLayout>
 
 namespace Farman {
@@ -42,7 +46,39 @@ void PreviewPane::setupUi() {
   m_unsupportedLabel->setWordWrap(true);
   m_stack->addWidget(m_unsupportedLabel);
 
-  // 3〜5: 既存ビュアーを使い回す。
+  // 3: Directory page (アイコン + パス + 件数 を縦に並べる Finder Quick Look 風)
+  m_directoryPage = new QWidget(this);
+  auto* dirLayout = new QVBoxLayout(m_directoryPage);
+  dirLayout->setContentsMargins(16, 32, 16, 32);
+  dirLayout->setSpacing(12);
+  dirLayout->addStretch();
+
+  m_directoryIcon = new QLabel(m_directoryPage);
+  m_directoryIcon->setAlignment(Qt::AlignCenter);
+  // 大きめのフォルダアイコンを描画。OS 標準のフォルダアイコンを 96px で取得。
+  const QIcon folderIcon = QApplication::style()->standardIcon(QStyle::SP_DirIcon);
+  m_directoryIcon->setPixmap(folderIcon.pixmap(96, 96));
+  dirLayout->addWidget(m_directoryIcon, 0, Qt::AlignCenter);
+
+  m_directoryPathLabel = new QLabel(m_directoryPage);
+  m_directoryPathLabel->setAlignment(Qt::AlignCenter);
+  m_directoryPathLabel->setWordWrap(true);
+  m_directoryPathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  QFont pathFont = m_directoryPathLabel->font();
+  pathFont.setBold(true);
+  m_directoryPathLabel->setFont(pathFont);
+  dirLayout->addWidget(m_directoryPathLabel);
+
+  m_directoryCountLabel = new QLabel(m_directoryPage);
+  m_directoryCountLabel->setAlignment(Qt::AlignCenter);
+  m_directoryCountLabel->setStyleSheet(QStringLiteral(
+    "QLabel { color: palette(mid); }"));
+  dirLayout->addWidget(m_directoryCountLabel);
+
+  dirLayout->addStretch();
+  m_stack->addWidget(m_directoryPage);
+
+  // 4〜6: 既存ビュアーを使い回す。
   m_textView   = new TextView(this);
   m_imageView  = new ImageView(this);
   m_binaryView = new BinaryView(this);
@@ -60,6 +96,18 @@ void PreviewPane::clear() {
 void PreviewPane::showUnsupported(const QString& reason) {
   m_unsupportedLabel->setText(reason);
   m_stack->setCurrentWidget(m_unsupportedLabel);
+}
+
+void PreviewPane::showDirectory(const QString& path, int itemCount) {
+  m_directoryPathLabel->setText(path);
+  if (itemCount < 0) {
+    m_directoryCountLabel->setText(QString());
+  } else if (itemCount == 1) {
+    m_directoryCountLabel->setText(tr("1 item"));
+  } else {
+    m_directoryCountLabel->setText(tr("%1 items").arg(itemCount));
+  }
+  m_stack->setCurrentWidget(m_directoryPage);
 }
 
 void PreviewPane::showLoading() {

@@ -32,6 +32,10 @@ public:
     QByteArray data;
     QString    actualEncoding;
     QString    text;
+    // truncate された場合 (maxBytes 引数で読み込み量を絞られた場合) は
+    // totalSize > loadedSize になる。両方 0 のときは未設定 (フル読み)。
+    qint64     totalSize  = 0;
+    qint64     loadedSize = 0;
   };
 
   explicit TextView(QWidget* parent = nullptr);
@@ -46,9 +50,14 @@ public:
   // の合間に true を確認した時点で早期 return して PreparedLoad{ ok=false }
   // を返す。プレビューモードでカーソル移動が起きたとき、進行中のロードを
   // 「中断」したいときに使う (旧 API 互換のため nullptr 既定)。
+  //
+  // maxBytes > 0 を指定すると先頭 maxBytes バイトだけ読んでデコード結果に
+  // truncate 注記を付加する (プレビューモードの上限処理に使う)。
+  // -1 (既定) はフル読み込み = 既存挙動。
   static PreparedLoad prepareLoad(const QString& filePath,
                                   const QString& userEncoding,
-                                  const std::atomic<bool>* cancelToken = nullptr);
+                                  const std::atomic<bool>* cancelToken = nullptr,
+                                  qint64 maxBytes = -1);
   // ワーカーの結果を UI に反映する。必ずメインスレッドから呼ぶこと。
   void applyPreparedLoad(const PreparedLoad& result);
 

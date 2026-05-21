@@ -251,7 +251,8 @@ bool ViewerPanel::openTextFile(const QString& filePath, const QString& displayPa
   auto future = QtConcurrent::run(&TextView::prepareLoad,
                                    filePath,
                                    m_textView->currentUserEncoding(),
-                                   /*cancelToken=*/ nullptr);
+                                   /*cancelToken=*/ nullptr,
+                                   /*maxBytes=*/ qint64(-1));
   TextView::PreparedLoad p = waitForFutureWithEventLoop(future);
   if (!p.ok) return false;
 
@@ -284,7 +285,8 @@ bool ViewerPanel::openBinaryFile(const QString& filePath, const QString& display
                                    m_binaryView->currentUnit(),
                                    m_binaryView->currentEndian(),
                                    m_binaryView->currentEncoding(),
-                                   /*cancelToken=*/ nullptr);
+                                   /*cancelToken=*/ nullptr,
+                                   /*maxBytes=*/ qint64(-1));
   BinaryView::PreparedLoad p = waitForFutureWithEventLoop(future);
   if (!p.ok) return false;
 

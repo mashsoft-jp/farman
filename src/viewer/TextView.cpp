@@ -323,7 +323,8 @@ bool TextView::loadFile(const QString& filePath) {
 
 TextView::PreparedLoad TextView::prepareLoad(const QString& filePath,
                                              const QString& userEncoding,
-                                             const std::atomic<bool>* cancelToken) {
+                                             const std::atomic<bool>* cancelToken,
+                                             qint64 maxBytes) {
   PreparedLoad r;
   r.filePath = filePath;
 
@@ -341,7 +342,17 @@ TextView::PreparedLoad TextView::prepareLoad(const QString& filePath,
   if (!file.open(QIODevice::ReadOnly)) {
     return r;
   }
-  r.data = file.readAll();
+  r.totalSize = file.size();
+  if (maxBytes > 0 && r.totalSize > maxBytes) {
+    // 先頭 maxBytes バイトだけ読む。マルチバイト文字の途中で切れるおそれは
+    // あるが QStringDecoder は replacement char に置き換えてくれるので致命傷
+    // にはならない。プレビュー用途なので末尾 1〜2 文字が乱れる程度は許容する。
+    r.data       = file.read(maxBytes);
+    r.loadedSize = r.data.size();
+  } else {
+    r.data       = file.readAll();
+    r.loadedSize = r.data.size();
+  }
   file.close();
 
   if (cancelled()) return r;
@@ -367,6 +378,14 @@ TextView::PreparedLoad TextView::prepareLoad(const QString& filePath,
   r.text = decodeBytes(r.data, r.actualEncoding);
 
   if (cancelled()) return r;
+
+  // truncate された場合は末尾に注記を入れる (プレビューで「先頭だけ」と
+  // ユーザーに伝えるため)。
+  if (r.totalSize > r.loadedSize) {
+    r.text.append(QStringLiteral("\n\n...\n[truncated: showing first %1 of %2 bytes]\n")
+                    .arg(r.loadedSize)
+                    .arg(r.totalSize));
+  }
 
   r.ok = true;
   return r;

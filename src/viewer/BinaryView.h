@@ -47,11 +47,14 @@ public:
   // ワーカースレッドで実行可能なロード処理 (UI 非依存)。
   // cancelToken が指す atomic が true になった時点で早期 return する
   // (プレビューモードのカーソル移動による中断用)。
+  // maxBytes > 0 を指定すると内蔵の 8 MB 既定上限の代わりにそれを使う。
+  // -1 (既定) は従来通り kMaxBytes (8MB) を上限とする。
   static PreparedLoad prepareLoad(const QString&     filePath,
                                   BinaryViewerUnit   unit,
                                   BinaryViewerEndian endian,
                                   const QString&     encoding,
-                                  const std::atomic<bool>* cancelToken = nullptr);
+                                  const std::atomic<bool>* cancelToken = nullptr,
+                                  qint64 maxBytes = -1);
   // ワーカーの結果を UI に反映する。必ずメインスレッドから呼ぶこと。
   void applyPreparedLoad(const PreparedLoad& result);
 
