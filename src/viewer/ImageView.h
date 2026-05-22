@@ -58,8 +58,14 @@ public:
 
   // 読み込み済みの画像の自然サイズ (px)。アニメ画像でも 1 フレーム目の画像
   // サイズを返す。未ロード or ロード失敗時は QSize() (= invalid)。
-  // ImageViewerWindow の「ウィンドウサイズを画像にあわせる」ボタン用。
+  // **ファイルそのもの**のサイズ (= 回転を反映しない) を返す。
   QSize naturalImageSize() const { return m_naturalImageSize; }
+
+  // 現在の表示状態 (回転を含む) における自然サイズ。90°/270° のときは
+  // naturalImageSize() の幅と高さを入れ替えたものを返す。
+  // 「ウィンドウサイズを画像にあわせる」ボタンが画面上の見た目に合わせて
+  // ウィンドウを調整するために使う。
+  QSize displayNaturalImageSize() const;
 
   // 現在の **実効ズーム率** (%)。マニュアルズーム時は m_zoomPercent、
   // Fit-to-Window モード時はビューポートに収めるための自動倍率を返す。

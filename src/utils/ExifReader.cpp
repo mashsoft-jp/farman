@@ -225,6 +225,10 @@ void parseGpsIfd(const TiffReader& r, qsizetype gpsIfdOff, ExifReader::Pairs& ou
     entries.append({e, off});
   });
 
+  // GPSAltitudeRef は BYTE: 0 = sea level (= 海抜上)、1 = below sea level。
+  // タグが無い場合は 0 (= 海抜上) として扱う。
+  quint16 altRef = 0;
+  bool    altRefSet = false;
   for (const auto& pair : entries) {
     const TagEntry& e = pair.first;
     const qsizetype off = pair.second;
@@ -233,6 +237,18 @@ void parseGpsIfd(const TiffReader& r, qsizetype gpsIfdOff, ExifReader::Pairs& ou
       case 0x0003: lonRef = readAscii(r, e, off); break;  // GPSLongitudeRef
       case 0x0002: latEnt = &pair.first; latEntOff = off; break;  // GPSLatitude
       case 0x0004: lonEnt = &pair.first; lonEntOff = off; break;  // GPSLongitude
+      case 0x0005: {  // GPSAltitudeRef (BYTE 1 byte)
+        // BYTE 型はインライン格納 (4 バイト中の先頭バイト)。安全のため
+        // valueOffsetFor を経由してオフセット解決し、その先頭バイトを読む。
+        if (e.type == 1 && e.count >= 1) {
+          const qsizetype voff = valueOffsetFor(e, off);
+          if (r.inRange(voff, 1)) {
+            altRef = r.base[voff];
+            altRefSet = true;
+          }
+        }
+        break;
+      }
     }
   }
 
@@ -252,11 +268,15 @@ void parseGpsIfd(const TiffReader& r, qsizetype gpsIfdOff, ExifReader::Pairs& ou
     const TagEntry& e = pair.first;
     const qsizetype off = pair.second;
     switch (e.tag) {
-      case 0x0006: {  // GPSAltitude
+      case 0x0006: {  // GPSAltitude (RATIONAL、絶対値)
         const Rational q = readRational(r, e, off);
         if (q.den != 0) {
-          out.append({ ExifReader::tr("GPS Altitude"),
-                       QStringLiteral("%1 m").arg(formatRational(q)) });
+          const double v = static_cast<double>(q.num) / static_cast<double>(q.den);
+          const bool belowSeaLevel = altRefSet && altRef == 1;
+          const QString s = belowSeaLevel
+            ? QStringLiteral("-%1 m").arg(QString::number(v, 'g', 6))
+            : QStringLiteral("%1 m").arg(QString::number(v, 'g', 6));
+          out.append({ ExifReader::tr("GPS Altitude"), s });
         }
         break;
       }

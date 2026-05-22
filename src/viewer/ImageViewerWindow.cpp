@@ -69,7 +69,9 @@ void ImageViewerWindow::loadImage() {
 
 void ImageViewerWindow::fitWindowToImage() {
   if (!m_imageView) return;
-  const QSize imgSize = m_imageView->naturalImageSize();
+  // 表示状態の自然サイズ (回転を含む) を使う。90°/270° のときは縦横が
+  // 入れ替わったサイズに合わせてウィンドウを調整する。
+  const QSize imgSize = m_imageView->displayNaturalImageSize();
   if (!imgSize.isValid() || imgSize.isEmpty()) return;
 
   // 現在の実効ズーム率 (Fit-to-Window 時はビューポートに基づく自動倍率) を

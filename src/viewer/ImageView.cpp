@@ -109,23 +109,29 @@ protected:
     paintBackground(p, event->rect());
     if (!m_pixmap.isNull()) {
       const QSize ds = displaySize();
-      const QRect target((width() - ds.width()) / 2, (height() - ds.height()) / 2,
+      // ターゲット矩形は浮動小数点 (QRectF) で計算する。
+      // QRect::center() を使うと整数座標になり、偶数幅/高さの 90/270 度回転で
+      // 1px 端が欠ける問題が出るため、QPointF 中心 + QRectF 描画にする。
+      const QRectF target((width()  - ds.width())  / 2.0,
+                          (height() - ds.height()) / 2.0,
                           ds.width(), ds.height());
       if (m_rotation == 0) {
-        p.drawPixmap(target, m_pixmap);
+        p.drawPixmap(target, m_pixmap, QRectF(m_pixmap.rect()));
       } else {
         // 回転描画: ターゲット矩形の中心を回転中心にして QPainter::rotate。
         // 描画矩形は「回転前のサイズ」= ds を 90 度ごとに転置したもの。
+        const QPointF center(target.left() + target.width()  / 2.0,
+                             target.top()  + target.height() / 2.0);
         p.save();
-        p.translate(target.center());
+        p.translate(center);
         p.rotate(m_rotation);
-        QSize unrotated = ds;
-        if (m_rotation == 90 || m_rotation == 270) unrotated.transpose();
-        const QRect drawRect(-unrotated.width()  / 2,
-                             -unrotated.height() / 2,
-                              unrotated.width(),
-                              unrotated.height());
-        p.drawPixmap(drawRect, m_pixmap);
+        QSize unrotatedSize = ds;
+        if (m_rotation == 90 || m_rotation == 270) unrotatedSize.transpose();
+        const QRectF drawRect(-unrotatedSize.width()  / 2.0,
+                              -unrotatedSize.height() / 2.0,
+                               unrotatedSize.width(),
+                               unrotatedSize.height());
+        p.drawPixmap(drawRect, m_pixmap, QRectF(m_pixmap.rect()));
         p.restore();
       }
     }
@@ -529,6 +535,16 @@ int ImageView::effectiveZoomPercent() const {
   return m_display ? m_display->effectiveZoomPercent() : m_zoomPercent;
 }
 
+QSize ImageView::displayNaturalImageSize() const {
+  QSize s = m_naturalImageSize;
+  // 回転中 (90/270°) は幅と高さが入れ替わる。Fit や「ウィンドウサイズを画像
+  // にあわせる」など、画面上の見た目に合わせたサイズが欲しい呼び出し用。
+  if (m_display && (m_display->rotation() == 90 || m_display->rotation() == 270)) {
+    s.transpose();
+  }
+  return s;
+}
+
 QSize ImageView::imageAreaSize() const {
   if (m_scrollArea && m_scrollArea->viewport()) {
     return m_scrollArea->viewport()->size();
@@ -578,7 +594,14 @@ bool ImageView::eventFilter(QObject* watched, QEvent* event) {
 
 bool ImageView::detectAnimated(const QString& filePath) {
   QImageReader reader(filePath);
-  return reader.supportsAnimation() && reader.imageCount() > 1;
+  if (!reader.supportsAnimation()) return false;
+  // Qt のプラグインによっては事前にフレーム数を確定できず imageCount() == 0
+  // を返す。その場合は安全側に倒して QMovie に渡し、最終判定は
+  // applyPreparedLoad() で frameCount() を見て行う (静止画フォールバック
+  // ロジックは applyPreparedLoad に既にある)。
+  // 1 フレームしかない GIF/WebP だけ明示的に静止画扱い。
+  const int count = reader.imageCount();
+  return count != 1;  // 0 (不明) は再生候補に残す
 }
 
 QString ImageView::statusInfo() const {
