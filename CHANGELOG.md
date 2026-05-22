@@ -41,6 +41,22 @@ All notable changes to **farman** are documented in this file.
   - 画像 (ズーム / Fit to Window / 透明背景 Checker / GIF・WebP アニメーション)
   - バイナリ (16 進ダンプ + アドレス列・文字列列カラーリング)
   - 任意ビュアーで開く (Ctrl+Enter) / OS 既定アプリで実行 (Shift+Enter)
+- **画像ビュアーの強化**
+  - ツールバーに **時計回り 90° 回転** ボタン (表示のみ、保存はしない)。
+    角度ラベル表示、ファイル切替で 0° リセット、Fit-to-Window や External
+    viewer のウィンドウフィットも回転後サイズに追従
+  - **再生ボタンの自動有効化制御**: 1 フレームしかない GIF/WebP や静止画
+    (PNG/JPEG/BMP) では disable、複数フレームのアニメだけ enable
+  - **画像情報 ("i") ダイアログ** (モードレス、ファイル切替で内容自動更新):
+    フォーマット / サイズ / 色深度 / DPI / 解像度
+  - **JPEG / PNG (eXIf) / WebP (EXIF) / TIFF の Exif メタデータ**: 自前パーサで
+    Camera Make/Model、撮影日時、絞り / ISO / 焦点距離 / フラッシュ /
+    ホワイトバランス / 色空間、レンズ Make/Model、GPS 緯度経度高度 (海抜下
+    対応)、QImageReader の埋込みテキストキー (PNG tEXt / iTXt / JPEG コメント) を
+    表示。外部ライブラリ非依存
+  - **ICC カラープロファイル名** ("sRGB IEC61966-2.1" / "Display P3" /
+    "Adobe RGB (1998)" 等) を表示
+  - **BMP** 対応 (24bit / 1bit / RLE)
 - **サムネイル表示**
   - ファイル一覧をリスト表示 / 小・中・大サムネイルの 4 段階で切り替え
     (Finder ライクに `Cmd/Ctrl+1〜4`、または View メニュー / ツールバー
