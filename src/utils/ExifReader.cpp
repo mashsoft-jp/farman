@@ -446,6 +446,34 @@ void parseIfd0(const TiffReader& r, qsizetype ifd0Off, ExifReader::Pairs& out,
   });
 }
 
+// TIFF ヘッダ + IFD ストリームを受け取って Exif タグを抽出する共通関数。
+// JPEG の APP1 / PNG の eXIf / WebP の EXIF / TIFF ファイル本体 から呼ばれる。
+// `base`, `size` は "II"/"MM" の先頭からのバイト列。
+void parseTiffStream(const uchar* base, qsizetype size, ExifReader::Pairs& out) {
+  if (size < 8) return;
+  TiffReader r;
+  r.base = base;
+  r.size = size;
+  const uchar b0 = base[0];
+  const uchar b1 = base[1];
+  if (b0 == 'I' && b1 == 'I') {
+    r.bigEndian = false;
+  } else if (b0 == 'M' && b1 == 'M') {
+    r.bigEndian = true;
+  } else {
+    return;
+  }
+  const quint16 magic = r.u16(2);
+  if (magic != 0x002A) return;
+  const quint32 ifd0Off = r.u32(4);
+
+  quint32 exifIfdOff = 0;
+  quint32 gpsIfdOff  = 0;
+  parseIfd0(r, ifd0Off, out, exifIfdOff, gpsIfdOff);
+  if (exifIfdOff != 0) parseExifIfd(r, exifIfdOff, out);
+  if (gpsIfdOff  != 0) parseGpsIfd (r, gpsIfdOff,  out);
+}
+
 } // namespace
 
 ExifReader::Pairs ExifReader::readFromJpeg(const QString& filePath) {
@@ -483,31 +511,8 @@ ExifReader::Pairs ExifReader::readFromJpeg(const QString& filePath) {
         if (std::memcmp(buf.constData() + payloadOff, "Exif\0\0", 6) == 0) {
           const qsizetype tiffOff = payloadOff + 6;
           const qsizetype tiffLen = payloadLen - 6;
-
-          // TIFF ヘッダ: II/MM (2) + 0x002A (2) + IFD0 offset (4)
-          if (tiffLen >= 8) {
-            const uchar b0 = static_cast<uchar>(buf[tiffOff]);
-            const uchar b1 = static_cast<uchar>(buf[tiffOff + 1]);
-            TiffReader r;
-            r.base = reinterpret_cast<const uchar*>(buf.constData() + tiffOff);
-            r.size = tiffLen;
-            if (b0 == 'I' && b1 == 'I') {
-              r.bigEndian = false;
-            } else if (b0 == 'M' && b1 == 'M') {
-              r.bigEndian = true;
-            } else {
-              return out;
-            }
-            const quint16 magic = r.u16(2);
-            if (magic != 0x002A) return out;
-            const quint32 ifd0Off = r.u32(4);
-
-            quint32 exifIfdOff = 0;
-            quint32 gpsIfdOff  = 0;
-            parseIfd0(r, ifd0Off, out, exifIfdOff, gpsIfdOff);
-            if (exifIfdOff != 0) parseExifIfd(r, exifIfdOff, out);
-            if (gpsIfdOff  != 0) parseGpsIfd (r, gpsIfdOff,  out);
-          }
+          parseTiffStream(reinterpret_cast<const uchar*>(buf.constData() + tiffOff),
+                          tiffLen, out);
           return out;  // Exif APP1 は通常 1 つだけ
         }
       }
@@ -515,6 +520,123 @@ ExifReader::Pairs ExifReader::readFromJpeg(const QString& filePath) {
     p += 2 + segLen;
   }
   return out;
+}
+
+ExifReader::Pairs ExifReader::readFromPng(const QString& filePath) {
+  Pairs out;
+  QFile f(filePath);
+  if (!f.open(QIODevice::ReadOnly)) return out;
+  const QByteArray buf = f.readAll();
+  f.close();
+
+  // PNG マジック: 89 50 4E 47 0D 0A 1A 0A
+  static const uchar kPngSig[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+  if (buf.size() < 8
+      || std::memcmp(buf.constData(), kPngSig, 8) != 0) {
+    return out;
+  }
+
+  // 8 バイト目以降をチャンクで走査。
+  //   length (4 bytes big-endian) + type (4 bytes ASCII) + data (length bytes)
+  //   + CRC (4 bytes)
+  // "eXIf" チャンクが見つかったら、その data 部分がそのまま TIFF/Exif ストリーム。
+  qsizetype p = 8;
+  while (p + 8 <= buf.size()) {
+    const auto* base = reinterpret_cast<const uchar*>(buf.constData() + p);
+    const quint32 length = (quint32(base[0]) << 24)
+                         | (quint32(base[1]) << 16)
+                         | (quint32(base[2]) << 8)
+                         |  quint32(base[3]);
+    const QByteArray type = QByteArray(reinterpret_cast<const char*>(base + 4), 4);
+
+    if (p + 8 + qsizetype(length) + 4 > buf.size()) break;  // 不正長
+    if (type == QByteArray("eXIf", 4)) {
+      const auto* data = reinterpret_cast<const uchar*>(buf.constData() + p + 8);
+      parseTiffStream(data, qsizetype(length), out);
+      return out;
+    }
+    if (type == QByteArray("IEND", 4)) break;  // 終端
+    p += 8 + qsizetype(length) + 4;
+  }
+  return out;
+}
+
+ExifReader::Pairs ExifReader::readFromWebp(const QString& filePath) {
+  Pairs out;
+  QFile f(filePath);
+  if (!f.open(QIODevice::ReadOnly)) return out;
+  const QByteArray buf = f.readAll();
+  f.close();
+
+  // WebP コンテナ (RIFF):
+  //   "RIFF" (4) + fileSize (4, little-endian) + "WEBP" (4)
+  //   その後ろにチャンク群: type(4) + size(4 LE) + data(size) + パディング 1B (size 奇数のとき)
+  // 拡張形式 (VP8X) なら "EXIF" チャンクが入る可能性がある。
+  if (buf.size() < 12) return out;
+  if (std::memcmp(buf.constData(), "RIFF", 4) != 0) return out;
+  if (std::memcmp(buf.constData() + 8, "WEBP", 4) != 0) return out;
+
+  qsizetype p = 12;
+  while (p + 8 <= buf.size()) {
+    const auto* base = reinterpret_cast<const uchar*>(buf.constData() + p);
+    const QByteArray type = QByteArray(reinterpret_cast<const char*>(base), 4);
+    const quint32 size =  quint32(base[4])
+                       | (quint32(base[5]) <<  8)
+                       | (quint32(base[6]) << 16)
+                       | (quint32(base[7]) << 24);
+    if (p + 8 + qsizetype(size) > buf.size()) break;
+
+    if (type == QByteArray("EXIF", 4)) {
+      // EXIF チャンクは中身がそのまま TIFF/Exif ストリーム。
+      // (一部の WebP ライターは先頭に "Exif\0\0" マジックを付けてしまうので、
+      //  それが見つかった場合はスキップする防御を入れる)
+      const uchar* data = base + 8;
+      qsizetype dataLen = qsizetype(size);
+      if (dataLen >= 6 && std::memcmp(data, "Exif\0\0", 6) == 0) {
+        data    += 6;
+        dataLen -= 6;
+      }
+      parseTiffStream(data, dataLen, out);
+      return out;
+    }
+    // 次のチャンクへ。size が奇数ならパディング 1 バイトを跨ぐ。
+    qsizetype step = 8 + qsizetype(size);
+    if (size & 1) ++step;
+    p += step;
+  }
+  return out;
+}
+
+ExifReader::Pairs ExifReader::readFromTiff(const QString& filePath) {
+  Pairs out;
+  QFile f(filePath);
+  if (!f.open(QIODevice::ReadOnly)) return out;
+  const QByteArray buf = f.readAll();
+  f.close();
+  if (buf.size() < 8) return out;
+  // TIFF はファイル先頭が直接 TIFF ヘッダ。コンテナ層は無いので
+  // バイト列全体を parseTiffStream に渡すだけ。
+  parseTiffStream(reinterpret_cast<const uchar*>(buf.constData()),
+                  qsizetype(buf.size()), out);
+  return out;
+}
+
+ExifReader::Pairs ExifReader::readForFormat(const QString& filePath,
+                                            const QString& formatName) {
+  const QString f = formatName.toLower();
+  if (f == QLatin1String("jpeg") || f == QLatin1String("jpg")) {
+    return readFromJpeg(filePath);
+  }
+  if (f == QLatin1String("png")) {
+    return readFromPng(filePath);
+  }
+  if (f == QLatin1String("webp")) {
+    return readFromWebp(filePath);
+  }
+  if (f == QLatin1String("tiff") || f == QLatin1String("tif")) {
+    return readFromTiff(filePath);
+  }
+  return {};
 }
 
 } // namespace Farman

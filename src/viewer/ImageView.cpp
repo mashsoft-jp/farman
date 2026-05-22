@@ -13,6 +13,7 @@
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QToolBar>
+#include <QColorSpace>
 #include <QImage>
 #include <QImageReader>
 #include <QLabel>
@@ -694,6 +695,7 @@ QString ImageView::buildImageInfoText() const {
   }
 
   // DPI (QImage::dotsPerMeterX/Y は実画像を読み込んで取得)。
+  // 同じ probe 画像から ICC カラープロファイル名 (Color space) も取り出す。
   QImage probe = reader.read();
   if (!probe.isNull()) {
     const int dpmx = probe.dotsPerMeterX();
@@ -704,6 +706,16 @@ QString ImageView::buildImageInfoText() const {
       body += tr("Resolution: %1 x %2 DPI")
                 .arg(qRound(dpix)).arg(qRound(dpiy))
             + QLatin1Char('\n');
+    }
+    // ICC カラープロファイル: 埋込み ICC があれば description() に名前が入る
+    // (例: "sRGB IEC61966-2.1", "Display P3", "Adobe RGB (1998)")。
+    // 埋込み無しの場合 QColorSpace は invalid。
+    const QColorSpace cs = probe.colorSpace();
+    if (cs.isValid()) {
+      const QString desc = cs.description();
+      if (!desc.isEmpty()) {
+        body += tr("Color profile: %1").arg(desc) + QLatin1Char('\n');
+      }
     }
   }
 
@@ -719,16 +731,17 @@ QString ImageView::buildImageInfoText() const {
     }
   }
 
-  // JPEG であれば Exif (Make/Model/Date/ISO/Aperture/Focal/Flash/WhiteBalance/
-  // ColorSpace/GPS など) を自前パーサで抽出して表示する。
-  // 他フォーマットは Qt の対応範囲外 (PNG/WebP の Exif は将来課題)。
-  if (fmt == QLatin1String("JPEG") || fmt == QLatin1String("JPG")) {
-    const auto exif = ExifReader::readFromJpeg(m_filePath);
-    if (!exif.isEmpty()) {
-      body += QLatin1Char('\n') + tr("--- Exif ---") + QLatin1Char('\n');
-      for (const auto& p : exif) {
-        body += p.first + QStringLiteral(": ") + p.second + QLatin1Char('\n');
-      }
+  // フォーマットに応じて Exif (TIFF/Exif ストリーム) を抽出。
+  //   - JPEG: APP1 セグメントの "Exif\0\0" マーカー
+  //   - PNG : eXIf チャンク (PNG 仕様 v2.0、2017)
+  //   - WebP: 拡張形式の EXIF チャンク
+  //   - TIFF: ファイル先頭が直接 TIFF ストリーム
+  // ExifReader::readForFormat() がフォーマット名から自動振り分けする。
+  const auto exif = ExifReader::readForFormat(m_filePath, fmt);
+  if (!exif.isEmpty()) {
+    body += QLatin1Char('\n') + tr("--- Exif ---") + QLatin1Char('\n');
+    for (const auto& p : exif) {
+      body += p.first + QStringLiteral(": ") + p.second + QLatin1Char('\n');
     }
   }
 
