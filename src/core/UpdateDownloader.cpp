@@ -1,5 +1,7 @@
 #include "UpdateDownloader.h"
 
+#include "Logger.h"
+
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -47,8 +49,12 @@ QString UpdateDownloader::assetPatternForThisPlatform() {
   // 現状の release.yml は macOS = arm64 限定で DMG を出している。
   return QStringLiteral("macos-%1.dmg").arg(currentArchKey());
 #elif defined(Q_OS_WIN)
-  // Windows は Inno Setup の setup.exe
-  return QStringLiteral("windows-%1-setup.exe").arg(currentArchKey());
+  // Windows は Inno Setup の setup.exe。
+  // release.yml は Microsoft の慣例に従って x86_64 ではなく `x64` 短縮表記で
+  // アセット名を作っているので、currentArchKey() ("x86_64") をそのまま使うと
+  // ミスマッチする。Windows x64 を明示的にハードコードする。
+  // (将来 Windows on ARM64 をサポートする場合は arch 別に分岐させる)
+  return QStringLiteral("windows-x64-setup.exe");
 #elif defined(Q_OS_LINUX)
   // Linux は AppImage (.deb もあるが、自動更新では AppImage を優先)
   return QStringLiteral("linux-%1.AppImage").arg(currentArchKey());
@@ -322,20 +328,40 @@ fi
 
 #elif defined(Q_OS_LINUX)
   // Linux AppImage: 現在の AppImage パスを取得して新版で置換 → 自プロセス終了
-  // 後にユーザーが手動で再起動。argv[0] (現在の実行ファイル) は QCoreApplication
-  // ::applicationFilePath() で取れる。
-  const QString currentApp = QCoreApplication::applicationFilePath();
-  // 自分自身を置き換えるには別プロセス経由が必要 (Linux でも実行中 inode は
-  // 保持されるが、書込みは可能)。シンプルにシェルスクリプトで実行。
+  // 後に新版を nohup で起動。
+  //
+  // 重要: AppImage は実行時に /tmp/.mount_xxx/ にマウントされ、その中の
+  // usr/bin/farman が走るため QCoreApplication::applicationFilePath() は
+  // マウント先内部の "/tmp/.mount_xxx/usr/bin/farman" を返す。これを mv で
+  // 上書きしてもユーザーが本来持っている .AppImage ファイルは変わらない。
+  // AppImage ランタイムは本物の AppImage パスを `$APPIMAGE` 環境変数で
+  // 教えてくれるので、まずそれを優先する。
+  // (AppImage 以外の経路 (例: .deb で /opt/farman/ に展開) で起動された
+  //  場合は $APPIMAGE が無いので applicationFilePath() にフォールバック。
+  //  ただし deb 経由のアップデートは sudo が要るので失敗する見込み。
+  //  その場合スクリプトのログを /tmp/farman-update.log に残してユーザーが
+  //  手動対処できるようにする。)
+  QString currentApp = qEnvironmentVariable("APPIMAGE");
+  if (currentApp.isEmpty()) {
+    currentApp = QCoreApplication::applicationFilePath();
+  }
   const QString script = QStringLiteral(R"(#!/bin/bash
-set -e
+exec >/tmp/farman-update.log 2>&1
+echo "[$(date)] farman update: NEW=%1 TARGET=%2"
 NEW="%1"
 TARGET="%2"
 sleep 2
-chmod +x "$NEW"
-mv -f "$NEW" "$TARGET"
+if [ ! -f "$NEW" ]; then
+  echo "ERROR: new AppImage not found at $NEW"
+  exit 1
+fi
+chmod +x "$NEW" || { echo "ERROR: chmod on NEW failed"; exit 1; }
+if ! mv -f "$NEW" "$TARGET"; then
+  echo "ERROR: mv -f \"$NEW\" \"$TARGET\" failed (permission? not an AppImage?)"
+  exit 1
+fi
 chmod +x "$TARGET"
-# 新版を起動
+echo "OK: replaced $TARGET, relaunching"
 nohup "$TARGET" >/dev/null 2>&1 &
 )").arg(m_savePath, currentApp);
 
@@ -353,6 +379,11 @@ nohup "$TARGET" >/dev/null 2>&1 &
     QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner |
     QFile::ReadGroup | QFile::ExeGroup |
     QFile::ReadOther | QFile::ExeOther);
+
+  Logger::instance().info(
+    QStringLiteral("Linux update: NEW=%1, TARGET=%2 (APPIMAGE=%3)")
+      .arg(m_savePath, currentApp,
+           qEnvironmentVariable("APPIMAGE", QStringLiteral("<unset>"))));
 
   if (!QProcess::startDetached(QStringLiteral("/bin/bash"), { scriptPath })) {
     m_state = State::Idle;
