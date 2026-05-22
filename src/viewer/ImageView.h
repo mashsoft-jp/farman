@@ -82,6 +82,17 @@ public:
 protected:
   bool eventFilter(QObject* watched, QEvent* event) override;
 
+private slots:
+  // ツールバーの "i" ボタンと `i` キーから呼ばれる。
+  // 既にダイアログが開いていれば閉じる、無ければ最新のメタデータで開く
+  // (= トグル動作、モードレス)。
+  void toggleImageInfoDialog();
+  // applyPreparedLoad から呼ばれる。ダイアログが開いている状態で別のファイルを
+  // 選んだ場合に、内容を最新に差し替える。
+  void refreshImageInfoDialog();
+  // 内部ヘルパ: 現在の m_filePath からメタデータテキストを組み立てる。
+  QString buildImageInfoText() const;
+
 private:
   void setupUi();
   void syncFromSettings();
@@ -102,6 +113,9 @@ private:
   // 透明部分の表示モード (Checker / SolidColor) のトグル。OFF = Checker、
   // ON = SolidColor。
   QToolButton* m_transparencyButton = nullptr;
+  // 画像メタデータ (フォーマット情報・QImageReader::text / 将来は Exif も) を
+  // モーダルダイアログで表示するボタン。
+  QToolButton* m_infoButton          = nullptr;
 
   // 表示部
   QScrollArea*  m_scrollArea = nullptr;
@@ -120,6 +134,10 @@ private:
   QString             m_filePath;
   QPointer<QMovie>    m_movie;        // アニメ再生用 (m_display の親で破棄)
   bool                m_fileIsAnimated = false;
+
+  // メタデータ表示用のモードレスダイアログ (i キー / "i" ボタンでトグル)。
+  // ファイル切替時に内容を更新する。
+  QPointer<class QDialog> m_infoDialog;
 
   // 表示に使う実効設定 (ローカル上書き)。Settings 変更で再同期される。
   int                   m_zoomPercent     = 100;

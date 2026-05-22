@@ -1,13 +1,19 @@
 #include "ImageView.h"
 #include "settings/Settings.h"
+#include "utils/ExifReader.h"
 
 #include <QComboBox>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QFontDatabase>
+#include <QPlainTextEdit>
 #include <QToolButton>
 #include "utils/EnterClickFilter.h"
 #include <QEvent>
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QToolBar>
+#include <QImage>
 #include <QImageReader>
 #include <QLabel>
 #include <QLocale>
@@ -219,6 +225,20 @@ void ImageView::setupUi() {
   m_transparencyButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_transparencyButton);
 
+  // 画像メタデータダイアログを開くボタン (フォーマット情報・コメント
+  // 等のテキストメタデータをまとめて表示する)。
+  m_infoButton = new QToolButton(m_toolbar);
+  m_infoButton->setText(QStringLiteral("i"));
+  QFont infoFont = m_infoButton->font();
+  infoFont.setItalic(true);
+  infoFont.setBold(true);
+  m_infoButton->setFont(infoFont);
+  m_infoButton->setToolTip(tr("Show image information / metadata"));
+  m_infoButton->setFocusPolicy(Qt::StrongFocus);
+  connect(m_infoButton, &QToolButton::clicked,
+          this,         &ImageView::toggleImageInfoDialog);
+  m_toolbar->addWidget(m_infoButton);
+
   root->addWidget(m_toolbar);
 
   // 画像表示部 (スクロール可)
@@ -244,8 +264,9 @@ void ImageView::setupUi() {
   setTabOrder(m_zoomCombo,          m_fitButton);
   setTabOrder(m_fitButton,          m_animButton);
   setTabOrder(m_animButton,         m_transparencyButton);
-  setTabOrder(m_transparencyButton, m_scrollArea);
-  m_lastToolbarWidget = m_transparencyButton;
+  setTabOrder(m_transparencyButton, m_infoButton);
+  setTabOrder(m_infoButton,         m_scrollArea);
+  m_lastToolbarWidget = m_infoButton;
 
   // ツールバー内のボタンで Tab フォーカス中に Enter を押したらそのボタンを
   // クリック扱いにする (= 親ウィジェットの "Enter で戻る" 等が誤発火しない)。
@@ -427,6 +448,26 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
     }
   }
 
+  // 再生ボタンの有効化: 真にアニメで複数フレームある場合のみ。
+  // - 静止画 (PNG/JPEG/BMP 等) → disable
+  // - 1 フレームしかない GIF/WebP → disable (= "アニメじゃない GIF")
+  // - QMovie::frameCount() が 0 (= 不明) のときは保守的に enable のまま
+  //   (デコーダが事前判定できないだけで、実際は複数フレームの可能性がある)
+  bool playEnabled = false;
+  if (m_fileIsAnimated && m_movie) {
+    const int fc = m_movie->frameCount();
+    playEnabled = (fc != 1);  // 0 (不明) も再生試行を許可
+  }
+  if (m_animButton) {
+    m_animButton->setEnabled(playEnabled);
+    if (!playEnabled) {
+      m_animButton->setChecked(false);
+    }
+  }
+
+  // Info ダイアログが開いていれば内容を新ファイルに差し替え。
+  refreshImageInfoDialog();
+
   applyDisplayState();
 }
 
@@ -497,11 +538,141 @@ QString ImageView::statusInfo() const {
   QString s = QStringLiteral("%1  ·  %2x%3")
                 .arg(fmt.isEmpty() ? QStringLiteral("?") : fmt)
                 .arg(sz.width()).arg(sz.height());
+  // 色深度 (取得できるフォーマットのみ)。
+  // ImageFormat は OS / プラグイン依存で取れる場合と取れない場合あり。
+  const QImage::Format imgFmt = reader.imageFormat();
+  if (imgFmt != QImage::Format_Invalid) {
+    const int depth = QImage(1, 1, imgFmt).depth();
+    if (depth > 0) s += QStringLiteral("  ·  %1 bpp").arg(depth);
+  }
   if (m_fileIsAnimated && m_movie) {
-    s += QStringLiteral("  ·  %1 frames").arg(m_movie->frameCount());
+    const int fc = m_movie->frameCount();
+    if (fc > 0) {
+      s += QStringLiteral("  ·  %1 frames").arg(fc);
+    }
   }
   s += QStringLiteral("  ·  %1").arg(QLocale(QLocale::English).formattedDataSize(bytes));
   return s;
+}
+
+QString ImageView::buildImageInfoText() const {
+  if (m_filePath.isEmpty()) return QString();
+
+  QImageReader reader(m_filePath);
+  const QString fmt = QString::fromLatin1(reader.format()).toUpper();
+  const QSize sz    = reader.size();
+  const QFileInfo fi(m_filePath);
+
+  QString body;
+  body += tr("File: %1").arg(m_filePath) + QLatin1Char('\n');
+  body += tr("Format: %1").arg(fmt.isEmpty() ? QStringLiteral("(unknown)") : fmt)
+        + QLatin1Char('\n');
+  body += tr("Size: %1 x %2 px").arg(sz.width()).arg(sz.height())
+        + QLatin1Char('\n');
+  body += tr("File size: %1").arg(
+            QLocale(QLocale::English).formattedDataSize(fi.size()))
+        + QLatin1Char('\n');
+
+  // 色深度
+  const QImage::Format imgFmt = reader.imageFormat();
+  if (imgFmt != QImage::Format_Invalid) {
+    const int depth = QImage(1, 1, imgFmt).depth();
+    if (depth > 0) {
+      body += tr("Color depth: %1 bpp").arg(depth) + QLatin1Char('\n');
+    }
+  }
+
+  // アニメ
+  if (m_fileIsAnimated && m_movie) {
+    const int fc = m_movie->frameCount();
+    if (fc > 0) {
+      body += tr("Frames: %1").arg(fc) + QLatin1Char('\n');
+    }
+  }
+
+  // DPI (QImage::dotsPerMeterX/Y は実画像を読み込んで取得)。
+  QImage probe = reader.read();
+  if (!probe.isNull()) {
+    const int dpmx = probe.dotsPerMeterX();
+    const int dpmy = probe.dotsPerMeterY();
+    if (dpmx > 0 && dpmy > 0) {
+      const double dpix = dpmx * 0.0254;
+      const double dpiy = dpmy * 0.0254;
+      body += tr("Resolution: %1 x %2 DPI")
+                .arg(qRound(dpix)).arg(qRound(dpiy))
+            + QLatin1Char('\n');
+    }
+  }
+
+  // QImageReader::text() で取れるテキストメタデータ
+  // (PNG の tEXt / iTXt キー、JPEG コメント等)
+  const QStringList keys = reader.textKeys();
+  if (!keys.isEmpty()) {
+    body += QLatin1Char('\n') + tr("--- Embedded text ---") + QLatin1Char('\n');
+    for (const QString& k : keys) {
+      const QString v = reader.text(k);
+      if (v.isEmpty()) continue;
+      body += k + QStringLiteral(": ") + v + QLatin1Char('\n');
+    }
+  }
+
+  // JPEG であれば Exif (Make/Model/Date/ISO/Aperture/Focal/Flash/WhiteBalance/
+  // ColorSpace/GPS など) を自前パーサで抽出して表示する。
+  // 他フォーマットは Qt の対応範囲外 (PNG/WebP の Exif は将来課題)。
+  if (fmt == QLatin1String("JPEG") || fmt == QLatin1String("JPG")) {
+    const auto exif = ExifReader::readFromJpeg(m_filePath);
+    if (!exif.isEmpty()) {
+      body += QLatin1Char('\n') + tr("--- Exif ---") + QLatin1Char('\n');
+      for (const auto& p : exif) {
+        body += p.first + QStringLiteral(": ") + p.second + QLatin1Char('\n');
+      }
+    }
+  }
+
+  return body;
+}
+
+void ImageView::toggleImageInfoDialog() {
+  if (m_filePath.isEmpty()) return;
+  // 既に表示中なら閉じる (= トグル動作)。
+  if (m_infoDialog && m_infoDialog->isVisible()) {
+    m_infoDialog->close();
+    return;
+  }
+  // 新規もしくは閉じた状態 → 開く。
+  if (!m_infoDialog) {
+    m_infoDialog = new QDialog(this);
+    m_infoDialog->setWindowTitle(tr("Image Information"));
+    m_infoDialog->setAttribute(Qt::WA_DeleteOnClose, false);
+    m_infoDialog->resize(640, 480);
+
+    auto* layout = new QVBoxLayout(m_infoDialog);
+    auto* edit = new QPlainTextEdit(m_infoDialog);
+    edit->setObjectName(QStringLiteral("imageInfoEdit"));
+    edit->setReadOnly(true);
+    edit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    layout->addWidget(edit);
+
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, m_infoDialog);
+    connect(buttons, &QDialogButtonBox::rejected, m_infoDialog, &QDialog::close);
+    layout->addWidget(buttons);
+  }
+  // モードレスで開く + 内容を最新化。
+  if (auto* edit = m_infoDialog->findChild<QPlainTextEdit*>(
+        QStringLiteral("imageInfoEdit"))) {
+    edit->setPlainText(buildImageInfoText());
+  }
+  m_infoDialog->show();
+  m_infoDialog->raise();
+  m_infoDialog->activateWindow();
+}
+
+void ImageView::refreshImageInfoDialog() {
+  if (!m_infoDialog || !m_infoDialog->isVisible()) return;
+  if (auto* edit = m_infoDialog->findChild<QPlainTextEdit*>(
+        QStringLiteral("imageInfoEdit"))) {
+    edit->setPlainText(buildImageInfoText());
+  }
 }
 
 } // namespace Farman

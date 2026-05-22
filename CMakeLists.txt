@@ -120,6 +120,7 @@ qt_add_executable(farman
   src/utils/EnterClickFilter.cpp
   src/utils/ArchivePath.cpp
   src/utils/MediaMatchers.cpp
+  src/utils/ExifReader.cpp
   src/core/workers/WorkerBase.cpp
   src/core/workers/CopyWorker.cpp
   src/core/workers/MoveWorker.cpp
