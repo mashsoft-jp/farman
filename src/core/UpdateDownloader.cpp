@@ -345,7 +345,13 @@ fi
   if (currentApp.isEmpty()) {
     currentApp = QCoreApplication::applicationFilePath();
   }
-  const QString script = QStringLiteral(R"(#!/bin/bash
+  // Raw string にカスタム delimiter (BASH) を付ける理由:
+  // 既定の R"(...)" だと「閉じデリミタ = )"」になり、スクリプト中の
+  // `not an AppImage?)"` の `)"` で文字列が早期終了する (GCC は厳格に
+  // 検出してエラー、Clang はなぜか通す)。R"BASH(...)BASH" にすれば
+  // 閉じデリミタは `)BASH"` のみとなり、シェル中の `)"` シーケンスを
+  // 安全に含められる。
+  const QString script = QStringLiteral(R"BASH(#!/bin/bash
 exec >/tmp/farman-update.log 2>&1
 echo "[$(date)] farman update: NEW=%1 TARGET=%2"
 NEW="%1"
@@ -363,7 +369,7 @@ fi
 chmod +x "$TARGET"
 echo "OK: replaced $TARGET, relaunching"
 nohup "$TARGET" >/dev/null 2>&1 &
-)").arg(m_savePath, currentApp);
+)BASH").arg(m_savePath, currentApp);
 
   const QString scriptPath = updateCacheDir() + QStringLiteral("/install-linux.sh");
   QFile sf(scriptPath);
