@@ -475,11 +475,37 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
   if (m_display) m_display->setRotation(0);
   if (m_rotationLabel) m_rotationLabel->setText(QStringLiteral("0°"));
 
+  // QMovie invalid → 静止画フォールバックを実行した分岐かどうかのフラグ。
+  // ここで処理した場合は下の「r.image を使う静止画ブランチ」をスキップする
+  // (prepareLoad が animated 判定時には r.image を空のままにしているため)。
+  bool staticFallbackHandled = false;
+
   if (m_fileIsAnimated) {
     auto* movie = new QMovie(r.filePath, QByteArray(), this);
     if (!movie->isValid()) {
       movie->deleteLater();
       m_fileIsAnimated = false;
+      // detectAnimated() が imageCount() == 0 (= 不明) を「animated 候補」として
+      // 通すようになった結果、ここに到達するファイルが増えた。prepareLoad は
+      // r.image を空のままワーカーから返してくるので、そのまま下の静止画
+      // ブランチに落ちると古い表示が残ってしまう。
+      // → ここで明示的に QImage で読み直して静止画として表示する。
+      //    それも失敗する場合はビューをクリアして失敗を観測可能にする。
+      QImage fallback;
+      if (fallback.load(r.filePath)) {
+        const QPixmap pm = QPixmap::fromImage(fallback);
+        if (!pm.isNull()) {
+          m_display->setStaticPixmap(pm);
+          m_naturalImageSize = pm.size();
+        } else {
+          m_display->clearImage();
+          m_naturalImageSize = QSize();
+        }
+      } else {
+        m_display->clearImage();
+        m_naturalImageSize = QSize();
+      }
+      staticFallbackHandled = true;
     } else {
       m_movie = movie;
       m_display->setMovie(movie);
@@ -495,13 +521,15 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
     }
   }
 
-  if (!m_fileIsAnimated) {
+  if (!m_fileIsAnimated && !staticFallbackHandled) {
     // bg で QImage に読み込んだものを main で QPixmap に変換して反映。
     const QPixmap pm = QPixmap::fromImage(r.image);
     if (!pm.isNull()) {
       m_display->setStaticPixmap(pm);
       m_naturalImageSize = pm.size();
     } else {
+      // pixmap 化に失敗 → 古い画像が残らないようビューをクリア。
+      m_display->clearImage();
       m_naturalImageSize = QSize();
     }
   }
