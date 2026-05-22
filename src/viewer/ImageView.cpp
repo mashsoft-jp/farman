@@ -74,6 +74,12 @@ public:
     m_fit = fit;
     updateGeometryAndPaint();
   }
+  // 0 / 90 / 180 / 270 度のいずれか (時計回り)。それ以外は 360 で正規化。
+  void setRotation(int deg) {
+    m_rotation = ((deg % 360) + 360) % 360;
+    updateGeometryAndPaint();
+  }
+  int rotation() const { return m_rotation; }
 
   // viewport (= QScrollArea のビューポート) を渡す。Fit 計算で使う。
   void setViewportWidget(QWidget* viewport) { m_viewport = viewport; }
@@ -82,8 +88,12 @@ public:
   int effectiveZoomPercent() const {
     const QSize ds = displaySize();
     if (m_pixmap.isNull() || ds.isEmpty()) return m_zoomPercent;
-    const double rx = static_cast<double>(ds.width())  / m_pixmap.width();
-    const double ry = static_cast<double>(ds.height()) / m_pixmap.height();
+    // 回転を考慮した自然サイズで割り戻す (= ユーザが「実画像の X%」と
+    // 認識するスケール。回転して幅高さが入れ替わったあとでも同じ実画像基準)
+    QSize natural = m_pixmap.size();
+    if (m_rotation == 90 || m_rotation == 270) natural.transpose();
+    const double rx = static_cast<double>(ds.width())  / natural.width();
+    const double ry = static_cast<double>(ds.height()) / natural.height();
     return qMax(1, static_cast<int>(qRound(qMin(rx, ry) * 100)));
   }
 
@@ -101,18 +111,37 @@ protected:
       const QSize ds = displaySize();
       const QRect target((width() - ds.width()) / 2, (height() - ds.height()) / 2,
                           ds.width(), ds.height());
-      p.drawPixmap(target, m_pixmap);
+      if (m_rotation == 0) {
+        p.drawPixmap(target, m_pixmap);
+      } else {
+        // 回転描画: ターゲット矩形の中心を回転中心にして QPainter::rotate。
+        // 描画矩形は「回転前のサイズ」= ds を 90 度ごとに転置したもの。
+        p.save();
+        p.translate(target.center());
+        p.rotate(m_rotation);
+        QSize unrotated = ds;
+        if (m_rotation == 90 || m_rotation == 270) unrotated.transpose();
+        const QRect drawRect(-unrotated.width()  / 2,
+                             -unrotated.height() / 2,
+                              unrotated.width(),
+                              unrotated.height());
+        p.drawPixmap(drawRect, m_pixmap);
+        p.restore();
+      }
     }
   }
 
 private:
   QSize displaySize() const {
     if (m_pixmap.isNull()) return QSize();
+    // 回転後の自然サイズ (= 外接矩形)。90 / 270 度では幅と高さが入れ替わる。
+    QSize natural = m_pixmap.size();
+    if (m_rotation == 90 || m_rotation == 270) natural.transpose();
     if (m_fit && m_viewport) {
       const QSize avail = m_viewport->size();
-      return m_pixmap.size().scaled(avail, Qt::KeepAspectRatio);
+      return natural.scaled(avail, Qt::KeepAspectRatio);
     }
-    return m_pixmap.size() * (m_zoomPercent / 100.0);
+    return natural * (m_zoomPercent / 100.0);
   }
 
   void updateGeometryAndPaint() {
@@ -157,6 +186,9 @@ private:
   QMovie*         m_movie    = nullptr;
   int             m_zoomPercent = 100;
   bool            m_fit         = false;
+  // 表示時の回転角度 (0/90/180/270、時計回り)。ファイルそのものは変更しない、
+  // 画面表示だけの一時状態。ファイル切替で 0 にリセット。
+  int             m_rotation    = 0;
   QPointer<QWidget> m_viewport;
   ImageView*      m_host = nullptr;
 };
@@ -225,6 +257,21 @@ void ImageView::setupUi() {
   m_transparencyButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_transparencyButton);
 
+  // 回転ボタン (時計回り 90° ずつ画面表示だけ回す。ファイル本体は変更しない)。
+  // 連打すると 0 → 90 → 180 → 270 → 0 と進む。ファイル切替で 0 にリセット。
+  m_rotateCwButton = new QToolButton(m_toolbar);
+  m_rotateCwButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/rotate-cw.svg")));
+  m_rotateCwButton->setToolTip(tr("Rotate 90° clockwise (display only)"));
+  m_rotateCwButton->setFocusPolicy(Qt::StrongFocus);
+  connect(m_rotateCwButton, &QToolButton::clicked,
+          this,             &ImageView::rotateCw90);
+  m_toolbar->addWidget(m_rotateCwButton);
+
+  // 現在の回転角度。ボタンの右隣に置く。
+  m_rotationLabel = new QLabel(QStringLiteral("0°"), m_toolbar);
+  m_rotationLabel->setContentsMargins(2, 0, 6, 0);
+  m_toolbar->addWidget(m_rotationLabel);
+
   // 画像メタデータダイアログを開くボタン (フォーマット情報・コメント
   // 等のテキストメタデータをまとめて表示する)。
   m_infoButton = new QToolButton(m_toolbar);
@@ -264,7 +311,8 @@ void ImageView::setupUi() {
   setTabOrder(m_zoomCombo,          m_fitButton);
   setTabOrder(m_fitButton,          m_animButton);
   setTabOrder(m_animButton,         m_transparencyButton);
-  setTabOrder(m_transparencyButton, m_infoButton);
+  setTabOrder(m_transparencyButton, m_rotateCwButton);
+  setTabOrder(m_rotateCwButton,     m_infoButton);
   setTabOrder(m_infoButton,         m_scrollArea);
   m_lastToolbarWidget = m_infoButton;
 
@@ -416,6 +464,10 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
   }
   m_fileIsAnimated = r.isAnimated;
   m_filePath       = r.filePath;
+  // ファイル切替で回転状態を 0 にリセット (画面表示だけのものなので
+  // 別ファイルへ持ち越さない)。
+  if (m_display) m_display->setRotation(0);
+  if (m_rotationLabel) m_rotationLabel->setText(QStringLiteral("0°"));
 
   if (m_fileIsAnimated) {
     auto* movie = new QMovie(r.filePath, QByteArray(), this);
@@ -665,6 +717,15 @@ void ImageView::toggleImageInfoDialog() {
   m_infoDialog->show();
   m_infoDialog->raise();
   m_infoDialog->activateWindow();
+}
+
+void ImageView::rotateCw90() {
+  if (!m_display) return;
+  const int next = (m_display->rotation() + 90) % 360;
+  m_display->setRotation(next);
+  if (m_rotationLabel) {
+    m_rotationLabel->setText(QStringLiteral("%1°").arg(next));
+  }
 }
 
 void ImageView::refreshImageInfoDialog() {

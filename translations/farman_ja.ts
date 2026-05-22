@@ -3376,77 +3376,82 @@ What would you like to do?</source>
 <context>
     <name>Farman::ImageView</name>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="194"/>
+        <location filename="../src/viewer/ImageView.cpp" line="226"/>
         <source>Zoom:</source>
         <translation>ズーム:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="207"/>
+        <location filename="../src/viewer/ImageView.cpp" line="239"/>
         <source>Fit to Window</source>
         <translation>ウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="215"/>
+        <location filename="../src/viewer/ImageView.cpp" line="247"/>
         <source>Play / Pause animation (GIF / WebP)</source>
         <translation>アニメ再生 / 一時停止 (GIF / WebP)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="223"/>
+        <location filename="../src/viewer/ImageView.cpp" line="255"/>
         <source>Transparency background: off = checker, on = solid color</source>
         <translation>透明部分の背景: OFF = チェッカー、ON = 単色</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="236"/>
+        <location filename="../src/viewer/ImageView.cpp" line="264"/>
+        <source>Rotate 90° clockwise (display only)</source>
+        <translation>時計回りに 90° 回転 (表示のみ)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="278"/>
         <source>Show image information / metadata</source>
         <translation>画像情報 / メタデータを表示</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="567"/>
+        <location filename="../src/viewer/ImageView.cpp" line="613"/>
         <source>File: %1</source>
         <translation>ファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="568"/>
+        <location filename="../src/viewer/ImageView.cpp" line="614"/>
         <source>Format: %1</source>
         <translation>フォーマット: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="570"/>
+        <location filename="../src/viewer/ImageView.cpp" line="616"/>
         <source>Size: %1 x %2 px</source>
         <translation>サイズ: %1 × %2 px</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="572"/>
+        <location filename="../src/viewer/ImageView.cpp" line="618"/>
         <source>File size: %1</source>
         <translation>ファイルサイズ: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="581"/>
+        <location filename="../src/viewer/ImageView.cpp" line="627"/>
         <source>Color depth: %1 bpp</source>
         <translation>色深度: %1 bpp</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="589"/>
+        <location filename="../src/viewer/ImageView.cpp" line="635"/>
         <source>Frames: %1</source>
         <translation>フレーム数: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="601"/>
+        <location filename="../src/viewer/ImageView.cpp" line="647"/>
         <source>Resolution: %1 x %2 DPI</source>
         <translation>解像度: %1 × %2 DPI</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="611"/>
+        <location filename="../src/viewer/ImageView.cpp" line="657"/>
         <source>--- Embedded text ---</source>
         <translation>--- 埋め込みテキスト ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="625"/>
+        <location filename="../src/viewer/ImageView.cpp" line="671"/>
         <source>--- Exif ---</source>
         <translation>--- Exif ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="645"/>
+        <location filename="../src/viewer/ImageView.cpp" line="691"/>
         <source>Image Information</source>
         <translation>画像情報</translation>
     </message>

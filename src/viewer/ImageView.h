@@ -9,6 +9,7 @@
 #include <QWidget>
 
 class QComboBox;
+class QLabel;
 class QMovie;
 class QScrollArea;
 class QToolBar;
@@ -92,6 +93,8 @@ private slots:
   void refreshImageInfoDialog();
   // 内部ヘルパ: 現在の m_filePath からメタデータテキストを組み立てる。
   QString buildImageInfoText() const;
+  // ツールバーの回転ボタンから呼ばれる。表示の回転を 90 度ずつ進める。
+  void rotateCw90();
 
 private:
   void setupUi();
@@ -116,6 +119,12 @@ private:
   // 画像メタデータ (フォーマット情報・QImageReader::text / 将来は Exif も) を
   // モーダルダイアログで表示するボタン。
   QToolButton* m_infoButton          = nullptr;
+  // 時計回り 90° ずつ画面表示だけを回転させるボタン。ファイル切替で 0 にリセット。
+  // ファイル本体は変更しない (= 保存しない)。
+  QToolButton* m_rotateCwButton      = nullptr;
+  // 回転角度の表示用ラベル (例: "0°" / "90°" / "180°" / "270°")。
+  // 回転ボタンの右隣に置く。
+  QLabel*      m_rotationLabel       = nullptr;
 
   // 表示部
   QScrollArea*  m_scrollArea = nullptr;

@@ -45,6 +45,7 @@
     <file alias="play.svg">icons/toolbar/play.svg</file>
     <file alias="pause.svg">icons/toolbar/pause.svg</file>
     <file alias="transparency.svg">icons/toolbar/transparency.svg</file>
+    <file alias="rotate-cw.svg">icons/toolbar/rotate-cw.svg</file>
     <file alias="line-numbers.svg">icons/toolbar/line-numbers.svg</file>
     <file alias="word-wrap.svg">icons/toolbar/word-wrap.svg</file>
     <file alias="case-sensitive.svg">icons/toolbar/case-sensitive.svg</file>
