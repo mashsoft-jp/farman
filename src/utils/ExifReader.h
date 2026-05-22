@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCoreApplication>
 #include <QList>
 #include <QPair>
 #include <QString>
@@ -24,6 +25,7 @@ namespace Farman {
 //   - 戻り値は (キー, 値) ペアの順序付きリスト (UI で順番通り表示するため)。
 //   - 解析失敗 / Exif 無しのときは空リスト。例外は投げない。
 class ExifReader {
+  Q_DECLARE_TR_FUNCTIONS(ExifReader)
 public:
   using Pair  = QPair<QString, QString>;
   using Pairs = QList<Pair>;

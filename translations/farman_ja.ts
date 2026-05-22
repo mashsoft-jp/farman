@@ -60,6 +60,219 @@
     </message>
 </context>
 <context>
+    <name>ExifReader</name>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="140"/>
+        <source>Horizontal (normal)</source>
+        <translation>水平 (通常)</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="141"/>
+        <source>Mirror horizontal</source>
+        <translation>水平反転</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="142"/>
+        <source>Rotate 180</source>
+        <translation>180°回転</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="143"/>
+        <source>Mirror vertical</source>
+        <translation>垂直反転</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="144"/>
+        <source>Mirror horizontal and rotate 270 CW</source>
+        <translation>水平反転 + 270°回転 (時計回り)</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="145"/>
+        <source>Rotate 90 CW</source>
+        <translation>90°回転 (時計回り)</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="146"/>
+        <source>Mirror horizontal and rotate 90 CW</source>
+        <translation>水平反転 + 90°回転 (時計回り)</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="147"/>
+        <source>Rotate 270 CW</source>
+        <translation>270°回転 (時計回り)</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="155"/>
+        <source>Fired (raw 0x%1)</source>
+        <translation>発光あり (raw 0x%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="156"/>
+        <source>Did not fire (raw 0x%1)</source>
+        <translation>発光なし (raw 0x%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="161"/>
+        <source>Auto</source>
+        <translation>自動</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="162"/>
+        <source>Manual</source>
+        <translation>マニュアル</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="169"/>
+        <source>sRGB</source>
+        <translation>sRGB</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="170"/>
+        <source>Uncalibrated</source>
+        <translation>未較正</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="171"/>
+        <source>Adobe RGB</source>
+        <translation>Adobe RGB</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="242"/>
+        <source>GPS Latitude</source>
+        <translation>GPS 緯度</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="247"/>
+        <source>GPS Longitude</source>
+        <translation>GPS 経度</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="258"/>
+        <source>GPS Altitude</source>
+        <translation>GPS 高度</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="265"/>
+        <source>GPS Date</source>
+        <translation>GPS 日付</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="277"/>
+        <source>GPS Time</source>
+        <translation>GPS 時刻</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="295"/>
+        <source>Date Taken</source>
+        <translation>撮影日時</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="300"/>
+        <source>Date Digitized</source>
+        <translation>デジタル化日時</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="305"/>
+        <source>Exposure</source>
+        <translation>露光時間</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="310"/>
+        <source>Aperture</source>
+        <translation>絞り</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="315"/>
+        <source>ISO</source>
+        <translation>ISO 感度</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="320"/>
+        <source>Focal length</source>
+        <translation>焦点距離</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="325"/>
+        <source>Flash</source>
+        <translation>フラッシュ</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="334"/>
+        <source>White balance</source>
+        <translation>ホワイトバランス</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="339"/>
+        <source>Color space</source>
+        <translation>色空間</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="344"/>
+        <source>Exif image width</source>
+        <translation>Exif 画像幅</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="349"/>
+        <source>Exif image height</source>
+        <translation>Exif 画像高さ</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="354"/>
+        <source>Lens make</source>
+        <translation>レンズメーカー</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="359"/>
+        <source>Lens model</source>
+        <translation>レンズモデル</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="372"/>
+        <source>Camera make</source>
+        <translation>カメラメーカー</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="377"/>
+        <source>Camera model</source>
+        <translation>カメラモデル</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="382"/>
+        <source>Orientation</source>
+        <translation>向き</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="387"/>
+        <source>Software</source>
+        <translation>ソフトウェア</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="392"/>
+        <source>Date modified</source>
+        <translation>更新日時</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="397"/>
+        <source>Artist</source>
+        <translation>作者</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="402"/>
+        <source>Copyright</source>
+        <translation>著作権</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="407"/>
+        <source>X resolution</source>
+        <translation>X 解像度</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/ExifReader.cpp" line="413"/>
+        <source>Y resolution</source>
+        <translation>Y 解像度</translation>
+    </message>
+</context>
+<context>
     <name>Farman::AppearanceTab</name>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="174"/>
@@ -3163,24 +3376,79 @@ What would you like to do?</source>
 <context>
     <name>Farman::ImageView</name>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="188"/>
+        <location filename="../src/viewer/ImageView.cpp" line="194"/>
         <source>Zoom:</source>
         <translation>ズーム:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="201"/>
+        <location filename="../src/viewer/ImageView.cpp" line="207"/>
         <source>Fit to Window</source>
         <translation>ウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="209"/>
+        <location filename="../src/viewer/ImageView.cpp" line="215"/>
         <source>Play / Pause animation (GIF / WebP)</source>
         <translation>アニメ再生 / 一時停止 (GIF / WebP)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="217"/>
+        <location filename="../src/viewer/ImageView.cpp" line="223"/>
         <source>Transparency background: off = checker, on = solid color</source>
         <translation>透明部分の背景: OFF = チェッカー、ON = 単色</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="236"/>
+        <source>Show image information / metadata</source>
+        <translation>画像情報 / メタデータを表示</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="567"/>
+        <source>File: %1</source>
+        <translation>ファイル: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="568"/>
+        <source>Format: %1</source>
+        <translation>フォーマット: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="570"/>
+        <source>Size: %1 x %2 px</source>
+        <translation>サイズ: %1 × %2 px</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="572"/>
+        <source>File size: %1</source>
+        <translation>ファイルサイズ: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="581"/>
+        <source>Color depth: %1 bpp</source>
+        <translation>色深度: %1 bpp</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="589"/>
+        <source>Frames: %1</source>
+        <translation>フレーム数: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="601"/>
+        <source>Resolution: %1 x %2 DPI</source>
+        <translation>解像度: %1 × %2 DPI</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="611"/>
+        <source>--- Embedded text ---</source>
+        <translation>--- 埋め込みテキスト ---</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="625"/>
+        <source>--- Exif ---</source>
+        <translation>--- Exif ---</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="645"/>
+        <source>Image Information</source>
+        <translation>画像情報</translation>
     </message>
     <message>
         <source>Play / stop animation (GIF / WebP)</source>
@@ -5242,22 +5510,22 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::UpdateDownloader</name>
     <message>
-        <location filename="../src/core/UpdateDownloader.cpp" line="111"/>
+        <location filename="../src/core/UpdateDownloader.cpp" line="117"/>
         <source>Verifying signature...</source>
         <translation>署名を検証中...</translation>
     </message>
     <message>
-        <location filename="../src/core/UpdateDownloader.cpp" line="142"/>
+        <location filename="../src/core/UpdateDownloader.cpp" line="148"/>
         <source>Downloading update...</source>
         <translation>アップデートをダウンロード中...</translation>
     </message>
     <message>
-        <location filename="../src/core/UpdateDownloader.cpp" line="212"/>
+        <location filename="../src/core/UpdateDownloader.cpp" line="218"/>
         <source>Verifying download...</source>
         <translation>ダウンロードを検証中...</translation>
     </message>
     <message>
-        <location filename="../src/core/UpdateDownloader.cpp" line="229"/>
+        <location filename="../src/core/UpdateDownloader.cpp" line="235"/>
         <source>Launching installer...</source>
         <translation>インストーラを起動中...</translation>
     </message>

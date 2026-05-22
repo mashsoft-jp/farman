@@ -137,14 +137,14 @@ QString formatFocalLength(const Rational& q) {
 
 QString orientationText(quint16 v) {
   switch (v) {
-    case 1: return QStringLiteral("Horizontal (normal)");
-    case 2: return QStringLiteral("Mirror horizontal");
-    case 3: return QStringLiteral("Rotate 180");
-    case 4: return QStringLiteral("Mirror vertical");
-    case 5: return QStringLiteral("Mirror horizontal and rotate 270 CW");
-    case 6: return QStringLiteral("Rotate 90 CW");
-    case 7: return QStringLiteral("Mirror horizontal and rotate 90 CW");
-    case 8: return QStringLiteral("Rotate 270 CW");
+    case 1: return ExifReader::tr("Horizontal (normal)");
+    case 2: return ExifReader::tr("Mirror horizontal");
+    case 3: return ExifReader::tr("Rotate 180");
+    case 4: return ExifReader::tr("Mirror vertical");
+    case 5: return ExifReader::tr("Mirror horizontal and rotate 270 CW");
+    case 6: return ExifReader::tr("Rotate 90 CW");
+    case 7: return ExifReader::tr("Mirror horizontal and rotate 90 CW");
+    case 8: return ExifReader::tr("Rotate 270 CW");
   }
   return QString::number(v);
 }
@@ -152,23 +152,23 @@ QString orientationText(quint16 v) {
 QString flashText(quint16 v) {
   // 詳細フラグは多数あるが要点だけ。Bit 0 = Flash fired。
   const bool fired = (v & 0x01) != 0;
-  return fired ? QStringLiteral("Fired (raw 0x%1)").arg(v, 0, 16)
-               : QStringLiteral("Did not fire (raw 0x%1)").arg(v, 0, 16);
+  return fired ? ExifReader::tr("Fired (raw 0x%1)").arg(v, 0, 16)
+               : ExifReader::tr("Did not fire (raw 0x%1)").arg(v, 0, 16);
 }
 
 QString whiteBalanceText(quint16 v) {
   switch (v) {
-    case 0: return QStringLiteral("Auto");
-    case 1: return QStringLiteral("Manual");
+    case 0: return ExifReader::tr("Auto");
+    case 1: return ExifReader::tr("Manual");
   }
   return QString::number(v);
 }
 
 QString colorSpaceText(quint16 v) {
   switch (v) {
-    case 1:       return QStringLiteral("sRGB");
-    case 0xFFFF:  return QStringLiteral("Uncalibrated");
-    case 2:       return QStringLiteral("Adobe RGB");  // 一部メーカ非標準拡張
+    case 1:       return ExifReader::tr("sRGB");
+    case 0xFFFF:  return ExifReader::tr("Uncalibrated");
+    case 2:       return ExifReader::tr("Adobe RGB");  // 一部メーカ非標準拡張
   }
   return QString::number(v);
 }
@@ -239,12 +239,12 @@ void parseGpsIfd(const TiffReader& r, qsizetype gpsIfdOff, ExifReader::Pairs& ou
   // 緯度
   if (latEnt && !latRef.isEmpty()) {
     const QString s = formatGpsCoord(r, *latEnt, latEntOff, latRef);
-    if (!s.isEmpty()) out.append({ QStringLiteral("GPS Latitude"), s });
+    if (!s.isEmpty()) out.append({ ExifReader::tr("GPS Latitude"), s });
   }
   // 経度
   if (lonEnt && !lonRef.isEmpty()) {
     const QString s = formatGpsCoord(r, *lonEnt, lonEntOff, lonRef);
-    if (!s.isEmpty()) out.append({ QStringLiteral("GPS Longitude"), s });
+    if (!s.isEmpty()) out.append({ ExifReader::tr("GPS Longitude"), s });
   }
 
   // 高度 / タイムスタンプ / 日付
@@ -255,14 +255,14 @@ void parseGpsIfd(const TiffReader& r, qsizetype gpsIfdOff, ExifReader::Pairs& ou
       case 0x0006: {  // GPSAltitude
         const Rational q = readRational(r, e, off);
         if (q.den != 0) {
-          out.append({ QStringLiteral("GPS Altitude"),
+          out.append({ ExifReader::tr("GPS Altitude"),
                        QStringLiteral("%1 m").arg(formatRational(q)) });
         }
         break;
       }
       case 0x001D: {  // GPSDateStamp
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("GPS Date"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("GPS Date"), s });
         break;
       }
       case 0x0007: {  // GPSTimeStamp (RATIONAL × 3: H/M/S)
@@ -274,7 +274,7 @@ void parseGpsIfd(const TiffReader& r, qsizetype gpsIfdOff, ExifReader::Pairs& ou
             const int hh = static_cast<int>(h.num / h.den);
             const int mm = static_cast<int>(m.num / m.den);
             const double ss = static_cast<double>(s.num) / s.den;
-            out.append({ QStringLiteral("GPS Time"),
+            out.append({ ExifReader::tr("GPS Time"),
                          QStringLiteral("%1:%2:%3 UTC")
                            .arg(hh, 2, 10, QLatin1Char('0'))
                            .arg(mm, 2, 10, QLatin1Char('0'))
@@ -292,37 +292,37 @@ void parseExifIfd(const TiffReader& r, qsizetype exifIfdOff, ExifReader::Pairs& 
     switch (e.tag) {
       case 0x9003: {  // DateTimeOriginal
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Date Taken"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Date Taken"), s });
         break;
       }
       case 0x9004: {  // DateTimeDigitized
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Date Digitized"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Date Digitized"), s });
         break;
       }
       case 0x829A: {  // ExposureTime
         const Rational q = readRational(r, e, off);
-        if (q.den != 0) out.append({ QStringLiteral("Exposure"), formatExposureTime(q) });
+        if (q.den != 0) out.append({ ExifReader::tr("Exposure"), formatExposureTime(q) });
         break;
       }
       case 0x829D: {  // FNumber
         const Rational q = readRational(r, e, off);
-        if (q.den != 0) out.append({ QStringLiteral("Aperture"), formatFNumber(q) });
+        if (q.den != 0) out.append({ ExifReader::tr("Aperture"), formatFNumber(q) });
         break;
       }
       case 0x8827: {  // ISO
         const quint16 v = readShort(r, e, off);
-        if (v != 0) out.append({ QStringLiteral("ISO"), QString::number(v) });
+        if (v != 0) out.append({ ExifReader::tr("ISO"), QString::number(v) });
         break;
       }
       case 0x920A: {  // FocalLength
         const Rational q = readRational(r, e, off);
-        if (q.den != 0) out.append({ QStringLiteral("Focal length"), formatFocalLength(q) });
+        if (q.den != 0) out.append({ ExifReader::tr("Focal length"), formatFocalLength(q) });
         break;
       }
       case 0x9209: {  // Flash
         const quint16 v = readShort(r, e, off);
-        out.append({ QStringLiteral("Flash"), flashText(v) });
+        out.append({ ExifReader::tr("Flash"), flashText(v) });
         break;
       }
       case 0x9208: {  // LightSource (白色点。WhiteBalance 0xA403 と別)
@@ -331,32 +331,32 @@ void parseExifIfd(const TiffReader& r, qsizetype exifIfdOff, ExifReader::Pairs& 
       }
       case 0xA403: {  // WhiteBalance
         const quint16 v = readShort(r, e, off);
-        out.append({ QStringLiteral("White balance"), whiteBalanceText(v) });
+        out.append({ ExifReader::tr("White balance"), whiteBalanceText(v) });
         break;
       }
       case 0xA001: {  // ColorSpace
         const quint16 v = readShort(r, e, off);
-        out.append({ QStringLiteral("Color space"), colorSpaceText(v) });
+        out.append({ ExifReader::tr("Color space"), colorSpaceText(v) });
         break;
       }
       case 0xA002: {  // ExifImageWidth
         const quint32 v = (e.type == 3) ? readShort(r, e, off) : r.u32(valueOffsetFor(e, off));
-        if (v != 0) out.append({ QStringLiteral("Exif image width"), QString::number(v) });
+        if (v != 0) out.append({ ExifReader::tr("Exif image width"), QString::number(v) });
         break;
       }
       case 0xA003: {  // ExifImageHeight
         const quint32 v = (e.type == 3) ? readShort(r, e, off) : r.u32(valueOffsetFor(e, off));
-        if (v != 0) out.append({ QStringLiteral("Exif image height"), QString::number(v) });
+        if (v != 0) out.append({ ExifReader::tr("Exif image height"), QString::number(v) });
         break;
       }
       case 0xA433: {  // LensMake
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Lens make"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Lens make"), s });
         break;
       }
       case 0xA434: {  // LensModel
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Lens model"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Lens model"), s });
         break;
       }
     }
@@ -369,48 +369,48 @@ void parseIfd0(const TiffReader& r, qsizetype ifd0Off, ExifReader::Pairs& out,
     switch (e.tag) {
       case 0x010F: {  // Make
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Camera make"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Camera make"), s });
         break;
       }
       case 0x0110: {  // Model
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Camera model"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Camera model"), s });
         break;
       }
       case 0x0112: {  // Orientation
         const quint16 v = readShort(r, e, off);
-        out.append({ QStringLiteral("Orientation"), orientationText(v) });
+        out.append({ ExifReader::tr("Orientation"), orientationText(v) });
         break;
       }
       case 0x0131: {  // Software
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Software"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Software"), s });
         break;
       }
       case 0x0132: {  // DateTime
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Date modified"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Date modified"), s });
         break;
       }
       case 0x013B: {  // Artist
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Artist"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Artist"), s });
         break;
       }
       case 0x8298: {  // Copyright
         const QString s = readAscii(r, e, off);
-        if (!s.isEmpty()) out.append({ QStringLiteral("Copyright"), s });
+        if (!s.isEmpty()) out.append({ ExifReader::tr("Copyright"), s });
         break;
       }
       case 0x011A: {  // XResolution (RATIONAL)
         const Rational q = readRational(r, e, off);
-        if (q.den != 0) out.append({ QStringLiteral("X resolution"),
+        if (q.den != 0) out.append({ ExifReader::tr("X resolution"),
                                      formatRational(q) });
         break;
       }
       case 0x011B: {  // YResolution (RATIONAL)
         const Rational q = readRational(r, e, off);
-        if (q.den != 0) out.append({ QStringLiteral("Y resolution"),
+        if (q.den != 0) out.append({ ExifReader::tr("Y resolution"),
                                      formatRational(q) });
         break;
       }
