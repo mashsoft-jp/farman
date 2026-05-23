@@ -1,0 +1,17 @@
+// Windows resource script for farman.
+//
+// Embeds the application icon (images/icon.ico) into farman.exe so that:
+//   - Windows Explorer shows the farman icon for the .exe file
+//   - The taskbar uses it
+//   - Inno Setup's "UninstallDisplayIcon" entry in Add/Remove Programs
+//     picks it up (since UninstallDisplayIcon points to farman.exe)
+//   - Pinned start menu / desktop shortcuts created by Inno Setup use it
+//
+// IDI_ICON1 = the first icon resource. Windows Explorer / shell display
+// the lowest-numbered ICON resource for the executable.
+//
+// `@CMAKE_CURRENT_SOURCE_DIR@/images/icon.ico` is substituted by
+// configure_file() at CMake time. RC compilers (rc.exe / windres) accept
+// forward slashes for paths since their introduction.
+
+IDI_ICON1 ICON "@CMAKE_CURRENT_SOURCE_DIR@/images/icon.ico"

@@ -162,6 +162,22 @@ if(APPLE AND EXISTS "${FARMAN_MACOS_ICON}")
   target_sources(farman PRIVATE "${FARMAN_MACOS_ICON}")
 endif()
 
+# Windows の場合は .rc 経由で farman.exe にアイコンリソースを埋め込む。
+# これが無いと Windows Explorer / タスクバー / Add/Remove Programs のすべてで
+# 既定の Windows EXE アイコン (灰色) が表示されてしまう (Qt の
+# QApplication::setWindowIcon は実行時のウィンドウ装飾だけで、exe のリソースとは
+# 別経路)。
+if(WIN32)
+  set(FARMAN_WINDOWS_ICON "${CMAKE_CURRENT_SOURCE_DIR}/images/icon.ico")
+  if(EXISTS "${FARMAN_WINDOWS_ICON}")
+    configure_file(
+      "${CMAKE_CURRENT_SOURCE_DIR}/windows/farman.rc.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/farman.rc"
+      @ONLY)
+    target_sources(farman PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/farman.rc")
+  endif()
+endif()
+
 target_include_directories(farman PRIVATE
   ${CMAKE_SOURCE_DIR}/src
 )
