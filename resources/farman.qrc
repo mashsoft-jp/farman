@@ -4,13 +4,19 @@
   - macOS の Dock / バンドルアイコンは Contents/Resources/icon.icns 側 (Info.plist
     の CFBundleIconFile) が使われる。
   - 一方で QApplication::setWindowIcon() で参照するアイコン
-    (タスクバー / ウィンドウタイトル / Linux の WM 表示など) は実行ファイルに
-    埋め込んだ PNG を使う。
-  - 大きめサイズを 1 枚埋めておけば、Qt が必要に応じて縮小してくれる。
+    (Windows タスクバー / Linux WM タイトル / macOS のウィンドウ装飾 など) は
+    実行ファイルに埋め込んだリソースを使う。
+  - icon.ico は複数サイズ (16/24/32/48/64/128/256) を内包しているので、
+    Qt が必要に応じて適切なサイズを選んでくれる。alias 名は歴史的経緯で
+    "farman.png" だが実体は ICO で、Qt の QIcon は拡張子で format を自動判定
+    するので問題なし。
+  - 以前は icon-512.png を読んでいたが、これは macOS スタイルの「白角丸 + 中に絵」
+    テンプレートで、Windows タスクバーで他アプリと比べて違和感が出ていた。
+    icon.ico は余白カット + 透明背景の整理済みで、Windows でも自然に表示される。
 -->
 <RCC version="1.0">
   <qresource prefix="/icons">
-    <file alias="farman.png">../images/icon-512.png</file>
+    <file alias="farman.png">../images/icon.ico</file>
   </qresource>
   <!--
     メインツールバー用のアイコン (Lucide スタイル / monochrome 24x24 SVG)。
