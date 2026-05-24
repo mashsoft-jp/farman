@@ -305,6 +305,37 @@ jobs:
           Copy-Item "$env:VCPKG_ROOT/installed/x64-windows/bin/*.dll" `
             -Destination build/Release/
 
+          # 1b. Visual C++ Runtime (MSVCP140 / VCRUNTIME140 / VCRUNTIME140_1) を
+          # 直接バンドル。windeployqt は VC Runtime DLL をコピーしないので、
+          # VC Redist がプリインストールされていない PC (Windows Sandbox、
+          # クリーンインストール直後の OS、サードパーティの最小環境など) で
+          # "MSVCP140.dll が見つからない" エラーが出てしまう。
+          # GitHub Actions の windows-latest runner には VS Build Tools が入っている
+          # ので、その redist ディレクトリから x64 CRT DLL を拾う。
+          $vcRedistRoot = "$env:VCToolsRedistDir"
+          if (-not $vcRedistRoot -or -not (Test-Path $vcRedistRoot)) {
+            # フォールバック: VCINSTALLDIR\Redist\MSVC\<ver> を漁る
+            $vcRedistRoot = (Get-ChildItem "$env:VCINSTALLDIR\Redist\MSVC" -Directory `
+                              -ErrorAction SilentlyContinue |
+                             Sort-Object Name -Descending |
+                             Select-Object -First 1).FullName
+          }
+          Write-Host "VC Redist root: $vcRedistRoot"
+          $crtDll = (Get-ChildItem "$vcRedistRoot\x64\Microsoft.VC*.CRT" -Directory `
+                       -ErrorAction SilentlyContinue |
+                     Select-Object -First 1).FullName
+          if (-not $crtDll) {
+            throw "Could not locate Microsoft.VC*.CRT redist directory under $vcRedistRoot"
+          }
+          Write-Host "Copying VC Runtime from $crtDll"
+          Copy-Item "$crtDll\msvcp140*.dll"     -Destination build/Release/ -Force
+          Copy-Item "$crtDll\vcruntime140.dll"  -Destination build/Release/ -Force
+          # VCRUNTIME140_1 は CRT 1.40 以降のみ。無ければスキップ。
+          Copy-Item "$crtDll\vcruntime140_1.dll" -Destination build/Release/ `
+            -Force -ErrorAction SilentlyContinue
+          Get-ChildItem build/Release/ -Filter "msvcp140*.dll", "vcruntime*.dll" |
+            ForEach-Object { Write-Host "  bundled: $($_.Name)" }
+
           # CMakeLists.txt の project(farman VERSION X.Y.Z) を抽出して
           # Inno Setup と zip 名に渡す。
           $version = (Select-String -Path CMakeLists.txt -Pattern 'project\(farman VERSION ([0-9.]+)').Matches[0].Groups[1].Value
