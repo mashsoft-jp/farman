@@ -310,22 +310,43 @@ jobs:
           # VC Redist がプリインストールされていない PC (Windows Sandbox、
           # クリーンインストール直後の OS、サードパーティの最小環境など) で
           # "MSVCP140.dll が見つからない" エラーが出てしまう。
-          # GitHub Actions の windows-latest runner には VS Build Tools が入っている
-          # ので、その redist ディレクトリから x64 CRT DLL を拾う。
-          $vcRedistRoot = "$env:VCToolsRedistDir"
-          if (-not $vcRedistRoot -or -not (Test-Path $vcRedistRoot)) {
-            # フォールバック: VCINSTALLDIR\Redist\MSVC\<ver> を漁る
-            $vcRedistRoot = (Get-ChildItem "$env:VCINSTALLDIR\Redist\MSVC" -Directory `
-                              -ErrorAction SilentlyContinue |
-                             Sort-Object Name -Descending |
-                             Select-Object -First 1).FullName
+          # GitHub Actions の windows-latest runner では VS Dev Command Prompt が
+          # 明示的にロードされていないと VCToolsRedistDir / VCINSTALLDIR が空に
+          # なるので、複数の典型的なパスを fallback で検索する。
+          $candidates = @()
+          if ($env:VCToolsRedistDir) { $candidates += $env:VCToolsRedistDir }
+          if ($env:VCINSTALLDIR)     { $candidates += "$env:VCINSTALLDIR\Redist\MSVC" }
+          $candidates += @(
+            "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC"
+            "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Redist\MSVC"
+            "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Redist\MSVC"
+            "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC"
+            "C:\Program Files\Microsoft Visual Studio\2019\Enterprise\VC\Redist\MSVC"
+            "C:\Program Files\Microsoft Visual Studio\2019\Community\VC\Redist\MSVC"
+          )
+
+          $crtDll = $null
+          foreach ($root in $candidates) {
+            if (-not $root -or -not (Test-Path $root)) { continue }
+            Write-Host "Searching VC redist under: $root"
+            $found = Get-ChildItem $root -Recurse -Filter "Microsoft.VC*.CRT" `
+                       -Directory -ErrorAction SilentlyContinue |
+                     Where-Object { $_.FullName -like "*\x64\*" } |
+                     Sort-Object { $_.FullName.Length } -Descending |
+                     Select-Object -First 1
+            if ($found) { $crtDll = $found.FullName; break }
           }
-          Write-Host "VC Redist root: $vcRedistRoot"
-          $crtDll = (Get-ChildItem "$vcRedistRoot\x64\Microsoft.VC*.CRT" -Directory `
-                       -ErrorAction SilentlyContinue |
-                     Select-Object -First 1).FullName
           if (-not $crtDll) {
-            throw "Could not locate Microsoft.VC*.CRT redist directory under $vcRedistRoot"
+            # 最終フォールバック: Program Files の Visual Studio を丸ごとスキャン
+            Write-Host "Fallback: scanning C:\Program Files\Microsoft Visual Studio recursively"
+            $found = Get-ChildItem "C:\Program Files\Microsoft Visual Studio" -Recurse `
+                       -Filter "Microsoft.VC*.CRT" -Directory -ErrorAction SilentlyContinue |
+                     Where-Object { $_.FullName -like "*\x64\*" } |
+                     Select-Object -First 1
+            if ($found) { $crtDll = $found.FullName }
+          }
+          if (-not $crtDll) {
+            throw "Could not locate Microsoft.VC*.CRT redist directory on the runner"
           }
           Write-Host "Copying VC Runtime from $crtDll"
           Copy-Item "$crtDll\msvcp140*.dll"     -Destination build/Release/ -Force
@@ -333,7 +354,9 @@ jobs:
           # VCRUNTIME140_1 は CRT 1.40 以降のみ。無ければスキップ。
           Copy-Item "$crtDll\vcruntime140_1.dll" -Destination build/Release/ `
             -Force -ErrorAction SilentlyContinue
-          Get-ChildItem build/Release/ -Filter "msvcp140*.dll", "vcruntime*.dll" |
+          Get-ChildItem build/Release/ -Filter "msvcp140*.dll" |
+            ForEach-Object { Write-Host "  bundled: $($_.Name)" }
+          Get-ChildItem build/Release/ -Filter "vcruntime*.dll" |
             ForEach-Object { Write-Host "  bundled: $($_.Name)" }
 
           # CMakeLists.txt の project(farman VERSION X.Y.Z) を抽出して
