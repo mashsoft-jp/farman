@@ -25,6 +25,25 @@ inline QString toolbarStyleSheet() {
   );
 }
 
+// QTableView / QTreeView / QListView (および QTableWidget 等の Widget 系派生)
+// に setStyleSheet() するための、「フォーカスを失った時の選択行ハイライトを
+// 弱める」スタイル文字列。
+//
+// 既定の Qt スタイルだとフォーカスが他に移っても palette(highlight) (= 青) で
+// 選択行を強調表示し続けるので、「あれ、こっちのリストにフォーカスがあるのかな」
+// と紛らわしくなる。Mac の NSTableView などは非アクティブ時はグレーになるが、
+// それを Qt のクロスプラットフォーム上で再現する形。
+//
+// 既存の setStyleSheet と合わせて使うときは、両方の文字列を連結して渡すこと。
+inline QString inactiveSelectionStyleSheet() {
+  return QStringLiteral(
+    "QAbstractItemView::item:selected:!active {"
+    "  background: palette(midlight);"
+    "  color: palette(text);"
+    "}"
+  );
+}
+
 // ツールバー上のフォーカス可能ウィジェットで Enter / Return キーが押された
 // ときに、親 (= ファイラ / ビュアーウィンドウ) へバブルさせず、
 // そのウィジェット自身のアクションとして処理する QObject フィルタ。

@@ -1,5 +1,6 @@
 #include "HistoryDialog.h"
 #include "utils/Dialogs.h"
+#include "utils/EnterClickFilter.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTableWidget>
@@ -29,6 +30,7 @@ void HistoryDialog::setupUi(const QStringList& entries) {
     mainLayout->addWidget(emptyLabel, 1);
   } else {
     m_table = new QTableWidget(this);
+    m_table->setStyleSheet(inactiveSelectionStyleSheet());
     m_table->setColumnCount(1);
     m_table->setHorizontalHeaderLabels({tr("Path")});
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);

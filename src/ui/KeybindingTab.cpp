@@ -5,6 +5,7 @@
 #include "keybinding/ICommand.h"
 #include "settings/PresetIO.h"
 #include "utils/Dialogs.h"
+#include "utils/EnterClickFilter.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTableWidget>
@@ -84,6 +85,7 @@ void KeybindingTab::setupUi() {
 
   // Table
   m_table = new QTableWidget(this);
+  m_table->setStyleSheet(inactiveSelectionStyleSheet());
   m_table->setColumnCount(3);
   m_table->setHorizontalHeaderLabels({tr("Command"), tr("Current Key"), tr("New Key")});
   m_table->horizontalHeader()->setStretchLastSection(false);

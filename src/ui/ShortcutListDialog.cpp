@@ -3,6 +3,7 @@
 #include "keybinding/CommandRegistry.h"
 #include "keybinding/KeyBindingManager.h"
 #include "settings/Settings.h"
+#include "utils/EnterClickFilter.h"
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <QKeySequence>
@@ -74,6 +75,7 @@ void ShortcutListDialog::setupUi() {
   layout->addWidget(m_searchEdit);
 
   m_table = new QTableWidget(this);
+  m_table->setStyleSheet(inactiveSelectionStyleSheet());
   m_table->setColumnCount(2);
   m_table->setHorizontalHeaderLabels({ tr("Key"), tr("Command") });
   m_table->verticalHeader()->setVisible(false);

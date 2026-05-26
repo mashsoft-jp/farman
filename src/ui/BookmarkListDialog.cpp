@@ -3,6 +3,7 @@
 #include "core/BookmarkManager.h"
 #include "settings/Settings.h"
 #include "utils/Dialogs.h"
+#include "utils/EnterClickFilter.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTableWidget>
@@ -77,6 +78,7 @@ void BookmarkListDialog::setupUi() {
   QVBoxLayout* mainLayout = new QVBoxLayout(this);
 
   m_table = new QTableWidget(this);
+  m_table->setStyleSheet(inactiveSelectionStyleSheet());
   m_table->setColumnCount(2);
   m_table->setHorizontalHeaderLabels({tr("Name"), tr("Path")});
   m_table->setSelectionBehavior(QAbstractItemView::SelectRows);

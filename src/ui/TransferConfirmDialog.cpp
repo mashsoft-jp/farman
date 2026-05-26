@@ -1,6 +1,7 @@
 #include "TransferConfirmDialog.h"
 #include "settings/Settings.h"
 #include "utils/Dialogs.h"
+#include "utils/EnterClickFilter.h"
 #include <QApplication>
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -93,6 +94,7 @@ void TransferConfirmDialog::setupUi(Operation op,
     tr("Items (%1)").arg(itemPaths.size()), this);
   QVBoxLayout* itemsLayout = new QVBoxLayout(itemsGroup);
   QListWidget* list = new QListWidget(this);
+  list->setStyleSheet(inactiveSelectionStyleSheet());
   for (const QString& path : itemPaths) {
     QFileInfo info(path);
     QString label = info.fileName();

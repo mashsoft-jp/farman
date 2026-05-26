@@ -2,6 +2,7 @@
 #include "core/workers/SearchWorker.h"
 #include "settings/Settings.h"
 #include "utils/Dialogs.h"
+#include "utils/EnterClickFilter.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -234,6 +235,10 @@ void SearchDialog::setupUi(const QString& initialPath) {
   m_resultsTable->setShowGrid(false);
   m_resultsTable->setTabKeyNavigation(false);  // Tab はボタンへ抜ける
   m_resultsTable->setFocusPolicy(Qt::StrongFocus);
+  // 検索開始時に setCurrentCell で先頭行が「選択中」になるが、フォーカスが
+  // 入力欄に居る状態で青反転表示だと「テーブルがアクティブ」に見えてしまう。
+  // 共通ヘルパで非アクティブ時はグレー + 通常テキスト色にする。
+  m_resultsTable->setStyleSheet(inactiveSelectionStyleSheet());
   mainLayout->addWidget(m_resultsTable, 1);
 
   m_statusLabel = new QLabel(tr("Ready."), this);
