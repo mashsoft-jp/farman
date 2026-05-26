@@ -2,12 +2,20 @@
 
 #include "utils/EnterClickFilter.h"
 
+#include <QApplication>
+#include <QColor>
 #include <QComboBox>
 #include <QFile>
 #include <QFileInfo>
 #include <QHeaderView>
+#include <QIcon>
+#include <QKeyEvent>
+#include <QKeySequence>
 #include <QLabel>
+#include <QLineEdit>
 #include <QLocale>
+#include <QModelIndex>
+#include <QSizePolicy>
 #include <QStringDecoder>
 #include <QTableView>
 #include <QToolBar>
@@ -94,64 +102,62 @@ QChar detectDelimiter(const QString& text, const QString& fileSuffixLower) {
   return candidates[bestIdx];
 }
 
-// RFC 4180 ベースの簡易 CSV パーサ。
-//   - フィールドは delim で区切る
-//   - フィールドが `"` で始まると quoted-field 扱い (改行を含められる)
-//   - quoted-field 内の `""` は 1 つの `"` にデコード
-//   - 行末は `\n` または `\r\n` (lone `\r` も一応許容)
-QVector<QStringList> parseCsv(const QString& text, QChar delim) {
-  QVector<QStringList> rows;
-  QStringList currentRow;
-  QString     currentField;
+// テキスト全体を 1 パスして、各行の開始 offset と最大列数を求める。
+// quoted-field 内の改行 / 区切りはスキップして判定する (RFC 4180 互換)。
+// 戻り値の rowStarts は最後に sentinel として text.size() を持つ。
+// (= rowStarts.size() == 行数 + 1)
+void buildRowIndex(const QString& text, QChar delim,
+                    QVector<int>* outRowStarts,
+                    int*          outColumnCount) {
+  outRowStarts->clear();
+  *outColumnCount = 0;
+  if (text.isEmpty()) return;
+
+  outRowStarts->append(0);
+  int curCols = 1;   // 行内のフィールド数 (空行でも 1 と数える)
   bool inQuotes = false;
-
-  auto flushField = [&]() {
-    currentRow.append(currentField);
-    currentField.clear();
-  };
-  auto flushRow = [&]() {
-    flushField();
-    rows.append(currentRow);
-    currentRow.clear();
-  };
-
   for (int i = 0; i < text.size(); ++i) {
     const QChar c = text.at(i);
     if (inQuotes) {
       if (c == QChar('"')) {
-        // 次が `"` ならエスケープ
         if (i + 1 < text.size() && text.at(i + 1) == QChar('"')) {
-          currentField.append(QChar('"'));
-          ++i;
+          ++i;  // エスケープ ""
         } else {
           inQuotes = false;
         }
-      } else {
-        currentField.append(c);
       }
       continue;
     }
-    // 非 quoted モード
-    if (c == QChar('"') && currentField.isEmpty()) {
-      // フィールド先頭の `"` だけ開きクオートと解釈
+    if (c == QChar('"')) {
       inQuotes = true;
     } else if (c == delim) {
-      flushField();
-    } else if (c == QChar('\n')) {
-      flushRow();
-    } else if (c == QChar('\r')) {
-      // \r\n / 単独 \r の両方を行末とみなす
-      flushRow();
-      if (i + 1 < text.size() && text.at(i + 1) == QChar('\n')) ++i;
-    } else {
-      currentField.append(c);
+      ++curCols;
+    } else if (c == QChar('\n') || c == QChar('\r')) {
+      if (curCols > *outColumnCount) *outColumnCount = curCols;
+      // \r\n は 1 行扱い
+      int rowStart = i + 1;
+      if (c == QChar('\r') && i + 1 < text.size()
+          && text.at(i + 1) == QChar('\n')) {
+        ++i;
+        rowStart = i + 1;
+      }
+      if (rowStart < text.size()) {
+        outRowStarts->append(rowStart);
+        curCols = 1;
+      }
     }
   }
-  // 末尾。空文字列 1 件だけの "空行" は捨てる (ファイル末尾の改行)。
-  if (!currentField.isEmpty() || !currentRow.isEmpty()) {
-    flushRow();
+  // 末尾の sentinel (= text 末尾位置)
+  if (curCols > *outColumnCount) *outColumnCount = curCols;
+  outRowStarts->append(text.size());
+
+  // ファイル末尾が改行で終わっていた場合、最後に追加された行は空 (text.size() を
+  // 開始 offset とする 0 長の行) になっている。これは「ファイル末尾の空行」と
+  // 見なして削除する。
+  if (outRowStarts->size() >= 2
+      && outRowStarts->at(outRowStarts->size() - 2) == text.size()) {
+    outRowStarts->removeAt(outRowStarts->size() - 2);
   }
-  return rows;
 }
 
 } // namespace
@@ -160,21 +166,31 @@ QVector<QStringList> parseCsv(const QString& text, QChar delim) {
 
 CsvTableModel::CsvTableModel(QObject* parent) : QAbstractTableModel(parent) {}
 
-void CsvTableModel::setRows(QVector<QStringList> rows, bool firstRowAsHeader) {
+void CsvTableModel::setSource(QString text,
+                                QChar delimiter,
+                                QVector<int> rowStarts,
+                                int columnCount,
+                                bool firstRowAsHeader) {
   beginResetModel();
-  m_rows = std::move(rows);
+  m_text             = std::move(text);
+  m_delimiter        = delimiter;
+  m_rowStarts        = std::move(rowStarts);
+  m_columnCount      = columnCount;
   m_firstRowAsHeader = firstRowAsHeader;
-  m_columnCount = 0;
-  for (const auto& r : m_rows) {
-    if (r.size() > m_columnCount) m_columnCount = r.size();
-  }
+  m_rowCache.clear();
+  m_cacheOrder.clear();
+  rebuildMatches();
   endResetModel();
 }
 
 void CsvTableModel::clear() {
   beginResetModel();
-  m_rows.clear();
+  m_text.clear();
+  m_rowStarts.clear();
   m_columnCount = 0;
+  m_rowCache.clear();
+  m_cacheOrder.clear();
+  m_matches.clear();
   endResetModel();
 }
 
@@ -182,13 +198,96 @@ void CsvTableModel::setFirstRowAsHeader(bool enabled) {
   if (m_firstRowAsHeader == enabled) return;
   beginResetModel();
   m_firstRowAsHeader = enabled;
+  rebuildMatches();
   endResetModel();
+}
+
+int CsvTableModel::setSearchString(const QString& needle, bool caseSensitive) {
+  m_search = needle;
+  m_searchCaseSensitive = caseSensitive;
+  rebuildMatches();
+  if (rowCount() > 0 && m_columnCount > 0) {
+    emit dataChanged(index(0, 0),
+                     index(rowCount() - 1, m_columnCount - 1),
+                     { Qt::BackgroundRole });
+  }
+  return m_matches.size();
+}
+
+QPair<int,int> CsvTableModel::matchAt(int matchIndex) const {
+  if (matchIndex < 0 || matchIndex >= m_matches.size()) return { -1, -1 };
+  return m_matches.at(matchIndex);
+}
+
+int CsvTableModel::findRowForOffset(int offset) const {
+  // m_rowStarts は昇順。最後の要素は sentinel (text.size())。
+  // offset を含む行 = m_rowStarts[r] <= offset < m_rowStarts[r+1] となる r。
+  if (m_rowStarts.size() < 2) return -1;
+  int lo = 0, hi = m_rowStarts.size() - 2;   // sentinel 手前まで
+  while (lo < hi) {
+    const int mid = (lo + hi + 1) / 2;
+    if (m_rowStarts.at(mid) <= offset) lo = mid;
+    else                                hi = mid - 1;
+  }
+  return lo;
+}
+
+int CsvTableModel::findColForOffsetWithinRow(int rawRow, int offsetInRow) const {
+  // 行内の delim カウントで列を割り出す。quoted 区間は無視。
+  if (rawRow < 0 || rawRow + 1 >= m_rowStarts.size()) return 0;
+  const int start = m_rowStarts.at(rawRow);
+  const int end   = m_rowStarts.at(rawRow + 1);
+  int col = 0;
+  bool inQuotes = false;
+  for (int i = start; i < end && i < start + offsetInRow; ++i) {
+    const QChar c = m_text.at(i);
+    if (inQuotes) {
+      if (c == QChar('"')) {
+        if (i + 1 < end && m_text.at(i + 1) == QChar('"')) ++i;
+        else                                                inQuotes = false;
+      }
+      continue;
+    }
+    if (c == QChar('"'))      inQuotes = true;
+    else if (c == m_delimiter) ++col;
+  }
+  return col;
+}
+
+void CsvTableModel::rebuildMatches() {
+  m_matches.clear();
+  if (m_search.isEmpty() || m_text.isEmpty()) return;
+  const Qt::CaseSensitivity cs = m_searchCaseSensitive
+                                   ? Qt::CaseSensitive
+                                   : Qt::CaseInsensitive;
+  const int viewRowOffset = m_firstRowAsHeader ? 1 : 0;
+  // text 全体を 1 パスで indexOf 連射。1 セルに複数ヒットしても 1 マッチとして
+  // 数える: 同じ (row, col) を重複追加しないために最後のものを覚えておく。
+  int pos = 0;
+  int lastRow = -1, lastCol = -1;
+  while (true) {
+    const int hit = m_text.indexOf(m_search, pos, cs);
+    if (hit < 0) break;
+    const int rawRow = findRowForOffset(hit);
+    if (rawRow >= viewRowOffset) {
+      const int rowStart = m_rowStarts.at(rawRow);
+      const int col = findColForOffsetWithinRow(rawRow, hit - rowStart);
+      const int viewRow = rawRow - viewRowOffset;
+      if (viewRow != lastRow || col != lastCol) {
+        m_matches.append({ viewRow, col });
+        lastRow = viewRow;
+        lastCol = col;
+      }
+    }
+    pos = hit + qMax(1, m_search.size());
+  }
 }
 
 int CsvTableModel::rowCount(const QModelIndex& parent) const {
   if (parent.isValid()) return 0;
-  if (m_rows.isEmpty()) return 0;
-  return m_firstRowAsHeader ? (m_rows.size() - 1) : m_rows.size();
+  if (m_rowStarts.size() < 2) return 0;
+  const int raw = m_rowStarts.size() - 1;  // sentinel を引いた行数
+  return m_firstRowAsHeader ? (raw - 1) : raw;
 }
 
 int CsvTableModel::columnCount(const QModelIndex& parent) const {
@@ -196,29 +295,94 @@ int CsvTableModel::columnCount(const QModelIndex& parent) const {
   return m_columnCount;
 }
 
+QStringList CsvTableModel::parseOneRow(int startOffset, int endOffset) const {
+  QStringList row;
+  QString     field;
+  bool inQuotes = false;
+  // 末尾の改行は含まないよう調整。
+  while (endOffset > startOffset) {
+    const QChar t = m_text.at(endOffset - 1);
+    if (t == QChar('\n') || t == QChar('\r')) --endOffset;
+    else                                       break;
+  }
+  for (int i = startOffset; i < endOffset; ++i) {
+    const QChar c = m_text.at(i);
+    if (inQuotes) {
+      if (c == QChar('"')) {
+        if (i + 1 < endOffset && m_text.at(i + 1) == QChar('"')) {
+          field.append(QChar('"'));
+          ++i;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field.append(c);
+      }
+      continue;
+    }
+    if (c == QChar('"') && field.isEmpty()) {
+      inQuotes = true;
+    } else if (c == m_delimiter) {
+      row.append(field);
+      field.clear();
+    } else {
+      field.append(c);
+    }
+  }
+  row.append(field);
+  return row;
+}
+
+QStringList CsvTableModel::rowAtRaw(int rawRow) const {
+  if (rawRow < 0 || rawRow + 1 >= m_rowStarts.size()) return {};
+  auto it = m_rowCache.find(rawRow);
+  if (it != m_rowCache.end()) return it.value();
+  // パース + キャッシュ。キャッシュ枠を超えたら古いものから捨てる。
+  const int start = m_rowStarts.at(rawRow);
+  const int end   = m_rowStarts.at(rawRow + 1);
+  QStringList row = parseOneRow(start, end);
+  m_rowCache.insert(rawRow, row);
+  m_cacheOrder.append(rawRow);
+  while (m_cacheOrder.size() > kCacheLimit) {
+    const int oldRow = m_cacheOrder.takeFirst();
+    m_rowCache.remove(oldRow);
+  }
+  return row;
+}
+
 QVariant CsvTableModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) return {};
-  if (role != Qt::DisplayRole && role != Qt::ToolTipRole && role != Qt::EditRole) {
-    return {};
-  }
-  const int dataRowIdx = m_firstRowAsHeader ? (index.row() + 1) : index.row();
-  if (dataRowIdx < 0 || dataRowIdx >= m_rows.size()) return {};
-  const QStringList& row = m_rows.at(dataRowIdx);
+  const int rawRow = m_firstRowAsHeader ? (index.row() + 1) : index.row();
+  if (rawRow < 0 || rawRow + 1 >= m_rowStarts.size()) return {};
+  const QStringList row = rowAtRaw(rawRow);
   if (index.column() < 0 || index.column() >= row.size()) return {};
-  return row.at(index.column());
+
+  if (role == Qt::DisplayRole || role == Qt::ToolTipRole || role == Qt::EditRole) {
+    return row.at(index.column());
+  }
+  if (role == Qt::BackgroundRole) {
+    if (!m_search.isEmpty()) {
+      const Qt::CaseSensitivity cs = m_searchCaseSensitive
+                                       ? Qt::CaseSensitive
+                                       : Qt::CaseInsensitive;
+      if (row.at(index.column()).contains(m_search, cs)) {
+        return QColor(255, 235, 100);
+      }
+    }
+  }
+  return {};
 }
 
 QVariant CsvTableModel::headerData(int section, Qt::Orientation orientation,
                                     int role) const {
   if (role != Qt::DisplayRole) return {};
   if (orientation == Qt::Horizontal) {
-    if (m_firstRowAsHeader && !m_rows.isEmpty()) {
-      const QStringList& head = m_rows.first();
+    if (m_firstRowAsHeader && m_rowStarts.size() >= 2) {
+      const QStringList head = rowAtRaw(0);
       if (section >= 0 && section < head.size()) return head.at(section);
     }
-    return QString::number(section + 1);  // A 列、B 列... の代わりに 1-based 番号
+    return QString::number(section + 1);
   }
-  // 垂直ヘッダ (行番号)。ヘッダ行を抜くと表示用は 1-based なので +1。
   return QString::number(section + 1);
 }
 
@@ -277,6 +441,58 @@ void CsvView::setupUi() {
   m_headerToggle->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_headerToggle);
 
+  m_toolbar->addSeparator();
+
+  // ── 検索 (TextView / PdfView / MarkdownView と同じレイアウト) ──
+  m_toolbar->addWidget(new QLabel(tr("Find:"), m_toolbar));
+
+  const QString findShortcutText =
+    QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+
+  m_findEdit = new QLineEdit(m_toolbar);
+  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
+  m_findEdit->setToolTip(tr("Search text in this CSV (%1)").arg(findShortcutText));
+  m_findEdit->setClearButtonEnabled(true);
+  m_findEdit->setFocusPolicy(Qt::StrongFocus);
+  m_findEdit->setMinimumWidth(160);
+  m_findEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  m_findEdit->installEventFilter(this);
+  m_toolbar->addWidget(m_findEdit);
+
+  m_findPrevBtn = new QToolButton(m_toolbar);
+  m_findPrevBtn->setText(QStringLiteral("◀"));
+  m_findPrevBtn->setToolTip(tr("Previous match (Shift+Enter)"));
+  m_findPrevBtn->setFocusPolicy(Qt::StrongFocus);
+  connect(m_findPrevBtn, &QToolButton::clicked, this, &CsvView::findPrevious);
+  m_toolbar->addWidget(m_findPrevBtn);
+
+  m_findNextBtn = new QToolButton(m_toolbar);
+  m_findNextBtn->setText(QStringLiteral("▶"));
+  m_findNextBtn->setToolTip(tr("Next match (Enter)"));
+  m_findNextBtn->setFocusPolicy(Qt::StrongFocus);
+  connect(m_findNextBtn, &QToolButton::clicked, this, &CsvView::findNext);
+  m_toolbar->addWidget(m_findNextBtn);
+
+  m_findCsButton = new QToolButton(m_toolbar);
+  m_findCsButton->setCheckable(true);
+  m_findCsButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/case-sensitive.svg")));
+  m_findCsButton->setToolTip(tr("Case sensitive search"));
+  m_findCsButton->setFocusPolicy(Qt::StrongFocus);
+  connect(m_findCsButton, &QToolButton::toggled, this, [this](bool) {
+    runSearchAndJump();
+  });
+  m_toolbar->addWidget(m_findCsButton);
+
+  m_findStatus = new QLabel(m_toolbar);
+  m_findStatus->setMinimumWidth(80);
+  m_toolbar->addWidget(m_findStatus);
+
+  connect(m_findEdit, &QLineEdit::textChanged,
+          this,        &CsvView::onFindTextChanged);
+
+  // Cmd/Ctrl+F のグローバルキャプチャ
+  qApp->installEventFilter(this);
+
   auto* clickFilter = new EnterClickFilter(this);
   clickFilter->installOnButtonsIn(m_toolbar);
 
@@ -297,6 +513,9 @@ void CsvView::setupUi() {
   m_table->setTabKeyNavigation(false);
   m_table->horizontalHeader()->setSectionsClickable(false);
   m_table->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  // 列幅の自動計算で全行をパースしてしまうと遅延ロードの意味が無くなる。
+  // サンプル上限を低めに固定する (Qt の既定は 1000)。
+  m_table->horizontalHeader()->setResizeContentsPrecision(100);
   m_table->verticalHeader()->setDefaultSectionSize(20);
   m_table->verticalHeader()->setMinimumSectionSize(16);
   m_table->setFocusPolicy(Qt::StrongFocus);
@@ -355,20 +574,22 @@ CsvView::PreparedLoad CsvView::prepareLoad(const QString& filePath,
   }
   if (cancelled()) return r;
 
-  const QString text = decodeBytes(r.data, r.actualEncoding);
+  r.text = decodeBytes(r.data, r.actualEncoding);
   if (cancelled()) return r;
 
   // 区切り判定
   if (delimiter == Delimiter::Auto) {
     const QString suffix = QFileInfo(filePath).suffix().toLower();
-    r.actualDelimiter = detectDelimiter(text, suffix);
+    r.actualDelimiter = detectDelimiter(r.text, suffix);
   } else {
     r.actualDelimiter = delimiterChar(delimiter);
   }
   if (cancelled()) return r;
 
-  r.rows = parseCsv(text, r.actualDelimiter);
-  r.ok   = true;
+  // 行オフセット index と最大列数を 1 パスで構築。実際の各セルへの
+  // QString パースは表示時にモデル側で行う (遅延ロード)。
+  buildRowIndex(r.text, r.actualDelimiter, &r.rowStarts, &r.columnCount);
+  r.ok = true;
   return r;
 }
 
@@ -380,7 +601,8 @@ void CsvView::applyPreparedLoad(const PreparedLoad& r) {
   m_totalSize       = r.totalSize;
   m_loadedSize      = r.loadedSize;
 
-  m_model->setRows(r.rows, m_headerToggle && m_headerToggle->isChecked());
+  m_model->setSource(r.text, r.actualDelimiter, r.rowStarts, r.columnCount,
+                     m_headerToggle && m_headerToggle->isChecked());
 
   // 自動判定の結果を UI に反映 (ユーザーが Auto を選んでいる場合に検出値を見せる)
   if (m_encodingCombo) {
@@ -428,7 +650,7 @@ void CsvView::applyPreparedLoad(const PreparedLoad& r) {
 
 void CsvView::reloadFromBuffer() {
   if (m_data.isEmpty()) return;
-  // bytes はそのまま、encoding / delimiter だけ作り直して再パース。
+  // bytes はそのまま、encoding / delimiter だけ作り直して index を再構築。
   const QString text = decodeBytes(m_data,
     (m_userEncoding.compare(QStringLiteral("Auto"), Qt::CaseInsensitive) == 0)
       ? m_actualEncoding : m_userEncoding);
@@ -439,8 +661,11 @@ void CsvView::reloadFromBuffer() {
     delim = delimiterChar(m_userDelimiter);
   }
   m_actualDelimiter = delim;
-  m_model->setRows(parseCsv(text, delim),
-                    m_headerToggle && m_headerToggle->isChecked());
+  QVector<int> rowStarts;
+  int columnCount = 0;
+  buildRowIndex(text, delim, &rowStarts, &columnCount);
+  m_model->setSource(text, delim, rowStarts, columnCount,
+                     m_headerToggle && m_headerToggle->isChecked());
   m_table->resizeColumnsToContents();
   for (int c = 0; c < m_model->columnCount(); ++c) {
     if (m_table->columnWidth(c) > 360) m_table->setColumnWidth(c, 360);
@@ -480,6 +705,124 @@ void CsvView::clearContent() {
   m_totalSize = 0;
   m_loadedSize = 0;
   if (m_model) m_model->clear();
+  m_currentMatchIndex = -1;
+  if (m_findEdit)   m_findEdit->clear();
+  if (m_findStatus) m_findStatus->clear();
+}
+
+// ---------- 検索 ----------
+
+void CsvView::onFindTextChanged(const QString& text) {
+  if (!m_model) return;
+  const bool cs = m_findCsButton && m_findCsButton->isChecked();
+  m_model->setSearchString(text, cs);
+  m_currentMatchIndex = -1;
+  updateFindStatus();
+  // 入力中はジャンプしない (= 入力する度にスクロールがガタガタするのを防ぐ)。
+  // ユーザーが Enter / 前次ボタンを押したタイミングで初めて飛ぶ。
+}
+
+void CsvView::runSearchAndJump() {
+  if (!m_model || !m_findEdit) return;
+  const bool cs = m_findCsButton && m_findCsButton->isChecked();
+  m_model->setSearchString(m_findEdit->text(), cs);
+  m_currentMatchIndex = -1;
+  if (m_model->matchCount() > 0) {
+    m_currentMatchIndex = 0;
+    jumpToMatch(0);
+  } else {
+    updateFindStatus();
+  }
+}
+
+void CsvView::findNext() {
+  if (!m_model) return;
+  if (m_model->searchString().isEmpty()
+      || m_model->searchString() != (m_findEdit ? m_findEdit->text() : QString())) {
+    runSearchAndJump();
+    return;
+  }
+  const int total = m_model->matchCount();
+  if (total <= 0) { updateFindStatus(); return; }
+  m_currentMatchIndex = (m_currentMatchIndex + 1) % total;
+  jumpToMatch(m_currentMatchIndex);
+}
+
+void CsvView::findPrevious() {
+  if (!m_model) return;
+  if (m_model->searchString().isEmpty()
+      || m_model->searchString() != (m_findEdit ? m_findEdit->text() : QString())) {
+    runSearchAndJump();
+    return;
+  }
+  const int total = m_model->matchCount();
+  if (total <= 0) { updateFindStatus(); return; }
+  m_currentMatchIndex = (m_currentMatchIndex <= 0)
+                          ? (total - 1)
+                          : (m_currentMatchIndex - 1);
+  jumpToMatch(m_currentMatchIndex);
+}
+
+void CsvView::jumpToMatch(int matchIndex) {
+  if (!m_model || !m_table) return;
+  const auto rc = m_model->matchAt(matchIndex);
+  if (rc.first < 0) return;
+  const QModelIndex idx = m_model->index(rc.first, rc.second);
+  m_table->setCurrentIndex(idx);
+  m_table->scrollTo(idx, QAbstractItemView::PositionAtCenter);
+  updateFindStatus();
+}
+
+void CsvView::updateFindStatus() {
+  if (!m_findStatus || !m_model || !m_findEdit) return;
+  if (m_findEdit->text().isEmpty()) {
+    m_findStatus->clear();
+    return;
+  }
+  const int total = m_model->matchCount();
+  if (total <= 0) {
+    m_findStatus->setText(tr("Not found"));
+  } else if (m_currentMatchIndex < 0) {
+    m_findStatus->setText(tr("%1 matches").arg(total));
+  } else {
+    m_findStatus->setText(tr("%1 / %2")
+                             .arg(m_currentMatchIndex + 1)
+                             .arg(total));
+  }
+}
+
+void CsvView::focusFindInput() {
+  if (!m_findEdit) return;
+  m_findEdit->setFocus(Qt::ShortcutFocusReason);
+  m_findEdit->selectAll();
+}
+
+bool CsvView::eventFilter(QObject* watched, QEvent* event) {
+  if (watched == m_findEdit && event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() == Qt::Key_Escape) {
+      if (m_table) m_table->setFocus(Qt::OtherFocusReason);
+      return true;
+    }
+    if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
+      if (ke->modifiers() & Qt::ShiftModifier) findPrevious();
+      else                                     findNext();
+      return true;
+    }
+  }
+  if (event->type() == QEvent::ShortcutOverride
+      || event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    const bool isFindKey =
+      ke->key() == Qt::Key_F &&
+      (ke->modifiers() & Qt::ControlModifier);
+    if (isFindKey && isVisible() && window() && window()->isActiveWindow()) {
+      if (event->type() == QEvent::KeyPress) focusFindInput();
+      event->accept();
+      return true;
+    }
+  }
+  return QWidget::eventFilter(watched, event);
 }
 
 QString CsvView::statusInfo() const {

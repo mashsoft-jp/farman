@@ -1114,8 +1114,12 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   テキスト判定より先に判定される (.csv はテキストにマッチし得るため、
   表形式表示の CSV ビュアーを優先する)。
 - 表示は `QTableView` + 自前 `QAbstractTableModel` (`CsvTableModel`)。
-  数万行クラスのファイルでも `QStringList` の配列をそのまま参照するだけで
-  メモリ / 構築コストを抑えられる。
+  **遅延ロード**: ワーカースレッドではテキスト全文のデコードと行オフセット
+  index (`QVector<int> m_rowStarts`) + 最大列数の構築だけを行う。各セルの
+  文字列パースは `data()` から呼ばれた瞬間に実行し、結果は LRU キャッシュ
+  (最大 4096 行) に保持する。これにより 12 MB / 20 万行クラスの CSV でも
+  初回表示はインデックス走査だけで終わる (= QStringList 配列を全件作る
+  従来方式と比べてメモリも初回応答時間も大幅に削減)。
 - RFC 4180 準拠の quoted-field パース (`"a","b,c"`、エスケープ `""` 対応)。
   行末は `\n` / `\r\n` / 単独 `\r` を許容。
 - ツールバー:
@@ -1124,8 +1128,16 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   - 区切り文字選択 (Auto / カンマ / タブ / セミコロン)。Auto は先頭サンプル
     の投票で決定 (`.tsv` は強制的にタブ)。
   - 「1 行目をヘッダ扱い」トグル (ON で 1 行目を列ヘッダにし、データから除く)。
+  - **全文検索** (Find 欄 + 前/次ボタン + 大文字小文字区別トグル + 件数表示)。
+    実装は「テキスト全体への `QString::indexOf` をループ + マッチ位置を
+    `m_rowStarts` を二分探索して (row, col) に逆引き」で、巨大ファイルでも
+    1 パス + 1 セルあたり O(log N) で走る。ヒット位置のセルは黄色背景で
+    マーキング、Enter / Shift+Enter で次/前、Cmd/Ctrl+F でフォーカス。
+- 列幅自動計算 (`resizeColumnsToContents` 経由) は内部で全行を舐めて遅延
+  ロードを無効化してしまうため、`QHeaderView::setResizeContentsPrecision(100)`
+  でサンプル数を上限 100 行に抑えている。
 - External モード時は `CsvViewerWindow` (独立 `QMainWindow`) として開く。
-- 並べ替え / セル内検索 / 巨大ファイルの遅延ロードは Phase 2 以降。
+- 並べ替え (列ヘッダクリック) は Phase 2 以降。
 - ステータスバー (statusInfo): `CSV · <行数> 行 · <列数> 列 · <エンコーディング>
   · <ファイルサイズ>`。
 
@@ -1243,9 +1255,10 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
     は再生開始時にロードする (`QMediaPlayer::setSource`)。
 - **CSV ビュアー (拡張)**
   - Phase 1 (表形式表示 / 区切り自動判定 + 手動切替 / ヘッダ行扱いトグル /
-    エンコーディング選択 / RFC 4180 quoted-field パース) は実装済
+    エンコーディング選択 / RFC 4180 quoted-field パース) と Phase 2
+    (セル内全文検索 + 行オフセット index 経由の遅延ロード) は実装済
     (上記 `#### CSV / TSV ビュアー` 参照)。
-  - 残件: 列ソート / セル内検索 / 巨大ファイルの遅延ロード。日常的ニーズが
+  - 残件: 列ソート (列ヘッダクリックで昇順/降順切替) のみ。日常的ニーズが
     出てきたら追加する。
 - **Office 文書ビュアー** (`.docx` / `.xlsx` / `.pptx`)
   - 対象: Microsoft Office Open XML 形式。

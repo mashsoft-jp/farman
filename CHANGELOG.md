@@ -48,7 +48,9 @@ All notable changes to **farman** are documented in this file.
     Inline / External 両対応)
   - **CSV / TSV** (`QTableView` で表形式表示。RFC 4180 quoted-field パース、
     区切り自動判定 + 手動切替、エンコーディング自動判定、1 行目をヘッダ扱い
-    トグル。Inline / External 両対応)
+    トグル、セル内全文検索、巨大ファイル向けの遅延ロード (行オフセット index +
+    LRU キャッシュで、12 MB / 20 万行クラスでも初回表示が即時)。
+    Inline / External 両対応)
   - 任意ビュアーで開く (Ctrl+Enter) / OS 既定アプリで実行 (Shift+Enter)
 - **画像ビュアーの強化**
   - ツールバーに **時計回り 90° 回転** ボタン (表示のみ、保存はしない)。

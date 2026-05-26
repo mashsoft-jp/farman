@@ -1871,68 +1871,113 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::CsvView</name>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="245"/>
+        <location filename="../src/viewer/CsvView.cpp" line="409"/>
         <source>Encoding:</source>
         <translation>エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="260"/>
+        <location filename="../src/viewer/CsvView.cpp" line="424"/>
         <source>Delimiter:</source>
         <translation>区切り:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="262"/>
+        <location filename="../src/viewer/CsvView.cpp" line="426"/>
         <source>Auto</source>
         <translation>自動</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="263"/>
+        <location filename="../src/viewer/CsvView.cpp" line="427"/>
         <source>Comma (,)</source>
         <translation>カンマ (,)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="264"/>
+        <location filename="../src/viewer/CsvView.cpp" line="428"/>
         <source>Tab (\t)</source>
         <translation>タブ (\t)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="265"/>
+        <location filename="../src/viewer/CsvView.cpp" line="429"/>
         <source>Semicolon (;)</source>
         <translation>セミコロン (;)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="273"/>
+        <location filename="../src/viewer/CsvView.cpp" line="437"/>
         <source>First row = header</source>
         <translation>1 行目をヘッダ扱い</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="276"/>
+        <location filename="../src/viewer/CsvView.cpp" line="440"/>
         <source>Treat the first row as column headers</source>
         <translation>1 行目を列ヘッダとして扱う</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="387"/>
-        <location filename="../src/viewer/CsvView.cpp" line="402"/>
+        <location filename="../src/viewer/CsvView.cpp" line="447"/>
+        <source>Find:</source>
+        <translation>検索:</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="453"/>
+        <source>Search text  (%1)</source>
+        <translation>検索する文字列  (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="454"/>
+        <source>Search text in this CSV (%1)</source>
+        <translation>この CSV 内のテキストを検索 (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="464"/>
+        <source>Previous match (Shift+Enter)</source>
+        <translation>前のマッチへ (Shift+Enter)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="471"/>
+        <source>Next match (Enter)</source>
+        <translation>次のマッチへ (Enter)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="479"/>
+        <source>Case sensitive search</source>
+        <translation>大文字小文字を区別して検索</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="612"/>
+        <location filename="../src/viewer/CsvView.cpp" line="627"/>
         <source>Detected: %1</source>
         <translation>検出: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="396"/>
+        <location filename="../src/viewer/CsvView.cpp" line="621"/>
         <source>Comma</source>
         <translation>カンマ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="397"/>
+        <location filename="../src/viewer/CsvView.cpp" line="622"/>
         <source>Tab</source>
         <translation>タブ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="398"/>
+        <location filename="../src/viewer/CsvView.cpp" line="623"/>
         <source>Semicolon</source>
         <translation>セミコロン</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="472"/>
+        <location filename="../src/viewer/CsvView.cpp" line="784"/>
+        <source>Not found</source>
+        <translation>見つかりません</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="786"/>
+        <source>%1 matches</source>
+        <translation>%1 件</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="788"/>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="832"/>
         <source>CSV · %1 rows · %2 cols · %3 · %4</source>
         <translation>CSV · %1 行 · %2 列 · %3 · %4</translation>
     </message>
