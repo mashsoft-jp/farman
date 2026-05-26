@@ -1583,7 +1583,7 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <message>
         <location filename="../src/ui/BookmarkListDialog.cpp" line="100"/>
         <source>Go</source>
-        <translation>名前</translation>
+        <translation>開く</translation>
     </message>
     <message>
         <location filename="../src/ui/BookmarkListDialog.cpp" line="101"/>
@@ -3365,7 +3365,7 @@ What would you like to do?</source>
     <message>
         <location filename="../src/ui/HistoryDialog.cpp" line="57"/>
         <source>Go</source>
-        <translation>編集</translation>
+        <translation>開く</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryDialog.cpp" line="58"/>
