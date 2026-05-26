@@ -51,9 +51,14 @@ int main(int argc, char *argv[]) {
   QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
 
   // ランタイム用アイコン (タスクバー / ウィンドウタイトル / Linux WM など)。
-  // macOS の Dock とバンドル本体のアイコンは Info.plist + Contents/Resources の
-  // icon.icns 側 (CMake で MACOSX_BUNDLE_ICON_FILE 指定) が使われる。
+  // macOS では setWindowIcon を呼ばない: Qt は macOS でも setWindowIcon の
+  // 結果で Dock アイコンを runtime 上書きしてしまうため、CMake で指定した
+  // MACOSX_BUNDLE_ICON_FILE (= icon.icns、Apple HIG の角丸版) が
+  // 後から塗りつぶされてしまう。Dock もウィンドウタイトル左の小アイコンも
+  // Bundle 経由の icon.icns に任せた方が macOS では自然な見た目になる。
+#ifndef Q_OS_MACOS
   app.setWindowIcon(QIcon(QStringLiteral(":/icons/farman.png")));
+#endif
 
   // Settings をロードして UI 言語を決定する。
   // QTranslator は QApplication と同じ寿命にしたいので static にしておく。
