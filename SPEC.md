@@ -1062,6 +1062,24 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   - 文字列のエンコード種別
     - 初期設定はUTF-8
 
+#### PDF ビュアー
+- 対象: `.pdf` (Settings の `pdfViewer.extensions` で変更可)。
+  バイナリビュアーより先に判定される。
+- Qt PDF (`Qt6::Pdf` + `Qt6::PdfWidgets`、PDFium ベース) で実装。
+  `QPdfView` + `QPdfDocument` の組合せで、ページのレンダリングは visible に
+  なったものから遅延描画する (= 数百ページの PDF でも初回ロードは
+  ヘッダ解析だけで高速)。
+- ツールバー:
+  - 前ページ / ページ番号スピンボックス (1〜N) / 次ページ
+  - ズームアウト / ズームイン (1.25 倍ステップ、0.1〜8.0 倍にクランプ)
+  - 「幅にフィット」/「ページ全体」トグル (同時 ON は無し)
+  - 「連続表示」トグル (OFF = SinglePage、ON = MultiPage)
+- 検索 / テキスト選択 / ページ回転は Phase 1 ではスコープ外 (将来課題)。
+  検索は `QPdfSearchModel`、テキスト選択は `QPdfSelection` で実装可能。
+  ページ回転は `QPdfDocumentRenderOptions::Rotation` を介したカスタム描画が必要。
+- External モード時は `PdfViewerWindow` (独立 `QMainWindow`) として開く。
+- ステータスバー (statusInfo): `PDF · <ページ数> ページ · <ファイルサイズ>`。
+
 #### Markdown ビュアー
 - 対象: `.md` `.markdown` `.mdown` `.mkd` (Settings の
   `markdownViewer.extensions` で変更可)。同じ拡張子がテキストビュアー側にも
@@ -1120,12 +1138,12 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
 将来追加したい組み込み (またはプラグイン) ビュアー。実装方針は外部
 ライブラリの導入難度と実装コストを天秤にかけて決める。
 
-- **PDF ビュアー**
-  - 対象: `.pdf`
-  - 候補ライブラリ: Qt PDF モジュール (`Qt::Pdf` / `Qt::PdfWidgets`、
-    Qt 公式) が第一候補。クロスプラットフォームで MIT ライセンス。
-  - 必要機能: ページ送り (PageUp/Down)、ズーム、Fit、ページ番号入力、
-    回転、テキスト選択 (可能なら)。
+- **PDF ビュアー (拡張)**
+  - Phase 1 (ページ送り / ズーム / Fit / ページジャンプ / 連続表示) は実装済
+    (上記 `#### PDF ビュアー` 参照)。
+  - 残件: 全文検索 (`QPdfSearchModel`) / テキスト選択 (`QPdfSelection`) /
+    ページ回転 (`QPdfDocumentRenderOptions::Rotation` 経由のカスタム描画) /
+    アウトライン (しおり) サイドバー。実装難度は中。
 - **Markdown ビュアー (拡張)**
   - Phase 0 (CommonMark + GFM) は実装済 (上記 `#### Markdown ビュアー` 参照)。
   - 残件: シンタックスハイライト (コードブロックの言語別カラー表示) /

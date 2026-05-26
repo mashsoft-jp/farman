@@ -316,6 +316,12 @@ public:
   QStringList markdownViewerExtensions() const;
   void        setMarkdownViewerExtensions(const QStringList& exts);
 
+  // ── PDF ビュアー設定 ───────────────────────
+  // ファイルを開く際に PDF ビュアー (Qt PDF) で処理する拡張子。
+  // 既定は "pdf" のみ。バイナリビュアー (拡張子非該当) より先に判定される。
+  QStringList pdfViewerExtensions() const;
+  void        setPdfViewerExtensions(const QStringList& exts);
+
   // ── 画像ビュアー設定 ───────────────────────
   QStringList           imageViewerExtensions()        const;
   void                  setImageViewerExtensions(const QStringList& exts);
@@ -537,6 +543,11 @@ private:
   // textViewerExtensions より優先される (resolveAuto で Markdown 判定が先)。
   QStringList        m_markdownViewerExtensions = {
     "md", "markdown", "mdown", "mkd",
+  };
+
+  // PDF viewer (Qt PDF 経由)。バイナリ判定より先に評価する。
+  QStringList        m_pdfViewerExtensions = {
+    "pdf",
   };
 
   // Text viewer

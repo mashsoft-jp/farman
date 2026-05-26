@@ -15,7 +15,7 @@ set(CMAKE_AUTOUIC ON)
 # (Qt 側はその結果を見て該当機能を無効化するだけで実害はない)。
 set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets LinguistTools)
 
 # Homebrew の libarchive は keg-only なので明示的にパスを通す。
 # Apple Silicon は /opt/homebrew、Intel Mac は /usr/local が Homebrew prefix。
@@ -135,11 +135,14 @@ qt_add_executable(farman
   src/viewer/ViewerDispatcher.cpp
   src/viewer/TextView.cpp
   src/viewer/MarkdownView.cpp
+  src/viewer/MarkdownViewerWindow.cpp
   src/viewer/TextViewerWindow.cpp
   src/viewer/ImageView.cpp
   src/viewer/ImageViewerWindow.cpp
   src/viewer/BinaryView.cpp
   src/viewer/BinaryViewerWindow.cpp
+  src/viewer/PdfView.cpp
+  src/viewer/PdfViewerWindow.cpp
   src/viewer/TextViewerPlugin.cpp
   src/viewer/ImageViewerPlugin.cpp
   src/viewer/BinaryViewerPlugin.cpp
@@ -236,6 +239,8 @@ target_link_libraries(farman PRIVATE
   Qt6::Concurrent
   Qt6::Network
   Qt6::Svg
+  Qt6::Pdf
+  Qt6::PdfWidgets
   LibArchive::LibArchive
 )
 

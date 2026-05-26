@@ -38,13 +38,14 @@ QString humanReadableSize(qint64 bytes) {
 // ワーカーが返す結果の合併型。kind に応じてどの PreparedLoad が
 // セットされているかを判別する。
 struct PreviewResult {
-  enum class Kind { Text, Image, Binary, Markdown, Unsupported };
+  enum class Kind { Text, Image, Binary, Markdown, Pdf, Unsupported };
   Kind kind = Kind::Unsupported;
   QString errorReason;  // Unsupported のときに表示するメッセージ
   TextView::PreparedLoad     text;
   ImageView::PreparedLoad    image;
   BinaryView::PreparedLoad   binary;
   MarkdownView::PreparedLoad markdown;
+  PdfView::PreparedLoad      pdf;
 };
 
 // ワーカースレッドで走る本体。UI には触らないので static の自由関数にする。
@@ -103,6 +104,14 @@ PreviewResult runPreviewLoad(QString             filePath,
       if (!r.markdown.ok) {
         r.kind = PreviewResult::Kind::Unsupported;
         r.errorReason = QObject::tr("Failed to load Markdown.");
+      }
+      return r;
+    case ViewerPanel::ViewerKind::Pdf:
+      r.pdf  = PdfView::prepareLoad(filePath, tokPtr);
+      r.kind = PreviewResult::Kind::Pdf;
+      if (!r.pdf.ok) {
+        r.kind = PreviewResult::Kind::Unsupported;
+        r.errorReason = QObject::tr("Failed to load PDF.");
       }
       return r;
     case ViewerPanel::ViewerKind::Auto:
@@ -374,6 +383,10 @@ void PreviewController::startLoadJob(const QString& filePath,
       case PreviewResult::Kind::Markdown:
         m_pane->showMarkdown(r.markdown);
         m_lastShownPath = r.markdown.filePath;
+        break;
+      case PreviewResult::Kind::Pdf:
+        m_pane->showPdf(r.pdf);
+        m_lastShownPath = r.pdf.filePath;
         break;
       case PreviewResult::Kind::Unsupported:
         m_pane->showUnsupported(r.errorReason);

@@ -78,15 +78,17 @@ void PreviewPane::setupUi() {
   dirLayout->addStretch();
   m_stack->addWidget(m_directoryPage);
 
-  // 4〜7: 既存ビュアーを使い回す。
+  // 4〜8: 既存ビュアーを使い回す。
   m_textView     = new TextView(this);
   m_imageView    = new ImageView(this);
   m_binaryView   = new BinaryView(this);
   m_markdownView = new MarkdownView(this);
+  m_pdfView      = new PdfView(this);
   m_stack->addWidget(m_textView);
   m_stack->addWidget(m_imageView);
   m_stack->addWidget(m_binaryView);
   m_stack->addWidget(m_markdownView);
+  m_stack->addWidget(m_pdfView);
 
   m_stack->setCurrentWidget(m_emptyLabel);
 }
@@ -134,6 +136,11 @@ void PreviewPane::showBinary(const BinaryView::PreparedLoad& prepared) {
 void PreviewPane::showMarkdown(const MarkdownView::PreparedLoad& prepared) {
   m_markdownView->applyPreparedLoad(prepared);
   m_stack->setCurrentWidget(m_markdownView);
+}
+
+void PreviewPane::showPdf(const PdfView::PreparedLoad& prepared) {
+  m_pdfView->applyPreparedLoad(prepared);
+  m_stack->setCurrentWidget(m_pdfView);
 }
 
 void PreviewPane::setStatusMessage(const QString& msg) {

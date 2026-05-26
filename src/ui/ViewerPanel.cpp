@@ -3,6 +3,7 @@
 #include "viewer/BinaryView.h"
 #include "viewer/ImageView.h"
 #include "viewer/MarkdownView.h"
+#include "viewer/PdfView.h"
 #include "viewer/TextView.h"
 #include <QApplication>
 #include <QEventLoop>
@@ -51,6 +52,10 @@ void ViewerPanel::setupUi() {
   // ===== Markdown Viewer (.md / .markdown 等) =====
   m_markdownView = new MarkdownView(this);
   m_stack->addWidget(m_markdownView);
+
+  // ===== PDF Viewer (.pdf) =====
+  m_pdfView = new PdfView(this);
+  m_stack->addWidget(m_pdfView);
 
   // ===== Loading placeholder =====
   // 大きいファイルや行数の多いテキストの読み込み中、ユーザーに「何も
@@ -161,6 +166,10 @@ ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
       || mimeMatches(s.imageViewerMimePatterns(), mime)) {
     return ViewerKind::Image;
   }
+  // PDF はバイナリ判定の前に独立で見る。
+  if (extensionMatches(s.pdfViewerExtensions(), extension)) {
+    return ViewerKind::Pdf;
+  }
   // Markdown はテキストビュアーより先に判定 (.md は両方の対象になり得るため、
   // 整形表示できる Markdown を優先する)。
   if (extensionMatches(s.markdownViewerExtensions(), extension)) {
@@ -205,6 +214,7 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
     case ViewerKind::Image:    ok = openImageFile(filePath, pathForStatus);    break;
     case ViewerKind::Binary:   ok = openBinaryFile(filePath, pathForStatus);   break;
     case ViewerKind::Markdown: ok = openMarkdownFile(filePath, pathForStatus); break;
+    case ViewerKind::Pdf:      ok = openPdfFile(filePath, pathForStatus);      break;
     case ViewerKind::Auto:     /* unreachable */ break;
   }
 
@@ -329,11 +339,30 @@ bool ViewerPanel::openMarkdownFile(const QString& filePath,
   return true;
 }
 
+bool ViewerPanel::openPdfFile(const QString& filePath,
+                               const QString& displayPath) {
+  // PDF はワーカーでの prepareLoad は軽い (存在確認のみ)。実ロードは UI 側。
+  auto future = QtConcurrent::run(&PdfView::prepareLoad,
+                                   filePath,
+                                   /*cancelToken=*/ nullptr);
+  PdfView::PreparedLoad p = waitForFutureWithEventLoop(future);
+  if (!p.ok) return false;
+
+  m_pdfView->applyPreparedLoad(p);
+  m_stack->setCurrentWidget(m_pdfView);
+  setFocusProxy(m_pdfView);
+  m_currentFilePath = displayPath;
+  emit fileOpened(displayPath);
+  emit viewerStatusChanged(displayPath, m_pdfView->statusInfo());
+  return true;
+}
+
 void ViewerPanel::clear() {
   m_textView->clearContent();
   m_imageView->clearContent();
   m_binaryView->clearContent();
   if (m_markdownView) m_markdownView->clearContent();
+  if (m_pdfView) m_pdfView->clearContent();
   m_currentFilePath.clear();
   emit fileClosed();
   emit viewerStatusChanged(QString(), QString());

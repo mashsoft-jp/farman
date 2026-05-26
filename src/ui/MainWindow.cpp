@@ -24,6 +24,8 @@
 #include "../viewer/TextViewerWindow.h"
 #include "../viewer/ImageViewerWindow.h"
 #include "../viewer/BinaryViewerWindow.h"
+#include "../viewer/MarkdownViewerWindow.h"
+#include "../viewer/PdfViewerWindow.h"
 #include <QActionGroup>
 #include <QDesktopServices>
 #include <QDir>
@@ -487,6 +489,12 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
         break;
       case ViewerPanel::ViewerKind::Binary:
         w = new BinaryViewerWindow(filePath, shownPath, this);
+        break;
+      case ViewerPanel::ViewerKind::Markdown:
+        w = new MarkdownViewerWindow(filePath, shownPath, this);
+        break;
+      case ViewerPanel::ViewerKind::Pdf:
+        w = new PdfViewerWindow(filePath, shownPath, this);
         break;
       case ViewerPanel::ViewerKind::Auto:
         /* unreachable */ break;

@@ -144,6 +144,8 @@ void Settings::applyDefaults() {
   // ── Markdown ビュアー ─────────────
   m_markdownViewerExtensions = { "md", "markdown", "mdown", "mkd" };
 
+  m_pdfViewerExtensions = { "pdf" };
+
   // ── テキストビュアー ─────────────
   m_textViewerExtensions = {
     "txt", "log",
@@ -901,6 +903,9 @@ void Settings::setTextViewerExtensions(const QStringList& exts) { m_textViewerEx
 
 QStringList Settings::markdownViewerExtensions() const { return m_markdownViewerExtensions; }
 void Settings::setMarkdownViewerExtensions(const QStringList& exts) { m_markdownViewerExtensions = exts; }
+
+QStringList Settings::pdfViewerExtensions() const { return m_pdfViewerExtensions; }
+void Settings::setPdfViewerExtensions(const QStringList& exts) { m_pdfViewerExtensions = exts; }
 QStringList Settings::textViewerMimePatterns() const { return m_textViewerMimePatterns; }
 void Settings::setTextViewerMimePatterns(const QStringList& patterns) { m_textViewerMimePatterns = patterns; }
 
@@ -1727,6 +1732,17 @@ void Settings::load() {
     }
     if (!list.isEmpty()) m_markdownViewerExtensions = list;
   }
+
+  // PDF ビュアー: バイナリ判定より先に評価される
+  QJsonObject pdfViewer = root.value("pdfViewer").toObject();
+  if (pdfViewer.contains("extensions")) {
+    QStringList list;
+    for (const QJsonValue& v : pdfViewer.value("extensions").toArray()) {
+      const QString s = v.toString().trimmed();
+      if (!s.isEmpty()) list.append(s);
+    }
+    if (!list.isEmpty()) m_pdfViewerExtensions = list;
+  }
   if (textViewer.contains("mimePatterns")) {
     QStringList list;
     for (const QJsonValue& v : textViewer.value("mimePatterns").toArray()) {
@@ -2188,6 +2204,15 @@ void Settings::save() const {
     for (const QString& s : m_markdownViewerExtensions) arr.append(s);
     mdViewer["extensions"] = arr;
     root["markdownViewer"] = mdViewer;
+  }
+
+  // Save PDF viewer settings (Text の手前で出す)
+  {
+    QJsonObject pdfViewer;
+    QJsonArray arr;
+    for (const QString& s : m_pdfViewerExtensions) arr.append(s);
+    pdfViewer["extensions"] = arr;
+    root["pdfViewer"] = pdfViewer;
   }
 
   // Save text viewer settings

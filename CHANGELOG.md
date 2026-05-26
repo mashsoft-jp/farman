@@ -43,6 +43,8 @@ All notable changes to **farman** are documented in this file.
   - **Markdown** (CommonMark + GitHub Flavored Markdown を `QTextDocument::setMarkdown`
     で整形表示。表 / タスクリスト / 取り消し線 / 自動リンク / 相対パス画像対応。
     ツールバー「Source」トグルで生 Markdown ソース表示に切替可)
+  - **PDF** (Qt PDF / PDFium で組み込み表示。ページ送り / ページジャンプ /
+    ズーム / 幅にフィット / ページ全体 / 連続表示トグル。Inline / External 両対応)
   - 任意ビュアーで開く (Ctrl+Enter) / OS 既定アプリで実行 (Shift+Enter)
 - **画像ビュアーの強化**
   - ツールバーに **時計回り 90° 回転** ボタン (表示のみ、保存はしない)。

@@ -12,6 +12,7 @@ namespace Farman {
 class BinaryView;
 class ImageView;
 class MarkdownView;
+class PdfView;
 class TextView;
 
 class ViewerPanel : public QWidget {
@@ -20,7 +21,7 @@ class ViewerPanel : public QWidget {
 public:
   // どのビュアーで開くかを呼び出し側から強制したい場合に使う。
   // Auto は拡張子・MIME ルーティングに従う通常動作。
-  enum class ViewerKind { Auto, Text, Image, Binary, Markdown };
+  enum class ViewerKind { Auto, Text, Image, Binary, Markdown, Pdf };
 
   explicit ViewerPanel(QWidget* parent = nullptr);
   ~ViewerPanel() override;
@@ -64,6 +65,7 @@ private:
   bool openImageFile(const QString& filePath, const QString& displayPath);
   bool openBinaryFile(const QString& filePath, const QString& displayPath);
   bool openMarkdownFile(const QString& filePath, const QString& displayPath);
+  bool openPdfFile(const QString& filePath, const QString& displayPath);
   // ロード中表示に切り替え、ファイル名・サイズを書き込んで再描画する。
   // 同期的なロードに入る前に呼ぶと、ユーザーには「読み込み中…」が見える。
   void showLoadingState(const QString& filePath);
@@ -73,6 +75,7 @@ private:
   ImageView*      m_imageView     = nullptr;
   BinaryView*     m_binaryView    = nullptr;
   MarkdownView*   m_markdownView  = nullptr;
+  PdfView*        m_pdfView       = nullptr;
 
   // ロード中に出すプレースホルダ。indeterminate な QProgressBar を持つ。
   QWidget*        m_loadingPage = nullptr;

@@ -22,17 +22,6 @@
 namespace Farman {
 
 namespace {
-constexpr auto kToolbarStyle = R"(
-QToolBar { border: 0; padding: 1px; spacing: 2px; }
-QToolButton {
-  padding: 4px 6px; border-radius: 4px;
-  background: transparent;
-}
-QToolButton:hover { background: rgba(0, 0, 0, 0.08); }
-QToolButton:focus { outline: none; border: 1px solid #5b8def; }
-QToolButton:checked { background: rgba(91, 141, 239, 0.25); }
-)";
-
 QString decodeBytes(const QByteArray& data, const QString& encoding) {
   QStringDecoder decoder(encoding.toUtf8().constData());
   if (decoder.isValid()) {
@@ -69,7 +58,7 @@ void MarkdownView::setupUi() {
   m_toolbar->setMovable(false);
   m_toolbar->setFloatable(false);
   m_toolbar->setIconSize(QSize(20, 20));
-  m_toolbar->setStyleSheet(QLatin1String(kToolbarStyle));
+  m_toolbar->setStyleSheet(toolbarStyleSheet());
 
   // 「ソース表示」トグル: ON = 生 Markdown (= テキストエディタ風)、
   //                      OFF = 整形表示 (= QTextDocument::setMarkdown)。
