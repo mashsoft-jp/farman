@@ -6,9 +6,11 @@
 #include <atomic>
 
 class QPdfDocument;
+class QPdfSearchModel;
 class QPdfView;
 class QSpinBox;
 class QLabel;
+class QLineEdit;
 class QToolBar;
 class QToolButton;
 
@@ -18,8 +20,9 @@ namespace Farman {
 //
 //   - Qt PDF モジュール (`QPdfView` + `QPdfDocument`) で実装。PDFium ベース。
 //   - ツールバー: 前ページ / 次ページ / ページジャンプ / ズーム +- /
-//     ページ幅にフィット / ページ全体にフィット / モード切替 (Single / Continuous)。
-//   - 検索 / テキスト選択 / 回転は Phase 1 ではスコープ外 (将来課題)。回転は
+//     ページ幅にフィット / ページ全体にフィット / モード切替 (Single / Continuous) /
+//     全文検索 (QPdfSearchModel)。
+//   - テキスト選択 / 回転は Phase 1 ではスコープ外 (将来課題)。回転は
 //     QPdfView 単体では実現できず、QPdfDocumentRenderOptions を介した
 //     カスタム描画が必要なため Phase 2 以降。
 //   - 大きい PDF (数百ページ) でも QPdfView は遅延描画なので初回ロードは
@@ -55,6 +58,11 @@ public:
   // ステータスバー表示用の要約 ("PDF · N pages · file size")
   QString statusInfo() const;
 
+protected:
+  // Cmd/Ctrl+F のグローバルキャプチャ用。フォーカスが他にあっても拾えるよう
+  // qApp->installEventFilter で全アプリにフックする。
+  bool eventFilter(QObject* watched, QEvent* event) override;
+
 private slots:
   void onPrevPage();
   void onNextPage();
@@ -66,10 +74,17 @@ private slots:
   void onPageModeToggled(bool continuous);
   void onCurrentPageChanged(int page);       // 0-based from QPdfPageNavigator
   void onPageCountChanged(int pageCount);
+  void onFindTextChanged(const QString& text);
+  void onFindCountChanged();
+  void findNext();
+  void findPrevious();
+  void focusFindInput();
 
 private:
   void setupUi();
   void updatePageLabel();
+  void jumpToSearchResult(int index);
+  void updateFindStatus();
 
   QToolBar*     m_toolbar       = nullptr;
   QToolButton*  m_prevButton    = nullptr;
@@ -81,6 +96,15 @@ private:
   QToolButton*  m_fitWidthButton = nullptr;
   QToolButton*  m_fitPageButton  = nullptr;
   QToolButton*  m_continuousButton = nullptr;
+
+  // 検索 (QPdfSearchModel ベース)。QPdfView::setSearchModel でビューに渡すと
+  // 全件ハイライトが入る。setCurrentSearchResultIndex で現在ヒットへスクロール。
+  QLineEdit*       m_findEdit    = nullptr;
+  QToolButton*     m_findPrevBtn = nullptr;
+  QToolButton*     m_findNextBtn = nullptr;
+  QLabel*          m_findStatus  = nullptr;
+  QPdfSearchModel* m_searchModel = nullptr;
+  int              m_currentSearchIndex = -1;
 
   QPdfView*     m_view     = nullptr;
   QPdfDocument* m_document = nullptr;

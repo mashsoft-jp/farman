@@ -1074,9 +1074,12 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   - ズームアウト / ズームイン (1.25 倍ステップ、0.1〜8.0 倍にクランプ)
   - 「幅にフィット」/「ページ全体」トグル (同時 ON は無し)
   - 「連続表示」トグル (OFF = SinglePage、ON = MultiPage)
-- 検索 / テキスト選択 / ページ回転は Phase 1 ではスコープ外 (将来課題)。
-  検索は `QPdfSearchModel`、テキスト選択は `QPdfSelection` で実装可能。
-  ページ回転は `QPdfDocumentRenderOptions::Rotation` を介したカスタム描画が必要。
+  - 全文検索 (`QPdfSearchModel`)。Find 欄 + 前/次ボタン + 件数表示。
+    Enter / Shift+Enter で次/前、Cmd/Ctrl+F でフォーカス移動。
+    `QPdfView::setSearchModel` で全件ハイライト + 現在ヒットへスクロール。
+- テキスト選択 / ページ回転は Phase 1 ではスコープ外 (将来課題)。
+  テキスト選択は `QPdfSelection`、ページ回転は
+  `QPdfDocumentRenderOptions::Rotation` を介したカスタム描画が必要。
 - External モード時は `PdfViewerWindow` (独立 `QMainWindow`) として開く。
 - ステータスバー (statusInfo): `PDF · <ページ数> ページ · <ファイルサイズ>`。
 
@@ -1092,6 +1095,9 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   (`setOpenExternalLinks(true)`)。相対パス画像 (`![alt](path)`) は Markdown
   ファイルのあるディレクトリを `setSearchPaths` でベースに指定して解決する。
 - ツールバーの「Source」トグルで生 Markdown ソースと整形表示を切り替えできる。
+- 全文検索: Find 欄 + 前/次ボタン + 大文字小文字区別トグル + 件数表示。
+  Enter / Shift+Enter で次/前、Cmd/Ctrl+F でフォーカス移動。整形表示・ソース表示の
+  どちらでも動く (内部の `QTextBrowser` が両モードを抱えるため)。
 - エンコーディングは Auto (uchardet で検出) を既定とし、Settings の指定が
   あればそれを使う。プレビューモードではサイズ上限を超えると先頭 N バイトに
   truncate して表示する (テキスト / バイナリと同じ作法)。
@@ -1139,13 +1145,15 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
 ライブラリの導入難度と実装コストを天秤にかけて決める。
 
 - **PDF ビュアー (拡張)**
-  - Phase 1 (ページ送り / ズーム / Fit / ページジャンプ / 連続表示) は実装済
-    (上記 `#### PDF ビュアー` 参照)。
-  - 残件: 全文検索 (`QPdfSearchModel`) / テキスト選択 (`QPdfSelection`) /
-    ページ回転 (`QPdfDocumentRenderOptions::Rotation` 経由のカスタム描画) /
-    アウトライン (しおり) サイドバー。実装難度は中。
+  - Phase 1 (ページ送り / ズーム / Fit / ページジャンプ / 連続表示 / 全文検索)
+    は実装済 (上記 `#### PDF ビュアー` 参照)。
+  - 残件: テキスト選択 (`QPdfSelection`) / ページ回転
+    (`QPdfDocumentRenderOptions::Rotation` 経由のカスタム描画) / アウトライン
+    (しおり) サイドバー。いずれもビュアー内描画の改修が必要で実装難度は中、
+    日常的ニーズが薄いため見送り。
 - **Markdown ビュアー (拡張)**
-  - Phase 0 (CommonMark + GFM) は実装済 (上記 `#### Markdown ビュアー` 参照)。
+  - Phase 0 (CommonMark + GFM + 全文検索) は実装済 (上記 `#### Markdown ビュアー`
+    参照)。
   - 残件: シンタックスハイライト (コードブロックの言語別カラー表示) /
     数式 (KaTeX) / Mermaid 図 / 目次サイドバー。いずれも外部 JS エンジン
     (`QWebEngineView`) もしくは独自パーサを要し、現時点では導入コストに見合う

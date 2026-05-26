@@ -2,13 +2,21 @@
 
 #include "utils/EnterClickFilter.h"
 
+#include <QApplication>
 #include <QFile>
 #include <QFileInfo>
+#include <QIcon>
+#include <QKeyEvent>
+#include <QKeySequence>
 #include <QLabel>
+#include <QLineEdit>
 #include <QLocale>
 #include <QPdfDocument>
+#include <QPdfLink>
 #include <QPdfPageNavigator>
+#include <QPdfSearchModel>
 #include <QPdfView>
+#include <QSizePolicy>
 #include <QSpinBox>
 #include <QToolBar>
 #include <QToolButton>
@@ -118,6 +126,54 @@ void PdfView::setupUi() {
           this,                &PdfView::onPageModeToggled);
   m_toolbar->addWidget(m_continuousButton);
 
+  m_toolbar->addSeparator();
+
+  // ───── 検索 (TextView と同じレイアウト: Find: [入力] [前] [次] [件数]) ─────
+  m_toolbar->addWidget(new QLabel(tr("Find:"), m_toolbar));
+
+  const QString findShortcutText =
+    QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+
+  m_findEdit = new QLineEdit(m_toolbar);
+  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
+  m_findEdit->setToolTip(tr("Search text in this PDF (%1)").arg(findShortcutText));
+  m_findEdit->setClearButtonEnabled(true);
+  m_findEdit->setFocusPolicy(Qt::StrongFocus);
+  m_findEdit->setMinimumWidth(160);
+  m_findEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  m_findEdit->installEventFilter(this);
+  m_toolbar->addWidget(m_findEdit);
+
+  m_findPrevBtn = new QToolButton(m_toolbar);
+  m_findPrevBtn->setText(QStringLiteral("◀"));
+  m_findPrevBtn->setToolTip(tr("Previous match (Shift+Enter)"));
+  m_findPrevBtn->setFocusPolicy(Qt::StrongFocus);
+  connect(m_findPrevBtn, &QToolButton::clicked, this, &PdfView::findPrevious);
+  m_toolbar->addWidget(m_findPrevBtn);
+
+  m_findNextBtn = new QToolButton(m_toolbar);
+  m_findNextBtn->setText(QStringLiteral("▶"));
+  m_findNextBtn->setToolTip(tr("Next match (Enter)"));
+  m_findNextBtn->setFocusPolicy(Qt::StrongFocus);
+  connect(m_findNextBtn, &QToolButton::clicked, this, &PdfView::findNext);
+  m_toolbar->addWidget(m_findNextBtn);
+
+  m_findStatus = new QLabel(m_toolbar);
+  m_findStatus->setMinimumWidth(80);
+  m_toolbar->addWidget(m_findStatus);
+
+  connect(m_findEdit, &QLineEdit::textChanged,
+          this,        &PdfView::onFindTextChanged);
+
+  // QPdfSearchModel は document をセットすると searchString に応じて
+  // 全件マッチを返してくれる。ビューに setSearchModel するとハイライト描画。
+  m_searchModel = new QPdfSearchModel(this);
+  connect(m_searchModel, &QPdfSearchModel::countChanged,
+          this,           &PdfView::onFindCountChanged);
+
+  // Cmd/Ctrl+F でフォーカスを検索欄に飛ばす (TextView と同じ作法)
+  qApp->installEventFilter(this);
+
   auto* clickFilter = new EnterClickFilter(this);
   clickFilter->installOnButtonsIn(m_toolbar);
 
@@ -188,11 +244,32 @@ void PdfView::applyPreparedLoad(const PreparedLoad& r) {
             this, &PdfView::onCurrentPageChanged, Qt::UniqueConnection);
   }
 
+  // 検索モデルを新しい document に再バインド。ファイル切替で前の文書の
+  // 検索状態が残らないよう、searchString も一旦クリアして UI も初期化する。
+  if (m_searchModel) {
+    m_searchModel->setSearchString(QString());
+    m_searchModel->setDocument(m_document);
+    m_view->setSearchModel(m_searchModel);
+  }
+  m_currentSearchIndex = -1;
+  if (m_findEdit)   m_findEdit->clear();
+  if (m_findStatus) m_findStatus->clear();
+
   onPageCountChanged(m_document->pageCount());
   updatePageLabel();
 }
 
 void PdfView::clearContent() {
+  // 検索モデルを先に切り離す。document を破棄してから残っているとモデルが
+  // 不正な document* に触れてしまう。
+  if (m_searchModel) {
+    m_searchModel->setSearchString(QString());
+    m_searchModel->setDocument(nullptr);
+  }
+  m_currentSearchIndex = -1;
+  if (m_findEdit)   m_findEdit->clear();
+  if (m_findStatus) m_findStatus->clear();
+
   if (m_view && m_document) {
     m_view->setDocument(nullptr);
   }
@@ -324,6 +401,120 @@ void PdfView::updatePageLabel() {
   m_pageSpin->blockSignals(true);
   m_pageSpin->setValue(nav->currentPage() + 1);
   m_pageSpin->blockSignals(false);
+}
+
+// ---------- 検索 ----------
+
+void PdfView::onFindTextChanged(const QString& text) {
+  // テキストが変わったら全件再検索 (QPdfSearchModel が非同期で count を更新)
+  if (!m_searchModel) return;
+  m_searchModel->setSearchString(text);
+  m_currentSearchIndex = -1;
+  if (text.isEmpty()) {
+    if (m_findStatus) m_findStatus->clear();
+  } else {
+    // count はまだ確定していないかも。countChanged 経由でも updateFindStatus が
+    // 呼ばれるので、ここでも一度仮表示を出す。
+    updateFindStatus();
+  }
+}
+
+void PdfView::onFindCountChanged() {
+  // モデルが検索完了したタイミング。ステータス表示を更新。
+  updateFindStatus();
+}
+
+void PdfView::findNext() {
+  if (!m_searchModel || !m_findEdit) return;
+  const int total = m_searchModel->count();
+  if (total <= 0) {
+    updateFindStatus();
+    return;
+  }
+  m_currentSearchIndex = (m_currentSearchIndex + 1) % total;
+  jumpToSearchResult(m_currentSearchIndex);
+}
+
+void PdfView::findPrevious() {
+  if (!m_searchModel || !m_findEdit) return;
+  const int total = m_searchModel->count();
+  if (total <= 0) {
+    updateFindStatus();
+    return;
+  }
+  m_currentSearchIndex =
+    (m_currentSearchIndex <= 0) ? (total - 1) : (m_currentSearchIndex - 1);
+  jumpToSearchResult(m_currentSearchIndex);
+}
+
+void PdfView::jumpToSearchResult(int index) {
+  if (!m_searchModel || !m_view) return;
+  // ビューに現在ヒット index を伝えると、そのヒットに赤丸風の強調が乗る。
+  m_view->setCurrentSearchResultIndex(index);
+  // ページにスクロールするのは pageNavigator 経由。QPdfLink から page と
+  // location を取って jump する。
+  const QPdfLink link = m_searchModel->resultAtIndex(index);
+  if (auto* nav = m_view->pageNavigator()) {
+    nav->jump(link.page(), link.location(), nav->currentZoom());
+  }
+  updateFindStatus();
+}
+
+void PdfView::updateFindStatus() {
+  if (!m_findStatus || !m_searchModel || !m_findEdit) return;
+  if (m_findEdit->text().isEmpty()) {
+    m_findStatus->clear();
+    return;
+  }
+  const int total = m_searchModel->count();
+  if (total <= 0) {
+    m_findStatus->setText(tr("Not found"));
+  } else if (m_currentSearchIndex < 0) {
+    m_findStatus->setText(tr("%1 matches").arg(total));
+  } else {
+    m_findStatus->setText(tr("%1 / %2")
+                             .arg(m_currentSearchIndex + 1)
+                             .arg(total));
+  }
+}
+
+void PdfView::focusFindInput() {
+  if (!m_findEdit) return;
+  m_findEdit->setFocus(Qt::ShortcutFocusReason);
+  m_findEdit->selectAll();
+}
+
+bool PdfView::eventFilter(QObject* watched, QEvent* event) {
+  // 検索入力欄の Enter / Shift+Enter / Esc
+  if (watched == m_findEdit && event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() == Qt::Key_Escape) {
+      if (m_view) m_view->setFocus(Qt::OtherFocusReason);
+      return true;
+    }
+    if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
+      if (ke->modifiers() & Qt::ShiftModifier) findPrevious();
+      else                                     findNext();
+      return true;
+    }
+  }
+
+  // Cmd/Ctrl+F: ビューが表示されているときだけ拾って検索欄にフォーカスを移す。
+  // TextView と同じく ShortcutOverride + KeyPress 両方で捕捉して上位の
+  // ショートカット (メニュー等) に取られるのを防ぐ。
+  if (event->type() == QEvent::ShortcutOverride
+      || event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    const bool isFindKey =
+      ke->key() == Qt::Key_F &&
+      (ke->modifiers() & Qt::ControlModifier);  // macOS では Cmd
+    if (isFindKey && isVisible() && window() && window()->isActiveWindow()) {
+      if (event->type() == QEvent::KeyPress) focusFindInput();
+      event->accept();
+      return true;
+    }
+  }
+  return QWidget::eventFilter(watched, event);
 }
 
 } // namespace Farman

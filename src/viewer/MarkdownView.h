@@ -6,6 +6,8 @@
 
 #include <atomic>
 
+class QLabel;
+class QLineEdit;
 class QTextBrowser;
 class QToolBar;
 class QToolButton;
@@ -57,16 +59,30 @@ public:
   // ステータスバー表示用の要約 ("1234 lines · UTF-8 · 56 KB" 等)
   QString statusInfo() const;
 
+protected:
+  // Cmd/Ctrl+F のグローバルキャプチャ用 (TextView / PdfView と同じ作法)
+  bool eventFilter(QObject* watched, QEvent* event) override;
+
 private slots:
   void onToggleRawSource(bool rawSource);
+  void findNext();
+  void findPrevious();
+  void focusFindInput();
 
 private:
   void setupUi();
   void renderCurrent();  // m_text を m_rawSource フラグで整形 or 生表示する
+  void findInDirection(bool backward);
+  void refreshMatchHighlights();
 
   QToolBar*     m_toolbar      = nullptr;
   QToolButton*  m_rawSourceButton = nullptr;
   QTextBrowser* m_browser      = nullptr;
+  QLineEdit*    m_findEdit     = nullptr;
+  QToolButton*  m_findPrevBtn  = nullptr;
+  QToolButton*  m_findNextBtn  = nullptr;
+  QToolButton*  m_findCsButton = nullptr;
+  QLabel*       m_findStatus   = nullptr;
 
   QString    m_filePath;
   QByteArray m_data;

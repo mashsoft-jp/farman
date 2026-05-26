@@ -1566,72 +1566,72 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::BookmarkListDialog</name>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="67"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="68"/>
         <source>Bookmarks</source>
         <translation>パス</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="81"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="83"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="81"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="83"/>
         <source>Path</source>
         <translation>パス</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="100"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="102"/>
         <source>Go</source>
         <translation>開く</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="101"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="103"/>
         <source>Edit</source>
         <translation>編集</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="102"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="104"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="103"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="105"/>
         <source>↑</source>
         <translation>↑</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="104"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="106"/>
         <source>↓</source>
         <translation>↓</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="105"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="107"/>
         <source>Close</source>
         <translation>閉じる</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="116"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="118"/>
         <source>Move selected bookmark up</source>
         <translation>選択したブックマークを上へ移動</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="117"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="119"/>
         <source>Move selected bookmark down</source>
         <translation>選択したブックマークを下へ移動</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="232"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="234"/>
         <source>Detected locations</source>
         <translation>検出された場所</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="356"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="358"/>
         <source>Delete Bookmark</source>
         <translation>ブックマークを削除</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="357"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="359"/>
         <source>Delete bookmark &apos;%1&apos;?</source>
         <translation>ブックマーク &apos;%1&apos; を削除しますか?</translation>
     </message>
@@ -3348,27 +3348,27 @@ What would you like to do?</source>
 <context>
     <name>Farman::HistoryDialog</name>
     <message>
-        <location filename="../src/ui/HistoryDialog.cpp" line="18"/>
+        <location filename="../src/ui/HistoryDialog.cpp" line="19"/>
         <source>History</source>
         <translation>履歴</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryDialog.cpp" line="27"/>
+        <location filename="../src/ui/HistoryDialog.cpp" line="28"/>
         <source>No history yet.</source>
         <translation>履歴はまだありません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryDialog.cpp" line="33"/>
+        <location filename="../src/ui/HistoryDialog.cpp" line="35"/>
         <source>Path</source>
         <translation>パス</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryDialog.cpp" line="57"/>
+        <location filename="../src/ui/HistoryDialog.cpp" line="59"/>
         <source>Go</source>
         <translation>開く</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryDialog.cpp" line="58"/>
+        <location filename="../src/ui/HistoryDialog.cpp" line="60"/>
         <source>Close</source>
         <translation>閉じる</translation>
     </message>
@@ -3508,7 +3508,7 @@ What would you like to do?</source>
 <context>
     <name>Farman::KeybindingTab</name>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="53"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="54"/>
         <source>Preset:</source>
         <translation>プリセット:</translation>
     </message>
@@ -3517,38 +3517,38 @@ What would you like to do?</source>
         <translation type="vanished">適用</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="56"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="57"/>
         <source>Selecting a preset previews it in the New Key column. Press OK to commit or Cancel to revert.</source>
         <translation>プリセットを選ぶと「New Key」列にプレビュー表示されます。OK で確定、Cancel で破棄します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="58"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="59"/>
         <source>(Choose a preset...)</source>
         <translation>(プリセットを選択...)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="67"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="68"/>
         <source>Export...</source>
         <translation>エクスポート...</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="68"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="69"/>
         <source>Save the current bindings to a JSON file</source>
         <translation>現在のバインドを JSON ファイルに保存する</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="72"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="73"/>
         <source>Import...</source>
         <translation>インポート...</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="73"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="74"/>
         <source>Load bindings from a JSON file (replaces existing)</source>
         <translation>JSON ファイルからバインドを読み込む (既存を置き換え)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="704"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="709"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="706"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="711"/>
         <source>Apply Preset</source>
         <translation>プリセット適用</translation>
     </message>
@@ -3559,176 +3559,176 @@ Press OK in Settings to commit, or Cancel to revert.</source>
 Settings で OK を押すと確定、Cancel で元に戻せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="725"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="731"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="727"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="733"/>
         <source>Export Keybindings</source>
         <translation>キーバインドをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="739"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="743"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="754"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="763"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="769"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="741"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="745"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="756"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="765"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="771"/>
         <source>Import Keybindings</source>
         <translation>キーバインドをインポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="744"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="746"/>
         <source>Replace all current keybindings with those in this file?
 Press OK in Settings to commit, or Cancel to revert.</source>
         <translation>このファイルのキーバインドで現在の設定を全置換しますか?
 Settings で OK を押すと確定、Cancel で元に戻せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="755"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="757"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="764"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="766"/>
         <source>Invalid JSON: %1</source>
         <translation>JSON が不正です: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="651"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="653"/>
         <source>Wrong file type: expected &apos;farman.keybindings&apos;, got &apos;%1&apos;</source>
         <translation>ファイル種別が不正です。&apos;farman.keybindings&apos; が期待されますが &apos;%1&apos; でした</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="656"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="658"/>
         <source>Invalid preset: missing &apos;bindings&apos; array</source>
         <translation>プリセットが不正です: bindings 配列がありません</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="727"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="740"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="729"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="742"/>
         <source>JSON Files (*.json)</source>
         <translation>JSON ファイル (*.json)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="81"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="82"/>
         <source>Press Enter or double-click to change a keybinding.</source>
         <translation>Enter またはダブルクリックでキーバインドを変更します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="88"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="90"/>
         <source>Command</source>
         <translation>コマンド</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="88"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="90"/>
         <source>Current Key</source>
         <translation>現在のキー</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="88"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="90"/>
         <source>New Key</source>
         <translation>新しいキー</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="118"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="120"/>
         <source>Command:</source>
         <translation>コマンド:</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="147"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="149"/>
         <source>→</source>
         <translation>→</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="157"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="373"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="159"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="375"/>
         <source>&lt;press a key&gt;</source>
         <translation>&lt;キーを押してください&gt;</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="173"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="175"/>
         <source>Cancel (Cmd+C)</source>
         <translation>キャンセル (Cmd+C)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="174"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="177"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="176"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="179"/>
         <source>OK (Enter)</source>
         <translation>OK (Enter)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="176"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="178"/>
         <source>Cancel (Ctrl+C)</source>
         <translation>キャンセル (Ctrl+C)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="198"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="200"/>
         <source>Clear Binding (Cmd+D)</source>
         <translation>割り当てを解除 (Cmd+D)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="200"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="202"/>
         <source>Clear Binding (Ctrl+D)</source>
         <translation>割り当てを解除 (Ctrl+D)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="202"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="204"/>
         <source>Remove the keybinding for the selected command</source>
         <translation>選択したコマンドのキーバインドを解除</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="207"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="209"/>
         <source>Reset to Defaults (Cmd+R)</source>
         <translation>デフォルトに戻す (Cmd+R)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="209"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="211"/>
         <source>Reset to Defaults (Ctrl+R)</source>
         <translation>デフォルトに戻す (Ctrl+R)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="211"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="213"/>
         <source>Reset all keybindings to their default values</source>
         <translation>すべてのキーバインドをデフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="277"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="293"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="279"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="295"/>
         <source> (and %1 more)</source>
         <translation> (他 %1 件)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="289"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="365"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="291"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="367"/>
         <source>(unbound)</source>
         <translation>(未割当)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="505"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="507"/>
         <source>Key Already Bound</source>
         <translation>キーが既に割り当て済み</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="506"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="508"/>
         <source>The key &apos;%1&apos; is already bound to &apos;%2&apos;.
 Do you want to rebind it to this command?</source>
         <translation>キー &apos;%1&apos; は既に &apos;%2&apos; に割り当てられています。
 このコマンドに割り当て直しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="522"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="524"/>
         <source>No Selection</source>
         <translation>未選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="523"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="525"/>
         <source>Please select a command to clear its binding.</source>
         <translation>解除するコマンドを選択してください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="550"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="552"/>
         <source>Reset to Defaults</source>
         <translation>デフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="551"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="553"/>
         <source>Are you sure you want to reset all keybindings to their default values?
 This will discard all custom keybindings.</source>
         <translation>すべてのキーバインドをデフォルトに戻しますか?
@@ -4571,7 +4571,47 @@ Reason: %1</source>
         <translation>生の Markdown ソースを表示 (オフ = 整形表示)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="211"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="91"/>
+        <source>Find:</source>
+        <translation>検索:</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="97"/>
+        <source>Search text  (%1)</source>
+        <translation>検索する文字列  (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="98"/>
+        <source>Search text in this Markdown (%1)</source>
+        <translation>この Markdown 内のテキストを検索 (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="108"/>
+        <source>Previous match (Shift+Enter)</source>
+        <translation>前のマッチへ (Shift+Enter)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="116"/>
+        <source>Next match (Enter)</source>
+        <translation>次のマッチへ (Enter)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="126"/>
+        <source>Case sensitive search</source>
+        <translation>大文字小文字を区別して検索</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="349"/>
+        <source>Not found</source>
+        <translation>見つかりません</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="350"/>
+        <source>%1 matches</source>
+        <translation>%1 件</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="386"/>
         <source>%1 lines · %2 · %3</source>
         <translation>%1 行 · %2 · %3</translation>
     </message>
@@ -4644,67 +4684,107 @@ Reason: %1</source>
 <context>
     <name>Farman::PdfView</name>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="58"/>
+        <location filename="../src/viewer/PdfView.cpp" line="54"/>
         <source>Previous page (PageUp)</source>
         <translation>前のページ (PageUp)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="68"/>
+        <location filename="../src/viewer/PdfView.cpp" line="64"/>
         <source>Jump to page</source>
         <translation>ページにジャンプ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="81"/>
+        <location filename="../src/viewer/PdfView.cpp" line="77"/>
         <source>Next page (PageDown)</source>
         <translation>次のページ (PageDown)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="91"/>
+        <location filename="../src/viewer/PdfView.cpp" line="87"/>
         <source>Zoom out (Ctrl+-)</source>
         <translation>ズームアウト (Ctrl+-)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="98"/>
+        <location filename="../src/viewer/PdfView.cpp" line="94"/>
         <source>Zoom in (Ctrl++)</source>
         <translation>ズームイン (Ctrl++)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="104"/>
+        <location filename="../src/viewer/PdfView.cpp" line="100"/>
         <source>Fit Width</source>
         <translation>幅にフィット</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="106"/>
+        <location filename="../src/viewer/PdfView.cpp" line="102"/>
         <source>Fit page width to view</source>
         <translation>ページ幅をビューに合わせる</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="112"/>
+        <location filename="../src/viewer/PdfView.cpp" line="108"/>
         <source>Fit Page</source>
         <translation>ページ全体</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="114"/>
+        <location filename="../src/viewer/PdfView.cpp" line="110"/>
         <source>Fit whole page in view</source>
         <translation>ページ全体をビューに収める</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="123"/>
+        <location filename="../src/viewer/PdfView.cpp" line="119"/>
         <source>Continuous</source>
         <translation>連続表示</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="127"/>
+        <location filename="../src/viewer/PdfView.cpp" line="123"/>
         <source>Continuous multi-page scrolling (off = single page)</source>
         <translation>複数ページを連続スクロール表示 (オフ = 1 ページずつ)</translation>
     </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="132"/>
+        <source>Find:</source>
+        <translation>検索:</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="138"/>
+        <source>Search text  (%1)</source>
+        <translation>検索する文字列  (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="139"/>
+        <source>Search text in this PDF (%1)</source>
+        <translation>この PDF 内のテキストを検索 (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="149"/>
+        <source>Previous match (Shift+Enter)</source>
+        <translation>前のマッチへ (Shift+Enter)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="156"/>
+        <source>Next match (Enter)</source>
+        <translation>次のマッチへ (Enter)</translation>
+    </message>
     <message numerus="yes">
-        <location filename="../src/viewer/PdfView.cpp" line="229"/>
+        <location filename="../src/viewer/PdfView.cpp" line="294"/>
         <source>PDF · %1 page(s) · %2</source>
         <comment>PDF status: page count + file size</comment>
         <translation>
             <numerusform>PDF · %1 ページ · %2</numerusform>
         </translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="471"/>
+        <source>Not found</source>
+        <translation>見つかりません</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="473"/>
+        <source>%1 matches</source>
+        <translation>%1 件</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="475"/>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
     </message>
 </context>
 <context>
@@ -4984,57 +5064,57 @@ Enter キーでビュアーを開いてください。</translation>
 <context>
     <name>Farman::SearchDialog</name>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="62"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="63"/>
         <source>Search Files</source>
         <translation>ファイル検索</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="79"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="80"/>
         <source>Browse folder...</source>
         <translation>フォルダを参照...</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="87"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="88"/>
         <source>e.g. *.txt *.cpp (space-separated, empty for all)</source>
         <translation>例: *.txt *.cpp (空白区切り、空ですべて)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="94"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="95"/>
         <source>e.g. .* node_modules (space-separated)</source>
         <translation>例: .* node_modules (空白区切り)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="96"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="97"/>
         <source>Directory names (glob) to skip when recursing. Default comes from Settings → Behavior. Changes here apply to this search only.</source>
         <translation>再帰時にスキップするディレクトリ名 (glob)。デフォルトは Settings → Behavior の値で、ここでの変更は今回の検索のみに適用されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="83"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="84"/>
         <source>Start path:</source>
         <translation>検索開始パス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="89"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="90"/>
         <source>Name pattern:</source>
         <translation>名前パターン:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="99"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="100"/>
         <source>Exclude dirs:</source>
         <translation>除外ディレクトリ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="103"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="104"/>
         <source>e.g. *.log .DS_Store (space-separated)</source>
         <translation>例: *.log .DS_Store (空白区切り)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="105"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="106"/>
         <source>File name patterns (glob) to skip from results. Applied after the name pattern filter.</source>
         <translation>結果から除外するファイル名パターン (glob)。名前パターンフィルタの後に適用されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="108"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="109"/>
         <source>Exclude files:</source>
         <translation>除外ファイル:</translation>
     </message>
@@ -5043,125 +5123,125 @@ Enter キーでビュアーを開いてください。</translation>
         <translation type="vanished">サブディレクトリを含める (%1)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="112"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="113"/>
         <source>Include subdirectories</source>
         <translation>サブディレクトリを含める</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="120"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="121"/>
         <source>Filters</source>
         <translation>フィルタ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="125"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="126"/>
         <source>Size:</source>
         <translation>サイズ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="128"/>
-        <location filename="../src/ui/SearchDialog.cpp" line="137"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="129"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="138"/>
         <source>Any</source>
         <translation>なし</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="145"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="146"/>
         <source>Min:</source>
         <translation>最小:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="148"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="149"/>
         <source>Max:</source>
         <translation>最大:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="157"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="158"/>
         <source>Modified:</source>
         <translation>更新日時:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="165"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="166"/>
         <source>From:</source>
         <translation>から:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="167"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="168"/>
         <source>To:</source>
         <translation>まで:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="171"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="172"/>
         <source>Content:</source>
         <translation>内容:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="173"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="174"/>
         <source>Text to find inside files</source>
         <translation>ファイル内を検索する文字列</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="174"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="175"/>
         <source>Case sensitive</source>
         <translation>大文字小文字を区別</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="212"/>
-        <location filename="../src/ui/SearchDialog.cpp" line="394"/>
-        <location filename="../src/ui/SearchDialog.cpp" line="404"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="213"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="399"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="409"/>
         <source>Search</source>
         <translation>検索</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="223"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="224"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="223"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="224"/>
         <source>Path</source>
         <translation>パス</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="223"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="224"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="223"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="224"/>
         <source>Modified</source>
         <translation>更新日時</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="239"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="244"/>
         <source>Ready.</source>
         <translation>準備完了</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="245"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="250"/>
         <source>Close</source>
         <translation>閉じる</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="321"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="326"/>
         <source>Select Start Directory</source>
         <translation>開始ディレクトリを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="351"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="356"/>
         <source>Searching...</source>
         <translation>検索中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="382"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="387"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="399"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="404"/>
         <source>Searching... %1 found</source>
         <translation>検索中... %1 件</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="405"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="410"/>
         <source>Done. %1 found.</source>
         <translation>完了。%1 件見つかりました。</translation>
     </message>
@@ -5250,22 +5330,22 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::ShortcutListDialog</name>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="52"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="53"/>
         <source>Keyboard Shortcuts</source>
         <translation>ショートカット一覧</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="70"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="71"/>
         <source>Filter (key, command name, or id)</source>
         <translation>絞り込み (キー / コマンド名 / ID)</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="78"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="80"/>
         <source>Key</source>
         <translation>キー</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="78"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="80"/>
         <source>Command</source>
         <translation>コマンド</translation>
     </message>
@@ -5475,67 +5555,67 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::TransferConfirmDialog</name>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="41"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="42"/>
         <source>Confirm Copy</source>
         <translation>コピー確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="41"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="42"/>
         <source>Confirm Move</source>
         <translation>移動確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="54"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="55"/>
         <source>Source:</source>
         <translation>コピー元:</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="58"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="59"/>
         <source>Destination directory. Press ↑/↓ to toggle between the source and the opposite-pane directory. Click the folder button to browse.</source>
         <translation>コピー先ディレクトリ。↑/↓ でコピー元と反対側ペインのディレクトリを切り替えます。フォルダボタンで参照ダイアログを開きます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="69"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="70"/>
         <source>Browse for destination directory...</source>
         <translation>コピー先ディレクトリを参照...</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="88"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="89"/>
         <source>Destination:</source>
         <translation>コピー先:</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="93"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="94"/>
         <source>Items (%1)</source>
         <translation>項目 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="110"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="112"/>
         <source>Ask</source>
         <translation>都度確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="111"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="113"/>
         <source>Auto-overwrite</source>
         <translation>自動上書き</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="112"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="114"/>
         <source>Auto-rename</source>
         <translation>自動リネーム</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="114"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="116"/>
         <source>How to handle files that already exist at the destination.</source>
         <translation>コピー先に既に存在するファイルの扱い方。</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="116"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="118"/>
         <source>On overwrite:</source>
         <translation>上書き時:</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="127"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="129"/>
         <source>Rename suffix:</source>
         <translation>リネーム接尾辞:</translation>
     </message>
@@ -5544,7 +5624,7 @@ Keybindings are not affected.</source>
         <translation type="vanished">上書き時 (%1):</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="124"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="126"/>
         <source>Suffix appended to rename conflicting files. Use {n} as the counter placeholder (e.g., &apos; ({n})&apos; → &apos;foo (1).txt&apos;).</source>
         <translation>重複ファイルのリネーム時に追加する接尾辞。{n} がカウンタのプレースホルダ (例: &apos; ({n})&apos; → &apos;foo (1).txt&apos;)。</translation>
     </message>
@@ -5553,17 +5633,17 @@ Keybindings are not affected.</source>
         <translation type="vanished">リネーム接尾辞 (%1):</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="146"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="148"/>
         <source>Copy</source>
         <translation>コピー</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="146"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="148"/>
         <source>Move</source>
         <translation>移動</translation>
     </message>
     <message>
-        <location filename="../src/ui/TransferConfirmDialog.cpp" line="178"/>
+        <location filename="../src/ui/TransferConfirmDialog.cpp" line="180"/>
         <source>Choose destination directory</source>
         <translation>コピー先ディレクトリを選択</translation>
     </message>
@@ -5958,7 +6038,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>(なし)</translation>
     </message>
     <message>
-        <location filename="../src/ui/BookmarkListDialog.cpp" line="48"/>
+        <location filename="../src/ui/BookmarkListDialog.cpp" line="49"/>
         <source>iCloud Drive</source>
         <translation>iCloud Drive</translation>
     </message>
