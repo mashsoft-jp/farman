@@ -2,6 +2,7 @@
 #include "settings/Settings.h"
 #include "viewer/BinaryView.h"
 #include "viewer/ImageView.h"
+#include "viewer/MarkdownView.h"
 #include "viewer/TextView.h"
 #include <QApplication>
 #include <QEventLoop>
@@ -46,6 +47,10 @@ void ViewerPanel::setupUi() {
   // ===== Binary Viewer (fallback) =====
   m_binaryView = new BinaryView(this);
   m_stack->addWidget(m_binaryView);
+
+  // ===== Markdown Viewer (.md / .markdown 等) =====
+  m_markdownView = new MarkdownView(this);
+  m_stack->addWidget(m_markdownView);
 
   // ===== Loading placeholder =====
   // 大きいファイルや行数の多いテキストの読み込み中、ユーザーに「何も
@@ -156,6 +161,11 @@ ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
       || mimeMatches(s.imageViewerMimePatterns(), mime)) {
     return ViewerKind::Image;
   }
+  // Markdown はテキストビュアーより先に判定 (.md は両方の対象になり得るため、
+  // 整形表示できる Markdown を優先する)。
+  if (extensionMatches(s.markdownViewerExtensions(), extension)) {
+    return ViewerKind::Markdown;
+  }
   if (extensionMatches(s.textViewerExtensions(), extension)
       || mimeMatches(s.textViewerMimePatterns(), mime)) {
     return ViewerKind::Text;
@@ -191,10 +201,11 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
 
   bool ok = false;
   switch (kind) {
-    case ViewerKind::Text:   ok = openTextFile(filePath, pathForStatus);   break;
-    case ViewerKind::Image:  ok = openImageFile(filePath, pathForStatus);  break;
-    case ViewerKind::Binary: ok = openBinaryFile(filePath, pathForStatus); break;
-    case ViewerKind::Auto:   /* unreachable */ break;
+    case ViewerKind::Text:     ok = openTextFile(filePath, pathForStatus);     break;
+    case ViewerKind::Image:    ok = openImageFile(filePath, pathForStatus);    break;
+    case ViewerKind::Binary:   ok = openBinaryFile(filePath, pathForStatus);   break;
+    case ViewerKind::Markdown: ok = openMarkdownFile(filePath, pathForStatus); break;
+    case ViewerKind::Auto:     /* unreachable */ break;
   }
 
   QApplication::restoreOverrideCursor();
@@ -299,10 +310,30 @@ bool ViewerPanel::openBinaryFile(const QString& filePath, const QString& display
   return true;
 }
 
+bool ViewerPanel::openMarkdownFile(const QString& filePath,
+                                    const QString& displayPath) {
+  auto future = QtConcurrent::run(&MarkdownView::prepareLoad,
+                                   filePath,
+                                   m_markdownView->currentUserEncoding(),
+                                   /*cancelToken=*/ nullptr,
+                                   /*maxBytes=*/ qint64(-1));
+  MarkdownView::PreparedLoad p = waitForFutureWithEventLoop(future);
+  if (!p.ok) return false;
+
+  m_markdownView->applyPreparedLoad(p);
+  m_stack->setCurrentWidget(m_markdownView);
+  setFocusProxy(m_markdownView);
+  m_currentFilePath = displayPath;
+  emit fileOpened(displayPath);
+  emit viewerStatusChanged(displayPath, m_markdownView->statusInfo());
+  return true;
+}
+
 void ViewerPanel::clear() {
   m_textView->clearContent();
   m_imageView->clearContent();
   m_binaryView->clearContent();
+  if (m_markdownView) m_markdownView->clearContent();
   m_currentFilePath.clear();
   emit fileClosed();
   emit viewerStatusChanged(QString(), QString());

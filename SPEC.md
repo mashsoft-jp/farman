@@ -1062,6 +1062,23 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   - 文字列のエンコード種別
     - 初期設定はUTF-8
 
+#### Markdown ビュアー
+- 対象: `.md` `.markdown` `.mdown` `.mkd` (Settings の
+  `markdownViewer.extensions` で変更可)。同じ拡張子がテキストビュアー側にも
+  指定されていた場合は Markdown ビュアー側を優先する (`resolveAuto`)。
+- Qt 6 標準の `QTextDocument::setMarkdown(text, MarkdownDialectGitHub)` で
+  CommonMark + GitHub Flavored Markdown (見出し / リスト / 表 / タスクリスト /
+  取り消し線 / 自動リンク / 画像 / コードブロック (色なし monospace)) を整形
+  表示する。シンタックスハイライト・数式 (KaTeX)・Mermaid は未対応 (将来課題)。
+- 内部実装は `QTextBrowser`。リンクは OS 既定ブラウザで開く
+  (`setOpenExternalLinks(true)`)。相対パス画像 (`![alt](path)`) は Markdown
+  ファイルのあるディレクトリを `setSearchPaths` でベースに指定して解決する。
+- ツールバーの「Source」トグルで生 Markdown ソースと整形表示を切り替えできる。
+- エンコーディングは Auto (uchardet で検出) を既定とし、Settings の指定が
+  あればそれを使う。プレビューモードではサイズ上限を超えると先頭 N バイトに
+  truncate して表示する (テキスト / バイナリと同じ作法)。
+- ステータスバー (statusInfo): `<行数> 行 · <エンコーディング> · <ファイルサイズ>`。
+
 ### 表示モードの切替
 
 ビュアーを **アプリ内パネルとして表示** するか、**独立した外部ウィンドウで
@@ -1109,18 +1126,12 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
     Qt 公式) が第一候補。クロスプラットフォームで MIT ライセンス。
   - 必要機能: ページ送り (PageUp/Down)、ズーム、Fit、ページ番号入力、
     回転、テキスト選択 (可能なら)。
-- **Markdown ビュアー**
-  - 対象: `.md` `.markdown` (ほか `.mdown` `.mkd` も任意)
-  - 既存テキストビュアーと別経路にして、整形済みの HTML 表示を行う。
-    `QTextBrowser` または `QTextDocument::setMarkdown()` で実装可能
-    (Qt 6 標準で CommonMark + GFM 互換のサブセットをサポート)。
-  - 必要機能: 見出し / リスト / コードブロック / インラインコード /
-    リンク (クリックで開く) / 表 / 強調表示。シンタックスハイライトや
-    数式 (KaTeX) は将来課題。
-  - ツールバーで「整形表示 / ソース表示」をトグルできるようにする
-    (ソース表示はテキストビュアーと同じ挙動)。
-  - 相対パス画像の表示 (`<img>` / `![alt](path)`) はファイルのある
-    ディレクトリを `setSearchPaths` でベースに指定して解決する。
+- **Markdown ビュアー (拡張)**
+  - Phase 0 (CommonMark + GFM) は実装済 (上記 `#### Markdown ビュアー` 参照)。
+  - 残件: シンタックスハイライト (コードブロックの言語別カラー表示) /
+    数式 (KaTeX) / Mermaid 図 / 目次サイドバー。いずれも外部 JS エンジン
+    (`QWebEngineView`) もしくは独自パーサを要し、現時点では導入コストに見合う
+    ニーズが無いため見送り。
 - **動画 / 音声ビュアー**
   - 対象 (動画): `.mp4` `.mov` `.m4v` `.webm` `.avi` `.mkv` 他
   - 対象 (音声): `.wav` `.mp3` `.m4a` `.flac` `.ogg` `.aac` 他

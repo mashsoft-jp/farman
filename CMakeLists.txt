@@ -134,6 +134,7 @@ qt_add_executable(farman
   src/model/FileListModel.cpp
   src/viewer/ViewerDispatcher.cpp
   src/viewer/TextView.cpp
+  src/viewer/MarkdownView.cpp
   src/viewer/TextViewerWindow.cpp
   src/viewer/ImageView.cpp
   src/viewer/ImageViewerWindow.cpp

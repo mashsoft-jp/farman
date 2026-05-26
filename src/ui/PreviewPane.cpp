@@ -78,13 +78,15 @@ void PreviewPane::setupUi() {
   dirLayout->addStretch();
   m_stack->addWidget(m_directoryPage);
 
-  // 4〜6: 既存ビュアーを使い回す。
-  m_textView   = new TextView(this);
-  m_imageView  = new ImageView(this);
-  m_binaryView = new BinaryView(this);
+  // 4〜7: 既存ビュアーを使い回す。
+  m_textView     = new TextView(this);
+  m_imageView    = new ImageView(this);
+  m_binaryView   = new BinaryView(this);
+  m_markdownView = new MarkdownView(this);
   m_stack->addWidget(m_textView);
   m_stack->addWidget(m_imageView);
   m_stack->addWidget(m_binaryView);
+  m_stack->addWidget(m_markdownView);
 
   m_stack->setCurrentWidget(m_emptyLabel);
 }
@@ -127,6 +129,11 @@ void PreviewPane::showImage(const ImageView::PreparedLoad& prepared) {
 void PreviewPane::showBinary(const BinaryView::PreparedLoad& prepared) {
   m_binaryView->applyPreparedLoad(prepared);
   m_stack->setCurrentWidget(m_binaryView);
+}
+
+void PreviewPane::showMarkdown(const MarkdownView::PreparedLoad& prepared) {
+  m_markdownView->applyPreparedLoad(prepared);
+  m_stack->setCurrentWidget(m_markdownView);
 }
 
 void PreviewPane::setStatusMessage(const QString& msg) {

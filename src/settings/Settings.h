@@ -310,6 +310,12 @@ public:
   void    setTextViewerLineNumberForeground(const QColor& c);
   void    setTextViewerLineNumberBackground(const QColor& c);
 
+  // ── Markdown ビュアー設定 ───────────────────────
+  // ファイルを開く際に Markdown ビュアー (= 整形 HTML 表示) で処理する拡張子。
+  // テキストビュアー判定より優先される。
+  QStringList markdownViewerExtensions() const;
+  void        setMarkdownViewerExtensions(const QStringList& exts);
+
   // ── 画像ビュアー設定 ───────────────────────
   QStringList           imageViewerExtensions()        const;
   void                  setImageViewerExtensions(const QStringList& exts);
@@ -526,10 +532,17 @@ private:
   bool             m_cursorLoop      = false;
   bool             m_typeAheadIncludeDotfiles = true;
 
+  // Markdown viewer
+  // .md / .markdown / .mdown / .mkd を整形 HTML で表示する。
+  // textViewerExtensions より優先される (resolveAuto で Markdown 判定が先)。
+  QStringList        m_markdownViewerExtensions = {
+    "md", "markdown", "mdown", "mkd",
+  };
+
   // Text viewer
   QStringList        m_textViewerExtensions   = {
     // テキスト系
-    "txt", "log", "md*",
+    "txt", "log",
     // c/cc/cpp/cxx/cs/css/conf/cfg — c から始まるテキスト系全般
     // Java の class はバイナリなので除外、Windows 系バイナリ (cab/chm/com) も除外
     "c*", "!class", "!cab", "!chm", "!com",

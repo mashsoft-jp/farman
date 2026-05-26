@@ -38,12 +38,13 @@ QString humanReadableSize(qint64 bytes) {
 // ワーカーが返す結果の合併型。kind に応じてどの PreparedLoad が
 // セットされているかを判別する。
 struct PreviewResult {
-  enum class Kind { Text, Image, Binary, Unsupported };
+  enum class Kind { Text, Image, Binary, Markdown, Unsupported };
   Kind kind = Kind::Unsupported;
   QString errorReason;  // Unsupported のときに表示するメッセージ
-  TextView::PreparedLoad   text;
-  ImageView::PreparedLoad  image;
-  BinaryView::PreparedLoad binary;
+  TextView::PreparedLoad     text;
+  ImageView::PreparedLoad    image;
+  BinaryView::PreparedLoad   binary;
+  MarkdownView::PreparedLoad markdown;
 };
 
 // ワーカースレッドで走る本体。UI には触らないので static の自由関数にする。
@@ -93,6 +94,15 @@ PreviewResult runPreviewLoad(QString             filePath,
       if (!r.binary.ok) {
         r.kind = PreviewResult::Kind::Unsupported;
         r.errorReason = QObject::tr("Failed to load file.");
+      }
+      return r;
+    case ViewerPanel::ViewerKind::Markdown:
+      r.markdown = MarkdownView::prepareLoad(filePath, userEncoding,
+                                              tokPtr, maxBytes);
+      r.kind     = PreviewResult::Kind::Markdown;
+      if (!r.markdown.ok) {
+        r.kind = PreviewResult::Kind::Unsupported;
+        r.errorReason = QObject::tr("Failed to load Markdown.");
       }
       return r;
     case ViewerPanel::ViewerKind::Auto:
@@ -360,6 +370,10 @@ void PreviewController::startLoadJob(const QString& filePath,
       case PreviewResult::Kind::Binary:
         m_pane->showBinary(r.binary);
         m_lastShownPath = r.binary.filePath;
+        break;
+      case PreviewResult::Kind::Markdown:
+        m_pane->showMarkdown(r.markdown);
+        m_lastShownPath = r.markdown.filePath;
         break;
       case PreviewResult::Kind::Unsupported:
         m_pane->showUnsupported(r.errorReason);

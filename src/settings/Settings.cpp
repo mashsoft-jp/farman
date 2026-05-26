@@ -141,9 +141,12 @@ void Settings::applyDefaults() {
   m_cursorLoop                = false;
   m_typeAheadIncludeDotfiles  = true;
 
+  // ── Markdown ビュアー ─────────────
+  m_markdownViewerExtensions = { "md", "markdown", "mdown", "mkd" };
+
   // ── テキストビュアー ─────────────
   m_textViewerExtensions = {
-    "txt", "log", "md*",
+    "txt", "log",
     "c*", "!class", "!cab", "!chm", "!com",
     "h", "hpp",
     "py", "js", "ts", "java", "rs", "go", "rb", "php", "pl", "pm",
@@ -895,6 +898,9 @@ void Settings::setTypeAheadIncludeDotfiles(bool include) {
 
 QStringList Settings::textViewerExtensions() const { return m_textViewerExtensions; }
 void Settings::setTextViewerExtensions(const QStringList& exts) { m_textViewerExtensions = exts; }
+
+QStringList Settings::markdownViewerExtensions() const { return m_markdownViewerExtensions; }
+void Settings::setMarkdownViewerExtensions(const QStringList& exts) { m_markdownViewerExtensions = exts; }
 QStringList Settings::textViewerMimePatterns() const { return m_textViewerMimePatterns; }
 void Settings::setTextViewerMimePatterns(const QStringList& patterns) { m_textViewerMimePatterns = patterns; }
 
@@ -1710,6 +1716,17 @@ void Settings::load() {
     }
     if (!list.isEmpty()) m_textViewerExtensions = list;
   }
+
+  // Markdown ビュアー: テキストビュアーと並列で扱う
+  QJsonObject markdownViewer = root.value("markdownViewer").toObject();
+  if (markdownViewer.contains("extensions")) {
+    QStringList list;
+    for (const QJsonValue& v : markdownViewer.value("extensions").toArray()) {
+      const QString s = v.toString().trimmed();
+      if (!s.isEmpty()) list.append(s);
+    }
+    if (!list.isEmpty()) m_markdownViewerExtensions = list;
+  }
   if (textViewer.contains("mimePatterns")) {
     QStringList list;
     for (const QJsonValue& v : textViewer.value("mimePatterns").toArray()) {
@@ -2162,6 +2179,15 @@ void Settings::save() const {
     logObj["retentionDays"] = m_logRetentionDays;
     logObj["directory"]     = m_logDirectory;
     root["log"] = logObj;
+  }
+
+  // Save markdown viewer settings (Text の手前で出す)
+  {
+    QJsonObject mdViewer;
+    QJsonArray arr;
+    for (const QString& s : m_markdownViewerExtensions) arr.append(s);
+    mdViewer["extensions"] = arr;
+    root["markdownViewer"] = mdViewer;
   }
 
   // Save text viewer settings

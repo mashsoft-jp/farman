@@ -40,6 +40,9 @@ All notable changes to **farman** are documented in this file.
   - テキスト (エンコード自動判定 / 行番号 / ワードラップ)
   - 画像 (ズーム / Fit to Window / 透明背景 Checker / GIF・WebP アニメーション)
   - バイナリ (16 進ダンプ + アドレス列・文字列列カラーリング)
+  - **Markdown** (CommonMark + GitHub Flavored Markdown を `QTextDocument::setMarkdown`
+    で整形表示。表 / タスクリスト / 取り消し線 / 自動リンク / 相対パス画像対応。
+    ツールバー「Source」トグルで生 Markdown ソース表示に切替可)
   - 任意ビュアーで開く (Ctrl+Enter) / OS 既定アプリで実行 (Shift+Enter)
 - **画像ビュアーの強化**
   - ツールバーに **時計回り 90° 回転** ボタン (表示のみ、保存はしない)。
