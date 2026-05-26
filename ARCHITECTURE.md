@@ -62,12 +62,21 @@ src/
 │   ├── CopyOperation.{h,cpp}        # コピー
 │   ├── MoveOperation.{h,cpp}        # 移動
 │   └── DeleteOperation.{h,cpp}      # 削除
-├── viewers/                 # ビュアー
-│   ├── IViewerPlugin.h              # プラグインIF
-│   ├── ViewerManager.{h,cpp}        # ビュアー管理
-│   ├── TextViewer.{h,cpp}           # テキストビュアー
-│   ├── ImageViewer.{h,cpp}          # 画像ビュアー
-│   └── HexViewer.{h,cpp}            # Hexビュアー
+├── viewer/                  # ビュアー (実体は src/viewer/)
+│   ├── IViewerPlugin.h              # プラグイン IF (内部基盤、外部公開は未)
+│   ├── ViewerDispatcher.{h,cpp}     # ビュアー振り分け
+│   ├── TextView.{h,cpp}             # テキストビュアー
+│   ├── TextViewerWindow.{h,cpp}     # 同・独立ウィンドウ (External モード)
+│   ├── ImageView.{h,cpp}            # 画像ビュアー (Exif / ICC / 回転 / 透明)
+│   ├── ImageViewerWindow.{h,cpp}    # 同・独立ウィンドウ
+│   ├── BinaryView.{h,cpp}           # バイナリ (16 進ダンプ)
+│   ├── BinaryViewerWindow.{h,cpp}   # 同・独立ウィンドウ
+│   ├── MarkdownView.{h,cpp}         # Markdown (CommonMark + GFM + 検索)
+│   ├── MarkdownViewerWindow.{h,cpp} # 同・独立ウィンドウ
+│   ├── PdfView.{h,cpp}              # PDF (Qt PDF / 検索 / ページ / ズーム)
+│   ├── PdfViewerWindow.{h,cpp}      # 同・独立ウィンドウ
+│   ├── CsvView.{h,cpp}              # CSV / TSV (QTableView ベース)
+│   └── CsvViewerWindow.{h,cpp}      # 同・独立ウィンドウ
 ├── settings/                # 設定管理
 │   ├── Settings.{h,cpp}             # 設定マネージャー
 │   ├── KeyBindings.{h,cpp}          # キーバインド

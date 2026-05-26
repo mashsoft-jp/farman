@@ -417,6 +417,53 @@ macOS の `Ctrl` は `⌘`（Command）に割り当てられる。
 - Tab 順序は「入力フィールド → キャンセル系 → 実行系」で、**実行系は
   最後**に回す。Tab 連打で誤って実行ボタンにフォーカスしないよう
   配慮する。`setTabOrder()` で順序を明示する。
+- `QTableView` / `QTableWidget` / `QTreeView` 系のリスト型コントロールは
+  既定では Tab がセル間ナビゲーションに吸われてしまうので、検索結果
+  リスト等の「Tab で抜けたい」ケースでは `setTabKeyNavigation(false)` を
+  必ず設定する。セル内移動は矢印キーで行う。
+
+### リスト / テーブル選択行の見た目
+
+`QTableView` / `QTreeView` / `QListWidget` の派生ウィジェットは、既定では
+フォーカスを失っても選択行を `palette(highlight)` (青) で強調し続けるため、
+「あれ、このリストにフォーカスがあるのかな」と紛らわしい。Mac の
+NSTableView 風に、**非アクティブ時はグレーに落とす** スタイルを共通ヘルパで
+提供する。
+
+- `utils/EnterClickFilter.h` の `inactiveSelectionStyleSheet()` を
+  `setStyleSheet()` に渡すだけで適用される。
+- 適用対象は「ダイアログを開いた瞬間に既定で何かが選択されているリスト」
+  全般。具体的には:
+  - SearchDialog (検索結果テーブル)
+  - HistoryDialog / BookmarkListDialog / ShortcutListDialog / KeybindingTab
+    のテーブル
+  - TransferConfirmDialog のアイテムリスト
+  - CSV ビュアーの本体テーブル
+- 例外: SettingsDialog のサイドメニューは既に独自の `:active` / `:!active`
+  指定がある。`QAbstractItemView::NoSelection` のテーブル (BulkRenameDialog
+  プレビュー等) は適用不要。
+
+「初期選択を出した上でフォーカスが他にあるときはグレー」にしたい場合は、
+モデル投入後に `setCurrentIndex(model->index(0, 0))` + `selectRow(0)` を
+呼んでカレント行 + 選択行を作る。これがないと最初に Tab でテーブルに移った
+瞬間 1 度では選択が見えず、矢印で動かして初めてハイライトが出るので、
+ユーザーから見ると「動かさないと現在位置が分からない」状態になる
+(CSV ビュアー初期実装時に踏んだ罠)。
+
+### ツールバーのスタイル
+
+メインツールバー / 各ビュアーのツールバーは見た目を揃えるため、共通の
+スタイルシートを使う。
+
+- `utils/EnterClickFilter.h` の `toolbarStyleSheet()` を `QToolBar` に
+  `setStyleSheet()` する。フォーカス枠 / `:checked` 状態 / ホバーが
+  プラットフォーム間で一貫して描かれる。
+- 適用対象: MainWindow / TextView / ImageView / BinaryView / MarkdownView /
+  PdfView / CsvView のツールバー。新規ビュアーを追加するときも同じ
+  ヘルパを使うこと。
+- ツールバーのボタンに対しては `EnterClickFilter::installOnButtonsIn()` を
+  使って Enter キーをクリック扱いにする (ツールバー上でも Tab → Enter で
+  操作が完結する)。
 
 ---
 
@@ -1798,7 +1845,10 @@ List Display へ移動済み。ビュアー固有の設定は Viewers タブへ�
   - Program Files / AppData の双方への install 経路をサポート (個別
     ユーザー権限でも入れられるように)。
   - **Authenticode 署名**: 取得は同じく配布数が増えてから。未署名のまま
-    では SmartScreen が警告を出す。
+    では SmartScreen が警告を出す。Windows 11 の **Smart App Control (SAC)** が
+    ON の環境ではインストーラ自体がブロックされ、再インストール
+    (= キャッシュリセット) や Sandbox 経由でしか起動できないケースがある。
+    抜本対応は Authenticode 署名 (例: Azure Trusted Signing) の導入。
   - スタートメニュー / デスクトップショートカットの作成、関連付けの
     登録 (任意)、アンインストーラの登録。
 - **Linux** — `AppImage`
@@ -1860,6 +1910,14 @@ OS 別の現状:
   シンボリックリンク、右に `farman.app`) の `.dmg` 生成 → `notarytool` で
   公証 + `stapler` で staple。背景画像 / ボリュームアイコンの追加は
   将来課題。
+  - **アイコン**: `images/icon.icns` を `MACOSX_BUNDLE_ICON_FILE` で
+    バンドルに同梱し、`Info.plist` の `CFBundleIconFile` に反映。
+    Dock / Finder / Cmd+Tab すべてここから読まれる。
+  - **`QApplication::setWindowIcon` は macOS では呼ばない**
+    (`main.cpp` 内で `#ifndef Q_OS_MACOS` ガード)。これを通すと Qt が
+    バンドルの `.icns` を上書きしてしまい、Windows 用に作った真四角な
+    `.ico` が Dock に出てしまう。Windows / Linux ではタスクバー / ウィンドウ
+    装飾用に必要なので残す。
 - **Linux**: `linuxdeploy` で AppImage と、AppDir を `/opt/farman/` に
   詰めた `.deb` の両方を生成。
 - **Windows**: `windeployqt` + vcpkg DLL コピー後、Inno Setup 6 で
@@ -1869,6 +1927,22 @@ OS 別の現状:
   ショートカット必須 + デスクトップショートカット任意 (Tasks)、アンインス
   トーラ自動登録、64-bit 限定。ポータブル用途の `.zip` も同時生成して併売。
   関連付けの登録は未対応 (将来課題)。
+  - **MSVC ランタイム DLL の同梱**: `windeployqt` は `MSVCP140.dll` /
+    `VCRUNTIME140.dll` / `VCRUNTIME140_1.dll` をコピーしないため、
+    `$VCToolsRedistDir` 経由で release ディレクトリに直接コピーする
+    (release.yml 内で実施)。これを忘れると VC++ Redistributable を入れて
+    いないクリーン環境 (Windows Sandbox など) で「MSVCP140.dll が見つからない」
+    エラーになる。
+  - **アイコンを exe リソースに埋める**: `windows/farman.rc.in` テンプレートを
+    `configure_file` で `farman.rc` に展開 → MSVC リソースコンパイラで
+    `IDI_ICON1 ICON "images/icon.ico"` を `farman.exe` に埋め込む。
+    これがないと Explorer / タスクバー / Add/Remove Programs すべてで
+    Windows 既定の灰色 EXE アイコンになる (Qt の `setWindowIcon` は実行時の
+    ウィンドウ装飾だけで、exe リソースとは別経路)。
+  - `images/icon.ico` は 32bpp RGBA + multi-size (16/32/48/64/128/256)
+    で生成し、無地の白背景に角丸シルエットを乗せたもの。タスクバーは
+    最大サイズを取りに行くので、Windows-friendly に padding を最小化して
+    あるのが macOS / Linux のソースアイコンとの違い。
 - **コード署名**: macOS は Developer ID + Notarization まで CI 内で動く
   状態 (Secrets が揃っているとき)。Windows Authenticode 署名は未対応。
 - **`farman --version`**: 実装済み。`QCommandLineParser::addVersionOption()`
@@ -1978,6 +2052,14 @@ Last checked: 2026-05-10 09:42
   `linux-<arch>.AppImage`) と SHA256 検証、各 OS 向けインストール
   スクリプトの生成・起動 (macOS: hdiutil + cp、Windows: 新インス
   トーラを `/SILENT` 起動、Linux: 旧 AppImage を新ファイルで置換)。
+  - **Windows のアーキ表記は CI と揃える**: `release.yml` のアセット名は
+    `windows-x64-setup.exe` で固定しているため、`UpdateDownloader` 側でも
+    `x64` を期待する。`QSysInfo::currentCpuArchitecture()` の戻り値
+    (`x86_64`) をそのまま使うと「No matching asset」になる。
+  - **Linux の "自分のパス" は `$APPIMAGE`**: AppImage 実行時は
+    `QCoreApplication::applicationFilePath()` が `/tmp/.mount_xxx/...` を
+    返してしまい、実体の `.AppImage` ファイルパスではない。差し替え対象を
+    決めるときは環境変数 `APPIMAGE` を優先する。
 - `release.yml` (CI) — `v*` タグ push でアセット + `.sha256` を
   自動添付。
 - 開発ビルド (`Settings::version()` が `0.0.0` ないし `0.0.0-dev`)
