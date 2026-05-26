@@ -146,6 +146,8 @@ void Settings::applyDefaults() {
 
   m_pdfViewerExtensions = { "pdf" };
 
+  m_csvViewerExtensions = { "csv", "tsv" };
+
   // ── テキストビュアー ─────────────
   m_textViewerExtensions = {
     "txt", "log",
@@ -906,6 +908,9 @@ void Settings::setMarkdownViewerExtensions(const QStringList& exts) { m_markdown
 
 QStringList Settings::pdfViewerExtensions() const { return m_pdfViewerExtensions; }
 void Settings::setPdfViewerExtensions(const QStringList& exts) { m_pdfViewerExtensions = exts; }
+
+QStringList Settings::csvViewerExtensions() const { return m_csvViewerExtensions; }
+void Settings::setCsvViewerExtensions(const QStringList& exts) { m_csvViewerExtensions = exts; }
 QStringList Settings::textViewerMimePatterns() const { return m_textViewerMimePatterns; }
 void Settings::setTextViewerMimePatterns(const QStringList& patterns) { m_textViewerMimePatterns = patterns; }
 
@@ -1743,6 +1748,17 @@ void Settings::load() {
     }
     if (!list.isEmpty()) m_pdfViewerExtensions = list;
   }
+
+  // CSV / TSV ビュアー: テキスト判定より先に評価される
+  QJsonObject csvViewer = root.value("csvViewer").toObject();
+  if (csvViewer.contains("extensions")) {
+    QStringList list;
+    for (const QJsonValue& v : csvViewer.value("extensions").toArray()) {
+      const QString s = v.toString().trimmed();
+      if (!s.isEmpty()) list.append(s);
+    }
+    if (!list.isEmpty()) m_csvViewerExtensions = list;
+  }
   if (textViewer.contains("mimePatterns")) {
     QStringList list;
     for (const QJsonValue& v : textViewer.value("mimePatterns").toArray()) {
@@ -2213,6 +2229,15 @@ void Settings::save() const {
     for (const QString& s : m_pdfViewerExtensions) arr.append(s);
     pdfViewer["extensions"] = arr;
     root["pdfViewer"] = pdfViewer;
+  }
+
+  // Save CSV / TSV viewer settings (Text の手前で出す)
+  {
+    QJsonObject csvViewer;
+    QJsonArray arr;
+    for (const QString& s : m_csvViewerExtensions) arr.append(s);
+    csvViewer["extensions"] = arr;
+    root["csvViewer"] = csvViewer;
   }
 
   // Save text viewer settings

@@ -322,6 +322,13 @@ public:
   QStringList pdfViewerExtensions() const;
   void        setPdfViewerExtensions(const QStringList& exts);
 
+  // ── CSV / TSV ビュアー設定 ───────────────────────
+  // ファイルを開く際に CSV ビュアー (QTableView + 自前パーサ) で処理する拡張子。
+  // 既定は "csv" / "tsv"。テキストビュアー判定より先に走らせる
+  // (resolveAuto の順序で決定)。
+  QStringList csvViewerExtensions() const;
+  void        setCsvViewerExtensions(const QStringList& exts);
+
   // ── 画像ビュアー設定 ───────────────────────
   QStringList           imageViewerExtensions()        const;
   void                  setImageViewerExtensions(const QStringList& exts);
@@ -548,6 +555,11 @@ private:
   // PDF viewer (Qt PDF 経由)。バイナリ判定より先に評価する。
   QStringList        m_pdfViewerExtensions = {
     "pdf",
+  };
+
+  // CSV / TSV viewer (QTableView + 自前パーサ)。テキスト判定より先に評価。
+  QStringList        m_csvViewerExtensions = {
+    "csv", "tsv",
   };
 
   // Text viewer

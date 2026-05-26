@@ -1062,6 +1062,26 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   - 文字列のエンコード種別
     - 初期設定はUTF-8
 
+#### CSV / TSV ビュアー
+- 対象: `.csv` `.tsv` (Settings の `csvViewer.extensions` で変更可)。
+  テキスト判定より先に判定される (.csv はテキストにマッチし得るため、
+  表形式表示の CSV ビュアーを優先する)。
+- 表示は `QTableView` + 自前 `QAbstractTableModel` (`CsvTableModel`)。
+  数万行クラスのファイルでも `QStringList` の配列をそのまま参照するだけで
+  メモリ / 構築コストを抑えられる。
+- RFC 4180 準拠の quoted-field パース (`"a","b,c"`、エスケープ `""` 対応)。
+  行末は `\n` / `\r\n` / 単独 `\r` を許容。
+- ツールバー:
+  - エンコーディング選択 (Auto / UTF-8 / UTF-16LE/BE / Shift_JIS / EUC-JP /
+    ISO-8859-1)。Auto は uchardet で検出。
+  - 区切り文字選択 (Auto / カンマ / タブ / セミコロン)。Auto は先頭サンプル
+    の投票で決定 (`.tsv` は強制的にタブ)。
+  - 「1 行目をヘッダ扱い」トグル (ON で 1 行目を列ヘッダにし、データから除く)。
+- External モード時は `CsvViewerWindow` (独立 `QMainWindow`) として開く。
+- 並べ替え / セル内検索 / 巨大ファイルの遅延ロードは Phase 2 以降。
+- ステータスバー (statusInfo): `CSV · <行数> 行 · <列数> 列 · <エンコーディング>
+  · <ファイルサイズ>`。
+
 #### PDF ビュアー
 - 対象: `.pdf` (Settings の `pdfViewer.extensions` で変更可)。
   バイナリビュアーより先に判定される。
@@ -1174,11 +1194,12 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
     将来的に簡易な波形描画 (peaks) を入れる余地は残す。
   - ファイルが大きいことが多いので、起動時はメタデータだけ読んで本体ストリーム
     は再生開始時にロードする (`QMediaPlayer::setSource`)。
-- **CSV ビュアー**
-  - 対象: `.csv` `.tsv` (区切り自動判定 + 手動切替)
-  - テキストビュアーとは別経路にして、表形式で `QTableView` で表示。
-  - 機能: ヘッダ行の有無切替 / 列幅自動調整 / 列ソート / 大ファイルでも
-    遅延ロード (RFC 4180 に準拠した quoted-field のパース)。
+- **CSV ビュアー (拡張)**
+  - Phase 1 (表形式表示 / 区切り自動判定 + 手動切替 / ヘッダ行扱いトグル /
+    エンコーディング選択 / RFC 4180 quoted-field パース) は実装済
+    (上記 `#### CSV / TSV ビュアー` 参照)。
+  - 残件: 列ソート / セル内検索 / 巨大ファイルの遅延ロード。日常的ニーズが
+    出てきたら追加する。
 - **Office 文書ビュアー** (`.docx` / `.xlsx` / `.pptx`)
   - 対象: Microsoft Office Open XML 形式。
   - 候補方針:

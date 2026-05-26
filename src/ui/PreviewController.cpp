@@ -38,7 +38,7 @@ QString humanReadableSize(qint64 bytes) {
 // ワーカーが返す結果の合併型。kind に応じてどの PreparedLoad が
 // セットされているかを判別する。
 struct PreviewResult {
-  enum class Kind { Text, Image, Binary, Markdown, Pdf, Unsupported };
+  enum class Kind { Text, Image, Binary, Markdown, Pdf, Csv, Unsupported };
   Kind kind = Kind::Unsupported;
   QString errorReason;  // Unsupported のときに表示するメッセージ
   TextView::PreparedLoad     text;
@@ -46,6 +46,7 @@ struct PreviewResult {
   BinaryView::PreparedLoad   binary;
   MarkdownView::PreparedLoad markdown;
   PdfView::PreparedLoad      pdf;
+  CsvView::PreparedLoad      csv;
 };
 
 // ワーカースレッドで走る本体。UI には触らないので static の自由関数にする。
@@ -112,6 +113,15 @@ PreviewResult runPreviewLoad(QString             filePath,
       if (!r.pdf.ok) {
         r.kind = PreviewResult::Kind::Unsupported;
         r.errorReason = QObject::tr("Failed to load PDF.");
+      }
+      return r;
+    case ViewerPanel::ViewerKind::Csv:
+      r.csv  = CsvView::prepareLoad(filePath, userEncoding,
+                                     CsvView::Delimiter::Auto, tokPtr, maxBytes);
+      r.kind = PreviewResult::Kind::Csv;
+      if (!r.csv.ok) {
+        r.kind = PreviewResult::Kind::Unsupported;
+        r.errorReason = QObject::tr("Failed to load CSV.");
       }
       return r;
     case ViewerPanel::ViewerKind::Auto:
@@ -387,6 +397,10 @@ void PreviewController::startLoadJob(const QString& filePath,
       case PreviewResult::Kind::Pdf:
         m_pane->showPdf(r.pdf);
         m_lastShownPath = r.pdf.filePath;
+        break;
+      case PreviewResult::Kind::Csv:
+        m_pane->showCsv(r.csv);
+        m_lastShownPath = r.csv.filePath;
         break;
       case PreviewResult::Kind::Unsupported:
         m_pane->showUnsupported(r.errorReason);

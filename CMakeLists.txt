@@ -143,6 +143,8 @@ qt_add_executable(farman
   src/viewer/BinaryViewerWindow.cpp
   src/viewer/PdfView.cpp
   src/viewer/PdfViewerWindow.cpp
+  src/viewer/CsvView.cpp
+  src/viewer/CsvViewerWindow.cpp
   src/viewer/TextViewerPlugin.cpp
   src/viewer/ImageViewerPlugin.cpp
   src/viewer/BinaryViewerPlugin.cpp

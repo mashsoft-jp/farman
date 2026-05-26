@@ -44,7 +44,11 @@ All notable changes to **farman** are documented in this file.
     で整形表示。表 / タスクリスト / 取り消し線 / 自動リンク / 相対パス画像対応。
     ツールバー「Source」トグルで生 Markdown ソース表示に切替可)
   - **PDF** (Qt PDF / PDFium で組み込み表示。ページ送り / ページジャンプ /
-    ズーム / 幅にフィット / ページ全体 / 連続表示トグル。Inline / External 両対応)
+    ズーム / 幅にフィット / ページ全体 / 連続表示トグル / 全文検索。
+    Inline / External 両対応)
+  - **CSV / TSV** (`QTableView` で表形式表示。RFC 4180 quoted-field パース、
+    区切り自動判定 + 手動切替、エンコーディング自動判定、1 行目をヘッダ扱い
+    トグル。Inline / External 両対応)
   - 任意ビュアーで開く (Ctrl+Enter) / OS 既定アプリで実行 (Shift+Enter)
 - **画像ビュアーの強化**
   - ツールバーに **時計回り 90° 回転** ボタン (表示のみ、保存はしない)。

@@ -7,6 +7,7 @@
 #include "viewer/BinaryView.h"
 #include "viewer/MarkdownView.h"
 #include "viewer/PdfView.h"
+#include "viewer/CsvView.h"
 
 class QLabel;
 class QStackedWidget;
@@ -53,6 +54,7 @@ public:
   void showBinary  (const BinaryView::PreparedLoad&   prepared);
   void showMarkdown(const MarkdownView::PreparedLoad& prepared);
   void showPdf     (const PdfView::PreparedLoad&      prepared);
+  void showCsv     (const CsvView::PreparedLoad&      prepared);
 
   // 内部ビュアーへの参照 (PreviewController が prepareLoad の引数を
   // 取りに行くために必要)。
@@ -61,6 +63,7 @@ public:
   BinaryView*   binaryView()   { return m_binaryView; }
   MarkdownView* markdownView() { return m_markdownView; }
   PdfView*      pdfView()      { return m_pdfView; }
+  CsvView*      csvView()      { return m_csvView; }
 
 private:
   void setupUi();
@@ -80,6 +83,7 @@ private:
   BinaryView*     m_binaryView        = nullptr;
   MarkdownView*   m_markdownView      = nullptr;
   PdfView*        m_pdfView           = nullptr;
+  CsvView*        m_csvView           = nullptr;
 };
 
 } // namespace Farman

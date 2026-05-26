@@ -1,6 +1,7 @@
 #include "ViewerPanel.h"
 #include "settings/Settings.h"
 #include "viewer/BinaryView.h"
+#include "viewer/CsvView.h"
 #include "viewer/ImageView.h"
 #include "viewer/MarkdownView.h"
 #include "viewer/PdfView.h"
@@ -56,6 +57,10 @@ void ViewerPanel::setupUi() {
   // ===== PDF Viewer (.pdf) =====
   m_pdfView = new PdfView(this);
   m_stack->addWidget(m_pdfView);
+
+  // ===== CSV / TSV Viewer =====
+  m_csvView = new CsvView(this);
+  m_stack->addWidget(m_csvView);
 
   // ===== Loading placeholder =====
   // 大きいファイルや行数の多いテキストの読み込み中、ユーザーに「何も
@@ -170,6 +175,11 @@ ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
   if (extensionMatches(s.pdfViewerExtensions(), extension)) {
     return ViewerKind::Pdf;
   }
+  // CSV / TSV はテキストビュアーより先に判定 (.csv はテキストにマッチし得るため、
+  // 表形式表示の CSV ビュアーを優先する)。
+  if (extensionMatches(s.csvViewerExtensions(), extension)) {
+    return ViewerKind::Csv;
+  }
   // Markdown はテキストビュアーより先に判定 (.md は両方の対象になり得るため、
   // 整形表示できる Markdown を優先する)。
   if (extensionMatches(s.markdownViewerExtensions(), extension)) {
@@ -215,6 +225,7 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
     case ViewerKind::Binary:   ok = openBinaryFile(filePath, pathForStatus);   break;
     case ViewerKind::Markdown: ok = openMarkdownFile(filePath, pathForStatus); break;
     case ViewerKind::Pdf:      ok = openPdfFile(filePath, pathForStatus);      break;
+    case ViewerKind::Csv:      ok = openCsvFile(filePath, pathForStatus);      break;
     case ViewerKind::Auto:     /* unreachable */ break;
   }
 
@@ -357,12 +368,33 @@ bool ViewerPanel::openPdfFile(const QString& filePath,
   return true;
 }
 
+bool ViewerPanel::openCsvFile(const QString& filePath,
+                               const QString& displayPath) {
+  auto future = QtConcurrent::run(&CsvView::prepareLoad,
+                                   filePath,
+                                   m_csvView->currentUserEncoding(),
+                                   m_csvView->currentDelimiter(),
+                                   /*cancelToken=*/ nullptr,
+                                   /*maxBytes=*/ qint64(-1));
+  CsvView::PreparedLoad p = waitForFutureWithEventLoop(future);
+  if (!p.ok) return false;
+
+  m_csvView->applyPreparedLoad(p);
+  m_stack->setCurrentWidget(m_csvView);
+  setFocusProxy(m_csvView);
+  m_currentFilePath = displayPath;
+  emit fileOpened(displayPath);
+  emit viewerStatusChanged(displayPath, m_csvView->statusInfo());
+  return true;
+}
+
 void ViewerPanel::clear() {
   m_textView->clearContent();
   m_imageView->clearContent();
   m_binaryView->clearContent();
   if (m_markdownView) m_markdownView->clearContent();
   if (m_pdfView) m_pdfView->clearContent();
+  if (m_csvView) m_csvView->clearContent();
   m_currentFilePath.clear();
   emit fileClosed();
   emit viewerStatusChanged(QString(), QString());

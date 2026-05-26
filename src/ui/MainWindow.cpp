@@ -26,6 +26,7 @@
 #include "../viewer/BinaryViewerWindow.h"
 #include "../viewer/MarkdownViewerWindow.h"
 #include "../viewer/PdfViewerWindow.h"
+#include "../viewer/CsvViewerWindow.h"
 #include <QActionGroup>
 #include <QDesktopServices>
 #include <QDir>
@@ -495,6 +496,9 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
         break;
       case ViewerPanel::ViewerKind::Pdf:
         w = new PdfViewerWindow(filePath, shownPath, this);
+        break;
+      case ViewerPanel::ViewerKind::Csv:
+        w = new CsvViewerWindow(filePath, shownPath, this);
         break;
       case ViewerPanel::ViewerKind::Auto:
         /* unreachable */ break;
