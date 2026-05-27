@@ -79,4 +79,8 @@
     <file alias="solarized.json">presets/themes/solarized.json</file>
     <file alias="monokai.json">presets/themes/monokai.json</file>
   </qresource>
+  <!-- 同梱の User Command プリセットは未提供 (Import で外部 JSON を取り込む
+       経路は ExternalAppsTab に有り)。将来必要になったら
+       `/presets/commands` qresource をここに追加し、PresetIO に
+       listBundledUserCommandPresets() を生やす。 -->
 </RCC>

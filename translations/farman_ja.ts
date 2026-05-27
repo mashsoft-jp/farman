@@ -1800,13 +1800,13 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::CancellableLoadPage</name>
     <message>
-        <location filename="../src/utils/CancellableLoadPage.cpp" line="22"/>
-        <location filename="../src/utils/CancellableLoadPage.cpp" line="65"/>
+        <location filename="../src/utils/CancellableLoadPage.cpp" line="24"/>
+        <location filename="../src/utils/CancellableLoadPage.cpp" line="67"/>
         <source>Loading...</source>
         <translation>読み込み中...</translation>
     </message>
     <message>
-        <location filename="../src/utils/CancellableLoadPage.cpp" line="46"/>
+        <location filename="../src/utils/CancellableLoadPage.cpp" line="48"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
@@ -2172,7 +2172,7 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="90"/>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="192"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="666"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="667"/>
         <source>/path/to/executable</source>
         <translation>/path/to/executable</translation>
     </message>
@@ -2183,21 +2183,21 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="94"/>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="196"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="670"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="671"/>
         <source>Program:</source>
         <translation>プログラム:</translation>
     </message>
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="99"/>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="200"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="674"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="675"/>
         <source>Space-separated arguments. Use double quotes for arguments with spaces. Placeholders: {dir} {otherDir} {file} {files} {name} {ext}</source>
         <translation>空白区切りの引数。空白を含む場合はダブルクォートで囲む。プレースホルダ: {dir} {otherDir} {file} {files} {name} {ext}</translation>
     </message>
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="102"/>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="203"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="677"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="678"/>
         <source>Arguments:</source>
         <translation>引数:</translation>
     </message>
@@ -2216,7 +2216,7 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="105"/>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="210"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="683"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="694"/>
         <source>Test launch</source>
         <translation>テスト起動</translation>
     </message>
@@ -2276,25 +2276,25 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     </message>
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="185"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="659"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="660"/>
         <source>Display name (shown in Tools menu)</source>
         <translation>表示名 (Tools メニューに表示)</translation>
     </message>
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="186"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="660"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="661"/>
         <source>Name:</source>
         <translation>名前:</translation>
     </message>
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="199"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="673"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="674"/>
         <source>e.g. {file}  /  --flag {dir}</source>
         <translation>例: {file}  /  --flag {dir}</translation>
     </message>
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="205"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="679"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="680"/>
         <source>Show in Tools menu</source>
         <translation>Tools メニューに表示</translation>
     </message>
@@ -2340,8 +2340,8 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <message>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="449"/>
         <location filename="../src/ui/ExternalAppsTab.cpp" line="459"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="718"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="820"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="731"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="884"/>
         <source>Test launch failed</source>
         <translation>テスト起動に失敗しました</translation>
     </message>
@@ -2351,28 +2351,38 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="652"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="740"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="653"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="753"/>
         <source>(Unnamed)</source>
         <translation>(名前なし)</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="684"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="687"/>
+        <source>Move this command up</source>
+        <translation>このコマンドを上へ移動</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="691"/>
+        <source>Move this command down</source>
+        <translation>このコマンドを下へ移動</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="695"/>
         <source>Update</source>
         <translation>更新</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="685"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="696"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="828"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="892"/>
         <source>Add Command</source>
         <translation>コマンド追加</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="829"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="893"/>
         <source>Program path is required.</source>
         <translation>実行ファイルのパスを入力してください。</translation>
     </message>
@@ -2381,18 +2391,18 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation type="vanished">新しいコマンド</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="744"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="757"/>
         <source>Remove Command</source>
         <translation>コマンド削除</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="745"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="758"/>
         <source>Remove user command &quot;%1&quot;?</source>
         <translation>ユーザー定義コマンド &quot;%1&quot; を削除しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="703"/>
-        <location filename="../src/ui/ExternalAppsTab.cpp" line="805"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="716"/>
+        <location filename="../src/ui/ExternalAppsTab.cpp" line="869"/>
         <source>Choose program executable</source>
         <translation>実行ファイルを選択</translation>
     </message>
@@ -3081,268 +3091,314 @@ What would you like to do?</source>
 <context>
     <name>Farman::GeneralTab</name>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="39"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="42"/>
         <source>Startup Settings</source>
         <translation>起動時の設定</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="42"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="45"/>
         <source>Initial Directory</source>
         <translation>初期ディレクトリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="57"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="60"/>
         <source>Default (Home)</source>
         <translation>デフォルト (ホーム)</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="58"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="105"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="132"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="61"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="108"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="135"/>
         <source>Last Session</source>
         <translation>前回終了時</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="59"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="106"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="133"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="62"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="109"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="136"/>
         <source>Custom</source>
         <translation>カスタム</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="60"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="63"/>
         <source>Mode:</source>
         <translation>モード:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="66"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="69"/>
         <source>/path/to/directory</source>
         <translation>/path/to/directory</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="70"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="73"/>
         <source>Browse for folder...</source>
         <translation>フォルダを参照...</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="73"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="76"/>
         <source>Custom Path:</source>
         <translation>カスタムパス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="79"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="82"/>
         <source>Left Pane</source>
         <translation>左パネル</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="82"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="85"/>
         <source>Right Pane</source>
         <translation>右パネル</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="247"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="250"/>
         <source>Confirm on exit</source>
         <translation>終了時に確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="248"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="251"/>
         <source>Show confirmation dialog when closing the application</source>
         <translation>アプリ終了時に確認ダイアログを表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="252"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="255"/>
         <source>Prevent multiple instances (takes effect on next launch)</source>
         <translation>二重起動を禁止する (再起動後に有効)</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="254"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="257"/>
         <source>If on, launching farman while another instance is already running will bring the existing window to the front instead of starting a new process. Off allows multiple parallel instances.</source>
         <translation>ON のとき、すでに farman が動いている状態で起動しようとすると、新規プロセスを立てずに既存ウィンドウを前面に出します。OFF にすると並列起動が可能。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="259"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="262"/>
         <source>Show toolbar</source>
         <translation>ツールバーを表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="261"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="264"/>
         <source>Show the icon toolbar under the menu bar. Can also be toggled from the View menu.</source>
         <translation>メニューバーの下に表示するツールバーをトグル。View メニューからも切り替え可能。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="266"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="269"/>
         <source>Auto (System)</source>
         <translation>自動 (システム)</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="267"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="270"/>
         <source>English</source>
         <translation>English</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="270"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="273"/>
         <source>Takes effect on next launch.</source>
         <translation>次回起動時から反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="274"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="277"/>
         <source>Language:</source>
         <translation>言語:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="97"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="100"/>
         <source>Window Settings</source>
         <translation>ウィンドウ設定</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="100"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="103"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="104"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="107"/>
         <source>Default (1200x600)</source>
         <translation>デフォルト (1200x600)</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="109"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="112"/>
         <source>Window Size:</source>
         <translation>サイズ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="116"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="121"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="143"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="148"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="172"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="119"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="124"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="146"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="151"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="175"/>
         <source> px</source>
         <translation> px</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="117"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="120"/>
         <source>Width:</source>
         <translation>幅:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="122"/>
-        <location filename="../src/ui/GeneralTab.cpp" line="189"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="125"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="192"/>
         <source>Height:</source>
         <translation>高さ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="125"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="128"/>
         <source>Custom Size:</source>
         <translation>カスタムサイズ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="127"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="130"/>
         <source>Position</source>
         <translation>位置</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="131"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="134"/>
         <source>Default (Center)</source>
         <translation>デフォルト (中央)</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="136"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="139"/>
         <source>Window Position:</source>
         <translation>位置:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="144"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="147"/>
         <source>X:</source>
         <translation>X:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="149"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="152"/>
         <source>Y:</source>
         <translation>Y:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="152"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="155"/>
         <source>Custom Position:</source>
         <translation>カスタム位置:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="161"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="164"/>
         <source>Log</source>
         <translation>ログ</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="164"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="167"/>
         <source>Show log pane</source>
         <translation>ログパネルを表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="166"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="169"/>
         <source>Show the log pane between the file panes and status bar. Toggle from the View menu or with Ctrl+L.</source>
         <translation>ファイルパネルとステータスバーの間にログパネルを表示します。表示メニューまたは Ctrl+L で切替可能です。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="173"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="176"/>
         <source>Fixed height of the log pane in pixels.</source>
         <translation>ログパネルの高さ (px)。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="177"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="180"/>
         <source> days</source>
         <translation> 日</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="179"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="182"/>
         <source>Daily log files older than this number of days are deleted on startup and on rotation.</source>
         <translation>この日数より古い日次ログファイルを起動時 / ローテーション時に削除します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="181"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="184"/>
         <source>Keep forever</source>
         <translation>永久に保持</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="183"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="186"/>
         <source>If checked, never delete old daily log files.</source>
         <translation>チェックすると古い日次ログファイルを削除しません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="192"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="195"/>
         <source>Retention:</source>
         <translation>保存日数:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="199"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="202"/>
         <source>Write log to file</source>
         <translation>ログをファイルに保存</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="201"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="204"/>
         <source>Append log entries to a date-stamped file (rotated daily) in addition to the log pane.</source>
         <translation>ログパネルに加え、日付付きファイル (日次ローテーション) にも追記します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="204"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="207"/>
         <source>/path/to/log/dir</source>
         <translation>/path/to/log/dir</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="206"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="209"/>
         <source>Directory where daily log files (farman-YYYY-MM-DD.log) are stored.</source>
         <translation>日次ログファイル (farman-YYYY-MM-DD.log) を置くディレクトリ。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="210"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="213"/>
         <source>Choose log directory...</source>
         <translation>ログディレクトリを選択...</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="215"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="218"/>
         <source>Directory:</source>
         <translation>ディレクトリ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="234"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="237"/>
         <source>Choose log directory</source>
         <translation>ログディレクトリを選択</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="564"/>
+        <source>Export All Settings</source>
+        <translation>設定をまとめてエクスポート</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="566"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="582"/>
+        <source>JSON Files (*.json)</source>
+        <translation>JSON ファイル (*.json)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="571"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="574"/>
+        <source>Export Settings</source>
+        <translation>設定をエクスポート</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="575"/>
+        <source>Settings exported to:
+%1</source>
+        <translation>設定を以下に書き出しました:
+%1</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="582"/>
+        <source>Import All Settings</source>
+        <translation>設定をまとめてインポート</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="585"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="596"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="599"/>
+        <source>Import Settings</source>
+        <translation>設定をインポート</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="586"/>
+        <source>This will replace ALL current settings (bookmarks, custom commands, color schemes, viewer options, paths, ...) with the file&apos;s content. Any unsaved changes in this dialog will be lost. Continue?</source>
+        <translation>現在のすべての設定 (ブックマーク / カスタムコマンド / カラースキーム / ビュアー設定 / パス等) をファイルの内容で上書きします。このダイアログで未保存の変更は失われます。続行しますか？</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="600"/>
+        <source>Settings imported. Close and reopen the Settings dialog to see the updated values in all tabs.</source>
+        <translation>設定を取り込みました。すべてのタブの値を更新表示するには、設定ダイアログを一度閉じてから再度開いてください。</translation>
     </message>
     <message>
         <source>External Applications</source>
@@ -3401,62 +3457,82 @@ What would you like to do?</source>
         <translation type="vanished">例: {file}</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="278"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="281"/>
         <source>(takes effect on next launch)</source>
         <translation>(再起動後に有効)</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="285"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="288"/>
         <source>Auto-Update</source>
         <translation>自動アップデート</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="289"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="292"/>
         <source>Check for updates automatically (once per day)</source>
         <translation>アップデートを自動的に確認する (1 日 1 回)</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="291"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="294"/>
         <source>On startup, query GitHub for a newer release (at most once every 24 h). If a newer version is found, a notification dialog is shown.</source>
         <translation>起動時に GitHub から最新リリースを確認します (最大 24 時間に 1 回)。新版が見つかると通知ダイアログを表示します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="296"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="299"/>
         <source>Download and install updates without asking</source>
         <translation>確認なしでダウンロードしてインストール</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="298"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="301"/>
         <source>Skip the confirmation dialog when an update is found. The new version is downloaded, verified by SHA256, and installed automatically.</source>
         <translation>新版が見つかったときに確認ダイアログを出しません。新バージョンを自動的にダウンロード、SHA256 で検証、インストールします。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="314"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="317"/>
         <source>Check for Updates Now</source>
         <translation>今すぐ確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="316"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="319"/>
         <source>Run an update check right now (same as Help → Check for Updates...).</source>
         <translation>今すぐアップデートを確認します (ヘルプ → アップデートを確認... と同じ動作)。</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="389"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="333"/>
+        <source>Backup / Restore</source>
+        <translation>バックアップ / 復元</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="336"/>
+        <source>Export all settings (bookmarks, custom commands, color schemes, viewer options, paths, ...) to a single JSON file you can copy to another machine. Import replaces every value with the file&apos;s content and reloads the dialog.</source>
+        <translation>すべての設定 (ブックマーク / カスタムコマンド / カラースキーム / ビュアー設定 / パス等) を 1 つの JSON ファイルに書き出します。別マシンへコピーして「インポート」すれば全設定を移行できます。インポートは現在の全値をファイルの内容で置換し、ダイアログを再読込します。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="346"/>
+        <source>Export Settings...</source>
+        <translation>設定をエクスポート...</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="348"/>
+        <source>Import Settings...</source>
+        <translation>設定をインポート...</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="422"/>
         <source>Last checked: %1</source>
         <translation>前回チェック: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="392"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="425"/>
         <source>Last checked: (never)</source>
         <translation>前回チェック: (未実行)</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="502"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="535"/>
         <source>Select initial directory for left pane</source>
         <translation>左パネルの初期ディレクトリを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/GeneralTab.cpp" line="515"/>
+        <location filename="../src/ui/GeneralTab.cpp" line="548"/>
         <source>Select initial directory for right pane</source>
         <translation>右パネルの初期ディレクトリを選択</translation>
     </message>
@@ -3504,87 +3580,87 @@ What would you like to do?</source>
 <context>
     <name>Farman::ImageView</name>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="233"/>
+        <location filename="../src/viewer/ImageView.cpp" line="234"/>
         <source>Zoom:</source>
         <translation>ズーム:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="246"/>
+        <location filename="../src/viewer/ImageView.cpp" line="247"/>
         <source>Fit to Window</source>
         <translation>ウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="254"/>
+        <location filename="../src/viewer/ImageView.cpp" line="255"/>
         <source>Play / Pause animation (GIF / WebP)</source>
         <translation>アニメ再生 / 一時停止 (GIF / WebP)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="262"/>
+        <location filename="../src/viewer/ImageView.cpp" line="263"/>
         <source>Transparency background: off = checker, on = solid color</source>
         <translation>透明部分の背景: OFF = チェッカー、ON = 単色</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="271"/>
+        <location filename="../src/viewer/ImageView.cpp" line="272"/>
         <source>Rotate 90° clockwise (display only)</source>
         <translation>時計回りに 90° 回転 (表示のみ)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="290"/>
+        <location filename="../src/viewer/ImageView.cpp" line="291"/>
         <source>Show image information / metadata</source>
         <translation>画像情報 / メタデータを表示</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="671"/>
+        <location filename="../src/viewer/ImageView.cpp" line="714"/>
         <source>File: %1</source>
         <translation>ファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="672"/>
+        <location filename="../src/viewer/ImageView.cpp" line="715"/>
         <source>Format: %1</source>
         <translation>フォーマット: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="674"/>
+        <location filename="../src/viewer/ImageView.cpp" line="717"/>
         <source>Size: %1 x %2 px</source>
         <translation>サイズ: %1 × %2 px</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="676"/>
+        <location filename="../src/viewer/ImageView.cpp" line="719"/>
         <source>File size: %1</source>
         <translation>ファイルサイズ: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="685"/>
+        <location filename="../src/viewer/ImageView.cpp" line="733"/>
         <source>Color depth: %1 bpp</source>
         <translation>色深度: %1 bpp</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="693"/>
+        <location filename="../src/viewer/ImageView.cpp" line="740"/>
         <source>Frames: %1</source>
         <translation>フレーム数: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="706"/>
+        <location filename="../src/viewer/ImageView.cpp" line="758"/>
         <source>Resolution: %1 x %2 DPI</source>
         <translation>解像度: %1 × %2 DPI</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="717"/>
+        <location filename="../src/viewer/ImageView.cpp" line="769"/>
         <source>Color profile: %1</source>
         <translation>カラープロファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="726"/>
+        <location filename="../src/viewer/ImageView.cpp" line="778"/>
         <source>--- Embedded text ---</source>
         <translation>--- 埋め込みテキスト ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="742"/>
+        <location filename="../src/viewer/ImageView.cpp" line="794"/>
         <source>--- Exif ---</source>
         <translation>--- Exif ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="761"/>
+        <location filename="../src/viewer/ImageView.cpp" line="813"/>
         <source>Image Information</source>
         <translation>画像情報</translation>
     </message>
@@ -5863,13 +5939,13 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::ViewerPanel</name>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="78"/>
-        <location filename="../src/ui/ViewerPanel.cpp" line="256"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="80"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="258"/>
         <source>Loading...</source>
         <translation>読み込み中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="106"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="108"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
@@ -6239,6 +6315,41 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>ムービー</translation>
     </message>
     <message>
+        <location filename="../src/settings/Settings.cpp" line="1405"/>
+        <source>Settings file does not exist yet.</source>
+        <translation>設定ファイルがまだ存在しません。</translation>
+    </message>
+    <message>
+        <location filename="../src/settings/Settings.cpp" line="1410"/>
+        <source>Cannot overwrite existing file: %1</source>
+        <translation>既存ファイルを上書きできません: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/settings/Settings.cpp" line="1414"/>
+        <source>Failed to copy settings to: %1</source>
+        <translation>設定ファイルのコピーに失敗しました: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/settings/Settings.cpp" line="1434"/>
+        <source>Not a valid JSON settings file: %1</source>
+        <translation>有効な JSON 設定ファイルではありません: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/settings/Settings.cpp" line="1440"/>
+        <source>Missing &quot;version&quot; field — not a farman settings file?</source>
+        <translation>「version」フィールドがありません — farman の設定ファイルではない可能性があります。</translation>
+    </message>
+    <message>
+        <location filename="../src/settings/Settings.cpp" line="1449"/>
+        <source>Cannot replace existing settings file: %1</source>
+        <translation>既存の設定ファイルを置き換えられません: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/settings/Settings.cpp" line="1453"/>
+        <source>Failed to install imported settings file</source>
+        <translation>インポートした設定ファイルの適用に失敗しました</translation>
+    </message>
+    <message>
         <location filename="../src/core/UserCommandRunner.cpp" line="33"/>
         <source>External command &quot;%1&quot; has no program set.</source>
         <translation>外部コマンド「%1」のプログラムが設定されていません。</translation>
@@ -6264,6 +6375,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>未知の外部コマンド: %1</translation>
     </message>
     <message>
+        <location filename="../src/settings/Settings.cpp" line="1425"/>
         <location filename="../src/settings/PresetIO.cpp" line="21"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>

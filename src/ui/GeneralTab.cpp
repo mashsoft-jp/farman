@@ -1,6 +1,7 @@
 #include "GeneralTab.h"
 #include "settings/Settings.h"
 #include "keybinding/CommandRegistry.h"
+#include "utils/Dialogs.h"
 #include <QDateTime>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -10,6 +11,8 @@
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QLineEdit>
+#include <QPushButton>
+#include <QStandardPaths>
 #include <QToolButton>
 #include <QFileDialog>
 #include <QDir>
@@ -323,6 +326,36 @@ void GeneralTab::setupUi() {
 
   mainLayout->addWidget(autoUpdateGroup);
 
+  // ── 設定全体のエクスポート / インポート (マシン間移行用) ──
+  // ブックマーク / ユーザ定義コマンド / カラースキーム / 全ての Settings
+  // 値を 1 ファイルにまとめて移行できる。中身は settings.json そのもの
+  // (= フォーマットや version 互換は既存の load/save に揃う)。
+  QGroupBox* backupGroup = new QGroupBox(tr("Backup / Restore"), this);
+  QVBoxLayout* backupLayout = new QVBoxLayout(backupGroup);
+  QLabel* backupHint = new QLabel(
+    tr("Export all settings (bookmarks, custom commands, color schemes, "
+       "viewer options, paths, ...) to a single JSON file you can copy to "
+       "another machine. Import replaces every value with the file's content "
+       "and reloads the dialog."),
+    backupGroup);
+  backupHint->setWordWrap(true);
+  backupLayout->addWidget(backupHint);
+
+  QHBoxLayout* backupBtnRow = new QHBoxLayout();
+  backupBtnRow->addStretch(1);
+  QPushButton* exportAllBtn = new QPushButton(tr("Export Settings..."), backupGroup);
+  exportAllBtn->setFocusPolicy(Qt::StrongFocus);
+  QPushButton* importAllBtn = new QPushButton(tr("Import Settings..."), backupGroup);
+  importAllBtn->setFocusPolicy(Qt::StrongFocus);
+  backupBtnRow->addWidget(exportAllBtn);
+  backupBtnRow->addWidget(importAllBtn);
+  backupLayout->addLayout(backupBtnRow);
+
+  connect(exportAllBtn, &QPushButton::clicked, this, &GeneralTab::onExportAllSettings);
+  connect(importAllBtn, &QPushButton::clicked, this, &GeneralTab::onImportAllSettings);
+
+  mainLayout->addWidget(backupGroup);
+
   mainLayout->addStretch();
 }
 
@@ -518,6 +551,54 @@ void GeneralTab::onRightBrowseInitialPath() {
   if (!selected.isEmpty()) {
     m_rightCustomPathEdit->setText(selected);
   }
+}
+
+void GeneralTab::onExportAllSettings() {
+  // 出力先のデフォルトはユーザの Documents 下、ファイル名は farman-settings-
+  // <yyyyMMdd-HHmm>.json。
+  const QString defaultDir =
+    QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+  const QString defaultName = QStringLiteral("farman-settings-%1.json")
+    .arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmm")));
+  const QString path = QFileDialog::getSaveFileName(
+    this, tr("Export All Settings"),
+    QDir(defaultDir).filePath(defaultName),
+    tr("JSON Files (*.json)"));
+  if (path.isEmpty()) return;
+
+  QString err;
+  if (!Settings::instance().exportTo(path, &err)) {
+    warn(this, tr("Export Settings"), err);
+    return;
+  }
+  inform(this, tr("Export Settings"),
+         tr("Settings exported to:\n%1").arg(path));
+}
+
+void GeneralTab::onImportAllSettings() {
+  const QString defaultDir =
+    QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+  const QString path = QFileDialog::getOpenFileName(
+    this, tr("Import All Settings"), defaultDir, tr("JSON Files (*.json)"));
+  if (path.isEmpty()) return;
+
+  if (!confirm(this, tr("Import Settings"),
+               tr("This will replace ALL current settings (bookmarks, custom "
+                  "commands, color schemes, viewer options, paths, ...) with "
+                  "the file's content. Any unsaved changes in this dialog "
+                  "will be lost. Continue?"),
+               /*defaultYes=*/false)) {
+    return;
+  }
+
+  QString err;
+  if (!Settings::instance().importFrom(path, &err)) {
+    warn(this, tr("Import Settings"), err);
+    return;
+  }
+  inform(this, tr("Import Settings"),
+         tr("Settings imported. Close and reopen the Settings dialog to see "
+            "the updated values in all tabs."));
 }
 
 } // namespace Farman

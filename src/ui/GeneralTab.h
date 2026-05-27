@@ -46,6 +46,11 @@ private slots:
   void onLeftBrowseInitialPath();
   void onRightBrowseInitialPath();
 
+  // 設定全体 (= settings.json) をユーザー指定の JSON ファイルへ書き出す /
+  // から読み込む。ブックマーク・カスタムコマンド・カラースキーム等まとめて。
+  void onExportAllSettings();
+  void onImportAllSettings();
+
 private:
   void setupUi();
   void loadSettings();

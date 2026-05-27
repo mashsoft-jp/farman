@@ -453,6 +453,28 @@ public:
   // 完了後に settingsChanged() を発火する。
   void resetToDefaults();
 
+  // settings.json の canonical パス (= AppConfigLocation/settings.json)。
+  // export / import / 診断ログ表示で表示するために公開する。
+  static QString settingsFilePath();
+
+  // ── マシン間移行用の "設定全体のエクスポート / インポート" ────────
+  // settings.json をユーザー指定の場所にコピー / 上書きする。
+  //
+  // export:
+  //   1. save() で現在の in-memory を settings.json に確定
+  //   2. settings.json を path にコピー (既存上書き)
+  //   true: 成功 / false: 失敗 (errorOut にメッセージ)。
+  bool exportTo(const QString& path, QString* errorOut = nullptr) const;
+  //
+  // import:
+  //   1. path を JSON として parse (= 形式チェック)
+  //   2. version フィールドを最低限確認
+  //   3. settings.json を上書き
+  //   4. load() で in-memory を再読込
+  //   5. settingsChanged() を emit
+  //   呼出元 (Settings ダイアログ等) は emit 後に自分の UI を再構築する。
+  bool importFrom(const QString& path, QString* errorOut = nullptr);
+
 signals:
   void settingsChanged() const;
 

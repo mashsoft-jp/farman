@@ -168,8 +168,8 @@ void ExternalAppsTab::setupUi() {
   // ─── ユーザー定義コマンド (terminal / editor 以外) の編集 UI ───
   // 縦に「既存コマンドの編集フォーム × N」「新規コマンド追加フォーム」を直接
   // 並べる (外側の「Custom User Commands」 GroupBox は省略)。各既存コマンド
-  // のフォームは「Test launch / Update / Delete」、追加フォームは「Test launch
-  // / Add」をボタン行に持つ。
+  // のフォームは「↑ ↓ Test launch / Update / Delete」、追加フォームは
+  // 「Test launch / Add」をボタン行に持つ。
   // 既存コマンド行を縦に並べるレイアウト。buildExistingCommandRow() で
   // ここに QGroupBox を 1 つずつ addWidget する。
   m_customRowsLayout = new QVBoxLayout();
@@ -591,6 +591,7 @@ void ExternalAppsTab::onImportCommands() {
                              .arg(filtered.size()));
   // 取り込んだコマンドが見えるよう一覧を再構築。
   rebuildCustomCommandRows();
+  refreshReorderButtons();
 }
 
 // ── ユーザー定義コマンドの編集 UI ──
@@ -680,11 +681,23 @@ void ExternalAppsTab::buildExistingCommandRow(const UserCommand& cmd) {
   showCheck->setChecked(cmd.showInToolsMenu);
   form->addRow(QString(), showCheck);
 
+  // 並び替え (Tools メニューでの出現順 + このタブの表示順を 1 個ずつ移動)。
+  QToolButton* upBtn = new QToolButton(box);
+  upBtn->setText(QStringLiteral("↑"));
+  upBtn->setToolTip(tr("Move this command up"));
+  upBtn->setFocusPolicy(Qt::StrongFocus);
+  QToolButton* downBtn = new QToolButton(box);
+  downBtn->setText(QStringLiteral("↓"));
+  downBtn->setToolTip(tr("Move this command down"));
+  downBtn->setFocusPolicy(Qt::StrongFocus);
+
   QPushButton* testBtn   = new QPushButton(tr("Test launch"), box);
   QPushButton* updateBtn = new QPushButton(tr("Update"),      box);
   QPushButton* deleteBtn = new QPushButton(tr("Delete"),      box);
   QHBoxLayout* btnRow = new QHBoxLayout();
   btnRow->setContentsMargins(0, 0, 0, 0);
+  btnRow->addWidget(upBtn);
+  btnRow->addWidget(downBtn);
   btnRow->addStretch(1);
   btnRow->addWidget(testBtn);
   btnRow->addWidget(updateBtn);
@@ -762,9 +775,15 @@ void ExternalAppsTab::buildExistingCommandRow(const UserCommand& cmd) {
     }
     box->setParent(nullptr);
     box->deleteLater();
-    // Tab 順を再構築 (削除した行を抜いた状態に揃える)
+    // Tab 順を再構築 (削除した行を抜いた状態に揃える) + 上/下ボタンの
+    // enable 状態も並び替え後の両端に合わせて更新する。
     rebuildCustomCommandTabOrder();
+    refreshReorderButtons();
   });
+
+  // 並び替えボタンの接続
+  connect(upBtn,   &QToolButton::clicked, this, [this, id]() { moveCommandUp(id); });
+  connect(downBtn, &QToolButton::clicked, this, [this, id]() { moveCommandDown(id); });
 
   CustomCommandRow row;
   row.id               = id;
@@ -774,12 +793,57 @@ void ExternalAppsTab::buildExistingCommandRow(const UserCommand& cmd) {
   row.programBrowse    = programBrowse;
   row.argsEdit         = argsEdit;
   row.showInToolsCheck = showCheck;
+  row.upBtn            = upBtn;
+  row.downBtn          = downBtn;
   row.testBtn          = testBtn;
   row.updateBtn        = updateBtn;
   row.deleteBtn        = deleteBtn;
   m_customRows.append(row);
 
   rebuildCustomCommandTabOrder();
+  refreshReorderButtons();
+}
+
+void ExternalAppsTab::moveCommandUp(const QString& id) {
+  // m_customRows と m_nonBuiltinUserCommands は常に同じ並び順を保つ前提
+  // (= buildExistingCommandRow の append 順)。両方を同期的に並び替える。
+  int rowIdx = -1;
+  for (int i = 0; i < m_customRows.size(); ++i) {
+    if (m_customRows[i].id == id) { rowIdx = i; break; }
+  }
+  if (rowIdx <= 0) return;  // 先頭 or 見つからない
+
+  m_customRows.swapItemsAt(rowIdx, rowIdx - 1);
+  m_nonBuiltinUserCommands.swapItemsAt(rowIdx, rowIdx - 1);
+  // 1 個上に取り直して再挿入する。QBoxLayout::insertWidget は同じウィジェット
+  // を渡すと先に detach されるので、明示 takeAt は不要。
+  m_customRowsLayout->insertWidget(rowIdx - 1, m_customRows[rowIdx - 1].box);
+
+  rebuildCustomCommandTabOrder();
+  refreshReorderButtons();
+}
+
+void ExternalAppsTab::moveCommandDown(const QString& id) {
+  int rowIdx = -1;
+  for (int i = 0; i < m_customRows.size(); ++i) {
+    if (m_customRows[i].id == id) { rowIdx = i; break; }
+  }
+  if (rowIdx < 0 || rowIdx >= m_customRows.size() - 1) return;  // 末尾 or 無し
+
+  m_customRows.swapItemsAt(rowIdx, rowIdx + 1);
+  m_nonBuiltinUserCommands.swapItemsAt(rowIdx, rowIdx + 1);
+  m_customRowsLayout->insertWidget(rowIdx + 1, m_customRows[rowIdx + 1].box);
+
+  rebuildCustomCommandTabOrder();
+  refreshReorderButtons();
+}
+
+void ExternalAppsTab::refreshReorderButtons() {
+  const int n = m_customRows.size();
+  for (int i = 0; i < n; ++i) {
+    if (m_customRows[i].upBtn)   m_customRows[i].upBtn->setEnabled(i > 0);
+    if (m_customRows[i].downBtn) m_customRows[i].downBtn->setEnabled(i < n - 1);
+  }
 }
 
 void ExternalAppsTab::flushCustomCommandRowsToModel() {

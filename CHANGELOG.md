@@ -73,6 +73,11 @@ All notable changes to **farman** are documented in this file.
     Qt 同梱プラグインは PSD を扱えないため、`QImage::load()` 失敗時の fallback
     として動く。Image Info ダイアログも、`QImageReader` で取れないフォーマット
     は実 `QImage` から size / depth を取り出す経路を追加
+- **ユーザー定義コマンドの並び替え** (External Apps タブ): 各コマンド行に ↑/↓
+  ボタンを追加。Tools メニューの並び順 + タブの表示順がこの順序に従う
+- **設定全体のエクスポート / インポート** (Settings → General → バックアップ /
+  復元): ブックマーク / カスタムコマンド / カラースキーム / ビュアー設定 / パス
+  まで含めた `settings.json` 全部を 1 ファイルで他マシンへ移行可能
 - **サムネイル表示**
   - ファイル一覧をリスト表示 / 小・中・大サムネイルの 4 段階で切り替え
     (Finder ライクに `Cmd/Ctrl+1〜4`、または View メニュー / ツールバー

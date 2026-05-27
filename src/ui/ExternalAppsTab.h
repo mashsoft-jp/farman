@@ -122,11 +122,22 @@ private:
     QToolButton* programBrowse    = nullptr;
     QLineEdit*   argsEdit         = nullptr;
     QCheckBox*   showInToolsCheck = nullptr;
+    QToolButton* upBtn            = nullptr;   // ↑ (Tools メニューでの並び順)
+    QToolButton* downBtn          = nullptr;   // ↓
     QPushButton* testBtn          = nullptr;
     QPushButton* updateBtn        = nullptr;
     QPushButton* deleteBtn        = nullptr;
   };
   QList<CustomCommandRow> m_customRows;
+
+  // 指定 id のコマンドを 1 つ前 / 1 つ後に移動する。Tools メニューの並び順 +
+  // ExternalApps タブの表示順がこの順序に従う。両端では何もしない。
+  // m_nonBuiltinUserCommands / m_customRows / m_customRowsLayout の 3 つを
+  // 同時に並び替えて整合させる。
+  void moveCommandUp(const QString& id);
+  void moveCommandDown(const QString& id);
+  // 並び替え後の上 / 下端ボタンの enable 状態を全行ぶん更新する。
+  void refreshReorderButtons();
 
   // 既存コマンド 1 件分の QGroupBox を構築し、m_customRows と
   // m_customRowsLayout に追加。command.id をキーに lambda を配線する。

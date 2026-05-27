@@ -1389,6 +1389,78 @@ BinaryViewerEndian stringToBinaryViewerEndian(const QString& str) {
   return (str == QLatin1String("big")) ? BinaryViewerEndian::Big : BinaryViewerEndian::Little;
 }
 
+QString Settings::settingsFilePath() {
+  return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
+       + QStringLiteral("/settings.json");
+}
+
+bool Settings::exportTo(const QString& path, QString* errorOut) const {
+  // 最新の in-memory 状態を settings.json に書き出してから、それを path へ
+  // コピーする (= 「dialog の編集も含めて全部出す」ためには呼ぶ前に
+  // 呼出側が必要な applyTo / save をしておくこと)。
+  save();
+  const QString src = settingsFilePath();
+  QFile srcFile(src);
+  if (!srcFile.exists()) {
+    if (errorOut) *errorOut = QObject::tr("Settings file does not exist yet.");
+    return false;
+  }
+  // 上書きコピー (QFile::copy は dst が既存だと失敗するため、先に消す)。
+  if (QFile::exists(path) && !QFile::remove(path)) {
+    if (errorOut) *errorOut = QObject::tr("Cannot overwrite existing file: %1").arg(path);
+    return false;
+  }
+  if (!QFile::copy(src, path)) {
+    if (errorOut) *errorOut = QObject::tr("Failed to copy settings to: %1").arg(path);
+    return false;
+  }
+  return true;
+}
+
+bool Settings::importFrom(const QString& path, QString* errorOut) {
+  // path を読み込んで簡易検証してから settings.json を上書きし、
+  // load() で in-memory を再構築する。
+  QFile in(path);
+  if (!in.open(QIODevice::ReadOnly)) {
+    if (errorOut) *errorOut = QObject::tr("Cannot open file: %1").arg(path);
+    return false;
+  }
+  const QByteArray data = in.readAll();
+  in.close();
+
+  QJsonParseError perr;
+  const QJsonDocument doc = QJsonDocument::fromJson(data, &perr);
+  if (perr.error != QJsonParseError::NoError || !doc.isObject()) {
+    if (errorOut) *errorOut = QObject::tr("Not a valid JSON settings file: %1")
+                                .arg(perr.errorString());
+    return false;
+  }
+  const QJsonObject root = doc.object();
+  if (!root.contains("version")) {
+    if (errorOut) *errorOut = QObject::tr("Missing \"version\" field — not a farman settings file?");
+    return false;
+  }
+
+  // settings.json を上書き。AppConfigLocation が無ければ作る。
+  const QString dst = settingsFilePath();
+  const QFileInfo dstInfo(dst);
+  QDir().mkpath(dstInfo.absolutePath());
+  if (QFile::exists(dst) && !QFile::remove(dst)) {
+    if (errorOut) *errorOut = QObject::tr("Cannot replace existing settings file: %1").arg(dst);
+    return false;
+  }
+  if (!QFile::copy(path, dst)) {
+    if (errorOut) *errorOut = QObject::tr("Failed to install imported settings file");
+    return false;
+  }
+
+  // in-memory を読み直して通知。Settings ダイアログを表示中の場合は
+  // 受け手側で UI を再構築する責任 (= settingsChanged を受けて reload する)。
+  load();
+  emit settingsChanged();
+  return true;
+}
+
 void Settings::load() {
   QString configPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
   QString filePath = configPath + "/settings.json";
