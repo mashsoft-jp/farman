@@ -305,6 +305,17 @@ void MainWindow::updateStatusBar() {
 
 namespace {
 
+// ToolbarStyle (farman の enum) → Qt::ToolButtonStyle へのマップ。
+// Settings::toolbarStyle() の値を QToolBar::setToolButtonStyle に渡すために使う。
+Qt::ToolButtonStyle toQtToolButtonStyle(ToolbarStyle s) {
+  switch (s) {
+    case ToolbarStyle::TextOnly:        return Qt::ToolButtonTextOnly;
+    case ToolbarStyle::IconBesideText:  return Qt::ToolButtonTextBesideIcon;
+    case ToolbarStyle::IconOnly:
+    default:                            return Qt::ToolButtonIconOnly;
+  }
+}
+
 // パスがクラウド同期フォルダ (Google Drive / iCloud / OneDrive / Dropbox 等)
 // 配下なら true。これらは OS から見ると「ローカル FS の一部のディレクトリ」
 // として統合されていて、QStorageInfo はホストディスクの容量を返してしまう
@@ -1606,11 +1617,12 @@ void MainWindow::createMainToolBar() {
   m_toolbar = new QToolBar(tr("Main Toolbar"), this);
   m_toolbar->setObjectName(QStringLiteral("mainToolBar"));
   m_toolbar->setMovable(false);
-  // アイコンのみ表示。アイコンの意味は tooltip (ラベル + ショートカット) で
-  // 補足する。アイコン素材は :/icons/toolbar/<name>.svg (Lucide スタイル
-  // / monochrome 24x24)。表示スタイルの切替 (Icon / Text / IconBesideText)
-  // は将来 Settings 経由で提供する余地あり。
-  m_toolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+  // 表示スタイルは Settings::toolbarStyle() に従う。Icon / Text / IconBesideText
+  // の 3 値で、Settings → General のコンボから切替。設定変更時は
+  // applyToolbarVisibility() 経由で再適用する。アイコン素材は
+  // :/icons/toolbar/<name>.svg (Lucide スタイル / monochrome 24x24)。
+  m_toolbar->setToolButtonStyle(
+    toQtToolButtonStyle(Settings::instance().toolbarStyle()));
   m_toolbar->setIconSize(QSize(20, 20));
   // フォーカス枠 + checkable トグルの押下状態 + ホバーをまとめてスタイリング。
   // (utils/EnterClickFilter.h の toolbarStyleSheet() に共通定義あり)
@@ -1805,6 +1817,10 @@ void MainWindow::applyToolbarVisibility() {
     QSignalBlocker blocker(m_toolbarMenuAction);
     m_toolbarMenuAction->setChecked(Settings::instance().showToolbar());
   }
+  // ボタン表示スタイル (Icon / Text / IconBesideText) も Settings から
+  // 再適用する。Settings → General ダイアログから変更したケースの追従。
+  m_toolbar->setToolButtonStyle(
+    toQtToolButtonStyle(Settings::instance().toolbarStyle()));
 }
 
 void MainWindow::showAboutDialog() {

@@ -211,6 +211,35 @@ enum class ViewerMode {
   External
 };
 
+// メインツールバーのボタン表示スタイル (Qt::ToolButtonStyle のサブセット)。
+// MainWindow が `QToolBar::setToolButtonStyle` に変換する。
+// - IconOnly       : アイコンのみ (省スペース)。ツールチップで意味を補足する。
+// - TextOnly       : テキストラベルのみ。視認性は高いが幅を取る。
+// - IconBesideText : アイコン + テキスト横並び。アイコンの意味を覚える前の
+//                    新規ユーザーに優しい。
+enum class ToolbarStyle {
+  IconOnly,
+  TextOnly,
+  IconBesideText
+};
+
+inline const char* toolbarStyleKey(ToolbarStyle s) {
+  switch (s) {
+    case ToolbarStyle::TextOnly:        return "text";
+    case ToolbarStyle::IconBesideText:  return "icon_beside_text";
+    case ToolbarStyle::IconOnly:
+    default:                            return "icon";
+  }
+}
+
+inline ToolbarStyle toolbarStyleFromKey(const QString& key,
+                                         ToolbarStyle fallback = ToolbarStyle::IconOnly) {
+  if (key == QLatin1String("text"))             return ToolbarStyle::TextOnly;
+  if (key == QLatin1String("icon_beside_text")) return ToolbarStyle::IconBesideText;
+  if (key == QLatin1String("icon"))             return ToolbarStyle::IconOnly;
+  return fallback;
+}
+
 // 画像ビュアーの透明部分の表示方法
 enum class ImageTransparencyMode {
   SolidColor, // 指定した背景色で塗りつぶす

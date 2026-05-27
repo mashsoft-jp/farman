@@ -218,6 +218,12 @@ public:
   bool showToolbar()                    const;
   void setShowToolbar(bool show);
 
+  // ツールバーのボタン表示スタイル (IconOnly / TextOnly / IconBesideText)。
+  // Settings → General のコンボから切替。MainWindow::applyToolbarVisibility が
+  // 反映する。デフォルトは IconOnly (省スペース)。
+  ToolbarStyle toolbarStyle()           const;
+  void         setToolbarStyle(ToolbarStyle style);
+
   // ファイルマネージャパネルのレイアウト (Dual / Single / Preview)。
   // View メニュー / ツールバー / Ctrl+O (Single) / Ctrl+P (Preview) で切替。
   // 起動時の復元に使うため永続化する。
@@ -553,6 +559,8 @@ private:
   // メニュー下のツールバーの表示。デフォルトは ON (新機能を見つけてもらう)。
   // 不要なら View → Toolbar / Settings → General からオフにできる。
   bool             m_showToolbar     = true;
+  // ツールバーのボタン表示スタイル。デフォルトは IconOnly (省スペース)。
+  ToolbarStyle     m_toolbarStyle    = ToolbarStyle::IconOnly;
   // ファイルマネージャパネルのレイアウト。Dual がデフォルト。Preview / Single
   // は永続化されるので、終了時に Preview なら次回も Preview で起動する。
   LayoutMode       m_layoutMode      = LayoutMode::Dual;
