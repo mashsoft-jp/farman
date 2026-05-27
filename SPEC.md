@@ -1191,10 +1191,52 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   て表示。Enter / Esc でファイルマネージャパネルに戻る。同時に 1 ファイル
   しか開けない代わりにキーボードで完結する。
 - **External**: 独立した `QMainWindow` (`TextViewerWindow` /
-  `ImageViewerWindow` / `BinaryViewerWindow`) をファイル毎に新規生成して
+  `ImageViewerWindow` / `BinaryViewerWindow` / `MarkdownViewerWindow` /
+  `PdfViewerWindow` / `CsvViewerWindow`) をファイル毎に新規生成して
   表示。複数ファイルを並べたり、別ディスプレイへドラッグしたりできる。
   ウィンドウは `Qt::WA_DeleteOnClose` 付きで作るので、閉じれば自動的に破棄
   される (親は MainWindow)。
+
+### ロード中のキャンセル
+
+巨大ファイル (数十 MB のテキスト / 100k 行越えの CSV / 高解像度画像 等) を
+開いている間にユーザーを足止めしないため、Inline / External どちらでも
+**Cancel ボタン + Esc / Enter** で中断できる。
+
+- 共通基盤: `src/utils/CancellableLoadPage.{h,cpp}` の
+  `CancellableLoadPage` ウィジェット。タイトル + ファイル名 / サイズ +
+  indeterminate な `QProgressBar` + Cancel ボタン (default + 表示直後に
+  フォーカス)。Esc は `keyPressEvent` で Cancel に転送される。
+- ロードフロー: `ViewerPanel` も各 `*ViewerWindow` も以下の同じ手順:
+  1. `setForFile(filePath)` で表示テキストをセット → ロードページに切替
+  2. `resetToken()` で新しい `std::shared_ptr<std::atomic<bool>>` を発行
+  3. `QtConcurrent::run` で `<View>::prepareLoad(..., token.get(), ...)`
+  4. `waitForFutureWithEventLoop(future)` でイベントループを回しながら待つ
+     (`AllEvents` で回すので Cancel クリック / Esc が届く)
+  5. 結果が `ok=false` & `*token==true` → キャンセル扱い → Inline は
+     `MainWindow::showFileManager()` で戻る / External は `close()`
+  6. 成功なら `applyPreparedLoad` してビューに切替
+- 各 `prepareLoad` は `cancelToken` を段階間 / 内側ループの両方でチェック
+  する作法に統一されている (CsvView の `buildRowIndex` は 64K 文字ごと、
+  BinaryView の `formatHexDump` は 256 行ごとなど)。これにより worker は
+  途中で早期 return して CPU をすぐ解放する。
+- **画像だけは例外**: `QImageReader::read` がデコード中に中断不能なため、
+  ロード後に token を見て結果を捨てる「ベストエフォート」キャンセルになる。
+  小さな画像なら気にならず、巨大画像でだけ「Cancel 押した瞬間に閉じる」
+  挙動と「decode 完了後に閉じる」挙動の差が見える。
+
+### ロード結果のロギング
+
+Inline / External どちらの経路でも、開いたファイルの結末を Logger に流す
+(プレビューは含めない: カーソル移動の度にスパムするため)。
+`utils/CancellableLoadPage.h` の `logViewerLoadResult(kind, path, ok,
+cancelled)` ヘルパで形式を統一する。
+
+- 成功: `Info  Viewer loaded (CSV): /path/to/big.csv`
+- キャンセル: `Info  Viewer load cancelled (Markdown): /path/to/foo.md`
+- 失敗: `Warn  Viewer load failed (PDF): /path/to/broken.pdf`
+
+External ウィンドウは `(Text, external)` のように `, external` を付ける。
 
 切替経路:
 
