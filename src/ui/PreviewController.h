@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QPointer>
 #include <QString>
 #include <QTimer>
 
@@ -13,6 +14,7 @@ namespace Farman {
 
 class PreviewPane;
 class ArchiveContext;
+class PropertiesWorker;
 
 // プレビューモード時の「カーソル変化 → 右ペインのビュアー切替」を
 // オーケストレートするコントローラ。
@@ -113,6 +115,18 @@ private:
   // ファイル名は <archiveHash>/<entryHashPath> 形式で決定論的にし、
   // 同じエントリへの再要求では再展開を行わない。
   std::unique_ptr<QTemporaryDir> m_archiveTempDir;
+
+  // ディレクトリプレビューで「再帰サイズ」を非同期集計するためのワーカ。
+  // 同時に動かすのは常に 1 件のみ。次のディレクトリ / 通常ファイル要求が
+  // 来たら requestCancel() + deleteLater でドロップする。
+  // ファイルプレビュー時は m_dirSizeWorker は null。
+  QPointer<PropertiesWorker> m_dirSizeWorker;
+  // 進行中のディレクトリ集計ジョブの世代。古い結果が走り遅れて到着しても
+  // 無視するため、PreviewController 全体の m_generation と同じパターン。
+  std::atomic<quint64>       m_dirSizeGeneration{0};
+
+  // ディレクトリ集計ワーカを cancel + deleteLater でドロップする。
+  void cancelDirSizeWorker();
 };
 
 } // namespace Farman

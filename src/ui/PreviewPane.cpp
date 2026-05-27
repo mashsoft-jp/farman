@@ -4,6 +4,7 @@
 #include <QFileIconProvider>
 #include <QFileInfo>
 #include <QLabel>
+#include <QLocale>
 #include <QStackedWidget>
 #include <QStyle>
 #include <QVBoxLayout>
@@ -107,13 +108,45 @@ void PreviewPane::showUnsupported(const QString& reason) {
 void PreviewPane::showDirectory(const QString& path, int itemCount) {
   m_directoryPathLabel->setText(path);
   if (itemCount < 0) {
-    m_directoryCountLabel->setText(QString());
+    m_directoryCountBase.clear();
   } else if (itemCount == 1) {
-    m_directoryCountLabel->setText(tr("1 item"));
+    m_directoryCountBase = tr("1 item");
   } else {
-    m_directoryCountLabel->setText(tr("%1 items").arg(itemCount));
+    m_directoryCountBase = tr("%1 items").arg(itemCount);
+  }
+  // size 行はまず「集計中…」プレースホルダで出しておく。すぐに
+  // showDirectorySize() で上書きされる。
+  if (m_directoryCountBase.isEmpty()) {
+    m_directoryCountLabel->setText(QString());
+  } else {
+    m_directoryCountLabel->setText(m_directoryCountBase
+      + QStringLiteral("  ·  ") + tr("calculating size..."));
   }
   m_stack->setCurrentWidget(m_directoryPage);
+}
+
+void PreviewPane::showDirectorySize(qint64 totalBytes, int fileCount,
+                                     int dirCount, bool finished) {
+  if (m_directoryCountBase.isEmpty()) return;   // showDirectory 前なら無視
+  if (!m_directoryCountLabel) return;
+  const QString sizeStr =
+    QLocale(QLocale::English).formattedDataSize(totalBytes);
+  // 確定済: "N items · 12.3 MB (15 files, 3 folders)"
+  // 走査中: "N items · 12.3 MB (集計中…)"
+  // ファイル数 / フォルダ数は走査中も含めて常に最新の暫定値を見せる
+  // (PropertiesWorker が 256 件ごとに emit しているため、ある程度滑らかに増える)。
+  QString suffix;
+  if (finished) {
+    if (fileCount > 0 || dirCount > 0) {
+      suffix = QStringLiteral(" (%1, %2)")
+                 .arg(tr("%n file(s)",   nullptr, fileCount))
+                 .arg(tr("%n folder(s)", nullptr, dirCount));
+    }
+  } else {
+    suffix = QStringLiteral(" (%1)").arg(tr("calculating..."));
+  }
+  m_directoryCountLabel->setText(m_directoryCountBase
+    + QStringLiteral("  ·  ") + sizeStr + suffix);
 }
 
 void PreviewPane::showLoading() {

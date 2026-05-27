@@ -3,6 +3,7 @@
 #include "PreviewPane.h"
 #include "core/ArchiveContext.h"
 #include "core/Logger.h"
+#include "core/workers/PropertiesWorker.h"
 #include "settings/Settings.h"
 #include "ui/ViewerPanel.h"
 #include "utils/ArchivePath.h"
@@ -142,7 +143,44 @@ PreviewController::PreviewController(PreviewPane* pane, QObject* parent)
           this,             &PreviewController::onDebounceTimeout);
 }
 
-PreviewController::~PreviewController() = default;
+PreviewController::~PreviewController() {
+  // 現在 m_dirSizeWorker に紐付いている worker は cancel + wait + delete を
+  // 同期実行する。clear 済 (cancelDirSizeWorker で detach された) worker は
+  // 自己破棄に任せる (QThread::finished → deleteLater で接続済)。
+  // QThread を未停止のまま破棄すると Qt::~QThread() が qFatal する。
+  if (m_dirSizeWorker) {
+    m_dirSizeWorker->requestCancel();
+    m_dirSizeWorker->wait();
+    delete m_dirSizeWorker.data();
+    m_dirSizeWorker.clear();
+  }
+}
+
+void PreviewController::cancelDirSizeWorker() {
+  // 世代を 1 進めて、走り遅れて到着する statsUpdated / finished を捨てる。
+  m_dirSizeGeneration.fetch_add(1, std::memory_order_acq_rel);
+  if (m_dirSizeWorker) {
+    PropertiesWorker* w = m_dirSizeWorker.data();
+    m_dirSizeWorker.clear();
+
+    // PreviewController 経由の slot 接続を全部切る (m_pane 越しに UI を
+    // 触ってしまうのを防ぐ)。これでこのコントローラからは worker への
+    // ハンドルが完全に切り離される。
+    w->disconnect(this);
+
+    // **重要**: `deleteLater()` を即時呼ぶと、worker のスレッドが lstat 等で
+    // ブロックしているうちに ~QThread() が走り「実行中スレッドの破棄」で
+    // qFatal してアプリがクラッシュする (例: Google Drive のような遅い FS で
+    // ディレクトリにカーソルを当てた直後に別のディレクトリへ移ったケース)。
+    //
+    // 代わりに `QThread::finished` (= run() が戻った後に Qt が発火する内蔵
+    // シグナル) を receiver 自身の deleteLater に繋ぐ標準イディオムを使う。
+    // requestCancel 前に接続するのは、worker が "瞬殺" される極短ケースで
+    // finished を取り逃さないようにするため。
+    QObject::connect(w, &QThread::finished, w, &QObject::deleteLater);
+    w->requestCancel();
+  }
+}
 
 void PreviewController::requestPreview(const QString& filePath,
                                        const QString& displayPath,
@@ -157,6 +195,9 @@ void PreviewController::requestPreview(const QString& filePath,
   if (m_currentCancelToken) {
     m_currentCancelToken->store(true, std::memory_order_release);
   }
+  // ディレクトリ集計ワーカも一緒に止める (前のカーソルが大きなディレクトリで
+  // 走査中だった場合、放っておくと CPU を浪費する)。
+  cancelDirSizeWorker();
 
   m_pendingFilePath    = filePath;
   m_pendingDisplayPath = displayPath.isEmpty() ? filePath : displayPath;
@@ -179,6 +220,7 @@ void PreviewController::requestArchivePreview(const ArchiveContext* ctx,
   if (m_currentCancelToken) {
     m_currentCancelToken->store(true, std::memory_order_release);
   }
+  cancelDirSizeWorker();
 
   m_pendingFilePath    .clear();   // 展開先パスは onDebounceTimeout で決める
   m_pendingDisplayPath = displayPath.isEmpty() ? entryPath : displayPath;
@@ -200,6 +242,7 @@ void PreviewController::clearPreview() {
   if (m_currentCancelToken) {
     m_currentCancelToken->store(true, std::memory_order_release);
   }
+  cancelDirSizeWorker();
   m_lastShownPath.clear();
   if (m_pane) m_pane->clear();
 }
@@ -215,8 +258,9 @@ void PreviewController::onDebounceTimeout() {
     return;
   }
 
-  // 2. ディレクトリは Finder Quick Look 風の "アイコン + パス + 件数" 表示。
-  //    件数は浅い (再帰しない) entryList で取る。.. / . は除外。アクセス権が
+  // 2. ディレクトリは Finder Quick Look 風の "アイコン + パス + 件数 + 再帰サイズ" 表示。
+  //    件数は浅い (再帰しない) entryList で取り、再帰サイズは PropertiesWorker
+  //    をバックグラウンドで走らせて随時更新する。.. / . は除外。アクセス権が
   //    無くて読めないディレクトリは -1 で件数行を省略させる。
   if (m_pendingIsDirectory) {
     int itemCount = -1;
@@ -227,6 +271,57 @@ void PreviewController::onDebounceTimeout() {
     }
     m_pane->showDirectory(m_pendingDisplayPath, itemCount);
     m_lastShownPath = m_pendingFilePath;
+
+    // 再帰サイズ集計をバックグラウンドで開始。前のジョブがまだ走っていれば
+    // 中断する。空ディレクトリ / アクセス不可ディレクトリ (itemCount == -1)
+    // のときは集計しない (showDirectory で size 行は空表示)。
+    cancelDirSizeWorker();
+    if (dir.exists() && itemCount > 0) {
+      const quint64 gen = ++m_dirSizeGeneration;
+      // 親は nullptr。PreviewController 破棄時に Qt の親子削除で worker が
+      // 巻き込まれると、走行中スレッドの ~QThread() で qFatal するため。
+      // 寿命管理は (a) 現役は m_dirSizeWorker (QPointer) + dtor の wait、
+      // (b) detach 済は QThread::finished → deleteLater の標準イディオム
+      // ( cancelDirSizeWorker で接続 ) に分けている。
+      auto* w = new PropertiesWorker(m_pendingFilePath, nullptr);
+      m_dirSizeWorker = w;
+      QPointer<PreviewController> self(this);
+
+      // 進捗イベント: statsUpdated は 256 ファイルごとに飛ぶ。
+      //   1. その時点の最新値 (bytes, files, dirs) を worker の dynamic
+      //      property に書いておく → finished 側で確定表示に使う。
+      //   2. PreviewPane を progressive に更新する (finished=false)。
+      // PropertiesWorker::run() は最終 statsUpdated を 1 回 emit してから
+      // finished(true) を出すので、property は確実に最終値を持つ。
+      connect(w, &PropertiesWorker::statsUpdated, this,
+              [this, self, gen, w](qint64 bytes, int files, int dirs) {
+        if (!self) return;
+        if (w) {
+          w->setProperty("_lastBytes", QVariant::fromValue(bytes));
+          w->setProperty("_lastFiles", files);
+          w->setProperty("_lastDirs",  dirs);
+        }
+        if (gen != m_dirSizeGeneration.load(std::memory_order_acquire)) return;
+        if (m_pane) m_pane->showDirectorySize(bytes, files, dirs, /*finished=*/false);
+      });
+
+      // 完了イベント: 「集計中…」サフィックスを外して確定表示に切替 + 破棄。
+      // 世代不一致 (= 既に次のディレクトリへ移動済) なら表示は触らない。
+      connect(w, &PropertiesWorker::finished, this,
+              [this, self, gen, w](bool ok) {
+        if (self
+            && ok
+            && gen == m_dirSizeGeneration.load(std::memory_order_acquire)
+            && m_pane && w) {
+          const qint64 bytes = w->property("_lastBytes").toLongLong();
+          const int    files = w->property("_lastFiles").toInt();
+          const int    dirs  = w->property("_lastDirs").toInt();
+          m_pane->showDirectorySize(bytes, files, dirs, /*finished=*/true);
+        }
+        if (w) w->deleteLater();
+      });
+      w->start();
+    }
     return;
   }
 

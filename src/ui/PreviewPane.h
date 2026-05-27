@@ -43,7 +43,16 @@ public:
   // ディレクトリにカーソルがあるときの表示 (Finder Quick Look 風)。
   //   path       : 表示用パス
   //   itemCount  : 「N 個のアイテム」表示用 (-1 で件数行を省略)
+  // 件数行は内部に覚えておき、後から showDirectorySize() で再帰サイズの
+  // 行末追記ができる。表示直後は size 行が「(集計中…)」プレースホルダ。
   void showDirectory(const QString& path, int itemCount);
+
+  // ディレクトリ走査結果 (PropertiesWorker からのストリーミング更新) を
+  // 件数行の末尾に追記する。`finished=true` で「集計中…」を取り除き、
+  // 確定の合計サイズ + ファイル / ディレクトリ件数を表示する。
+  // showDirectory() で表示中でない場合は何もしない。
+  void showDirectorySize(qint64 totalBytes, int fileCount, int dirCount,
+                          bool finished);
 
   // 非同期ロード中の表示 (Phase 2 で使う)。
   void showLoading();
@@ -78,6 +87,9 @@ private:
   QLabel*         m_directoryIcon     = nullptr;
   QLabel*         m_directoryPathLabel  = nullptr;
   QLabel*         m_directoryCountLabel = nullptr;
+  // 浅い entryList で取った直近の表示用テキスト ("1 item" / "%1 items" / "")。
+  // showDirectorySize() で append するときに頭の N items 部分を再利用する。
+  QString         m_directoryCountBase;
   TextView*       m_textView          = nullptr;
   ImageView*      m_imageView         = nullptr;
   BinaryView*     m_binaryView        = nullptr;

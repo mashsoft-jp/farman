@@ -229,8 +229,18 @@ Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
 - 特殊なカーソル位置:
   - `..` 行: 空表示。
   - ディレクトリ: macOS Finder Quick Look 風のページ
-    (大きめフォルダアイコン + パス + 浅い件数 "N items")。
-    合計サイズの **再帰計算は将来課題**。
+    (大きめフォルダアイコン + パス + 浅い件数 "N items" + 再帰サイズ)。
+    再帰サイズはバックグラウンドの `PropertiesWorker` で集計し、256 ファイル
+    ごとの `statsUpdated` で「12.3 MB (集計中…)」と progressive 更新、完了で
+    「12.3 MB (M ファイル, K フォルダ)」に確定する。カーソル移動 / プレビュー
+    クリア時にワーカーは即 cancel される。
+    - **ライフサイクル注意**: ワーカーは `parent=nullptr` で生成し、cancel 後は
+      `QThread::finished → deleteLater` の標準イディオムで自己破棄させる。
+      `deleteLater()` を即時呼ぶと、`lstat()` で長時間ブロックする FS
+      (Google Drive のような cloud-streaming、ネットワーク FS、暗号化マウント
+      など) で `~QThread()` が走行中スレッドを破棄しようとして qFatal する。
+      PreviewController の dtor では現役 worker のみ `cancel + wait + delete`
+      を同期実行する。
   - 非通常ファイル / 存在しないファイル: "Not a regular file." /
     "File not found." メッセージ。
 - アーカイブ内エントリのプレビュー (実装済):
@@ -256,7 +266,6 @@ Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
   プレビューモード中に終了すれば次回起動時もプレビューレイアウトで開く。
 - Splitter のドラッグ位置は Dual / Preview それぞれ独立に記憶される。
 - 将来課題:
-  - ディレクトリ統計の合計サイズ (再帰計算、Properties Worker 流用)
   - Preview ペインへの Tab フォーカス移動 (文字選択 / コピー対応)
 
 ### アクティブペインの切替

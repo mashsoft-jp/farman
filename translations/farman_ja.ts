@@ -5051,34 +5051,34 @@ Reason: %1</source>
 <context>
     <name>Farman::PreviewController</name>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="243"/>
+        <location filename="../src/ui/PreviewController.cpp" line="319"/>
         <source>File too large to preview (%1).
 Press Enter to open in viewer.</source>
         <translation>プレビューするには大きすぎます (%1)。
 Enter キーでビュアーを開いてください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="265"/>
+        <location filename="../src/ui/PreviewController.cpp" line="341"/>
         <source>Failed to prepare temp directory for archive.</source>
         <translation>アーカイブ用の一時ディレクトリを準備できませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="280"/>
+        <location filename="../src/ui/PreviewController.cpp" line="356"/>
         <source>Unsafe archive entry path: %1</source>
         <translation>アーカイブ内の安全でないパスです: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="290"/>
+        <location filename="../src/ui/PreviewController.cpp" line="366"/>
         <source>Failed to extract &apos;%1&apos; from archive.</source>
         <translation>アーカイブから &apos;%1&apos; を展開できませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="311"/>
+        <location filename="../src/ui/PreviewController.cpp" line="387"/>
         <source>File not found.</source>
         <translation>ファイルが見つかりません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="316"/>
+        <location filename="../src/ui/PreviewController.cpp" line="392"/>
         <source>Not a regular file.</source>
         <translation>通常のファイルではありません。</translation>
     </message>
@@ -5086,24 +5086,48 @@ Enter キーでビュアーを開いてください。</translation>
 <context>
     <name>Farman::PreviewPane</name>
     <message>
-        <location filename="../src/ui/PreviewPane.cpp" line="29"/>
+        <location filename="../src/ui/PreviewPane.cpp" line="30"/>
         <source>(No selection)</source>
         <translation>(選択なし)</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewPane.cpp" line="36"/>
+        <location filename="../src/ui/PreviewPane.cpp" line="37"/>
         <source>Loading...</source>
         <translation>読み込み中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewPane.cpp" line="112"/>
+        <location filename="../src/ui/PreviewPane.cpp" line="113"/>
         <source>1 item</source>
         <translation>1 件</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewPane.cpp" line="114"/>
+        <location filename="../src/ui/PreviewPane.cpp" line="115"/>
         <source>%1 items</source>
         <translation>%1 件</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreviewPane.cpp" line="123"/>
+        <source>calculating size...</source>
+        <translation>サイズ計算中...</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../src/ui/PreviewPane.cpp" line="142"/>
+        <source>%n file(s)</source>
+        <translation>
+            <numerusform>%n 個のファイル</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../src/ui/PreviewPane.cpp" line="143"/>
+        <source>%n folder(s)</source>
+        <translation>
+            <numerusform>%n 個のフォルダ</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreviewPane.cpp" line="146"/>
+        <source>calculating...</source>
+        <translation>計算中...</translation>
     </message>
 </context>
 <context>
@@ -6490,37 +6514,37 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>アーカイブを読み込み中: %1 (%2 件)</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="78"/>
+        <location filename="../src/ui/PreviewController.cpp" line="79"/>
         <source>Failed to load text.</source>
         <translation>テキストを読み込めませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="89"/>
+        <location filename="../src/ui/PreviewController.cpp" line="90"/>
         <source>Failed to load image.</source>
         <translation>画像を読み込めませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="98"/>
+        <location filename="../src/ui/PreviewController.cpp" line="99"/>
         <source>Failed to load file.</source>
         <translation>ファイルを読み込めませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="107"/>
+        <location filename="../src/ui/PreviewController.cpp" line="108"/>
         <source>Failed to load Markdown.</source>
         <translation>Markdown ファイルを読み込めませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="115"/>
+        <location filename="../src/ui/PreviewController.cpp" line="116"/>
         <source>Failed to load PDF.</source>
         <translation>PDF ファイルを読み込めませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="124"/>
+        <location filename="../src/ui/PreviewController.cpp" line="125"/>
         <source>Failed to load CSV.</source>
         <translation>CSV ファイルを読み込めませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreviewController.cpp" line="130"/>
+        <location filename="../src/ui/PreviewController.cpp" line="131"/>
         <source>Unsupported file type.</source>
         <translation>非対応のファイル形式です。</translation>
     </message>
