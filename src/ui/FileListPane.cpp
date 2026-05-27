@@ -529,12 +529,24 @@ void FileListPane::focusBookmarkLabel() {
 }
 
 void FileListPane::focusFooterControls() {
-  // 1 つの popup button にまとめたので、ここに setFocus するだけ。Space /
-  // Enter で popup を開いて選択できる。
+  // 旧称。新しい Tab 連鎖では view + Tab → mode へ直接遷移するため
+  // focusModeButton() を呼ぶだけのラッパ。
+  focusModeButton();
+}
+
+void FileListPane::focusModeButton() {
   if (m_viewModeButton && m_viewModeButton->isVisible()) {
-    m_viewModeButton->setFocus(Qt::TabFocusReason);
+    m_viewModeButton->setFocus(Qt::BacktabFocusReason);
   } else {
+    // モードボタンが非表示の場合、フッタに到達できる選択肢は無いので
+    // ★ にフォーカス (連鎖の起点) を逃がす。
     focusBookmarkLabel();
+  }
+}
+
+void FileListPane::focusFolderButton() {
+  if (m_folderButton && m_folderButton->isVisible()) {
+    m_folderButton->setFocus(Qt::BacktabFocusReason);
   }
 }
 
@@ -676,9 +688,16 @@ bool FileListPane::eventFilter(QObject* watched, QEvent* event) {
       QWidget* next = nullptr;
       QAbstractItemView* av = activeView();
 
+      // 連鎖順 (forward): ★ → addr → 📁 → view → mode → <exit forward>
+      //         (back) : ★ ← addr ← 📁 ← view ← mode  AND  <exit back> ← ★
       if (watched == m_bookmarkLabel) {
-        next = back ? static_cast<QWidget*>(m_viewModeButton)
-                    : static_cast<QWidget*>(m_addressEdit);
+        if (back) {
+          // ★ + Shift+Tab → 対向ペインの末尾 (mode) へ
+          if (isKeyPress) emit focusExitBackward();
+          event->accept();
+          return true;
+        }
+        next = static_cast<QWidget*>(m_addressEdit);
       } else if (watched == m_addressEdit) {
         next = back ? static_cast<QWidget*>(m_bookmarkLabel)
                     : static_cast<QWidget*>(m_folderButton);
@@ -686,8 +705,14 @@ bool FileListPane::eventFilter(QObject* watched, QEvent* event) {
         next = back ? static_cast<QWidget*>(m_addressEdit)
                     : static_cast<QWidget*>(av);
       } else if (watched == m_viewModeButton) {
-        next = back ? static_cast<QWidget*>(av)
-                    : static_cast<QWidget*>(m_bookmarkLabel);
+        if (back) {
+          next = static_cast<QWidget*>(av);
+        } else {
+          // mode + Tab → 対向ペインの先頭 (★) へ
+          if (isKeyPress) emit focusExitForward();
+          event->accept();
+          return true;
+        }
       }
       if (next) {
         if (isKeyPress) {

@@ -75,6 +75,11 @@ void FileManagerPanel::setupUi() {
   m_leftPane->setPaneType(PaneType::Left);
   connect(m_leftPane, &FileListPane::currentChanged, this, &FileManagerPanel::onLeftPaneCurrentChanged);
   connect(m_leftPane, &FileListPane::folderButtonClicked, this, &FileManagerPanel::onLeftFolderButtonClicked);
+  // Tab 連鎖の端 (mode + Tab / ★ + Shift+Tab) → ルータで対向側へ振り分け
+  connect(m_leftPane, &FileListPane::focusExitForward, this,
+          [this]() { onPaneFocusExit(PaneType::Left, /*forward=*/true); });
+  connect(m_leftPane, &FileListPane::focusExitBackward, this,
+          [this]() { onPaneFocusExit(PaneType::Left, /*forward=*/false); });
   // ステータスバー更新: カーソル移動・モデル変化・選択変化を監視
   connect(m_leftPane, &FileListPane::currentChanged, this, [this](const QModelIndex&, const QModelIndex&) {
     emitActivePaneStatus();
@@ -92,6 +97,10 @@ void FileManagerPanel::setupUi() {
   m_rightPane->setPaneType(PaneType::Right);
   connect(m_rightPane, &FileListPane::currentChanged, this, &FileManagerPanel::onRightPaneCurrentChanged);
   connect(m_rightPane, &FileListPane::folderButtonClicked, this, &FileManagerPanel::onRightFolderButtonClicked);
+  connect(m_rightPane, &FileListPane::focusExitForward, this,
+          [this]() { onPaneFocusExit(PaneType::Right, /*forward=*/true); });
+  connect(m_rightPane, &FileListPane::focusExitBackward, this,
+          [this]() { onPaneFocusExit(PaneType::Right, /*forward=*/false); });
   connect(m_rightPane, &FileListPane::currentChanged, this, [this](const QModelIndex&, const QModelIndex&) {
     emitActivePaneStatus();
   });
@@ -128,6 +137,12 @@ void FileManagerPanel::setupUi() {
       if (auto* v = pane->view()) v->setFocus(Qt::OtherFocusReason);
     }
   });
+  // PreviewPane の Tab 連鎖の端から呼ばれるルータ。プレビューを抜けたら
+  // アクティブな FileListPane の ★ (forward) / mode (back) に戻す。
+  connect(m_previewPane, &PreviewPane::focusExitForward, this,
+          [this]() { onPreviewFocusExit(/*forward=*/true); });
+  connect(m_previewPane, &PreviewPane::focusExitBackward, this,
+          [this]() { onPreviewFocusExit(/*forward=*/false); });
 
   // 左ペインのカーソル変化 → PreviewController に通知 (Preview 中のみ実行)。
   m_previewController = new PreviewController(m_previewPane, this);
@@ -656,17 +671,23 @@ void FileManagerPanel::syncActiveToOther() {
 }
 
 bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
-  // Tab: ファイルリスト上の Tab はフッタコントロール (モード切替ボタン →
-  // (Thumbnail 時) サイズボタン → ★) へ。FileListPane::eventFilter が以降の
-  // ★ → addr → 📁 → view と循環させる。
-  //
-  // 設計メモ: プレビューモード時に「Tab で preview ペインへ」を試したが、
-  // 現在ページが Loading / Empty かどうかで挙動が変わって不整合になるため
-  // 撤回した (2026-05-27)。preview ペインへ移って文字選択したい場合は
-  // マウスクリックでフォーカスし、Esc でファイルリストへ戻る運用にする。
-  if (event->key() == Qt::Key_Tab) {
+  // Tab 連鎖 (左ペインの場合): ★ → addr → 📁 → view → mode → <対向ペイン>
+  //   - view 上で Tab 押下 → mode へ
+  //   - view 上で Shift+Tab 押下 → 📁 へ
+  //   - mode + Tab → 対向ペイン (FileListPane::focusExitForward シグナル経由)
+  //   - ★ + Shift+Tab → 対向ペイン (focusExitBackward シグナル経由)
+  // 対向 = Dual: 反対 FileListPane / Preview: PreviewPane / Single: 自分にラップ
+  const bool shifted = (event->modifiers() & Qt::ShiftModifier);
+  if (event->key() == Qt::Key_Tab && !shifted) {
     if (FileListPane* pane = activePane()) {
-      pane->focusFooterControls();
+      pane->focusModeButton();
+      return true;
+    }
+  }
+  if (event->key() == Qt::Key_Backtab
+      || (event->key() == Qt::Key_Tab && shifted)) {
+    if (FileListPane* pane = activePane()) {
+      pane->focusFolderButton();
       return true;
     }
   }
@@ -824,6 +845,61 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
   }
 
   return false;
+}
+
+void FileManagerPanel::onPaneFocusExit(PaneType from, bool forward) {
+  // Tab 連鎖の端 (mode + Tab / ★ + Shift+Tab) → レイアウトに応じた行き先へ。
+  //   - Dual    : 対向ペインの ★ (forward) / mode (back)
+  //   - Preview : PreviewPane の先頭 (forward) / 末尾 (back)。
+  //               プレビュー側に focusable が無ければ同ペインにラップ。
+  //   - Single  : 反対ペインが居ない → 同ペインの中でラップ
+  switch (m_layoutMode) {
+    case LayoutMode::Single: {
+      FileListPane* self = (from == PaneType::Left) ? m_leftPane : m_rightPane;
+      if (!self) return;
+      if (forward) self->focusBookmarkLabel();
+      else         self->focusModeButton();
+      return;
+    }
+    case LayoutMode::Dual: {
+      const PaneType otherType =
+        (from == PaneType::Left) ? PaneType::Right : PaneType::Left;
+      FileListPane* other =
+        (otherType == PaneType::Left) ? m_leftPane : m_rightPane;
+      if (!other) return;
+      // アクティブペインも反対側に切替える (setActivePane 内で view への
+      // setFocus が走るが、続けて bookmark / mode に setFocus し直すので OK)。
+      setActivePane(otherType);
+      if (forward) other->focusBookmarkLabel();
+      else         other->focusModeButton();
+      return;
+    }
+    case LayoutMode::Preview: {
+      // Preview 中は from は通常 Left (setLayoutMode が強制している) だが、
+      // どちらから呼ばれてもプレビュー側へ。
+      if (!m_previewPane) return;
+      const bool ok = forward ? m_previewPane->focusFirstControl()
+                              : m_previewPane->focusLastControl();
+      if (!ok) {
+        // プレビュー側に focusable な相手が無い (Empty / Loading 等)。
+        // 自ペインの反対端にラップして「Tab で永久ループしない」状態を作る。
+        if (FileListPane* self = activePane()) {
+          if (forward) self->focusBookmarkLabel();
+          else         self->focusModeButton();
+        }
+      }
+      return;
+    }
+  }
+}
+
+void FileManagerPanel::onPreviewFocusExit(bool forward) {
+  // PreviewPane を抜ける → アクティブな FileListPane (= 左) の頭 / 末尾に戻す。
+  // forward の連鎖を維持したいので、forward なら ★、back なら mode。
+  FileListPane* pane = activePane();
+  if (!pane) return;
+  if (forward) pane->focusBookmarkLabel();
+  else         pane->focusModeButton();
 }
 
 void FileManagerPanel::onLeftPaneCurrentChanged(const QModelIndex& current, const QModelIndex& previous) {

@@ -205,6 +205,71 @@ bool PreviewPane::focusContent() {
   return false;
 }
 
+bool PreviewPane::focusFirstControl() {
+  if (!m_stack) return false;
+  QWidget* page = m_stack->currentWidget();
+  if (!page) return false;
+  // 状態ページ (Empty / Loading / Unsupported / Directory) は focusable な
+  // 子を持たない (持ったとしても Cancel ボタンくらいで、Tab 遷移先には
+  // したくない)。呼び出し元 (FileManagerPanel ルータ) に false を返して
+  // 別の遷移先 (= 自ペインの mode などにラップ) を選ばせる。
+  if (page != m_textView && page != m_markdownView && page != m_binaryView
+      && page != m_csvView && page != m_pdfView && page != m_imageView) {
+    return false;
+  }
+  // page から forward に walk して PreviewPane 配下で最初の Tab focusable
+  // を採用。各ビュアーの setTabOrder で「ツールバー → メイン content」の順に
+  // 並んでいる前提。最大歩数は安全策として 1024 段で打ち切り。
+  QWidget* w = page;
+  for (int i = 0; i < 1024; ++i) {
+    QWidget* next = w->nextInFocusChain();
+    if (!next || next == page) break;
+    if (!isAncestorOf(next)) break;  // ペイン外に出た
+    if ((next->focusPolicy() & Qt::TabFocus)
+        && next->isVisible() && next->isEnabled()) {
+      next->setFocus(Qt::TabFocusReason);
+      installEventFiltersRecursively(page);
+      return true;
+    }
+    w = next;
+  }
+  // 念のためのフォールバック: 何も見つからなければ page (focusProxy) に直接。
+  return focusContent();
+}
+
+bool PreviewPane::focusLastControl() {
+  if (!m_stack) return false;
+  QWidget* page = m_stack->currentWidget();
+  if (!page) return false;
+  if (page != m_textView && page != m_markdownView && page != m_binaryView
+      && page != m_csvView && page != m_pdfView && page != m_imageView) {
+    return false;
+  }
+  // page から forward に walk して、PreviewPane 配下で「最後」に登場する
+  // Tab focusable な widget を覚えて、その widget にフォーカスを当てる。
+  // previousInFocusChain で page から後ろ向きに walk すると先に page の
+  // 「外側」(= PreviewPane より前にある widget) に出てしまうので、forward
+  // 走査 + 最後を覚える方式にしている。
+  QWidget* lastInside = nullptr;
+  QWidget* w = page;
+  for (int i = 0; i < 1024; ++i) {
+    QWidget* next = w->nextInFocusChain();
+    if (!next || next == page) break;
+    if (!isAncestorOf(next)) break;
+    if ((next->focusPolicy() & Qt::TabFocus)
+        && next->isVisible() && next->isEnabled()) {
+      lastInside = next;
+    }
+    w = next;
+  }
+  if (lastInside) {
+    lastInside->setFocus(Qt::BacktabFocusReason);
+    installEventFiltersRecursively(page);
+    return true;
+  }
+  return focusContent();
+}
+
 void PreviewPane::installEventFiltersRecursively(QWidget* root) {
   if (!root) return;
   root->installEventFilter(this);
@@ -212,12 +277,51 @@ void PreviewPane::installEventFiltersRecursively(QWidget* root) {
   for (QWidget* c : children) c->installEventFilter(this);
 }
 
+namespace {
+// PreviewPane 内で、focused から forward/back 方向に walk して、
+// まだ pane 配下に Tab focusable な相手が残っているかを判定。
+// 残っていなければ「ペインを抜けるべき」と判断できる。
+bool hasFocusableInDirection(const PreviewPane* pane, QWidget* focused,
+                              bool back) {
+  if (!pane || !focused) return false;
+  QWidget* w = focused;
+  for (int i = 0; i < 1024; ++i) {
+    QWidget* next = back ? w->previousInFocusChain() : w->nextInFocusChain();
+    if (!next || next == focused) return false;
+    if (!pane->isAncestorOf(next)) return false;
+    if ((next->focusPolicy() & Qt::TabFocus)
+        && next->isVisible() && next->isEnabled()) {
+      return true;
+    }
+    w = next;
+  }
+  return false;
+}
+} // anonymous namespace
+
 bool PreviewPane::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    if (ke->key() == Qt::Key_Escape) {
+    const int key = ke->key();
+    if (key == Qt::Key_Escape) {
       emit escapePressed();
       return true;
+    }
+    if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
+      const bool back = (key == Qt::Key_Backtab)
+                        || (ke->modifiers() & Qt::ShiftModifier);
+      // 現在フォーカスを持っている widget からチェーンを 1 段進めて、
+      // PreviewPane 配下にまだ focusable が残っているかを見る。
+      // 残っていなければ「端」と判断してルータに通知する。
+      QWidget* focused = QApplication::focusWidget();
+      if (focused && isAncestorOf(focused)) {
+        if (!hasFocusableInDirection(this, focused, back)) {
+          if (back) emit focusExitBackward();
+          else      emit focusExitForward();
+          event->accept();
+          return true;
+        }
+      }
     }
   }
   return QWidget::eventFilter(watched, event);

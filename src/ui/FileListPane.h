@@ -83,10 +83,15 @@ public:
   // アドレスバーへ飛ばすために FileManagerPanel から呼ばれる。
   void focusAddressBar();
   // ★ ブックマークラベルへフォーカス。Tab 連鎖の起点として使う。
+  // 反対ペインから「Tab で頭から入って欲しい」ときに呼ばれる。
   void focusBookmarkLabel();
-  // フッタのサムネイル表示モード切替ボタンへフォーカス。Tab 連鎖で「ファイル
-  // リスト → モード切替 (→ サイズ) → ★」と巡るために使う。List モード時でも
-  // モード切替ボタンは常に visible なので、ここに到達する。
+  // フッタのサムネイル表示モード切替ボタンへフォーカス。Tab 連鎖の末尾。
+  // 反対ペインから「Shift+Tab で末尾から入って欲しい」ときに呼ばれる。
+  void focusModeButton();
+  // フォルダ参照ボタン (📁) へフォーカス。view + Shift+Tab で 1 つ戻る。
+  void focusFolderButton();
+  // フッタのモード切替ボタンへフォーカス (view + Tab forward の遷移先)。
+  // 互換のため focusModeButton() の旧称として残す。
   void focusFooterControls();
 
   // 即時フィルタ (Quick Filter Bar) のトグル表示。
@@ -101,6 +106,13 @@ signals:
   // 外部 / 反対側ペインからのファイルドロップ。FileManagerPanel が拾って
   // Copy / Move のいずれかをユーザーに尋ねる。
   void externalUrlsDropped(const QList<QUrl>& urls);
+
+  // Tab 連鎖の端 (フッタモードボタンで Tab 押下 / ★で Shift+Tab 押下) に
+  // 到達したことを通知する。FileManagerPanel が router で対向側
+  // (Dual: 反対ペイン / Preview: PreviewPane / Single: 自分の先頭/末尾) に
+  // フォーカスを移す。
+  void focusExitForward();    // mode + Tab → 対向ペインの先頭 (★)
+  void focusExitBackward();   // ★ + Shift+Tab → 対向ペインの末尾 (mode)
 
 public:
   // 現在のパスのブックマーク登録状態を切り替える。

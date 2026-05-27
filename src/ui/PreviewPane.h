@@ -80,10 +80,27 @@ public:
   // 返り値: フォーカスを移せたら true。
   bool focusContent();
 
+  // ファイルリストペイン → プレビュー先頭/末尾。Tab 連鎖の外部入口。
+  //   - focusFirstControl: 現在表示中のページ配下で、フォーカスチェーン上で
+  //                        最も前にある Tab focusable な widget にフォーカス。
+  //                        典型的には「ツールバーの左端ボタン」。
+  //   - focusLastControl : 同チェーン上で最も後ろの widget にフォーカス。
+  //                        典型的にはメインコンテンツ (本文 / 画像 等)。
+  // 状態ページ (Empty / Loading / Unsupported / Directory) では false を返す
+  // (フォーカスを受ける相手が居ないので、呼び出し側は別の遷移先を選ぶ)。
+  bool focusFirstControl();
+  bool focusLastControl();
+
 signals:
   // プレビューペイン内で Esc が押された → 呼び出し側 (FileManagerPanel) に
   // 「ファイルリストへ戻して欲しい」と伝える。
   void escapePressed();
+
+  // プレビュー内の Tab 連鎖の端 (= 末尾で Tab / 先頭で Shift+Tab) に
+  // 到達したことを通知する。FileManagerPanel が router でアクティブな
+  // FileListPane の ★ / mode に戻す。
+  void focusExitForward();    // 末尾で Tab     → 自ペイン ★ にラップ
+  void focusExitBackward();   // 先頭で Shift+Tab → 自ペイン mode にラップ
 
 protected:
   bool eventFilter(QObject* watched, QEvent* event) override;

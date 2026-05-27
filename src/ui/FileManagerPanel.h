@@ -161,6 +161,15 @@ private slots:
   void onRightPaneCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
   void onLeftFolderButtonClicked();
   void onRightFolderButtonClicked();
+  // Tab 連鎖の端 (ファイルリストペインの mode ボタンで Tab / ★ で Shift+Tab) に
+  // 達したときに呼ばれるルータ。レイアウトに応じて遷移先を振り分ける:
+  //   - Dual    : 対向 FileListPane の ★ (forward) / mode (back)
+  //   - Preview : PreviewPane の先頭 (forward) / 末尾 (back)
+  //   - Single  : 同ペイン内でラップ (★ / mode)
+  void onPaneFocusExit(PaneType from, bool forward);
+  // PreviewPane の Tab 連鎖の端から呼ばれるルータ。プレビューを抜けたら
+  // アクティブな FileListPane の頭 (forward) / 末尾 (back) に戻す。
+  void onPreviewFocusExit(bool forward);
 
 private:
   void setupUi();
