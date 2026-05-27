@@ -77,8 +77,6 @@ private:
   QCheckBox*   m_singleInstanceCheck       = nullptr;
   // メインツールバーの表示。View メニューからもトグル可能。
   QCheckBox*   m_showToolbarCheck          = nullptr;
-  // ツールバーのボタン表示スタイル (Icon / Text / IconBesideText)。
-  QComboBox*   m_toolbarStyleCombo         = nullptr;
 
   // Application language
   QComboBox*   m_languageCombo             = nullptr;

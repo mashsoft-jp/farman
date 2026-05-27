@@ -128,7 +128,6 @@ void Settings::applyDefaults() {
   m_singleInstance = true;
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
-  m_toolbarStyle  = ToolbarStyle::IconOnly;
   m_language      = LanguageMode::Auto;
 
   // ── ログ ─────────────────────────
@@ -799,14 +798,6 @@ bool Settings::showToolbar() const {
 
 void Settings::setShowToolbar(bool show) {
   m_showToolbar = show;
-}
-
-ToolbarStyle Settings::toolbarStyle() const {
-  return m_toolbarStyle;
-}
-
-void Settings::setToolbarStyle(ToolbarStyle style) {
-  m_toolbarStyle = style;
 }
 
 LayoutMode Settings::layoutMode() const { return m_layoutMode; }
@@ -1702,9 +1693,6 @@ void Settings::load() {
                      : ViewerMode::Inline;
   }
   m_showToolbar = behavior.value("showToolbar").toBool(true);
-  // ツールバーのボタン表示スタイル ("icon" / "text" / "icon_beside_text")。
-  // 未指定は IconOnly。
-  m_toolbarStyle = toolbarStyleFromKey(behavior.value("toolbarStyle").toString());
   // レイアウト (dual / single / preview)。未指定は dual。
   m_layoutMode = layoutModeFromKey(behavior.value("layoutMode").toString());
   // プレビュー動作パラメタ
@@ -2233,9 +2221,8 @@ void Settings::save() const {
   behavior["viewerMode"] = (m_viewerMode == ViewerMode::External)
                              ? QStringLiteral("external")
                              : QStringLiteral("inline");
-  behavior["showToolbar"]  = m_showToolbar;
-  behavior["toolbarStyle"] = QString::fromLatin1(toolbarStyleKey(m_toolbarStyle));
-  behavior["layoutMode"]   = QString::fromLatin1(layoutModeKey(m_layoutMode));
+  behavior["showToolbar"] = m_showToolbar;
+  behavior["layoutMode"]  = QString::fromLatin1(layoutModeKey(m_layoutMode));
   {
     QJsonObject preview;
     preview["debounceMs"]       = m_previewDebounceMs;

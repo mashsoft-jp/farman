@@ -265,33 +265,6 @@ void GeneralTab::setupUi() {
        "the View menu."));
   mainLayout->addWidget(m_showToolbarCheck);
 
-  // ── ツールバーボタン表示スタイル (Icon / Text / IconBesideText) ──
-  // SPEC.md「ツールバー」節の polish 項目。アイコン素材は :/icons/toolbar/
-  // 配下に揃えているため Icon モードでもラベル付きで意味は伝わる前提だが、
-  // 初見ユーザー / アクセシビリティ目的でテキスト併記モードも提供する。
-  m_toolbarStyleCombo = new QComboBox(this);
-  m_toolbarStyleCombo->addItem(tr("Icon only"),
-                                static_cast<int>(ToolbarStyle::IconOnly));
-  m_toolbarStyleCombo->addItem(tr("Text only"),
-                                static_cast<int>(ToolbarStyle::TextOnly));
-  m_toolbarStyleCombo->addItem(tr("Icon beside text"),
-                                static_cast<int>(ToolbarStyle::IconBesideText));
-  m_toolbarStyleCombo->setToolTip(
-    tr("Choose how toolbar buttons are rendered. Tooltips show the command "
-       "name and shortcut regardless of style."));
-  // 「Show toolbar」が OFF の間は意味が無いので grey out。
-  m_toolbarStyleCombo->setEnabled(m_showToolbarCheck->isChecked());
-  connect(m_showToolbarCheck, &QCheckBox::toggled, this, [this](bool on) {
-    if (m_toolbarStyleCombo) m_toolbarStyleCombo->setEnabled(on);
-  });
-
-  QHBoxLayout* toolbarStyleRow = new QHBoxLayout();
-  toolbarStyleRow->setContentsMargins(0, 0, 0, 0);
-  toolbarStyleRow->addWidget(new QLabel(tr("Toolbar style:"), this));
-  toolbarStyleRow->addWidget(m_toolbarStyleCombo);
-  toolbarStyleRow->addStretch(1);
-  mainLayout->addLayout(toolbarStyleRow);
-
   m_languageCombo = new QComboBox(this);
   m_languageCombo->addItem(tr("Auto (System)"), static_cast<int>(LanguageMode::Auto));
   m_languageCombo->addItem(tr("English"),       static_cast<int>(LanguageMode::English));
@@ -407,15 +380,6 @@ void GeneralTab::loadSettings() {
   m_confirmOnExitCheck->setChecked(settings.confirmOnExit());
   m_singleInstanceCheck->setChecked(settings.singleInstance());
   m_showToolbarCheck->setChecked(settings.showToolbar());
-  // Toolbar style 復元
-  for (int i = 0; i < m_toolbarStyleCombo->count(); ++i) {
-    if (m_toolbarStyleCombo->itemData(i).toInt()
-        == static_cast<int>(settings.toolbarStyle())) {
-      m_toolbarStyleCombo->setCurrentIndex(i);
-      break;
-    }
-  }
-  m_toolbarStyleCombo->setEnabled(m_showToolbarCheck->isChecked());
   for (int i = 0; i < m_languageCombo->count(); ++i) {
     if (m_languageCombo->itemData(i).toInt() == static_cast<int>(settings.language())) {
       m_languageCombo->setCurrentIndex(i);
@@ -497,8 +461,6 @@ void GeneralTab::save() {
   settings.setConfirmOnExit(m_confirmOnExitCheck->isChecked());
   settings.setSingleInstance(m_singleInstanceCheck->isChecked());
   settings.setShowToolbar(m_showToolbarCheck->isChecked());
-  settings.setToolbarStyle(
-    static_cast<ToolbarStyle>(m_toolbarStyleCombo->currentData().toInt()));
   settings.setLanguage(static_cast<LanguageMode>(m_languageCombo->currentData().toInt()));
 
   WindowSizeMode sizeMode = static_cast<WindowSizeMode>(m_windowSizeModeCombo->currentData().toInt());

@@ -1348,14 +1348,13 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
     将来的に簡易な波形描画 (peaks) を入れる余地は残す。
   - ファイルが大きいことが多いので、起動時はメタデータだけ読んで本体ストリーム
     は再生開始時にロードする (`QMediaPlayer::setSource`)。
-- **CSV ビュアー (拡張)** — 完了扱い
+- **CSV ビュアー (拡張)**
   - Phase 1 (表形式表示 / 区切り自動判定 + 手動切替 / ヘッダ行扱いトグル /
     エンコーディング選択 / RFC 4180 quoted-field パース) と Phase 2
     (セル内全文検索 + 行オフセット index 経由の遅延ロード) は実装済
     (上記 `#### CSV / TSV ビュアー` 参照)。
-  - 列ソート (列ヘッダクリックで昇順/降順切替) は **不採用** (2026-05-27)。
-    日常的ニーズが薄いため実装しない。CSV ビュアー側で並べ替えが必要な
-    ケースは表計算ソフトで開く想定。
+  - 残件: 列ソート (列ヘッダクリックで昇順/降順切替) のみ。日常的ニーズが
+    薄いため **見送り**。
 - **画像ビュアー / PSD 拡張** *(後日 or プラグインビュアー対応)*
   - 現状は合成済プレビュー (Photoshop が末尾に書き出す全レイヤマージ画像)
     のみを表示している (上記 `#### 画像ビュアー` の PSD 節参照)。
@@ -1636,18 +1635,10 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
   Settings → General → "Show toolbar" チェックボックスから切替可能。
   コマンド ID は `view.toggle_toolbar`。Settings の `behavior.showToolbar`
   に保存され、デフォルトは **ON** (新機能を発見してもらう狙い)。
-- **表示スタイル**: Settings → General →「Toolbar style」コンボから
-  3 値を切替 (`behavior.toolbarStyle` に永続化):
-  - `icon` (= `Qt::ToolButtonIconOnly`): アイコンのみ。**既定**。省スペース。
-    各ボタンの意味は tooltip (ラベル + ショートカット) で補足。
-  - `text` (= `Qt::ToolButtonTextOnly`): テキストラベルのみ。視認性が高いが
-    幅を取る。
-  - `icon_beside_text` (= `Qt::ToolButtonTextBesideIcon`): アイコン + テキストの
-    横並び。意味とアイコンの対応を覚える前の新規ユーザー向け。
-  - 「Show toolbar」が OFF の間はコンボは grey out。`Settings::settingsChanged`
-    → `MainWindow::applyToolbarVisibility()` で即時反映。
-- アイコン素材は `:/icons/toolbar/<name>.svg` (Lucide スタイル / monochrome、
-  20px で描画)。
+- 表示スタイル: `Qt::ToolButtonTextOnly` (Qt 標準アイコンセットでは Copy /
+  Move / Rename 等にしっくりくるアイコンが無いため、現時点ではテキストラベル
+  だけのシンプル表示)。アイコンの追加と表示スタイル切替 (Icon / Text /
+  IconBesideText) は将来の polish 項目。
 - カスタマイズ (ボタン集合・並び順をユーザーが変更可能にする) は
   **見送り**。現状のボタン数では設定 UI を増やすコストに対する見返りが薄い
   (ユーザー判断、2026-05-27)。
