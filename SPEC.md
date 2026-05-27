@@ -1317,6 +1317,23 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
     (上記 `#### CSV / TSV ビュアー` 参照)。
   - 残件: 列ソート (列ヘッダクリックで昇順/降順切替) のみ。日常的ニーズが
     出てきたら追加する。
+- **画像ビュアー / PSD 拡張**
+  - 現状は合成済プレビュー (Photoshop が末尾に書き出す全レイヤマージ画像)
+    のみを表示している (上記 `#### 画像ビュアー` の PSD 節参照)。
+  - 残件:
+    - **レイヤー単位の表示**: PSD の Layer and Mask Information セクションを
+      パースし、レイヤーツリー (フォルダ / 通常レイヤー / 調整レイヤー /
+      テキストレイヤー等) をサイドバーに出す。各レイヤーの表示/非表示トグル、
+      blend mode + opacity を反映した合成、レイヤーマスク、グループ折りたたみ。
+    - **付随**: PSB (v2、大型形式) / 16・32 bpc / CMYK・Lab / ZIP 圧縮 /
+      埋め込み ICC プロファイル + DPI 抽出 (Image Resources セクション)。
+    - ファイルマネージャのビュアーとしては「閲覧」スコープに留め、編集は
+      Photoshop / Affinity / GIMP に任せる方針。
+    - 実装難度: 高。Photoshop の各レイヤー効果 (drop shadow / bevel / 等の
+      レイヤースタイル、スマートオブジェクト、テキストレンダリング、ベクター
+      マスク) を完全再現するのは非現実的なので、まずは「ピクセルレイヤーの
+      ベース表示 + blend mode のうち代表的なもの (normal / multiply /
+      screen / overlay)」程度から段階対応するのが現実的。
 - **Office 文書ビュアー** (`.docx` / `.xlsx` / `.pptx`)
   - 対象: Microsoft Office Open XML 形式。
   - 候補方針:
