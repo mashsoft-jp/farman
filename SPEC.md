@@ -1053,8 +1053,19 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
 #### 画像ビュアー
 
 - 対象ファイル
-  - .jpg .png .gif .bmp .webp .svg .tif/.tiff .ico 等
+  - .jpg .png .gif .bmp .webp .svg .tif/.tiff .ico .psd 等
     (Settings の Image Viewer 拡張子リストで管理)
+  - **PSD (Adobe Photoshop Document)**: Qt 6 同梱の imageformats プラグインに
+    PSD ハンドラが無いため、自前パーサ (`src/viewer/PsdReader.{h,cpp}`) で
+    「**合成済プレビュー画像**」(= Photoshop が保存時に末尾に書き出す全レイヤ
+    マージ済 RGBA。Photoshop の "Maximize Compatibility" 設定が ON のときに
+    自動で保存される) のみを `QImage` として取り出して表示する。`QImage::load()`
+    が失敗かつ拡張子が `psd`/`psb` のときの fallback として呼ばれる。
+    - **対応**: PSD v1 / 8 bpc / Grayscale or RGB / Raw or RLE (PackBits) 圧縮
+    - **非対応** (ファイルマネージャのビュアーとしては過剰): PSB (v2)、
+      16/32 bpc、CMYK / Lab / Indexed / Bitmap、ZIP 圧縮、レイヤー個別表示、
+      "Maximize Compatibility" OFF で保存された PSD (= 合成済プレビューが
+      埋め込まれていないので表示不可)
 - ツールバー操作
   - **拡大縮小率** (25 / 50 / 75 / 100 / 200% プリセット + 任意入力)
   - **ウィンドウサイズに合わせる** (Fit to Window) トグル
@@ -1070,6 +1081,10 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
 - 画像情報ダイアログの内容
   - 基本: ファイルパス / フォーマット / 縦横ピクセル数 / ファイルサイズ /
     色深度 (bpp) / フレーム数 (アニメ時) / 解像度 (DPI)
+  - **`QImageReader` が認識できない形式 (PSD 等) のフォールバック**:
+    フォーマット名は拡張子を大文字化したもの (例: `PSD`)、サイズと色深度は
+    実際にロード済の `QImage` (= `m_loadedImage`) から取得する。これがないと
+    `Format: (unknown)` / `Size: -1 x -1 px` と表示されてしまう。
   - **カラープロファイル**: `QImage::colorSpace().description()` を表示
     (例: `sRGB IEC61966-2.1`, `Display P3`, `Adobe RGB (1998)`)。
     色空間情報が無いファイルでは行ごと省略。

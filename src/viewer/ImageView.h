@@ -162,6 +162,13 @@ private:
 
   // 読み込み済みの画像の自然サイズ。loadFile / applyPreparedLoad で更新する。
   QSize                 m_naturalImageSize;
+
+  // 静止画として読み込んだ QImage 本体。表示用 m_pixmap (ImageDisplay 側) は
+  // QPixmap なので format / depth / colorSpace / dotsPerMeter といった
+  // メタデータが落ちる。Image Info ダイアログで QImageReader が情報を
+  // 取れないフォーマット (例: PSD) のフォールバックに使う。
+  // アニメ画像のときは空 (QMovie 経由なので)。
+  QImage                m_loadedImage;
 };
 
 } // namespace Farman

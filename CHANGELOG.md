@@ -68,6 +68,11 @@ All notable changes to **farman** are documented in this file.
   - **ICC カラープロファイル名** ("sRGB IEC61966-2.1" / "Display P3" /
     "Adobe RGB (1998)" 等) を表示
   - **BMP** 対応 (24bit / 1bit / RLE)
+  - **PSD (Adobe Photoshop) 対応**: 自前パーサで合成済プレビュー画像 (= Photoshop
+    の "Maximize Compatibility" ON で保存される全レイヤマージ済 RGBA) を表示。
+    Qt 同梱プラグインは PSD を扱えないため、`QImage::load()` 失敗時の fallback
+    として動く。Image Info ダイアログも、`QImageReader` で取れないフォーマット
+    は実 `QImage` から size / depth を取り出す経路を追加
 - **サムネイル表示**
   - ファイル一覧をリスト表示 / 小・中・大サムネイルの 4 段階で切り替え
     (Finder ライクに `Cmd/Ctrl+1〜4`、または View メニュー / ツールバー

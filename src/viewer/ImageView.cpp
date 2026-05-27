@@ -1,4 +1,5 @@
 #include "ImageView.h"
+#include "PsdReader.h"
 #include "settings/Settings.h"
 #include "utils/ExifReader.h"
 
@@ -453,8 +454,16 @@ ImageView::PreparedLoad ImageView::prepareLoad(const QString& filePath) {
     // 静止画は QImage で読み込む (QPixmap はメインスレッド限定なので bg では避ける)。
     QImage img;
     if (!img.load(filePath)) {
-      r.ok = false;
-      return r;
+      // Qt 6 同梱の imageformats プラグインには PSD ハンドラが無い。
+      // 拡張子 / signature が PSD 系なら自前リーダで合成済プレビューを取得する。
+      const QString ext = QFileInfo(filePath).suffix().toLower();
+      if (ext == QLatin1String("psd") || ext == QLatin1String("psb")) {
+        img = PsdReader::decodeComposite(filePath);
+      }
+      if (img.isNull()) {
+        r.ok = false;
+        return r;
+      }
     }
     r.image = img;
   }
@@ -528,11 +537,17 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
     if (!pm.isNull()) {
       m_display->setStaticPixmap(pm);
       m_naturalImageSize = pm.size();
+      // QImage 本体を取っておく (Info ダイアログのメタデータ用)。
+      m_loadedImage = r.image;
     } else {
       // pixmap 化に失敗 → 古い画像が残らないようビューをクリア。
       m_display->clearImage();
       m_naturalImageSize = QSize();
+      m_loadedImage = QImage();
     }
+  } else {
+    // アニメ画像 / フォールバック経路では m_loadedImage は使わない。
+    m_loadedImage = QImage();
   }
 
   // 再生ボタンの有効化: 真にアニメで複数フレームある場合のみ。
@@ -610,6 +625,7 @@ void ImageView::clearContent() {
   m_filePath.clear();
   m_fileIsAnimated = false;
   m_naturalImageSize = QSize();
+  m_loadedImage = QImage();
   m_display->clearImage();
 }
 
@@ -636,19 +652,32 @@ bool ImageView::detectAnimated(const QString& filePath) {
 QString ImageView::statusInfo() const {
   if (m_filePath.isEmpty()) return QString();
   QImageReader reader(m_filePath);
-  const QString fmt = QString::fromLatin1(reader.format()).toUpper();
-  const QSize sz   = reader.size();
+  // フォーマット / サイズが QImageReader で取れない場合は拡張子 +
+  // 実 QImage / m_naturalImageSize を使う (PSD などのフォールバック)。
+  QString fmt = QString::fromLatin1(reader.format()).toUpper();
+  if (fmt.isEmpty()) {
+    const QString ext = QFileInfo(m_filePath).suffix().toUpper();
+    if (!ext.isEmpty()) fmt = ext;
+  }
+  QSize sz = reader.size();
+  if (!sz.isValid() || sz.width() <= 0 || sz.height() <= 0) {
+    if (!m_loadedImage.isNull())            sz = m_loadedImage.size();
+    else if (m_naturalImageSize.isValid())  sz = m_naturalImageSize;
+  }
   const qint64 bytes = QFileInfo(m_filePath).size();
   QString s = QStringLiteral("%1  ·  %2x%3")
                 .arg(fmt.isEmpty() ? QStringLiteral("?") : fmt)
                 .arg(sz.width()).arg(sz.height());
   // 色深度 (取得できるフォーマットのみ)。
   // ImageFormat は OS / プラグイン依存で取れる場合と取れない場合あり。
-  const QImage::Format imgFmt = reader.imageFormat();
-  if (imgFmt != QImage::Format_Invalid) {
-    const int depth = QImage(1, 1, imgFmt).depth();
-    if (depth > 0) s += QStringLiteral("  ·  %1 bpp").arg(depth);
+  int depthBits = 0;
+  if (const QImage::Format imgFmt = reader.imageFormat();
+      imgFmt != QImage::Format_Invalid) {
+    depthBits = QImage(1, 1, imgFmt).depth();
+  } else if (!m_loadedImage.isNull()) {
+    depthBits = m_loadedImage.depth();
   }
+  if (depthBits > 0) s += QStringLiteral("  ·  %1 bpp").arg(depthBits);
   if (m_fileIsAnimated && m_movie) {
     const int fc = m_movie->frameCount();
     if (fc > 0) {
@@ -663,8 +692,22 @@ QString ImageView::buildImageInfoText() const {
   if (m_filePath.isEmpty()) return QString();
 
   QImageReader reader(m_filePath);
-  const QString fmt = QString::fromLatin1(reader.format()).toUpper();
-  const QSize sz    = reader.size();
+  // Format: QImageReader が認識できる形式ならその短縮名 (PNG / JPEG / ...)。
+  // 認識できないフォーマット (= PSD のような Qt 同梱プラグイン非対応形式) の
+  // 場合は拡張子を大文字化して表示する (例: "PSD")。"(unknown)" のままだと
+  // ユーザーから見て「何の画像か」が分からない。
+  QString fmt = QString::fromLatin1(reader.format()).toUpper();
+  if (fmt.isEmpty()) {
+    const QString ext = QFileInfo(m_filePath).suffix().toUpper();
+    if (!ext.isEmpty()) fmt = ext;
+  }
+  // Size: QImageReader が認識できれば読めるが、PSD 等は -1×-1 を返してくる。
+  // フォールバックとして実際にロードした QImage / 表示中の自然サイズを使う。
+  QSize sz = reader.size();
+  if (!sz.isValid() || sz.width() <= 0 || sz.height() <= 0) {
+    if (!m_loadedImage.isNull())            sz = m_loadedImage.size();
+    else if (m_naturalImageSize.isValid())  sz = m_naturalImageSize;
+  }
   const QFileInfo fi(m_filePath);
 
   QString body;
@@ -677,13 +720,17 @@ QString ImageView::buildImageInfoText() const {
             QLocale(QLocale::English).formattedDataSize(fi.size()))
         + QLatin1Char('\n');
 
-  // 色深度
-  const QImage::Format imgFmt = reader.imageFormat();
-  if (imgFmt != QImage::Format_Invalid) {
-    const int depth = QImage(1, 1, imgFmt).depth();
-    if (depth > 0) {
-      body += tr("Color depth: %1 bpp").arg(depth) + QLatin1Char('\n');
-    }
+  // 色深度: QImageReader が知っている形式ならそこから、そうでなければ
+  // 実 QImage の depth() を採用する。
+  int depthBits = 0;
+  if (const QImage::Format imgFmt = reader.imageFormat();
+      imgFmt != QImage::Format_Invalid) {
+    depthBits = QImage(1, 1, imgFmt).depth();
+  } else if (!m_loadedImage.isNull()) {
+    depthBits = m_loadedImage.depth();
+  }
+  if (depthBits > 0) {
+    body += tr("Color depth: %1 bpp").arg(depthBits) + QLatin1Char('\n');
   }
 
   // アニメ
@@ -696,7 +743,12 @@ QString ImageView::buildImageInfoText() const {
 
   // DPI (QImage::dotsPerMeterX/Y は実画像を読み込んで取得)。
   // 同じ probe 画像から ICC カラープロファイル名 (Color space) も取り出す。
+  // PSD 等 QImageReader が読めないフォーマットは m_loadedImage で代用する
+  // (ただし PsdReader は現状 DPI / ICC をセットしないので 0 / invalid)。
   QImage probe = reader.read();
+  if (probe.isNull() && !m_loadedImage.isNull()) {
+    probe = m_loadedImage;
+  }
   if (!probe.isNull()) {
     const int dpmx = probe.dotsPerMeterX();
     const int dpmy = probe.dotsPerMeterY();
