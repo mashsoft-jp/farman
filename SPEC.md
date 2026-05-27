@@ -257,16 +257,28 @@ Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
 - 制約:
   - プレビュー中は **Sync Browse / Directory Compare は強制 OFF** (右ペインが
     ビュアーなので意味を成さない)。
-  - `Tab` キーは no-op、`←` は親ディレクトリへ、`→` は no-op (シングルペインと
-    同じ挙動)。
+  - `←` は親ディレクトリへ、`→` は no-op (シングルペインと同じ挙動)。
+  - `Tab` / `Shift+Tab` はプレビュー側に進入する (下記フォーカス節参照)。
   - コピー / 移動 / 抽出の既定宛先はアクティブペイン (= 左) を使う。
-- フォーカス: Phase 1 では常に左ペイン固定。文字選択 / コピーをしたい場合は
-  `Enter` で本来のビュアーを開く運用。
+- フォーカス:
+  - 初期フォーカスは常に左ペイン (アクティブペインは強制で Left に揃える)。
+  - 左ペインで `Tab` を押すと **アクティブペインのローカル連鎖を最後まで
+    辿った後 (= モード切替ボタンの次)**、プレビューペインの先頭 focusable
+    (典型的にはツールバーの左端ボタン) へ進入する。`Shift+Tab` は逆方向で、
+    左ペインの ★ から `Shift+Tab` するとプレビューペインの末尾 focusable
+    (典型的にはメインコンテンツ) へ入る。
+  - プレビュー内では各ビュアーのローカルチェーン (ツールバー → メイン
+    content) を `Tab` / `Shift+Tab` で辿れる。末尾で `Tab` / 先頭で
+    `Shift+Tab` を押すとプレビューを抜けて左ペインの ★ / モード切替ボタンに
+    戻る (Tab 連鎖が閉ループになる)。
+  - 状態ページ (Empty / Loading / Unsupported / Directory) では focusable
+    な相手が居ないので、`Tab` での進入は自ペインの ★ / モードボタンに
+    ラップする (= プレビュー側を素通り)。
+  - プレビュー内で `Esc` を押すと、即座に左ペインのファイルリストへ
+    フォーカスを戻す (テキスト選択 / コピー後の復帰用)。
 - レイアウトは Settings (`behavior.layoutMode = "preview"`) に永続化されるため、
   プレビューモード中に終了すれば次回起動時もプレビューレイアウトで開く。
 - Splitter のドラッグ位置は Dual / Preview それぞれ独立に記憶される。
-- 将来課題:
-  - Preview ペインへの Tab フォーカス移動 (文字選択 / コピー対応)
 
 ### アクティブペインの切替
 
@@ -280,7 +292,12 @@ Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
   `setActivePane()` から `scrollTo(EnsureVisible)` を呼び、カーソル行を
   最小限の移動で表示範囲に戻す。「カーソルが画面のどこにあるか分からない」
   状態を作らない。
-- (Tab はペイン切替には使わない。Tab はアクティブペイン内のフォーカス循環。)
+- `Tab` / `Shift+Tab` は本来「フォーカス循環」用だが、Dual モードでアクティブ
+  ペインのローカル連鎖の端 (mode + `Tab` または ★ + `Shift+Tab`) に達したとき
+  だけは、結果として反対ペインへフォーカスが移る (= 連鎖の続きが対向側になる)。
+  ペインの中央 (ファイルリスト本体) で `Tab` を押した場合は、まず自ペインの
+  モード切替ボタンに進む — 反対ペインへは即座には飛ばない。
+  詳細は「[Tab フォーカス連鎖](#tab-フォーカス連鎖)」節を参照。
 
 ### ディレクトリ単位のソート・フィルタ設定
 
@@ -327,7 +344,7 @@ macOS の `Ctrl` は `⌘`（Command）に割り当てられる。
 | `Shift+文字キー` | 押下文字を頭文字とする次のファイル／ディレクトリへカーソルを移動（末尾まで見つからなければ先頭へ循環）。連打で順次次のマッチへ進む。`Shift` を伴わない文字キーでは発動しない |
 | `Enter` | ディレクトリに入る / ファイルをビュアーで開く |
 | `Backspace` | 親ディレクトリへ移動 |
-| `Tab` | アクティブパネル内でフォーカス循環 (★ → アドレスバー → フォルダボタン → ファイルリスト)。ペイン切替には使わない |
+| `Tab` / `Shift+Tab` | フォーカス循環。アクティブパネル内は ★ → アドレスバー → 📁 → ファイルリスト → モード切替ボタン の順 (`Shift+Tab` は逆)。末尾 (mode + `Tab`) / 先頭 (★ + `Shift+Tab`) でレイアウトに応じて遷移: Dual = 反対ペインの先頭/末尾、Preview = プレビュー側の先頭/末尾、Single = 同ペイン内でラップ。詳細は「[Tab フォーカス連鎖](#tab-フォーカス連鎖)」節 |
 | `Space` | カーソル行を選択・解除してカーソルを下に移動 |
 | `Shift+Space` | カーソル行を選択・解除（カーソル移動なし） |
 | `i` | 選択を反転 |
@@ -1416,6 +1433,84 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 新設する形で、`IViewerPlugin` には触れずに対応可能。「追加ビュアー」を組み込み
 で実装するかプラグインとして外出しにするかは、ライブラリ依存の重さで判断する
 (PDF は組み込み寄り、Office は外部依存が大きいのでプラグイン寄りが妥当)。
+
+---
+
+## Tab フォーカス連鎖
+
+`Tab` / `Shift+Tab` を押したときのフォーカス移動を、レイアウト
+(Dual / Single / Preview) を跨いで「閉じたループ」として設計している。
+ユーザーが Tab を押し続けるだけで全 UI 要素を巡回できる + どこからでも
+予測可能な順序で次の要素に進める、というのがゴール。
+
+### 各ペインのローカル連鎖 (FileListPane)
+
+各 FileListPane は次の順序で内部 widget を巡回する:
+
+```
+★ → アドレスバー → 📁 → ファイルリスト本体 → モード切替ボタン
+```
+
+- `★` (ブックマークラベル): 連鎖の頭。
+- アドレスバー: 編集モード入りで全選択。
+- `📁` フォルダ参照ボタン。
+- ファイルリスト本体 (List / Thumbnail の active な側)。
+- モード切替ボタン: フッタ右端の View Mode 選択ポップアップ。
+- `Shift+Tab` は厳密に逆順。
+
+実装は `FileListPane::eventFilter` 内で `setFocus()` を明示的に呼ぶ。
+macOS の Tab ナビゲーション設定 (システム環境設定で OFF にされている
+ケース) に依存しないよう、Qt 標準の連鎖には頼らない。
+`QAbstractItemView::tabKeyNavigation` も `false` に設定し、Tab が
+セル間移動に吸われないようにしている。
+
+ローカル連鎖の **末尾 (mode + `Tab`)** または **先頭 (★ + `Shift+Tab`)**
+に達すると、FileListPane は `focusExitForward` / `focusExitBackward`
+シグナルを発行する。
+
+### ルータ (FileManagerPanel)
+
+`FileManagerPanel` は `focusExitForward` / `focusExitBackward` を
+レイアウトモード別に振り分ける:
+
+| レイアウト | `focusExitForward` (mode + Tab) の行き先 | `focusExitBackward` (★ + Shift+Tab) の行き先 |
+|---|---|---|
+| **Dual** | 反対 FileListPane の `★` (= 反対側の先頭) | 反対 FileListPane の `mode` (= 反対側の末尾) |
+| **Preview** | `PreviewPane::focusFirstControl()` (= プレビュー先頭、典型はツールバー左端) | `PreviewPane::focusLastControl()` (= プレビュー末尾、典型はメインコンテンツ) |
+| **Single** | 同ペインの `★` (連鎖の頭へラップ) | 同ペインの `mode` (連鎖の末尾へラップ) |
+
+Dual モードで反対ペインに移ったときは、同時に `setActivePane()` で
+アクティブペインも切替える (= フォーカスとアクティブ状態を一致させる)。
+
+### プレビューペインの連鎖 (PreviewPane)
+
+プレビューペインは各ビュアーごとのローカルチェーン (ツールバー →
+メイン content) を持つ。`Tab` で先頭から末尾へ、`Shift+Tab` で逆順に
+辿れる。
+
+- `focusFirstControl()` / `focusLastControl()`: 現在の page から
+  `nextInFocusChain()` を walk して、PreviewPane 配下にある最初/最後の
+  Tab focusable な widget を探して `setFocus()` する。各ビュアーの
+  `setTabOrder()` で「ツールバー → メイン content」順に並べている前提。
+- 状態ページ (Empty / Loading / Unsupported / Directory) では false を
+  返し、ルータは自ペインの ★ / mode にラップする (= プレビュー側を素通り)。
+- プレビュー内の Tab/Shift+Tab が **チェーンの境界** に達したことは
+  `eventFilter` で `hasFocusableInDirection()` を使って判定し、
+  境界なら `focusExitForward` / `focusExitBackward` シグナルを発行する。
+  ルータはアクティブな FileListPane の `★` / `mode` にフォーカスを戻し、
+  ループを閉じる。
+- プレビュー内で `Esc` を押すと、即座にアクティブな FileListPane の
+  ビュー本体にフォーカスを戻す (`PreviewPane::escapePressed` シグナル
+  経由)。テキスト選択 / コピーした直後に素早く操作に戻れるための動線。
+
+### 設計上の制約
+
+- 「ペイン切替は Tab で行わない」が原則。アクティブペインの切替は
+  マウスクリック または `←` / `→` キー (アクティブ端での切替) を使う。
+  Tab はあくまでフォーカス循環であり、Dual モードで結果として反対ペインに
+  辿り着くのは「ローカル連鎖の続きが対向側になっている」副作用。
+- Single モードでは反対ペインが居ないので Tab で外には出ない (自ペイン
+  内でラップ)。「Tab を押し続けたら永久にループする」状態を保つ。
 
 ---
 
