@@ -2,8 +2,11 @@
 
 #include <QMainWindow>
 
+class QStackedWidget;
+
 namespace Farman {
 
+class CancellableLoadPage;
 class ImageView;
 
 class ImageViewerWindow : public QMainWindow {
@@ -28,9 +31,11 @@ private:
   // ぶんは画像表示領域 (m_imageView->sizeHint() ベース) との差で補正する。
   void fitWindowToImage();
 
-  QString    m_filePath;
-  QString    m_displayPath;
-  ImageView* m_imageView = nullptr;
+  QString              m_filePath;
+  QString              m_displayPath;
+  QStackedWidget*      m_stack     = nullptr;
+  CancellableLoadPage* m_loadPage  = nullptr;
+  ImageView*           m_imageView = nullptr;
 };
 
 } // namespace Farman

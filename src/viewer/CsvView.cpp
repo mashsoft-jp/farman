@@ -106,17 +106,30 @@ QChar detectDelimiter(const QString& text, const QString& fileSuffixLower) {
 // quoted-field 内の改行 / 区切りはスキップして判定する (RFC 4180 互換)。
 // 戻り値の rowStarts は最後に sentinel として text.size() を持つ。
 // (= rowStarts.size() == 行数 + 1)
-void buildRowIndex(const QString& text, QChar delim,
+// cancelToken が non-null かつ途中で true になった場合は、それまで集めた
+// 部分結果のまま early return する。呼び出し側はその後に再度 cancel チェック
+// して partial を捨てるかどうかを決めること。
+// 戻り値: 走り切れたら true、cancel 中断なら false。
+bool buildRowIndex(const QString& text, QChar delim,
                     QVector<int>* outRowStarts,
-                    int*          outColumnCount) {
+                    int*          outColumnCount,
+                    const std::atomic<bool>* cancelToken = nullptr) {
   outRowStarts->clear();
   *outColumnCount = 0;
-  if (text.isEmpty()) return;
+  if (text.isEmpty()) return true;
 
   outRowStarts->append(0);
   int curCols = 1;   // 行内のフィールド数 (空行でも 1 と数える)
   bool inQuotes = false;
+  // cancel チェックは 64K 文字ごと (≈ 256 KB UTF-16)。十分こまかい一方で
+  // 通常ファイルでは数回しか走らないオーバーヘッド。
+  constexpr int kCancelStride = 1 << 16;
   for (int i = 0; i < text.size(); ++i) {
+    if ((i & (kCancelStride - 1)) == 0
+        && cancelToken
+        && cancelToken->load(std::memory_order_acquire)) {
+      return false;
+    }
     const QChar c = text.at(i);
     if (inQuotes) {
       if (c == QChar('"')) {
@@ -158,6 +171,7 @@ void buildRowIndex(const QString& text, QChar delim,
       && outRowStarts->at(outRowStarts->size() - 2) == text.size()) {
     outRowStarts->removeAt(outRowStarts->size() - 2);
   }
+  return true;
 }
 
 } // namespace
@@ -588,7 +602,12 @@ CsvView::PreparedLoad CsvView::prepareLoad(const QString& filePath,
 
   // 行オフセット index と最大列数を 1 パスで構築。実際の各セルへの
   // QString パースは表示時にモデル側で行う (遅延ロード)。
-  buildRowIndex(r.text, r.actualDelimiter, &r.rowStarts, &r.columnCount);
+  // 巨大ファイルに対するこのループは prepareLoad で最も重いので、cancelToken
+  // を奥まで渡して即時中断できるようにする。
+  const bool indexed = buildRowIndex(r.text, r.actualDelimiter,
+                                      &r.rowStarts, &r.columnCount,
+                                      cancelToken);
+  if (!indexed || cancelled()) return r;   // ok = false のまま返す
   r.ok = true;
   return r;
 }

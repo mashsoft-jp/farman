@@ -2,8 +2,11 @@
 
 #include <QMainWindow>
 
+class QStackedWidget;
+
 namespace Farman {
 
+class CancellableLoadPage;
 class TextView;
 
 class TextViewerWindow : public QMainWindow {
@@ -27,9 +30,11 @@ private:
   void setupUi();
   void loadFile();
 
-  QString    m_filePath;     // ディスク上のパス (load 用)
-  QString    m_displayPath;  // タイトルに出すパス (表示用)
-  TextView*  m_textView;
+  QString              m_filePath;     // ディスク上のパス (load 用)
+  QString              m_displayPath;  // タイトルに出すパス (表示用)
+  QStackedWidget*      m_stack    = nullptr;
+  CancellableLoadPage* m_loadPage = nullptr;
+  TextView*            m_textView = nullptr;
 };
 
 } // namespace Farman

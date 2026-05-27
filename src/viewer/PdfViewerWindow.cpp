@@ -1,11 +1,12 @@
 #include "PdfViewerWindow.h"
 #include "PdfView.h"
-#include "utils/Dialogs.h"
+#include "utils/CancellableLoadPage.h"
 
+#include <QApplication>
 #include <QFileInfo>
 #include <QKeyEvent>
-#include <QVBoxLayout>
-#include <QWidget>
+#include <QStackedWidget>
+#include <QtConcurrent/QtConcurrentRun>
 
 namespace Farman {
 
@@ -24,24 +25,45 @@ void PdfViewerWindow::setupUi() {
   QFileInfo fileInfo(m_displayPath);
   setWindowTitle(QString("PDF Viewer - %1").arg(fileInfo.fileName()));
 
-  QWidget* centralWidget = new QWidget(this);
-  QVBoxLayout* layout = new QVBoxLayout(centralWidget);
-  layout->setContentsMargins(0, 0, 0, 0);
+  m_stack    = new QStackedWidget(this);
+  m_loadPage = new CancellableLoadPage(this);
+  m_pdfView  = new PdfView(this);
+  m_stack->addWidget(m_loadPage);
+  m_stack->addWidget(m_pdfView);
+  setCentralWidget(m_stack);
 
-  m_pdfView = new PdfView(this);
-  layout->addWidget(m_pdfView);
-  setCentralWidget(centralWidget);
+  connect(m_loadPage, &CancellableLoadPage::cancelled,
+          this,        &QMainWindow::close);
 
   resize(900, 700);
 }
 
 void PdfViewerWindow::loadFile() {
-  if (!m_pdfView->loadFile(m_filePath)) {
-    critical(this, QStringLiteral("Error"),
-      QStringLiteral("Failed to open PDF: %1").arg(m_filePath));
+  m_loadPage->setForFile(m_filePath);
+  m_stack->setCurrentWidget(m_loadPage);
+  auto token = m_loadPage->resetToken();
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+
+  // PdfView::prepareLoad は存在チェックだけの軽量関数なので、ほぼ即時。
+  // 実際の document load (heavier) は applyPreparedLoad で UI 側に走る。
+  auto future = QtConcurrent::run(&PdfView::prepareLoad,
+                                   m_filePath,
+                                   token.get());
+  PdfView::PreparedLoad p = waitForFutureWithEventLoop(future);
+  QApplication::restoreOverrideCursor();
+
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("PDF, external"),
+                         m_displayPath, false, cancelled);
+    close();
     return;
   }
+  m_pdfView->applyPreparedLoad(p);
+  m_stack->setCurrentWidget(m_pdfView);
   m_pdfView->setFocus();
+  logViewerLoadResult(QStringLiteral("PDF, external"),
+                       m_displayPath, true, false);
 }
 
 void PdfViewerWindow::keyPressEvent(QKeyEvent* event) {

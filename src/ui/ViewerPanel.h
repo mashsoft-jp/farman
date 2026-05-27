@@ -3,9 +3,13 @@
 #include <QString>
 #include <QWidget>
 
+#include <atomic>
+#include <memory>
+
 class QStackedWidget;
 class QLabel;
 class QProgressBar;
+class QPushButton;
 
 namespace Farman {
 
@@ -50,6 +54,10 @@ public:
   // ビューアをクリア
   void clear();
 
+protected:
+  // ロード中表示のときに Esc を「キャンセル」として扱うため。
+  void keyPressEvent(QKeyEvent* event) override;
+
 signals:
   void fileOpened(const QString& filePath);
   void fileClosed();
@@ -70,7 +78,14 @@ private:
   bool openCsvFile(const QString& filePath, const QString& displayPath);
   // ロード中表示に切り替え、ファイル名・サイズを書き込んで再描画する。
   // 同期的なロードに入る前に呼ぶと、ユーザーには「読み込み中…」が見える。
+  // ここで新しい cancelToken を発行し、Cancel ボタンにフォーカスを当てる
+  // (Enter / Esc でキャンセルできる)。
   void showLoadingState(const QString& filePath);
+
+  // ロード中のキャンセルボタン / Esc で立ち上がる中断要求。token を true に
+  // セットし、prepareLoad が早期 return することで waitForFutureWithEventLoop
+  // が抜ける。
+  void cancelCurrentLoad();
 
   QStackedWidget* m_stack         = nullptr;
   TextView*       m_textView      = nullptr;
@@ -80,11 +95,18 @@ private:
   PdfView*        m_pdfView       = nullptr;
   CsvView*        m_csvView       = nullptr;
 
-  // ロード中に出すプレースホルダ。indeterminate な QProgressBar を持つ。
+  // ロード中に出すプレースホルダ。indeterminate な QProgressBar + Cancel
+  // ボタンを持つ。Cancel ボタンには表示と同時にフォーカスを当てるので、
+  // Enter で即キャンセルできる (Esc も keyPressEvent で同じ動作に転送)。
   QWidget*        m_loadingPage = nullptr;
   QLabel*         m_loadingTitle = nullptr;
   QLabel*         m_loadingDetail = nullptr;
   QProgressBar*   m_loadingBar  = nullptr;
+  QPushButton*    m_loadingCancelButton = nullptr;
+
+  // 現在進行中のロードに渡している cancel token。Cancel 操作で true に
+  // セットすると、prepareLoad が早期 return する。
+  std::shared_ptr<std::atomic<bool>> m_currentCancelToken;
 
   QString m_currentFilePath;
 };

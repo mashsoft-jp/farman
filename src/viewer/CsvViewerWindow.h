@@ -2,8 +2,11 @@
 
 #include <QMainWindow>
 
+class QStackedWidget;
+
 namespace Farman {
 
+class CancellableLoadPage;
 class CsvView;
 
 class CsvViewerWindow : public QMainWindow {
@@ -22,9 +25,11 @@ private:
   void setupUi();
   void loadFile();
 
-  QString  m_filePath;
-  QString  m_displayPath;
-  CsvView* m_csvView = nullptr;
+  QString              m_filePath;
+  QString              m_displayPath;
+  QStackedWidget*      m_stack    = nullptr;
+  CancellableLoadPage* m_loadPage = nullptr;
+  CsvView*             m_csvView  = nullptr;
 };
 
 } // namespace Farman

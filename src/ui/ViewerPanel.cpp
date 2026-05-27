@@ -1,5 +1,7 @@
 #include "ViewerPanel.h"
+#include "core/Logger.h"
 #include "settings/Settings.h"
+#include "utils/CancellableLoadPage.h"   // logViewerLoadResult
 #include "viewer/BinaryView.h"
 #include "viewer/CsvView.h"
 #include "viewer/ImageView.h"
@@ -11,11 +13,13 @@
 #include <QFileInfo>
 #include <QFutureWatcher>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLocale>
 #include <QMimeDatabase>
 #include <QMimeType>
 #include <QProgressBar>
+#include <QPushButton>
 #include <QRegularExpression>
 #include <QStackedWidget>
 #include <QVBoxLayout>
@@ -97,6 +101,22 @@ void ViewerPanel::setupUi() {
   barRow->addWidget(m_loadingBar);
   barRow->addStretch();
   loadingLayout->addLayout(barRow);
+
+  // Cancel ボタン。ロード中の状態でフォーカスを当てるので、Enter で
+  // 即キャンセル → ファイルマネージャに戻れる。Esc も keyPressEvent で
+  // ここに転送する。
+  m_loadingCancelButton = new QPushButton(tr("Cancel"), m_loadingPage);
+  m_loadingCancelButton->setFocusPolicy(Qt::StrongFocus);
+  m_loadingCancelButton->setAutoDefault(true);
+  m_loadingCancelButton->setDefault(true);
+  m_loadingCancelButton->setMaximumWidth(140);
+  connect(m_loadingCancelButton, &QPushButton::clicked,
+          this,                    &ViewerPanel::cancelCurrentLoad);
+  QHBoxLayout* cancelRow = new QHBoxLayout();
+  cancelRow->addStretch();
+  cancelRow->addWidget(m_loadingCancelButton);
+  cancelRow->addStretch();
+  loadingLayout->addLayout(cancelRow);
 
   loadingLayout->addStretch();
   m_stack->addWidget(m_loadingPage);
@@ -241,7 +261,19 @@ void ViewerPanel::showLoadingState(const QString& filePath) {
   // ファイル名 (太字相当) と サイズ・パスを 2 行で。
   m_loadingDetail->setText(QStringLiteral("%1\n%2 — %3")
                              .arg(fi.fileName(), sizeStr, fi.absolutePath()));
+
+  // 新しい cancel token を発行。openXxxFile はこの token の生ポインタを
+  // prepareLoad に渡して、ユーザーが Cancel を押したら早期 return させる。
+  m_currentCancelToken = std::make_shared<std::atomic<bool>>(false);
+
   m_stack->setCurrentWidget(m_loadingPage);
+  // ロード中はキャンセル操作以外受けつけたくないので、Cancel ボタンに
+  // フォーカスを当てる。Enter で即キャンセル (default ボタン)。Esc も
+  // keyPressEvent でキャンセルに転送する。
+  if (m_loadingCancelButton) {
+    m_loadingCancelButton->setEnabled(true);
+    m_loadingCancelButton->setFocus(Qt::OtherFocusReason);
+  }
 
   // 確実に画面に出すための強制再描画。
   // - processEvents(ExcludeUserInputEvents) だけでは初回表示時 (レイアウト
@@ -258,35 +290,50 @@ void ViewerPanel::showLoadingState(const QString& filePath) {
   QApplication::processEvents(QEventLoop::AllEvents, 50);
 }
 
-// 各ビュアーの prepareLoad をワーカースレッドで実行し、戻り値を待つ間
-// メインスレッドのイベントループは回り続ける (= プログレスバーが動く /
-// 「読み込み中…」が見える)。ExcludeUserInputEvents で待機中のクリックや
-// キー入力は無視する (再入を防ぐ)。
-namespace {
-
-template <typename T>
-T waitForFutureWithEventLoop(QFuture<T> future) {
-  QFutureWatcher<T> watcher;
-  QEventLoop        loop;
-  QObject::connect(&watcher, &QFutureWatcher<T>::finished,
-                   &loop,    &QEventLoop::quit);
-  watcher.setFuture(future);
-  if (!future.isFinished()) {
-    loop.exec(QEventLoop::ExcludeUserInputEvents);
+void ViewerPanel::cancelCurrentLoad() {
+  // worker (prepareLoad) はトークンを定期的に見ているので、true をセット
+  // すれば早期 return して waitForFutureWithEventLoop が抜ける。
+  if (m_currentCancelToken) {
+    m_currentCancelToken->store(true, std::memory_order_release);
   }
-  return watcher.result();
+  // 連打で複数 cancel が走らないようにボタンを一旦無効化 (実際の遷移は
+  // openXxxFile 側の戻り処理に任せる)。
+  if (m_loadingCancelButton) m_loadingCancelButton->setEnabled(false);
 }
 
-} // namespace
+void ViewerPanel::keyPressEvent(QKeyEvent* event) {
+  // ロード中ページ表示中の Esc キーは Cancel ボタンに転送する。Cancel
+  // ボタンが default になっているので Enter は自動でクリック扱いになる。
+  if (m_stack && m_stack->currentWidget() == m_loadingPage
+      && event->key() == Qt::Key_Escape) {
+    cancelCurrentLoad();
+    event->accept();
+    return;
+  }
+  QWidget::keyPressEvent(event);
+}
+
+// 各ビュアーの prepareLoad をワーカースレッドで実行し、戻り値を待つ間
+// メインスレッドのイベントループを回す。
+//   - waitForFutureWithEventLoop / logViewerLoadResult は
+//     utils/CancellableLoadPage.h で共通化されている (External の各
+//     *ViewerWindow とも同じものを使う)。
+//   - 入力イベントは流す (= ユーザーが Cancel ボタンを押せる / Esc が届く)。
+//     ExcludeUserInputEvents にすると Cancel が効かなくなるので注意。
 
 bool ViewerPanel::openTextFile(const QString& filePath, const QString& displayPath) {
+  auto token = m_currentCancelToken;
   auto future = QtConcurrent::run(&TextView::prepareLoad,
                                    filePath,
                                    m_textView->currentUserEncoding(),
-                                   /*cancelToken=*/ nullptr,
+                                   token ? token.get() : nullptr,
                                    /*maxBytes=*/ qint64(-1));
   TextView::PreparedLoad p = waitForFutureWithEventLoop(future);
-  if (!p.ok) return false;
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("Text"), displayPath, false, cancelled);
+    return false;
+  }
 
   m_textView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_textView);
@@ -294,13 +341,25 @@ bool ViewerPanel::openTextFile(const QString& filePath, const QString& displayPa
   m_currentFilePath = displayPath;
   emit fileOpened(displayPath);
   emit viewerStatusChanged(displayPath, m_textView->statusInfo());
+  logViewerLoadResult(QStringLiteral("Text"), displayPath, true, false);
   return true;
 }
 
 bool ViewerPanel::openImageFile(const QString& filePath, const QString& displayPath) {
+  // Image は prepareLoad に cancelToken 引数が無い (QImageReader は中断不可)。
+  // ロード後に token を見て、Cancel ボタンが押されていたら結果を捨てる。
+  auto token = m_currentCancelToken;
   auto future = QtConcurrent::run(&ImageView::prepareLoad, filePath);
   ImageView::PreparedLoad p = waitForFutureWithEventLoop(future);
-  if (!p.ok) return false;
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (cancelled) {
+    logViewerLoadResult(QStringLiteral("Image"), displayPath, false, true);
+    return false;
+  }
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("Image"), displayPath, false, false);
+    return false;
+  }
 
   m_imageView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_imageView);
@@ -308,19 +367,25 @@ bool ViewerPanel::openImageFile(const QString& filePath, const QString& displayP
   m_currentFilePath = displayPath;
   emit fileOpened(displayPath);
   emit viewerStatusChanged(displayPath, m_imageView->statusInfo());
+  logViewerLoadResult(QStringLiteral("Image"), displayPath, true, false);
   return true;
 }
 
 bool ViewerPanel::openBinaryFile(const QString& filePath, const QString& displayPath) {
+  auto token = m_currentCancelToken;
   auto future = QtConcurrent::run(&BinaryView::prepareLoad,
                                    filePath,
                                    m_binaryView->currentUnit(),
                                    m_binaryView->currentEndian(),
                                    m_binaryView->currentEncoding(),
-                                   /*cancelToken=*/ nullptr,
+                                   token ? token.get() : nullptr,
                                    /*maxBytes=*/ qint64(-1));
   BinaryView::PreparedLoad p = waitForFutureWithEventLoop(future);
-  if (!p.ok) return false;
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("Binary"), displayPath, false, cancelled);
+    return false;
+  }
 
   m_binaryView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_binaryView);
@@ -328,18 +393,24 @@ bool ViewerPanel::openBinaryFile(const QString& filePath, const QString& display
   m_currentFilePath = displayPath;
   emit fileOpened(displayPath);
   emit viewerStatusChanged(displayPath, m_binaryView->statusInfo());
+  logViewerLoadResult(QStringLiteral("Binary"), displayPath, true, false);
   return true;
 }
 
 bool ViewerPanel::openMarkdownFile(const QString& filePath,
                                     const QString& displayPath) {
+  auto token = m_currentCancelToken;
   auto future = QtConcurrent::run(&MarkdownView::prepareLoad,
                                    filePath,
                                    m_markdownView->currentUserEncoding(),
-                                   /*cancelToken=*/ nullptr,
+                                   token ? token.get() : nullptr,
                                    /*maxBytes=*/ qint64(-1));
   MarkdownView::PreparedLoad p = waitForFutureWithEventLoop(future);
-  if (!p.ok) return false;
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("Markdown"), displayPath, false, cancelled);
+    return false;
+  }
 
   m_markdownView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_markdownView);
@@ -347,17 +418,23 @@ bool ViewerPanel::openMarkdownFile(const QString& filePath,
   m_currentFilePath = displayPath;
   emit fileOpened(displayPath);
   emit viewerStatusChanged(displayPath, m_markdownView->statusInfo());
+  logViewerLoadResult(QStringLiteral("Markdown"), displayPath, true, false);
   return true;
 }
 
 bool ViewerPanel::openPdfFile(const QString& filePath,
                                const QString& displayPath) {
   // PDF はワーカーでの prepareLoad は軽い (存在確認のみ)。実ロードは UI 側。
+  auto token = m_currentCancelToken;
   auto future = QtConcurrent::run(&PdfView::prepareLoad,
                                    filePath,
-                                   /*cancelToken=*/ nullptr);
+                                   token ? token.get() : nullptr);
   PdfView::PreparedLoad p = waitForFutureWithEventLoop(future);
-  if (!p.ok) return false;
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("PDF"), displayPath, false, cancelled);
+    return false;
+  }
 
   m_pdfView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_pdfView);
@@ -365,19 +442,25 @@ bool ViewerPanel::openPdfFile(const QString& filePath,
   m_currentFilePath = displayPath;
   emit fileOpened(displayPath);
   emit viewerStatusChanged(displayPath, m_pdfView->statusInfo());
+  logViewerLoadResult(QStringLiteral("PDF"), displayPath, true, false);
   return true;
 }
 
 bool ViewerPanel::openCsvFile(const QString& filePath,
                                const QString& displayPath) {
+  auto token = m_currentCancelToken;
   auto future = QtConcurrent::run(&CsvView::prepareLoad,
                                    filePath,
                                    m_csvView->currentUserEncoding(),
                                    m_csvView->currentDelimiter(),
-                                   /*cancelToken=*/ nullptr,
+                                   token ? token.get() : nullptr,
                                    /*maxBytes=*/ qint64(-1));
   CsvView::PreparedLoad p = waitForFutureWithEventLoop(future);
-  if (!p.ok) return false;
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("CSV"), displayPath, false, cancelled);
+    return false;
+  }
 
   m_csvView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_csvView);
@@ -385,6 +468,7 @@ bool ViewerPanel::openCsvFile(const QString& filePath,
   m_currentFilePath = displayPath;
   emit fileOpened(displayPath);
   emit viewerStatusChanged(displayPath, m_csvView->statusInfo());
+  logViewerLoadResult(QStringLiteral("CSV"), displayPath, true, false);
   return true;
 }
 

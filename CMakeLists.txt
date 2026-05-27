@@ -118,6 +118,7 @@ qt_add_executable(farman
   src/utils/Dialogs.cpp
   src/utils/FarmanMessageBox.cpp
   src/utils/EnterClickFilter.cpp
+  src/utils/CancellableLoadPage.cpp
   src/utils/ArchivePath.cpp
   src/utils/MediaMatchers.cpp
   src/utils/ExifReader.cpp

@@ -2,9 +2,12 @@
 
 #include <QMainWindow>
 
+class QStackedWidget;
+
 namespace Farman {
 
 class BinaryView;
+class CancellableLoadPage;
 
 class BinaryViewerWindow : public QMainWindow {
   Q_OBJECT
@@ -22,9 +25,14 @@ protected:
   void keyPressEvent(QKeyEvent* event) override;
 
 private:
-  QString     m_filePath;
-  QString     m_displayPath;
-  BinaryView* m_view;
+  void setupUi();
+  void loadFile();
+
+  QString              m_filePath;
+  QString              m_displayPath;
+  QStackedWidget*      m_stack    = nullptr;
+  CancellableLoadPage* m_loadPage = nullptr;
+  BinaryView*          m_view     = nullptr;
 };
 
 } // namespace Farman

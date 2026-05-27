@@ -1,11 +1,12 @@
 #include "CsvViewerWindow.h"
 #include "CsvView.h"
-#include "utils/Dialogs.h"
+#include "utils/CancellableLoadPage.h"
 
+#include <QApplication>
 #include <QFileInfo>
 #include <QKeyEvent>
-#include <QVBoxLayout>
-#include <QWidget>
+#include <QStackedWidget>
+#include <QtConcurrent/QtConcurrentRun>
 
 namespace Farman {
 
@@ -24,24 +25,46 @@ void CsvViewerWindow::setupUi() {
   QFileInfo fileInfo(m_displayPath);
   setWindowTitle(QString("CSV Viewer - %1").arg(fileInfo.fileName()));
 
-  QWidget* centralWidget = new QWidget(this);
-  QVBoxLayout* layout = new QVBoxLayout(centralWidget);
-  layout->setContentsMargins(0, 0, 0, 0);
+  m_stack    = new QStackedWidget(this);
+  m_loadPage = new CancellableLoadPage(this);
+  m_csvView  = new CsvView(this);
+  m_stack->addWidget(m_loadPage);
+  m_stack->addWidget(m_csvView);
+  setCentralWidget(m_stack);
 
-  m_csvView = new CsvView(this);
-  layout->addWidget(m_csvView);
-  setCentralWidget(centralWidget);
+  connect(m_loadPage, &CancellableLoadPage::cancelled,
+          this,        &QMainWindow::close);
 
   resize(900, 600);
 }
 
 void CsvViewerWindow::loadFile() {
-  if (!m_csvView->loadFile(m_filePath)) {
-    critical(this, QStringLiteral("Error"),
-      QStringLiteral("Failed to open CSV: %1").arg(m_filePath));
+  m_loadPage->setForFile(m_filePath);
+  m_stack->setCurrentWidget(m_loadPage);
+  auto token = m_loadPage->resetToken();
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+
+  auto future = QtConcurrent::run(&CsvView::prepareLoad,
+                                   m_filePath,
+                                   m_csvView->currentUserEncoding(),
+                                   m_csvView->currentDelimiter(),
+                                   token.get(),
+                                   /*maxBytes=*/ qint64(-1));
+  CsvView::PreparedLoad p = waitForFutureWithEventLoop(future);
+  QApplication::restoreOverrideCursor();
+
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("CSV, external"),
+                         m_displayPath, false, cancelled);
+    close();
     return;
   }
+  m_csvView->applyPreparedLoad(p);
+  m_stack->setCurrentWidget(m_csvView);
   m_csvView->setFocus();
+  logViewerLoadResult(QStringLiteral("CSV, external"),
+                       m_displayPath, true, false);
 }
 
 void CsvViewerWindow::keyPressEvent(QKeyEvent* event) {

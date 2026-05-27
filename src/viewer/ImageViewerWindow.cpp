@@ -1,14 +1,15 @@
 #include "ImageViewerWindow.h"
 #include "ImageView.h"
+#include "utils/CancellableLoadPage.h"
 
+#include <QApplication>
 #include <QFileInfo>
 #include <QIcon>
 #include <QKeyEvent>
-#include "utils/Dialogs.h"
 #include <QScreen>
+#include <QStackedWidget>
 #include <QToolButton>
-#include <QVBoxLayout>
-#include <QWidget>
+#include <QtConcurrent/QtConcurrentRun>
 
 namespace Farman {
 
@@ -27,13 +28,15 @@ void ImageViewerWindow::setupUi() {
   QFileInfo fileInfo(m_displayPath);
   setWindowTitle(QString("Image Viewer - %1").arg(fileInfo.fileName()));
 
-  QWidget* centralWidget = new QWidget(this);
-  QVBoxLayout* layout = new QVBoxLayout(centralWidget);
-  layout->setContentsMargins(0, 0, 0, 0);
-
+  m_stack     = new QStackedWidget(this);
+  m_loadPage  = new CancellableLoadPage(this);
   m_imageView = new ImageView(this);
-  layout->addWidget(m_imageView);
-  setCentralWidget(centralWidget);
+  m_stack->addWidget(m_loadPage);
+  m_stack->addWidget(m_imageView);
+  setCentralWidget(m_stack);
+
+  connect(m_loadPage, &CancellableLoadPage::cancelled,
+          this,        &QMainWindow::close);
 
   // 「ウィンドウサイズを画像にあわせる」ボタンを ImageView の既存ツールバー
   // (Zoom / Fit / Anim / Transparency) と同じ列に挿入する。
@@ -59,12 +62,36 @@ void ImageViewerWindow::setupUi() {
 }
 
 void ImageViewerWindow::loadImage() {
-  if (!m_imageView->loadFile(m_filePath)) {
-    critical(this, QStringLiteral("Error"),
-      QStringLiteral("Failed to load image: %1").arg(m_filePath));
+  m_loadPage->setForFile(m_filePath);
+  m_stack->setCurrentWidget(m_loadPage);
+  // 画像デコード自体 (QImageReader::read) は内部で割り込み不能だが、開始前の
+  // cancel チェックとロード中の Cancel ボタン表示・Esc 待ちの機会を確保する
+  // ため、他のビュアーと同じ非同期パターンに揃える。
+  auto token = m_loadPage->resetToken();
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+
+  auto future = QtConcurrent::run(&ImageView::prepareLoad, m_filePath);
+  ImageView::PreparedLoad p = waitForFutureWithEventLoop(future);
+  QApplication::restoreOverrideCursor();
+
+  const bool cancelled = token && token->load(std::memory_order_acquire);
+  if (cancelled) {
+    logViewerLoadResult(QStringLiteral("Image, external"),
+                         m_displayPath, false, true);
+    close();
     return;
   }
+  if (!p.ok) {
+    logViewerLoadResult(QStringLiteral("Image, external"),
+                         m_displayPath, false, false);
+    close();
+    return;
+  }
+  m_imageView->applyPreparedLoad(p);
+  m_stack->setCurrentWidget(m_imageView);
   m_imageView->setFocus();
+  logViewerLoadResult(QStringLiteral("Image, external"),
+                       m_displayPath, true, false);
 }
 
 void ImageViewerWindow::fitWindowToImage() {
