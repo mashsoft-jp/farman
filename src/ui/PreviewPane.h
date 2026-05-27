@@ -74,6 +74,26 @@ public:
   PdfView*      pdfView()      { return m_pdfView; }
   CsvView*      csvView()      { return m_csvView; }
 
+  // ファイルリスト側から Tab で呼び出される: 現在 m_stack に表示中のビュアー
+  // にフォーカスを当てる (テキスト選択 / コピー目的)。ロード中 / 空表示の
+  // ページにはフォーカスを当てない (Cancel ボタンが拾ってしまうため)。
+  // 返り値: フォーカスを移せたら true。
+  bool focusContent();
+
+signals:
+  // プレビューペイン内で Esc が押された → 呼び出し側 (FileManagerPanel) に
+  // 「ファイルリストへ戻して欲しい」と伝える。
+  void escapePressed();
+
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override;
+
+private:
+  // focusContent 内で使う: 与えたウィジェットとその全子孫に `this` を
+  // event filter として install する。テキストビュアー内の QPlainTextEdit
+  // などに対しても Esc を拾えるようにするため。
+  void installEventFiltersRecursively(QWidget* root);
+
 private:
   void setupUi();
   void setStatusMessage(const QString& msg);  // unsupported / loading 共通

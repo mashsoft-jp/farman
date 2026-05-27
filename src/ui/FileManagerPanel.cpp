@@ -121,6 +121,14 @@ void FileManagerPanel::setupUi() {
   m_previewPane->hide();
   m_splitter->addWidget(m_previewPane);
 
+  // Preview ペインで Esc が押されたら、ファイルリストの active pane へ
+  // フォーカスを戻す (Tab で入った → テキスト選択した → Esc で戻る の動線)。
+  connect(m_previewPane, &PreviewPane::escapePressed, this, [this]() {
+    if (FileListPane* pane = activePane()) {
+      if (auto* v = pane->view()) v->setFocus(Qt::OtherFocusReason);
+    }
+  });
+
   // 左ペインのカーソル変化 → PreviewController に通知 (Preview 中のみ実行)。
   m_previewController = new PreviewController(m_previewPane, this);
 
@@ -651,6 +659,11 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
   // Tab: ファイルリスト上の Tab はフッタコントロール (モード切替ボタン →
   // (Thumbnail 時) サイズボタン → ★) へ。FileListPane::eventFilter が以降の
   // ★ → addr → 📁 → view と循環させる。
+  //
+  // 設計メモ: プレビューモード時に「Tab で preview ペインへ」を試したが、
+  // 現在ページが Loading / Empty かどうかで挙動が変わって不整合になるため
+  // 撤回した (2026-05-27)。preview ペインへ移って文字選択したい場合は
+  // マウスクリックでフォーカスし、Esc でファイルリストへ戻る運用にする。
   if (event->key() == Qt::Key_Tab) {
     if (FileListPane* pane = activePane()) {
       pane->focusFooterControls();

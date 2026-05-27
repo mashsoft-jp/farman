@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QFileIconProvider>
 #include <QFileInfo>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLocale>
 #include <QStackedWidget>
@@ -181,6 +182,45 @@ void PreviewPane::showPdf(const PdfView::PreparedLoad& prepared) {
 void PreviewPane::showCsv(const CsvView::PreparedLoad& prepared) {
   m_csvView->applyPreparedLoad(prepared);
   m_stack->setCurrentWidget(m_csvView);
+}
+
+bool PreviewPane::focusContent() {
+  if (!m_stack) return false;
+  QWidget* page = m_stack->currentWidget();
+  if (!page) return false;
+  // Empty / Loading / Unsupported / Directory ページ自体は QLabel なので
+  // フォーカスを受け取らない (StrongFocus にしていない)。実ビュアー
+  // (Text/Image/Binary/Markdown/Pdf/Csv) のときだけテキスト選択向けに
+  // フォーカスを移す。
+  if (page == m_textView || page == m_markdownView || page == m_binaryView
+      || page == m_csvView || page == m_pdfView || page == m_imageView) {
+    page->setFocus(Qt::TabFocusReason);
+    // フォーカス取りこぼし対策: 既に focusProxy を設定しているビュアー
+    // (TextView の m_editArea 等) は自動で正しい子へ転送する。
+    // PreviewPane 全体への Esc 通知を受けたいので、子全部に event filter
+    // を仕掛けておく (load 完了の度に呼ばれるのでここで都度 install)。
+    installEventFiltersRecursively(page);
+    return true;
+  }
+  return false;
+}
+
+void PreviewPane::installEventFiltersRecursively(QWidget* root) {
+  if (!root) return;
+  root->installEventFilter(this);
+  const auto children = root->findChildren<QWidget*>();
+  for (QWidget* c : children) c->installEventFilter(this);
+}
+
+bool PreviewPane::eventFilter(QObject* watched, QEvent* event) {
+  if (event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() == Qt::Key_Escape) {
+      emit escapePressed();
+      return true;
+    }
+  }
+  return QWidget::eventFilter(watched, event);
 }
 
 void PreviewPane::setStatusMessage(const QString& msg) {
