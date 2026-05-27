@@ -52,6 +52,10 @@ All notable changes to **farman** are documented in this file.
     LRU キャッシュで、12 MB / 20 万行クラスでも初回表示が即時)。
     Inline / External 両対応)
   - 任意ビュアーで開く (Ctrl+Enter) / OS 既定アプリで実行 (Shift+Enter)
+  - **ビュアー読込のキャンセル + 結果ロギング**: Inline / External どちらの
+    モードでも、ロード中に Esc 押下や別ファイル遷移でキャンセル可能
+    (Cancel ボタン付きのモードレス進捗表示)。完了 / 失敗 / キャンセルは
+    Logger に Info / Warn / Info 1 行で出力され、再現性のあるログが残る
 - **画像ビュアーの強化**
   - ツールバーに **時計回り 90° 回転** ボタン (表示のみ、保存はしない)。
     角度ラベル表示、ファイル切替で 0° リセット、Fit-to-Window や External
@@ -106,6 +110,21 @@ All notable changes to **farman** are documented in this file.
     すると、エントリを一時展開して通常ビュアー経路でプレビュー
   - ディレクトリは Finder Quick Look 風 (フォルダアイコン + パス + "N items")
   - レイアウトは永続化、Splitter のサイズは Dual / Preview で独立記憶
+  - **Tab でプレビューにフォーカス進入**: ファイルリストペインのローカル
+    Tab 連鎖 (★ → アドレスバー → 📁 → リスト → モード切替) の末尾で
+    `Tab` を押すとプレビュー側のツールバー / メインコンテンツへ進入。
+    プレビュー側末尾で `Tab` を押すと自ペイン ★ に戻り、Tab 連鎖が
+    閉ループになる。`Shift+Tab` は逆方向。`Esc` で即座にファイルリストへ復帰
+- **Tab フォーカス連鎖をレイアウト跨ぎで一本化**: Dual モードでは
+  対向 FileListPane の頭 / 末尾、Preview モードでは PreviewPane の
+  先頭 / 末尾、Single モードでは同ペイン内ラップ。どこから Tab を
+  押し始めても予測可能な順序で全 UI 要素を巡回できる
+- **非アクティブ時のテーブル行ハイライトを薄く**: `QTableView` /
+  `QListWidget` 等の派生ウィジェットは Qt 既定だとフォーカスを失っても
+  選択行を `palette(highlight)` (青) で強調し続け、「今フォーカスが
+  あるのか?」が分かりにくい。NSTableView 風に **非アクティブ時はグレーに
+  落とす** 共通スタイルを Settings / Keybindings ダイアログ等のリスト系
+  ウィジェットへ一括適用
 - **自動アップデート**
   - 起動時に最大 1 日 1 回、GitHub Releases の最新タグをチェック
   - 新バージョンを検出したら通知ダイアログを表示 (リリースノートを
