@@ -1636,10 +1636,13 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
   Settings → General → "Show toolbar" チェックボックスから切替可能。
   コマンド ID は `view.toggle_toolbar`。Settings の `behavior.showToolbar`
   に保存され、デフォルトは **ON** (新機能を発見してもらう狙い)。
-- 表示スタイル: `Qt::ToolButtonTextOnly` (Qt 標準アイコンセットでは Copy /
-  Move / Rename 等にしっくりくるアイコンが無いため、現時点ではテキストラベル
-  だけのシンプル表示)。アイコンの追加と表示スタイル切替 (Icon / Text /
-  IconBesideText) は将来の polish 項目。
+- 表示スタイル: `Qt::ToolButtonIconOnly` 固定 (アイコンのみ)。ボタンの意味は
+  tooltip (ラベル + ショートカット) で補足する。アイコン素材は
+  `:/icons/toolbar/<name>.svg` (Lucide スタイル / monochrome、20px で描画)。
+- 表示スタイル切替 (Icon / Text / IconBesideText の 3 値を Settings から選ぶ)
+  は **不採用** (2026-05-27)。Icon Only で確定し、アイコンの意味が分からない
+  場合は tooltip で確認する運用に揃える。実装着手後にユーザー判断でロール
+  バック (`8031266` で revert)。
 - カスタマイズ (ボタン集合・並び順をユーザーが変更可能にする) は
   **見送り**。現状のボタン数では設定 UI を増やすコストに対する見返りが薄い
   (ユーザー判断、2026-05-27)。
