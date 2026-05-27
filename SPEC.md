@@ -87,7 +87,8 @@ Total Commander / Double Commander に近い操作感を目指す。
   - 表示は `QListView::IconMode`。`QStackedWidget` でリスト⇔サムネイル
     を切替し、両方とも `FilterSortProxy` を共有するので選択状態は保持。
 - アーカイブ内画像も対応 (仮想 FS パスを直接サムネイル化)。
-- 動画のサムネイル化は OS / 外部依存が大きいので将来課題。
+- 動画のサムネイル化は OS / 外部依存が大きく、**v1.0 では見送り**
+  (動画 / 音声ビュアー本体と合わせてプラグイン候補)。
 
 ### ソート
 
@@ -162,7 +163,8 @@ Krusader / Total Commander の Sync Browse 相当。
 - 切替手段:
   - **View メニュー**: チェック付きの "Sync Browse" 項目。
   - **キーバインド**: 既定 `y` (Settings → Keybindings で変更可)。
-  - 将来ツールバー実装時にトグルボタンも追加予定 (バックログ)。
+  - **ツールバー**: Single Pane / Sync Browse / Log の並びにトグル
+    ボタンとして実装済。
 - ON のときの視覚インジケータ:
   - メニューのチェックマーク
   - ステータスバー右側に "Sync Browse: ON" ラベル
@@ -1294,7 +1296,11 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
     数式 (KaTeX) / Mermaid 図 / 目次サイドバー。いずれも外部 JS エンジン
     (`QWebEngineView`) もしくは独自パーサを要し、現時点では導入コストに見合う
     ニーズが無いため見送り。
-- **動画 / 音声ビュアー**
+- **動画 / 音声ビュアー** *(後日 or プラグインビュアー対応)*
+  - 本体取り込みは依存ライブラリ + OS 毎コーデック検証が大きい (Qt
+    Multimedia の native backend は macOS / Windows / Linux で挙動が
+    違う) ので、**v1.0 では未対応**。プラグインシステムを正式公開した
+    段階で外部プラグイン候補に回す方が現実的。
   - 対象 (動画): `.mp4` `.mov` `.m4v` `.webm` `.avi` `.mkv` 他
   - 対象 (音声): `.wav` `.mp3` `.m4a` `.flac` `.ogg` `.aac` 他
   - 候補ライブラリ: Qt Multimedia (`QMediaPlayer` + 動画用 `QVideoWidget`、
@@ -1316,10 +1322,12 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
     (セル内全文検索 + 行オフセット index 経由の遅延ロード) は実装済
     (上記 `#### CSV / TSV ビュアー` 参照)。
   - 残件: 列ソート (列ヘッダクリックで昇順/降順切替) のみ。日常的ニーズが
-    出てきたら追加する。
-- **画像ビュアー / PSD 拡張**
+    薄いため **見送り**。
+- **画像ビュアー / PSD 拡張** *(後日 or プラグインビュアー対応)*
   - 現状は合成済プレビュー (Photoshop が末尾に書き出す全レイヤマージ画像)
     のみを表示している (上記 `#### 画像ビュアー` の PSD 節参照)。
+  - 本体取り込みは難度が高くスコープも大きいので、**v1.0 では合成プレビュー
+    のみで打ち切り**。レイヤー個別表示まで欲しくなったらプラグイン候補。
   - 残件:
     - **レイヤー単位の表示**: PSD の Layer and Mask Information セクションを
       パースし、レイヤーツリー (フォルダ / 通常レイヤー / 調整レイヤー /
@@ -1334,7 +1342,10 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
       マスク) を完全再現するのは非現実的なので、まずは「ピクセルレイヤーの
       ベース表示 + blend mode のうち代表的なもの (normal / multiply /
       screen / overlay)」程度から段階対応するのが現実的。
-- **Office 文書ビュアー** (`.docx` / `.xlsx` / `.pptx`)
+- **Office 文書ビュアー** (`.docx` / `.xlsx` / `.pptx`) *(後日 or プラグイン
+  ビュアー対応)*
+  - 外部レンダラまたは独自パーサのどちらにせよ重量級で、**v1.0 では未対応**。
+    プラグイン候補に回す。
   - 対象: Microsoft Office Open XML 形式。
   - 候補方針:
     - **A. 外部レンダラ**: LibreOffice headless / Pandoc などで PDF or HTML
@@ -1518,8 +1529,9 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
   Move / Rename 等にしっくりくるアイコンが無いため、現時点ではテキストラベル
   だけのシンプル表示)。アイコンの追加と表示スタイル切替 (Icon / Text /
   IconBesideText) は将来の polish 項目。
-- カスタマイズ (ボタン集合・並び順をユーザーが変更可能にする) は将来課題。
-  最小実装では上記の固定セットで開始する。
+- カスタマイズ (ボタン集合・並び順をユーザーが変更可能にする) は
+  **見送り**。現状のボタン数では設定 UI を増やすコストに対する見返りが薄い
+  (ユーザー判断、2026-05-27)。
 - macOS のネイティブ「Unified Title and Toolbar」(`setUnifiedTitleAndToolBarOnMac`)
   は採用していない (他プラットフォームとの挙動差を避けるため)。
 
