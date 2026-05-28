@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>farman — キーボード駆動のクロスプラットフォーム 2 画面ファイラ</title>
-  <meta name="description" content="farman は Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。キーボードのみで全操作が完結。macOS / Windows / Linux 対応、MIT ライセンスのオープンソース。" />
+  <meta name="description" content="farman はキーボードだけでほぼすべての操作が完結するクロスプラットフォーム 2 画面ファイラ。macOS / Windows / Linux 対応、MIT ライセンスのオープンソース。" />
 
   <!-- Open Graph / Twitter -->
   <meta property="og:title" content="farman — キーボード駆動の 2 画面ファイラ" />
-  <meta property="og:description" content="Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。キーボードのみで全操作が完結。" />
+  <meta property="og:description" content="キーボードだけでほぼすべての操作が完結するクロスプラットフォーム 2 画面ファイラ。" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="farman-icon.png" />
   <meta name="twitter:card" content="summary" />
@@ -37,8 +37,8 @@
       <img class="hero-logo" src="farman-icon.png" alt="" width="96" height="96" />
       <h1>farman</h1>
       <p class="tagline">
-        キーボードのみで全操作が完結する、<br />
-        Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
+        キーボードだけでほぼすべての操作が完結する、<br />
+        クロスプラットフォーム 2 画面ファイラ。
       </p>
 
       <div class="hero-cta">
@@ -101,15 +101,28 @@
   <!-- ===== Screenshots ===== -->
   <section class="section section-alt" id="screenshots">
     <h2>スクリーンショット</h2>
+
+    <h3 class="shot-group">ファイル操作・表示モード</h3>
     <div class="shot-grid">
       <figure><img src="screenshots/01-main-2pane.png" alt="メイン 2 ペイン" loading="lazy" /><figcaption>メイン 2 ペイン</figcaption></figure>
+      <figure><img src="screenshots/14-thumbnail-view.png" alt="サムネイル表示" loading="lazy" /><figcaption>サムネイル表示</figcaption></figure>
+      <figure><img src="screenshots/10-preview-mode.png" alt="プレビューモード" loading="lazy" /><figcaption>プレビューモード (Quick View)</figcaption></figure>
+      <figure><img src="screenshots/16-search.png" alt="再帰検索" loading="lazy" /><figcaption>再帰検索</figcaption></figure>
+      <figure><img src="screenshots/17-bulk-rename.png" alt="一括リネーム" loading="lazy" /><figcaption>一括リネーム</figcaption></figure>
       <figure><img src="screenshots/02-archive-browsing.png" alt="アーカイブブラウジング" loading="lazy" /><figcaption>アーカイブブラウジング</figcaption></figure>
       <figure><img src="screenshots/03-directory-compare.png" alt="ディレクトリ比較" loading="lazy" /><figcaption>ディレクトリ比較</figcaption></figure>
-      <figure><img src="screenshots/07-text-viewer.png" alt="テキストビュアー" loading="lazy" /><figcaption>テキストビュアー</figcaption></figure>
-      <figure><img src="screenshots/08-image-viewer.png" alt="画像ビュアー" loading="lazy" /><figcaption>画像ビュアー</figcaption></figure>
-      <figure><img src="screenshots/09-binary-viewer.png" alt="バイナリビュアー" loading="lazy" /><figcaption>バイナリビュアー</figcaption></figure>
-      <figure><img src="screenshots/05-settings.png" alt="設定" loading="lazy" /><figcaption>設定</figcaption></figure>
       <figure><img src="screenshots/04-shortcut-list.png" alt="ショートカット一覧" loading="lazy" /><figcaption>ショートカット一覧</figcaption></figure>
+      <figure><img src="screenshots/05-settings.png" alt="設定" loading="lazy" /><figcaption>設定</figcaption></figure>
+    </div>
+
+    <h3 class="shot-group">組み込みビュアー</h3>
+    <div class="shot-grid">
+      <figure><img src="screenshots/11-markdown-viewer.png" alt="Markdown ビュアー" loading="lazy" /><figcaption>Markdown</figcaption></figure>
+      <figure><img src="screenshots/12-pdf-viewer.png" alt="PDF ビュアー" loading="lazy" /><figcaption>PDF</figcaption></figure>
+      <figure><img src="screenshots/13-csv-viewer.png" alt="CSV / TSV ビュアー" loading="lazy" /><figcaption>CSV / TSV</figcaption></figure>
+      <figure><img src="screenshots/07-text-viewer.png" alt="テキストビュアー" loading="lazy" /><figcaption>テキスト</figcaption></figure>
+      <figure><img src="screenshots/08-image-viewer.png" alt="画像ビュアー" loading="lazy" /><figcaption>画像</figcaption></figure>
+      <figure><img src="screenshots/09-binary-viewer.png" alt="バイナリビュアー" loading="lazy" /><figcaption>バイナリ</figcaption></figure>
     </div>
   </section>
 
@@ -140,6 +153,11 @@
 
   <!-- ===== Footer ===== -->
   <footer class="site-footer">
+    <p class="disclaimer">
+      ファイルを直接操作するソフトウェアの性質上、重要なデータは事前に
+      バックアップした上でご利用ください。本ソフトウェアの利用によって生じた
+      いかなる損害についても、作者は責任を負いません。
+    </p>
     <p>
       <a href="https://github.com/ms-haraki/farman" rel="noopener">GitHub</a> ·
       <a href="https://github.com/ms-haraki/farman/issues" rel="noopener">Issues</a> ·

@@ -168,6 +168,15 @@ code {
 .feature p { margin: 0; color: var(--fg-muted); font-size: .95rem; }
 
 /* ===== Screenshots ===== */
+.shot-group {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 48px 0 22px;
+}
+.shot-group:first-of-type { margin-top: 0; }
+.shot-grid + .shot-group { margin-top: 52px; }
 .shot-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -233,3 +242,10 @@ code {
 .site-footer a { color: var(--fg-muted); }
 .site-footer a:hover { color: var(--fg); }
 .copyright { margin: 8px 0 0; opacity: .8; }
+.disclaimer {
+  max-width: 760px;
+  margin: 0 auto 20px;
+  font-size: .82rem;
+  line-height: 1.7;
+  opacity: .85;
+}
