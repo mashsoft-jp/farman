@@ -163,6 +163,10 @@ All notable changes to **farman** are documented in this file.
     スタートメニュー / デスクトップショートカット / アンインストーラを
     自動登録、Program Files / LocalAppData の両方の install 経路を
     サポート。ポータブル用 zip も併売
+  - **macOS 版を Developer ID 署名 + 公証 (Notarization) 済みで配布**。
+    初回起動時の「開発元が未確認」警告なしでそのまま開ける
+  - プロジェクトを **Mashsoft の GitHub Organization (`mashsoft-jp/farman`)**
+    へ移管。自動アップデートの参照先も新リポジトリに更新
 
 ### Security
 
