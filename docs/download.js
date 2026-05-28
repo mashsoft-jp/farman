@@ -1,0 +1,181 @@
+/* ===== farman download buttons (GitHub Releases API) =====
+ *
+ * リリースのたびにサイトを更新しなくて済むよう、最新の安定版リリースを
+ * GitHub API から取得して各 OS のダウンロードボタンを動的に生成する。
+ * アセット名にバージョンが入る (farman-vX.Y.Z-macos-arm64.dmg など) ため
+ * 固定の直リンクが作れないので、この方式を採る。
+ *
+ * API 取得に失敗した場合は GitHub Releases ページへのリンクにフォールバック。
+ */
+(function () {
+  "use strict";
+
+  var REPO = "ms-haraki/farman";
+  var API = "https://api.github.com/repos/" + REPO + "/releases/latest";
+  var RELEASES_PAGE = "https://github.com/" + REPO + "/releases/latest";
+
+  // 訪問者の OS を推定 (macos / windows / linux / unknown)。
+  function detectOS() {
+    var ua = navigator.userAgent || "";
+    var plat = navigator.platform || "";
+    if (/Mac/i.test(ua) || /Mac/i.test(plat)) return "macos";
+    if (/Win/i.test(ua) || /Win/i.test(plat)) return "windows";
+    if (/Linux|X11|Android/i.test(ua)) return "linux";
+    return "unknown";
+  }
+
+  // アセット配列から OS / 形式ごとのダウンロード URL を拾う。
+  function pickAssets(assets) {
+    function find(pred) {
+      for (var i = 0; i < assets.length; i++) {
+        var n = assets[i].name.toLowerCase();
+        if (n.endsWith(".sha256")) continue; // チェックサムは除外
+        if (pred(n)) return assets[i].browser_download_url;
+      }
+      return null;
+    }
+    return {
+      macos:         find(function (n) { return n.indexOf("macos") >= 0 && n.endsWith(".dmg"); }),
+      windowsSetup:  find(function (n) { return n.indexOf("windows") >= 0 && n.endsWith("-setup.exe"); }),
+      windowsZip:    find(function (n) { return n.indexOf("windows") >= 0 && n.endsWith(".zip"); }),
+      linuxAppImage: find(function (n) { return n.indexOf("linux") >= 0 && n.endsWith(".appimage"); }),
+      linuxDeb:      find(function (n) { return n.indexOf("linux") >= 0 && n.endsWith(".deb"); })
+    };
+  }
+
+  // OS カードの定義。primary = 主たるインストーラ、secondary = 補助形式。
+  function buildCards(urls, currentOS) {
+    return [
+      {
+        os: "macos",
+        title: "macOS",
+        arch: "Apple Silicon (arm64)",
+        primary: urls.macos ? { label: "ダウンロード (.dmg)", url: urls.macos } : null,
+        secondary: null
+      },
+      {
+        os: "windows",
+        title: "Windows",
+        arch: "64-bit (x64)",
+        primary: urls.windowsSetup ? { label: "インストーラ (.exe)", url: urls.windowsSetup } : null,
+        secondary: urls.windowsZip ? { label: "ポータブル版 (.zip)", url: urls.windowsZip } : null
+      },
+      {
+        os: "linux",
+        title: "Linux",
+        arch: "x86_64",
+        primary: urls.linuxAppImage ? { label: "AppImage", url: urls.linuxAppImage } : null,
+        secondary: urls.linuxDeb ? { label: "Debian / Ubuntu (.deb)", url: urls.linuxDeb } : null
+      }
+    ].map(function (c) { c.isCurrent = (c.os === currentOS); return c; });
+  }
+
+  function renderCards(cards) {
+    var grid = document.getElementById("download-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    // 自 OS を先頭に並べ替え (見つけやすく)。
+    cards.sort(function (a, b) { return (b.isCurrent ? 1 : 0) - (a.isCurrent ? 1 : 0); });
+
+    cards.forEach(function (c) {
+      var card = document.createElement("div");
+      card.className = "dl-card" + (c.isCurrent ? " is-current" : "");
+
+      var html = '<p class="dl-os">' + c.title + "</p>"
+               + '<p class="dl-arch">' + c.arch + "</p>";
+
+      if (c.primary) {
+        html += '<a class="btn btn-primary" href="' + c.primary.url + '">'
+              + c.primary.label + "</a>";
+      } else {
+        html += '<a class="btn btn-ghost" href="' + RELEASES_PAGE + '" rel="noopener">'
+              + "リリースページへ</a>";
+      }
+      if (c.secondary) {
+        html += '<a class="dl-secondary" href="' + c.secondary.url + '">'
+              + c.secondary.label + "</a>";
+      }
+      card.innerHTML = html;
+      grid.appendChild(card);
+    });
+  }
+
+  // 自 OS の主たるアセットをヒーローの大ボタンに反映。
+  function updateHeroButton(urls, currentOS) {
+    var btn = document.getElementById("hero-download");
+    if (!btn) return;
+    var map = {
+      macos:   { url: urls.macos,        label: "macOS 版をダウンロード" },
+      windows: { url: urls.windowsSetup, label: "Windows 版をダウンロード" },
+      linux:   { url: urls.linuxAppImage, label: "Linux 版をダウンロード" }
+    };
+    var pick = map[currentOS];
+    if (pick && pick.url) {
+      btn.href = pick.url;
+      btn.textContent = pick.label;
+    } else {
+      btn.href = "#download";
+      btn.textContent = "ダウンロード";
+    }
+  }
+
+  function setVersionText(tag, publishedAt) {
+    var date = "";
+    if (publishedAt) {
+      var d = new Date(publishedAt);
+      if (!isNaN(d)) {
+        date = " · " + d.getFullYear() + "-"
+             + ("0" + (d.getMonth() + 1)).slice(-2) + "-"
+             + ("0" + d.getDate()).slice(-2);
+      }
+    }
+    var heroV = document.getElementById("hero-version");
+    var dlV = document.getElementById("download-version");
+    if (heroV) heroV.textContent = "最新リリース: " + tag + date;
+    if (dlV) dlV.textContent = "最新リリース: " + tag + date;
+  }
+
+  function fallback(msg) {
+    var heroV = document.getElementById("hero-version");
+    var dlV = document.getElementById("download-version");
+    if (heroV) heroV.textContent = "";
+    if (dlV) {
+      dlV.innerHTML = (msg || "リリース情報を取得できませんでした。")
+        + ' <a href="' + RELEASES_PAGE + '" rel="noopener">GitHub Releases</a> から直接ダウンロードしてください。';
+    }
+    var grid = document.getElementById("download-grid");
+    if (grid && !grid.children.length) {
+      grid.innerHTML = '<div class="dl-card"><p class="dl-os">すべての OS</p>'
+        + '<p class="dl-arch">macOS / Windows / Linux</p>'
+        + '<a class="btn btn-primary" href="' + RELEASES_PAGE + '" rel="noopener">リリースページを開く</a></div>';
+    }
+  }
+
+  function init() {
+    var os = detectOS();
+    fetch(API, { headers: { "Accept": "application/vnd.github+json" } })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data || !data.assets || !data.assets.length) throw new Error("no assets");
+        var urls = pickAssets(data.assets);
+        setVersionText(data.tag_name || "latest", data.published_at);
+        updateHeroButton(urls, os);
+        renderCards(buildCards(urls, os));
+      })
+      .catch(function (err) {
+        // レート制限 (60 req/h/IP) やオフライン時はフォールバック。
+        fallback();
+        if (window.console) console.warn("farman: release fetch failed:", err);
+      });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();

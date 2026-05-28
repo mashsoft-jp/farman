@@ -1,0 +1,235 @@
+/* ===== farman landing page ===== */
+/* 依存ゼロ。light / dark は prefers-color-scheme で自動切替。 */
+
+:root {
+  --bg:        #ffffff;
+  --bg-alt:    #f5f6f8;
+  --fg:        #1d2127;
+  --fg-muted:  #5b6470;
+  --border:    #e2e5ea;
+  --accent:    #5b8def;
+  --accent-fg: #ffffff;
+  --card:      #ffffff;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.06);
+  --radius:    12px;
+  --maxw:      1080px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #0f1216;
+    --bg-alt:    #161a20;
+    --fg:        #e6e9ee;
+    --fg-muted:  #9aa4b2;
+    --border:    #262c35;
+    --accent:    #6f9bf5;
+    --accent-fg: #0f1216;
+    --card:      #161a20;
+    --shadow:    0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
+               "Noto Sans JP", Meiryo, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code {
+  font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: .88em;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+/* ===== Header ===== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--fg);
+}
+.brand:hover { text-decoration: none; }
+.nav { display: flex; gap: 20px; flex-wrap: wrap; }
+.nav a { color: var(--fg-muted); font-size: .95rem; }
+.nav a:hover { color: var(--fg); text-decoration: none; }
+
+/* ===== Hero ===== */
+.hero {
+  padding: 64px 24px 32px;
+  text-align: center;
+  background: radial-gradient(ellipse at top,
+              color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%);
+}
+.hero-inner { max-width: var(--maxw); margin: 0 auto; }
+.hero-logo { margin-bottom: 8px; }
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  margin: 0 0 12px;
+  letter-spacing: -.02em;
+}
+.tagline {
+  font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+  color: var(--fg-muted);
+  margin: 0 auto 28px;
+  max-width: 620px;
+}
+.hero-cta {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.hero-sub {
+  color: var(--fg-muted);
+  font-size: .9rem;
+  margin: 14px 0 0;
+}
+.hero-shot {
+  margin: 44px auto 0;
+  max-width: 920px;
+}
+.hero-shot img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+.btn:hover { text-decoration: none; transform: translateY(-1px); }
+.btn-primary { background: var(--accent); color: var(--accent-fg); }
+.btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.btn-ghost { background: transparent; color: var(--fg); border-color: var(--border); }
+.btn-ghost:hover { background: var(--bg-alt); }
+
+/* ===== Sections ===== */
+.section { padding: 64px 24px; max-width: var(--maxw); margin: 0 auto; }
+.section-alt { max-width: none; background: var(--bg-alt); }
+.section-alt > * { max-width: var(--maxw); margin-left: auto; margin-right: auto; }
+.section h2 {
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  text-align: center;
+  margin: 0 0 40px;
+}
+
+/* ===== Feature grid ===== */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.feature {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 22px 18px;
+}
+.feature h3 { margin: 0 0 8px; font-size: 1.1rem; }
+.feature p { margin: 0; color: var(--fg-muted); font-size: .95rem; }
+
+/* ===== Screenshots ===== */
+.shot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+}
+.shot-grid figure { margin: 0; }
+.shot-grid img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: block;
+}
+.shot-grid figcaption {
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: .9rem;
+  margin-top: 10px;
+}
+
+/* ===== Download ===== */
+.download-version, .download-note, .fallback {
+  text-align: center;
+  color: var(--fg-muted);
+}
+.download-version { font-size: 1.05rem; margin: -20px 0 32px; }
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.dl-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+}
+.dl-card.is-current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.dl-os { font-size: 1.2rem; font-weight: 700; margin: 0 0 4px; }
+.dl-arch { color: var(--fg-muted); font-size: .85rem; margin: 0 0 18px; }
+.dl-card .btn { width: 100%; margin-bottom: 10px; }
+.dl-secondary {
+  display: block;
+  font-size: .9rem;
+  color: var(--fg-muted);
+}
+.download-note { font-size: .9rem; margin-top: 8px; }
+
+/* ===== Footer ===== */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: .9rem;
+}
+.site-footer a { color: var(--fg-muted); }
+.site-footer a:hover { color: var(--fg); }
+.copyright { margin: 8px 0 0; opacity: .8; }

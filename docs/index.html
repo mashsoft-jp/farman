@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>farman — キーボード駆動のクロスプラットフォーム 2 画面ファイラ</title>
+  <meta name="description" content="farman は Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。キーボードのみで全操作が完結。macOS / Windows / Linux 対応、MIT ライセンスのオープンソース。" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:title" content="farman — キーボード駆動の 2 画面ファイラ" />
+  <meta property="og:description" content="Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。キーボードのみで全操作が完結。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="farman-icon.png" />
+  <meta name="twitter:card" content="summary" />
+
+  <link rel="icon" type="image/png" href="farman-icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="site-header">
+    <a class="brand" href="#top">
+      <img src="farman-icon.png" alt="farman" width="32" height="32" />
+      <span>farman</span>
+    </a>
+    <nav class="nav">
+      <a href="#features">機能</a>
+      <a href="#screenshots">スクリーンショット</a>
+      <a href="#download">ダウンロード</a>
+      <a href="https://github.com/ms-haraki/farman" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <img class="hero-logo" src="farman-icon.png" alt="" width="96" height="96" />
+      <h1>farman</h1>
+      <p class="tagline">
+        キーボードのみで全操作が完結する、<br />
+        Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
+      </p>
+
+      <div class="hero-cta">
+        <a class="btn btn-primary" id="hero-download" href="https://github.com/ms-haraki/farman/releases/latest" rel="noopener">
+          ダウンロード
+        </a>
+        <a class="btn btn-ghost" href="#download">すべての OS / 形式</a>
+      </div>
+      <p class="hero-sub" id="hero-version">最新リリースを取得中…</p>
+
+      <div class="hero-shot">
+        <img src="screenshots/01-main-2pane.png" alt="farman のメイン 2 ペイン画面" loading="lazy" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Features ===== -->
+  <section class="section" id="features">
+    <h2>主な機能</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <h3>2 ペイン UI</h3>
+        <p>左右ペイン間のコピー / 移動 / 同期。任意でシングルペイン・プレビューレイアウトにも切替。</p>
+      </div>
+      <div class="feature">
+        <h3>キー駆動操作</h3>
+        <p><code>c</code>/<code>m</code>/<code>k</code>/<code>d</code>/<code>r</code>/<code>n</code> 等の単一キーで主要操作。キーバインドは完全カスタマイズ可能。</p>
+      </div>
+      <div class="feature">
+        <h3>ファイル操作</h3>
+        <p>コピー / 移動 / 削除 (ゴミ箱 or 完全) / リネーム / 一括リネーム (テンプレート + 連番 + 正規表現 + プレビュー)。</p>
+      </div>
+      <div class="feature">
+        <h3>アーカイブ</h3>
+        <p>zip / tar / tar.gz / tar.bz2 / tar.xz の作成・展開。アーカイブ内ブラウジング (仮想 FS) と選択抽出。</p>
+      </div>
+      <div class="feature">
+        <h3>組み込みビュアー</h3>
+        <p>テキスト / 画像 / バイナリ / Markdown / PDF / CSV・TSV。インライン or 別ウィンドウ、全文検索対応。</p>
+      </div>
+      <div class="feature">
+        <h3>検索 / ナビゲーション</h3>
+        <p>バックグラウンド再帰検索、ブックマーク、ディレクトリ履歴、アドレスバー + パス補完。</p>
+      </div>
+      <div class="feature">
+        <h3>ディレクトリ比較</h3>
+        <p>左右ペインの差分を行ごとに色分け。同期ブラウズと併用でき、コピー後も比較状態を維持。</p>
+      </div>
+      <div class="feature">
+        <h3>外観カスタマイズ</h3>
+        <p>テーマ / アドレスバー / カーソル / カテゴリ別ファイル色 / 行高。英語・日本語対応 (Auto は OS 追従)。</p>
+      </div>
+      <div class="feature">
+        <h3>自動アップデート</h3>
+        <p>起動時に最新版をチェックし、ワンクリックでダウンロード + 検証 + インストール。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Screenshots ===== -->
+  <section class="section section-alt" id="screenshots">
+    <h2>スクリーンショット</h2>
+    <div class="shot-grid">
+      <figure><img src="screenshots/01-main-2pane.png" alt="メイン 2 ペイン" loading="lazy" /><figcaption>メイン 2 ペイン</figcaption></figure>
+      <figure><img src="screenshots/02-archive-browsing.png" alt="アーカイブブラウジング" loading="lazy" /><figcaption>アーカイブブラウジング</figcaption></figure>
+      <figure><img src="screenshots/03-directory-compare.png" alt="ディレクトリ比較" loading="lazy" /><figcaption>ディレクトリ比較</figcaption></figure>
+      <figure><img src="screenshots/07-text-viewer.png" alt="テキストビュアー" loading="lazy" /><figcaption>テキストビュアー</figcaption></figure>
+      <figure><img src="screenshots/08-image-viewer.png" alt="画像ビュアー" loading="lazy" /><figcaption>画像ビュアー</figcaption></figure>
+      <figure><img src="screenshots/09-binary-viewer.png" alt="バイナリビュアー" loading="lazy" /><figcaption>バイナリビュアー</figcaption></figure>
+      <figure><img src="screenshots/05-settings.png" alt="設定" loading="lazy" /><figcaption>設定</figcaption></figure>
+      <figure><img src="screenshots/04-shortcut-list.png" alt="ショートカット一覧" loading="lazy" /><figcaption>ショートカット一覧</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- ===== Download ===== -->
+  <section class="section" id="download">
+    <h2>ダウンロード</h2>
+    <p class="download-version" id="download-version">最新リリースを取得中…</p>
+
+    <div class="download-grid" id="download-grid">
+      <!-- download.js が各 OS のカードを差し込む。JS 無効時のフォールバックは下記。 -->
+    </div>
+
+    <noscript>
+      <p class="fallback">
+        JavaScript が無効です。
+        <a href="https://github.com/ms-haraki/farman/releases/latest" rel="noopener">GitHub Releases</a>
+        から各 OS のインストーラを直接ダウンロードしてください。
+      </p>
+    </noscript>
+
+    <p class="download-note">
+      すべてのリリースとリリースノートは
+      <a href="https://github.com/ms-haraki/farman/releases" rel="noopener">GitHub Releases</a>
+      / <a href="https://github.com/ms-haraki/farman/blob/main/CHANGELOG.md" rel="noopener">CHANGELOG</a>
+      を参照してください。各アセットには <code>.sha256</code> チェックサムが付属します。
+    </p>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/ms-haraki/farman" rel="noopener">GitHub</a> ·
+      <a href="https://github.com/ms-haraki/farman/issues" rel="noopener">Issues</a> ·
+      <a href="https://github.com/ms-haraki/farman/blob/main/LICENSE" rel="noopener">MIT License</a>
+    </p>
+    <p class="copyright">© Mashsoft Inc.</p>
+  </footer>
+
+  <script src="download.js"></script>
+</body>
+</html>
