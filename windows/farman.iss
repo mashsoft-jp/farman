@@ -29,9 +29,9 @@ AppName=farman
 AppVersion={#AppVersion}
 AppVerName=farman {#AppVersion}
 AppPublisher=Mashsoft Inc.
-AppPublisherURL=https://github.com/ms-haraki/farman
-AppSupportURL=https://github.com/ms-haraki/farman/issues
-AppUpdatesURL=https://github.com/ms-haraki/farman/releases
+AppPublisherURL=https://github.com/mashsoft-jp/farman
+AppSupportURL=https://github.com/mashsoft-jp/farman/issues
+AppUpdatesURL=https://github.com/mashsoft-jp/farman/releases
 
 ; {autopf} は admin 時 = Program Files、user 時 = LocalAppData\Programs を解決する。
 ; PrivilegesRequiredOverridesAllowed=dialog でユーザーに選ばせる。

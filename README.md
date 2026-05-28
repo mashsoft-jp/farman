@@ -1,6 +1,6 @@
 # farman
 
-[![Build](https://github.com/ms-haraki/farman/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/ms-haraki/farman/actions/workflows/build.yml)
+[![Build](https://github.com/mashsoft-jp/farman/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/mashsoft-jp/farman/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
@@ -85,7 +85,7 @@ Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
 正式リリース前のため、配布バイナリはまだ提供していません。
 最新の開発ビルドは GitHub Actions の成果物から取得できます:
 
-<https://github.com/ms-haraki/farman/actions/workflows/build.yml>
+<https://github.com/mashsoft-jp/farman/actions/workflows/build.yml>
 
 該当ワークフローの run を選んで、Artifacts からプラットフォーム別の zip を
 ダウンロードしてください:

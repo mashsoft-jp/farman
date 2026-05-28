@@ -14,7 +14,7 @@ namespace Farman {
 namespace {
 
 constexpr const char* kReleasesUrl =
-  "https://api.github.com/repos/ms-haraki/farman/releases/latest";
+  "https://api.github.com/repos/mashsoft-jp/farman/releases/latest";
 
 // "0.9.0-test" を ([0, 9, 0], "test") のような (数値リスト, prerelease) に分解する。
 // 不正フォーマットは数値リスト空で返す。

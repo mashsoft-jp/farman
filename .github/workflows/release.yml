@@ -497,7 +497,7 @@ jobs:
           Architecture: amd64
           Installed-Size: ${INSTALLED_SIZE}
           Maintainer: Mashsoft Inc. <noreply@mashsoft.co.jp>
-          Homepage: https://github.com/ms-haraki/farman
+          Homepage: https://github.com/mashsoft-jp/farman
           Description: Qt6 dual-pane file manager
            A keyboard-driven dual-pane file manager built on Qt 6.
            Supports archive browsing (zip / tar / gz / bz2 / xz),

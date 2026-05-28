@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var REPO = "ms-haraki/farman";
+  var REPO = "mashsoft-jp/farman";
   var API = "https://api.github.com/repos/" + REPO + "/releases/latest";
   var RELEASES_PAGE = "https://github.com/" + REPO + "/releases/latest";
 

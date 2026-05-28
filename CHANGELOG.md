@@ -5,7 +5,7 @@ All notable changes to **farman** are documented in this file.
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/)、
 バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
-リリース毎のコミット / PR 単位の詳細は [GitHub Releases](https://github.com/ms-haraki/farman/releases)
+リリース毎のコミット / PR 単位の詳細は [GitHub Releases](https://github.com/mashsoft-jp/farman/releases)
 を参照 (`release.yml` の `generate_release_notes` が前回タグからの差分を
 自動でリリースノートにまとめる)。本ファイルは「ユーザーから見える主な
 変更点」だけを要約する役割を担う。
@@ -177,4 +177,4 @@ All notable changes to **farman** are documented in this file.
 - 壊れたアーカイブの部分読み込みを「正常」扱いせず、致命エラーを通知して
   停止する
 
-[Unreleased]: https://github.com/ms-haraki/farman/commits/main
+[Unreleased]: https://github.com/mashsoft-jp/farman/commits/main
