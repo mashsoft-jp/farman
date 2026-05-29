@@ -5,6 +5,10 @@
 Qt6 / C++20 製のクロスプラットフォーム2画面ファイラ。キーボード操作を主軸とし、
 Total Commander / Double Commander に近い操作感を目指す。
 
+Mashsoft Inc. が MIT ライセンスで公開する OSS。リポジトリは
+**github.com/mashsoft-jp/farman** (会社 org 配下。旧 `ms-haraki/farman` から
+2026-05 に Transfer 移管済み。旧 URL は GitHub のリダイレクトで追従)。
+
 ---
 
 ## 対応プラットフォーム
@@ -2055,18 +2059,27 @@ List Display へ移動済み。ビュアー固有の設定は Viewers タブへ�
     (ドラッグ先のターゲットを左、ドラッグ元のアプリを右に配置する)。
   - 配布ターゲットは Apple Silicon (arm64)。Universal Binary 化は
     バックログ参照。
-  - **コード署名** (Apple Developer ID) と **公証 (notarization)** に
-    対応する。未署名のままでは「壊れている」と表示されてユーザーが起動
-    できない。署名証明書の取得は配布数が増えてから判断。
+  - **コード署名** (Apple Developer ID Application) と **公証 (notarization)**
+    に対応済み (v0.9.5〜)。CI で `.app` を Developer ID 署名 (Hardened Runtime
+    + timestamp) → `.dmg` も Developer ID 署名 → `notarytool` で公証 →
+    `stapler` で staple する。配布された `.app` / `.dmg` とも `spctl` で
+    "Notarized Developer ID" として受理され、Gatekeeper 警告なしで開ける。
+    (証明書 + 公証用の認証情報は CI の Secrets として保持。詳細は
+    「コード署名 (CI)」節を参照)
 - **Windows** — `.exe` インストーラ (NSIS or Inno Setup)
   - 必要なら `.msi` も検討するが、初回は単一 `.exe` が最も摩擦が少ない。
   - Program Files / AppData の双方への install 経路をサポート (個別
     ユーザー権限でも入れられるように)。
-  - **Authenticode 署名**: 取得は同じく配布数が増えてから。未署名のまま
-    では SmartScreen が警告を出す。Windows 11 の **Smart App Control (SAC)** が
-    ON の環境ではインストーラ自体がブロックされ、再インストール
-    (= キャッシュリセット) や Sandbox 経由でしか起動できないケースがある。
-    抜本対応は Authenticode 署名 (例: Azure Trusted Signing) の導入。
+  - **Authenticode 署名**: 未対応。当面は配布サイトの Windows ダウンロード
+    カードに「SmartScreen 警告が出たら 詳細情報 → 実行」の注記を出して回避を
+    案内する運用 (2026-05-29 ユーザー判断)。未署名だと SmartScreen が警告を出し、
+    Windows 11 の **Smart App Control (SAC)** が ON の環境ではインストーラ自体が
+    ブロックされ、再インストール (= キャッシュリセット) や Sandbox 経由でしか
+    起動できないケースもある。抜本対応は Authenticode 署名の導入。コスト/手間と
+    効果を踏まえると **Azure Trusted Signing** (月額が安く CI 連携しやすい。ただし
+    組織検証・設立年数等の適格要件あり) が第一候補。OV/EV 証明書は 2023 年以降
+    秘密鍵のハードウェア保管が必須化しており、macOS のように `.p12` を Secret に
+    入れる方式が使えない点に注意。配布数が増えてユーザーから声が出てきたら検討。
   - スタートメニュー / デスクトップショートカットの作成、関連付けの
     登録 (任意)、アンインストーラの登録。
 - **Linux** — `AppImage`
@@ -2161,8 +2174,27 @@ OS 別の現状:
     で生成し、無地の白背景に角丸シルエットを乗せたもの。タスクバーは
     最大サイズを取りに行くので、Windows-friendly に padding を最小化して
     あるのが macOS / Linux のソースアイコンとの違い。
-- **コード署名**: macOS は Developer ID + Notarization まで CI 内で動く
-  状態 (Secrets が揃っているとき)。Windows Authenticode 署名は未対応。
+- **コード署名 (CI)**: macOS は **Developer ID 署名 + 公証まで CI で実装・
+  運用済み** (v0.9.5〜)。`release.yml` が次の順で処理する:
+  1. `MACOS_CERTIFICATE_BASE64` 等の Secret が揃っていれば署名フローを実行
+     (無ければ ad-hoc 署名にフォールバック)
+  2. 一時キーチェーンに `.p12` を import → `.app` を Developer ID 署名
+     (`--options runtime --timestamp`)
+  3. `create-dmg` で `.dmg` を作成 → **`.dmg` 自体も Developer ID 署名**
+     (これが無いと `spctl -t open` が "no usable signature" になる)
+  4. `notarytool submit` で公証 → `stapler staple` でチケットを `.dmg` に添付
+  - 必要な Secrets (mashsoft-jp/farman の Actions secrets):
+    `MACOS_CERTIFICATE_BASE64` (Developer ID Application 証明書 + 秘密鍵の
+    `.p12` を base64 化) / `MACOS_CERTIFICATE_PASSWORD` (`.p12` のパスワード) /
+    `MACOS_NOTARIZATION_APPLE_ID` (Apple ID メール) /
+    `MACOS_NOTARIZATION_TEAM_ID` (10 桁 Team ID) /
+    `MACOS_NOTARIZATION_PASSWORD` (appleid.apple.com で発行したアプリ用パスワード。
+    `.p12` のパスワードとは別物)。
+  - **macOS arm64 ランナーのビルド並列度は `--parallel 2` に制限**している。
+    無制限だと少メモリランナーで重い翻訳単位 (-O2) が同時多発してメモリ逼迫 →
+    clang がストールしジョブが固まる事象が頻発したため (Linux も `--parallel 2`、
+    Windows のみメモリ余裕があり無制限)。
+  - Windows Authenticode 署名は未対応 (上記「プラットフォーム別の形式」参照)。
 - **`farman --version`**: 実装済み。`QCommandLineParser::addVersionOption()`
   で `farman X.Y.Z` を stdout 出力 + 即終了 (GUI 起動しない)。`--help`
   も同時に効く。
@@ -2285,6 +2317,43 @@ Last checked: 2026-05-10 09:42
 
 ---
 
+## 配布 Web サイト (GitHub Pages)
+
+ユーザーが farman を知り・ダウンロードするための静的ランディングサイト。
+リポジトリの `docs/` を **GitHub Pages** (`main` ブランチ / `/docs` フォルダ)
+から配信する想定。依存ゼロの素の HTML/CSS/JS で構成する。
+
+### 構成 (`docs/`)
+- `index.html` — 日本語版 (ルート)。`en/index.html` — 英語版。
+  ヘッダーの言語切替リンク (日本語 ⇆ English) で行き来する。日本語をルート、
+  英語を `/en/` に置く (会社の主市場が日本のため)。
+- `style.css` — 共通スタイル。`prefers-color-scheme` でライト/ダーク自動切替。
+- `download.js` — **最新リリースを GitHub API から取得して OS 別ダウンロード
+  ボタンを動的生成**する。アセット名にバージョンが入る
+  (`farman-vX.Y.Z-macos-arm64.dmg` 等) ため固定の直リンクが作れないので、
+  `releases/latest` を叩いて訪問者の OS を判定し、適切なアセットへのボタンを
+  組み立てる。API 失敗時は Releases ページへのリンクにフォールバック。
+  `<html lang>` を見て文言を日本語/英語で出し分ける (両ページ共用)。
+- `screenshots/` — 機能スクリーンショット。`farman-icon.{png,svg}` — ロゴ。
+
+### コンテンツ
+- ヒーロー (キャッチ + OS 判定ダウンロードボタン)、主な機能グリッド、
+  スクリーンショット (「ファイル操作・表示モード」「組み込みビュアー」の 2 群)、
+  OS 別ダウンロード、免責事項 (現状有姿の法律用語は避け「データはバックアップを /
+  作者は責任を負わない」を平易に明記)。
+- **Windows ダウンロードカードに SmartScreen 注記** (未署名のため「詳細情報 →
+  実行」を案内)。
+- スクリーンショットは当面、日本語 UI で撮影したものを英語ページでも流用
+  (英語ページに「app は英語 UI も同梱」と注記)。
+
+### 公開フロー
+- GitHub Pages は **Settings → Pages で有効化した瞬間が公開**。有効化前は
+  `main` に `docs/` があってもサイトは存在しない (= マージ/ push だけでは
+  自動公開されない)。有効化後は `main` への push で自動再公開。
+- 独自ドメイン (`farman.mashsoft.co.jp` 等) を CNAME で当てる余地あり (将来検討)。
+
+---
+
 ## 非機能要件
 
 - 起動時間: 1秒以内
@@ -2300,8 +2369,10 @@ Last checked: 2026-05-10 09:42
 
 ### CI / ビルド系
 
-- **`-DCMAKE_BUILD_PARALLEL_LEVEL`** など、各 OS 用の並列度チューニング。
-  特に macOS runner (M1 3 コア) のビルド時間が現状 25〜35 分と長い。
+- **各 OS 用の並列度チューニング**。macOS / Linux は安定性のため
+  `--parallel 2` に固定済み (無制限だと少メモリランナーでメモリ逼迫 → clang が
+  ストールしてジョブが固まるため)。その分 macOS のビルド時間は長め (30〜40 分)。
+  将来、より大きなランナー or ccache 等で速度と安定性を両立できないか検討。
 
 ### 配布系
 
@@ -2316,9 +2387,12 @@ Last checked: 2026-05-10 09:42
 - **`release.yml`** によるタグ push → GitHub Releases 自動公開 (作成済み、
   [.github/workflows/release.yml](.github/workflows/release.yml))。`v*` タグ
   push or workflow_dispatch で 3 OS の DMG / AppImage / zip を生成し、Releases
-  に **draft** として公開する (本人が UI 確認後 Publish)。署名は未対応。
-- **コード署名 (Apple Developer ID / Authenticode)** — 配布数が増えてから検討。
-  Mac は $99/年、Windows は $200〜500/年が必要。
+  に **draft** として公開する (本人が UI 確認後 Publish)。
+- **コード署名** — macOS は **Developer ID 署名 + 公証を実装・運用済み**
+  (v0.9.5〜、`.app` / `.dmg` とも署名 + notarize + staple。詳細は「リリースと
+  配布」→「コード署名 (CI)」節)。残るは **Windows Authenticode 署名** (未対応、
+  当面は SmartScreen 注記で回避案内。第一候補は Azure Trusted Signing)。
+  費用目安: Apple Developer $99/年、Windows OV/EV $200〜500/年。
 - **Linux 配布の拡充**: AppImage + `.deb` 配布済み (`release.yml` で
   linuxdeploy の AppDir をそのまま `/opt/farman/` に詰める方式)。
   `.rpm` / Flathub / AUR は需要次第で追加検討 (現状は予定なし)。
