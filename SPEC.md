@@ -2427,14 +2427,17 @@ Last checked: 2026-05-10 09:42
   3. Help → Plugins... メニュー復活 + プラグインディレクトリの設定 UI 追加。
   4. プラグイン作者向けのリファレンス文書 + テンプレートとしてサンプルを公開。
 
-- **アーカイブ作成オプション** — 現状 `CreateArchiveDialog` はフォーマット /
-  出力先 / ファイル名のみ。読み取り側の password 対応 (`ArchiveContext::password`)
-  と対称になるよう、作成時の追加オプションを後日整える:
-  - **パスワード (= 暗号化)**: libarchive `archive_write_set_passphrase` + 形式別
-    オプション (`zip:encryption=aes256` / `zip:encryption=zipcrypto`)
-  - **圧縮レベル** (0〜9): `archive_write_set_filter_option` で gzip/bzip2/xz/zip
-    の deflate レベルを指定
-  - **暗号化方式** (AES-256 / ZipCrypto): zip 形式のみ
-  - **パス文字コード** (Shift_JIS / UTF-8): Windows 旧 zip との互換性。要件が
-    出たら追加
-  - **Solid 圧縮 / Volume splitting**: 7z 作成サポート自体が無いので大きく後回し
+- **アーカイブ作成オプション** — `CreateArchiveDialog` に作成オプションを実装済み。
+  読み取り側の password 対応 (`ArchiveContext::password`) と対称:
+  - **パスワード (= 暗号化)** ✅ — zip のみ。`archive_write_set_passphrase` +
+    `zip:encryption=aes256` / `zip:encryption=zipcrypt`。ダイアログでパスワード +
+    確認欄、一致検証あり。**要求した暗号化が libarchive ビルドで使えない場合は
+    平文を黙って作らずエラー終了**する (偽暗号化防止)。
+  - **圧縮レベル (0〜9)** ✅ — `<module>:compression-level` (zip / gzip / bzip2 /
+    xz)。`-1` で libarchive 既定。無圧縮の Tar は対象外。bzip2 は 1〜9 に丸める。
+  - **暗号化方式 (AES-256 / ZipCrypto)** ✅ — zip + パスワード時のみ選択可。
+    既定 AES-256。ZipCrypto (旧式・脆弱) は互換目的の選択肢。
+    ※ libarchive の値は `aes256` / `zipcrypt` (`zipcrypto` ではない点に注意)。
+  - **パス文字コード** (Shift_JIS / UTF-8) — Windows 旧 zip 互換。**見送り**
+    (要件が出たら `zip:hdrcharset` 経由で追加)。
+  - **Solid 圧縮 / Volume splitting** — 7z 作成サポート自体が無いので対象外。

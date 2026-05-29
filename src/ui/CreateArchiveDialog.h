@@ -32,6 +32,11 @@ public:
   QString                      outputPath() const;
   ArchiveCreateWorker::Format  format()     const;
 
+  // 作成オプション。zip 以外 / パスワード空のときは暗号化なし扱いを返す。
+  QString                          passphrase()       const;
+  ArchiveCreateWorker::Encryption  encryption()       const;
+  int                              compressionLevel() const;  // -1 = 既定
+
 protected:
   void keyPressEvent(QKeyEvent* event) override;
   bool eventFilter(QObject* watched, QEvent* event) override;
@@ -39,6 +44,10 @@ protected:
 private slots:
   void onBrowseDir();
   void onFormatChanged();
+  // OK 押下時の検証 (パスワード一致など)。問題なければ accept() する。
+  void tryAccept();
+  // パスワード欄の有無に応じて暗号化方式コンボの有効/無効を更新する。
+  void updateEncryptionEnabled();
 
 private:
   void setupUi(const QString& defaultOutputDir);
@@ -52,6 +61,10 @@ private:
   QLineEdit*   m_dirEdit;
   QPushButton* m_browseButton;
   QLineEdit*   m_nameEdit;
+  QComboBox*   m_compressionCombo     = nullptr;  // 圧縮レベル (-1=既定 / 0〜9)
+  QLineEdit*   m_passwordEdit         = nullptr;  // zip 暗号化パスワード
+  QLineEdit*   m_passwordConfirmEdit  = nullptr;  // 確認用
+  QComboBox*   m_encryptionCombo      = nullptr;  // AES-256 / ZipCrypto
 };
 
 } // namespace Farman

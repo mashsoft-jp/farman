@@ -23,10 +23,27 @@ public:
     TarXz,      // .tar.xz
   };
 
+  // zip の暗号化方式。zip 形式 + パスフレーズ設定時のみ有効。
+  enum class Encryption {
+    None,       // 暗号化しない
+    Aes256,     // WinZip AES-256 (推奨)
+    ZipCrypt,   // 旧式 ZipCrypto (脆弱だが互換性高)
+  };
+
   ArchiveCreateWorker(const QString&     outputPath,
                       Format             format,
                       const QStringList& inputPaths,
                       QObject*           parent = nullptr);
+
+  // 作成オプション (start() 前に任意で設定する)。
+  // - パスフレーズ + 暗号化方式は **zip 形式のみ** 有効。空 / None で無効。
+  //   要求した暗号化が libarchive ビルドで使えない場合は run() がエラー終了する
+  //   (平文を黙って作らない)。
+  // - 圧縮レベルは 0〜9。-1 (既定) で libarchive のデフォルトに任せる。
+  //   無圧縮の Tar には影響しない。
+  void setPassphrase(const QString& pass) { m_passphrase = pass; }
+  void setEncryption(Encryption enc)      { m_encryption = enc; }
+  void setCompressionLevel(int level)     { m_compressionLevel = level; }
 
 protected:
   void run() override;
@@ -44,6 +61,11 @@ private:
   QString     m_outputPath;
   Format      m_format;
   QStringList m_inputPaths;
+
+  // 作成オプション (既定 = 暗号化なし / 圧縮レベルは libarchive 既定)。
+  QString     m_passphrase;
+  Encryption  m_encryption       = Encryption::None;
+  int         m_compressionLevel = -1;
 };
 
 } // namespace Farman

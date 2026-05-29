@@ -67,6 +67,58 @@ void ArchiveCreateWorker::run() {
       break;
   }
 
+  // ── 作成オプション (open より前に設定する必要がある) ──
+  // 圧縮レベル: 形式に対応する libarchive の module 名で指定。失敗しても
+  // 致命的ではない (既定レベルで続行) ので戻り値は無視する。
+  if (m_compressionLevel >= 0) {
+    const char* mod = nullptr;
+    int level = m_compressionLevel;
+    switch (m_format) {
+      case Format::Zip:    mod = "zip";   break;
+      case Format::TarGz:  mod = "gzip";  break;
+      case Format::TarBz2: mod = "bzip2"; if (level < 1) level = 1; break;  // bzip2 は 1〜9
+      case Format::TarXz:  mod = "xz";    break;
+      case Format::Tar:    mod = nullptr; break;  // 無圧縮なので無視
+    }
+    if (mod) {
+      const QByteArray opt = (QString::fromLatin1(mod)
+        + QStringLiteral(":compression-level=") + QString::number(level)).toUtf8();
+      archive_write_set_options(a, opt.constData());
+    }
+  }
+
+  // 暗号化 (zip のみ)。要求した暗号化が使えない libarchive ビルドで平文を
+  // 黙って作ると「暗号化したつもり」のセキュリティ事故になるため、
+  // set_passphrase / set_options が失敗したら明示的にエラー終了する。
+  if (m_encryption != Encryption::None && !m_passphrase.isEmpty()) {
+    if (m_format != Format::Zip) {
+      emit errorOccurred(m_outputPath,
+        QStringLiteral("Encryption is only supported for zip archives"));
+      archive_write_free(a);
+      emit finished(false);
+      return;
+    }
+    const QByteArray pass = m_passphrase.toUtf8();
+    if (archive_write_set_passphrase(a, pass.constData()) != ARCHIVE_OK) {
+      emit errorOccurred(m_outputPath,
+        QString::fromUtf8(archive_error_string(a)));
+      archive_write_free(a);
+      emit finished(false);
+      return;
+    }
+    const char* enc = (m_encryption == Encryption::Aes256)
+                        ? "zip:encryption=aes256"
+                        : "zip:encryption=zipcrypt";
+    if (archive_write_set_options(a, enc) != ARCHIVE_OK) {
+      emit errorOccurred(m_outputPath,
+        QStringLiteral("This build of libarchive cannot encrypt zip archives: %1")
+          .arg(QString::fromUtf8(archive_error_string(a))));
+      archive_write_free(a);
+      emit finished(false);
+      return;
+    }
+  }
+
   // Windows では archive_write_open_filename (char*) が ANSI 解釈なので、
   // 日本語パス (例: OneDrive\ドキュメント) や OneDrive 配下が開けない。
   // wchar_t* 版を使えば QString の UTF-16 表現をそのまま渡せる。

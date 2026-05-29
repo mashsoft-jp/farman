@@ -26,6 +26,9 @@ All notable changes to **farman** are documented in this file.
   - 進捗ダイアログ / キャンセル対応 / 上書きモード (Ask / 自動上書き / 自動リネーム)
 - **アーカイブ**
   - 作成・展開 (zip / tar / tar.gz / tar.bz2 / tar.xz)
+  - **作成オプション**: 圧縮レベル (0〜9)、zip の **パスワード暗号化**
+    (AES-256 / 旧式 ZipCrypto を選択、パスワード確認 + 一致検証付き)。
+    暗号化非対応の libarchive ビルドでは平文を作らずエラーにする
   - 暗号化 zip の展開 (パスワード入力 + 検証付き)
   - **アーカイブ内ブラウジング**: 仮想 FS (`archive.zip!/inner/`) として閲覧、
     選択ファイルだけを反対ペインへ抽出コピー

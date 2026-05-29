@@ -2208,6 +2208,10 @@ void FileManagerPanel::createArchive() {
 
   ArchiveCreateWorker* worker = new ArchiveCreateWorker(
     outputPath, format, paths, this);
+  // 作成オプション (圧縮レベル / zip 暗号化) をダイアログから引き継ぐ。
+  worker->setCompressionLevel(dlg.compressionLevel());
+  worker->setEncryption(dlg.encryption());
+  worker->setPassphrase(dlg.passphrase());
   ProgressDialog* dialog = new ProgressDialog(tr("Creating archive..."), this);
   dialog->setWorker(worker);
 
