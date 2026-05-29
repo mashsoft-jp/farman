@@ -293,6 +293,16 @@ jobs:
             build/farman.dmg \
             build/dmg-staging
 
+          # DMG コンテナ自体も Developer ID 署名しておく (公証の前)。.app だけ
+          # 署名 + 公証してもコンテナが未署名だと `spctl -t open` が「no usable
+          # signature」になる。署名 → notarize → staple の順にすることで、配布
+          # された .dmg がダウンロード直後のマウント時点から Notarized Developer
+          # ID として完全に受理される。
+          if [ "$SIGN_AVAILABLE" = "true" ]; then
+            codesign --force --timestamp \
+              --sign "$MACOS_IDENTITY_HASH" build/farman.dmg
+          fi
+
       - name: Notarize and staple (macOS, signed runs only)
         if: runner.os == 'macOS' && steps.sign-check.outputs.available == 'true'
         env:
