@@ -177,8 +177,17 @@ jobs:
         if: runner.os == 'Linux'
         run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 2
 
-      - name: Build (macOS / Windows)
-        if: runner.os != 'Linux'
+      # macOS arm64 ランナーは 3 vCPU / 7 GB と小さく、`--parallel` 無制限だと
+      # 重い翻訳単位 (-O2 の Qt 依存ファイル) が同時多発してメモリ逼迫 → clang が
+      # ストールしてジョブが固まる事象が頻発した (v0.9.4 / v0.9.5)。Linux と同じく
+      # 2 並列に制限して安定させる (多少遅くなってもリリースの信頼性を優先)。
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 2
+
+      # Windows ランナーはメモリに余裕があり無制限並列でも安定しているので据え置き。
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
         run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
 
       # ──────── Deploy: 配布形式へ整形 ────────
