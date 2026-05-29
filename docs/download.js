@@ -58,7 +58,8 @@
         title: "Windows",
         arch: "64-bit (x64)",
         primary: urls.windowsSetup ? { label: "インストーラ (.exe)", url: urls.windowsSetup } : null,
-        secondary: urls.windowsZip ? { label: "ポータブル版 (.zip)", url: urls.windowsZip } : null
+        secondary: urls.windowsZip ? { label: "ポータブル版 (.zip)", url: urls.windowsZip } : null,
+        note: "初回起動時に SmartScreen の警告が出たら「詳細情報」→「実行」で起動できます。"
       },
       {
         os: "linux",
@@ -95,6 +96,9 @@
       if (c.secondary) {
         html += '<a class="dl-secondary" href="' + c.secondary.url + '">'
               + c.secondary.label + "</a>";
+      }
+      if (c.note) {
+        html += '<p class="dl-note">' + c.note + "</p>";
       }
       card.innerHTML = html;
       grid.appendChild(card);

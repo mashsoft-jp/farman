@@ -229,6 +229,14 @@ code {
   font-size: .9rem;
   color: var(--fg-muted);
 }
+.dl-note {
+  margin: 14px 0 0;
+  font-size: .78rem;
+  line-height: 1.6;
+  color: var(--fg-muted);
+  text-align: left;
+  opacity: .9;
+}
 .download-note { font-size: .9rem; margin-top: 8px; }
 
 /* ===== Footer ===== */
