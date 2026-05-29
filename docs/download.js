@@ -5,6 +5,7 @@
  * アセット名にバージョンが入る (farman-vX.Y.Z-macos-arm64.dmg など) ため
  * 固定の直リンクが作れないので、この方式を採る。
  *
+ * 日本語版 (/) と英語版 (/en/) で共用。文言は <html lang> を見て出し分ける。
  * API 取得に失敗した場合は GitHub Releases ページへのリンクにフォールバック。
  */
 (function () {
@@ -13,6 +14,50 @@
   var REPO = "mashsoft-jp/farman";
   var API = "https://api.github.com/repos/" + REPO + "/releases/latest";
   var RELEASES_PAGE = "https://github.com/" + REPO + "/releases/latest";
+
+  // <html lang="en"> なら英語、それ以外は日本語。
+  var LANG = ((document.documentElement.lang || "ja").toLowerCase().indexOf("en") === 0)
+    ? "en" : "ja";
+
+  var STR = {
+    ja: {
+      latest: "最新リリース: ",
+      download: "ダウンロード",
+      heroMac: "macOS 版をダウンロード",
+      heroWin: "Windows 版をダウンロード",
+      heroLinux: "Linux 版をダウンロード",
+      dmg: "ダウンロード (.dmg)",
+      exe: "インストーラ (.exe)",
+      zip: "ポータブル版 (.zip)",
+      appimage: "AppImage",
+      deb: "Debian / Ubuntu (.deb)",
+      smartscreen: "初回起動時に SmartScreen の警告が出たら「詳細情報」→「実行」で起動できます。",
+      releasesPage: "リリースページへ",
+      allOS: "すべての OS",
+      openReleases: "リリースページを開く",
+      fetchFail: "リリース情報を取得できませんでした。",
+      fromReleases: ' <a href="' + RELEASES_PAGE + '" rel="noopener">GitHub Releases</a> から直接ダウンロードしてください。'
+    },
+    en: {
+      latest: "Latest release: ",
+      download: "Download",
+      heroMac: "Download for macOS",
+      heroWin: "Download for Windows",
+      heroLinux: "Download for Linux",
+      dmg: "Download (.dmg)",
+      exe: "Installer (.exe)",
+      zip: "Portable (.zip)",
+      appimage: "AppImage",
+      deb: "Debian / Ubuntu (.deb)",
+      smartscreen: 'If SmartScreen warns on first launch, click "More info" → "Run anyway".',
+      releasesPage: "Releases page",
+      allOS: "All platforms",
+      openReleases: "Open releases page",
+      fetchFail: "Could not fetch release info.",
+      fromReleases: ' Download directly from <a href="' + RELEASES_PAGE + '" rel="noopener">GitHub Releases</a>.'
+    }
+  };
+  var L = STR[LANG];
 
   // 訪問者の OS を推定 (macos / windows / linux / unknown)。
   function detectOS() {
@@ -50,23 +95,23 @@
         os: "macos",
         title: "macOS",
         arch: "Apple Silicon (arm64)",
-        primary: urls.macos ? { label: "ダウンロード (.dmg)", url: urls.macos } : null,
+        primary: urls.macos ? { label: L.dmg, url: urls.macos } : null,
         secondary: null
       },
       {
         os: "windows",
         title: "Windows",
         arch: "64-bit (x64)",
-        primary: urls.windowsSetup ? { label: "インストーラ (.exe)", url: urls.windowsSetup } : null,
-        secondary: urls.windowsZip ? { label: "ポータブル版 (.zip)", url: urls.windowsZip } : null,
-        note: "初回起動時に SmartScreen の警告が出たら「詳細情報」→「実行」で起動できます。"
+        primary: urls.windowsSetup ? { label: L.exe, url: urls.windowsSetup } : null,
+        secondary: urls.windowsZip ? { label: L.zip, url: urls.windowsZip } : null,
+        note: L.smartscreen
       },
       {
         os: "linux",
         title: "Linux",
         arch: "x86_64",
-        primary: urls.linuxAppImage ? { label: "AppImage", url: urls.linuxAppImage } : null,
-        secondary: urls.linuxDeb ? { label: "Debian / Ubuntu (.deb)", url: urls.linuxDeb } : null
+        primary: urls.linuxAppImage ? { label: L.appimage, url: urls.linuxAppImage } : null,
+        secondary: urls.linuxDeb ? { label: L.deb, url: urls.linuxDeb } : null
       }
     ].map(function (c) { c.isCurrent = (c.os === currentOS); return c; });
   }
@@ -91,7 +136,7 @@
               + c.primary.label + "</a>";
       } else {
         html += '<a class="btn btn-ghost" href="' + RELEASES_PAGE + '" rel="noopener">'
-              + "リリースページへ</a>";
+              + L.releasesPage + "</a>";
       }
       if (c.secondary) {
         html += '<a class="dl-secondary" href="' + c.secondary.url + '">'
@@ -110,9 +155,9 @@
     var btn = document.getElementById("hero-download");
     if (!btn) return;
     var map = {
-      macos:   { url: urls.macos,        label: "macOS 版をダウンロード" },
-      windows: { url: urls.windowsSetup, label: "Windows 版をダウンロード" },
-      linux:   { url: urls.linuxAppImage, label: "Linux 版をダウンロード" }
+      macos:   { url: urls.macos,         label: L.heroMac },
+      windows: { url: urls.windowsSetup,  label: L.heroWin },
+      linux:   { url: urls.linuxAppImage, label: L.heroLinux }
     };
     var pick = map[currentOS];
     if (pick && pick.url) {
@@ -120,7 +165,7 @@
       btn.textContent = pick.label;
     } else {
       btn.href = "#download";
-      btn.textContent = "ダウンロード";
+      btn.textContent = L.download;
     }
   }
 
@@ -136,23 +181,21 @@
     }
     var heroV = document.getElementById("hero-version");
     var dlV = document.getElementById("download-version");
-    if (heroV) heroV.textContent = "最新リリース: " + tag + date;
-    if (dlV) dlV.textContent = "最新リリース: " + tag + date;
+    if (heroV) heroV.textContent = L.latest + tag + date;
+    if (dlV) dlV.textContent = L.latest + tag + date;
   }
 
-  function fallback(msg) {
+  function fallback() {
     var heroV = document.getElementById("hero-version");
     var dlV = document.getElementById("download-version");
     if (heroV) heroV.textContent = "";
-    if (dlV) {
-      dlV.innerHTML = (msg || "リリース情報を取得できませんでした。")
-        + ' <a href="' + RELEASES_PAGE + '" rel="noopener">GitHub Releases</a> から直接ダウンロードしてください。';
-    }
+    if (dlV) dlV.innerHTML = L.fetchFail + L.fromReleases;
     var grid = document.getElementById("download-grid");
     if (grid && !grid.children.length) {
-      grid.innerHTML = '<div class="dl-card"><p class="dl-os">すべての OS</p>'
+      grid.innerHTML = '<div class="dl-card"><p class="dl-os">' + L.allOS + "</p>"
         + '<p class="dl-arch">macOS / Windows / Linux</p>'
-        + '<a class="btn btn-primary" href="' + RELEASES_PAGE + '" rel="noopener">リリースページを開く</a></div>';
+        + '<a class="btn btn-primary" href="' + RELEASES_PAGE + '" rel="noopener">'
+        + L.openReleases + "</a></div>";
     }
   }
 

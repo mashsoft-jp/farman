@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>farman — keyboard-driven cross-platform dual-pane file manager</title>
+  <meta name="description" content="farman is a cross-platform dual-pane file manager you can drive almost entirely from the keyboard. macOS / Windows / Linux, open source under the MIT license." />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:title" content="farman — keyboard-driven dual-pane file manager" />
+  <meta property="og:description" content="A cross-platform dual-pane file manager you can drive almost entirely from the keyboard." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="../farman-icon.png" />
+  <meta name="twitter:card" content="summary" />
+
+  <link rel="icon" type="image/png" href="../farman-icon.png" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="site-header">
+    <a class="brand" href="#top">
+      <img src="../farman-icon.png" alt="farman" width="32" height="32" />
+      <span>farman</span>
+    </a>
+    <nav class="nav">
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a>
+      <a class="lang-switch" href="../">日本語</a>
+    </nav>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <img class="hero-logo" src="../farman-icon.png" alt="" width="96" height="96" />
+      <h1>farman</h1>
+      <p class="tagline">
+        A cross-platform dual-pane file manager<br />
+        you can drive almost entirely from the keyboard.
+      </p>
+
+      <div class="hero-cta">
+        <a class="btn btn-primary" id="hero-download" href="https://github.com/mashsoft-jp/farman/releases/latest" rel="noopener">
+          Download
+        </a>
+        <a class="btn btn-ghost" href="#download">All platforms / formats</a>
+      </div>
+      <p class="hero-sub" id="hero-version">Fetching the latest release…</p>
+
+      <div class="hero-shot">
+        <img src="../screenshots/01-main-2pane.png" alt="farman main dual-pane window" loading="lazy" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Features ===== -->
+  <section class="section" id="features">
+    <h2>Features</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <h3>Dual-pane UI</h3>
+        <p>Copy / move / sync between the two panes. Switch to a single-pane or preview layout anytime.</p>
+      </div>
+      <div class="feature">
+        <h3>Keyboard-driven</h3>
+        <p>Single keys like <code>c</code>/<code>m</code>/<code>k</code>/<code>d</code>/<code>r</code>/<code>n</code> for the core actions. Fully customizable key bindings.</p>
+      </div>
+      <div class="feature">
+        <h3>File operations</h3>
+        <p>Copy / move / delete (trash or permanent) / rename / bulk rename (template + numbering + regex + live preview).</p>
+      </div>
+      <div class="feature">
+        <h3>Archives</h3>
+        <p>Create &amp; extract zip / tar / tar.gz / tar.bz2 / tar.xz. Browse inside archives (virtual FS) and extract selected entries.</p>
+      </div>
+      <div class="feature">
+        <h3>Built-in viewers</h3>
+        <p>Text / image / binary / Markdown / PDF / CSV·TSV. Inline or separate window, with full-text search.</p>
+      </div>
+      <div class="feature">
+        <h3>Search &amp; navigation</h3>
+        <p>Background recursive search, bookmarks, directory history, address bar with path completion.</p>
+      </div>
+      <div class="feature">
+        <h3>Directory compare</h3>
+        <p>Color-coded per-row diff between the two panes. Works with sync browsing and stays active after copying.</p>
+      </div>
+      <div class="feature">
+        <h3>Customizable look</h3>
+        <p>Theme, address bar, cursor, per-category file colors, row height. English / Japanese (Auto follows the OS).</p>
+      </div>
+      <div class="feature">
+        <h3>Auto-update</h3>
+        <p>Checks for the latest version on startup and updates in one click — download, verify, install.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Screenshots ===== -->
+  <section class="section section-alt" id="screenshots">
+    <h2>Screenshots</h2>
+
+    <h3 class="shot-group">File operations &amp; view modes</h3>
+    <div class="shot-grid">
+      <figure><img src="../screenshots/01-main-2pane.png" alt="Main dual pane" loading="lazy" /><figcaption>Main dual pane</figcaption></figure>
+      <figure><img src="../screenshots/14-thumbnail-view.png" alt="Thumbnail view" loading="lazy" /><figcaption>Thumbnail view</figcaption></figure>
+      <figure><img src="../screenshots/10-preview-mode.png" alt="Preview mode" loading="lazy" /><figcaption>Preview mode (Quick View)</figcaption></figure>
+      <figure><img src="../screenshots/16-search.png" alt="Recursive search" loading="lazy" /><figcaption>Recursive search</figcaption></figure>
+      <figure><img src="../screenshots/17-bulk-rename.png" alt="Bulk rename" loading="lazy" /><figcaption>Bulk rename</figcaption></figure>
+      <figure><img src="../screenshots/02-archive-browsing.png" alt="Archive browsing" loading="lazy" /><figcaption>Archive browsing</figcaption></figure>
+      <figure><img src="../screenshots/03-directory-compare.png" alt="Directory compare" loading="lazy" /><figcaption>Directory compare</figcaption></figure>
+      <figure><img src="../screenshots/04-shortcut-list.png" alt="Shortcut list" loading="lazy" /><figcaption>Shortcut list</figcaption></figure>
+      <figure><img src="../screenshots/05-settings.png" alt="Settings" loading="lazy" /><figcaption>Settings</figcaption></figure>
+    </div>
+
+    <h3 class="shot-group">Built-in viewers</h3>
+    <div class="shot-grid">
+      <figure><img src="../screenshots/11-markdown-viewer.png" alt="Markdown viewer" loading="lazy" /><figcaption>Markdown</figcaption></figure>
+      <figure><img src="../screenshots/12-pdf-viewer.png" alt="PDF viewer" loading="lazy" /><figcaption>PDF</figcaption></figure>
+      <figure><img src="../screenshots/13-csv-viewer.png" alt="CSV / TSV viewer" loading="lazy" /><figcaption>CSV / TSV</figcaption></figure>
+      <figure><img src="../screenshots/07-text-viewer.png" alt="Text viewer" loading="lazy" /><figcaption>Text</figcaption></figure>
+      <figure><img src="../screenshots/08-image-viewer.png" alt="Image viewer" loading="lazy" /><figcaption>Image</figcaption></figure>
+      <figure><img src="../screenshots/09-binary-viewer.png" alt="Binary viewer" loading="lazy" /><figcaption>Binary</figcaption></figure>
+    </div>
+    <p class="download-note">Screenshots show the Japanese UI; the app ships with an English interface too.</p>
+  </section>
+
+  <!-- ===== Download ===== -->
+  <section class="section" id="download">
+    <h2>Download</h2>
+    <p class="download-version" id="download-version">Fetching the latest release…</p>
+
+    <div class="download-grid" id="download-grid">
+      <!-- download.js injects per-OS cards. The no-JS fallback is below. -->
+    </div>
+
+    <noscript>
+      <p class="fallback">
+        JavaScript is disabled. Download installers for each OS directly from
+        <a href="https://github.com/mashsoft-jp/farman/releases/latest" rel="noopener">GitHub Releases</a>.
+      </p>
+    </noscript>
+
+    <p class="download-note">
+      All releases and release notes are on
+      <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">GitHub Releases</a>
+      / <a href="https://github.com/mashsoft-jp/farman/blob/main/CHANGELOG.md" rel="noopener">CHANGELOG</a>.
+      Every asset ships with a <code>.sha256</code> checksum.
+    </p>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <p class="disclaimer">
+      Because this software operates on your files directly, please back up
+      important data before using it. The author assumes no liability for any
+      damage arising from the use of this software.
+    </p>
+    <p>
+      <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a> ·
+      <a href="https://github.com/mashsoft-jp/farman/issues" rel="noopener">Issues</a> ·
+      <a href="https://github.com/mashsoft-jp/farman/blob/main/LICENSE" rel="noopener">MIT License</a>
+    </p>
+    <p class="copyright">© Mashsoft Inc.</p>
+  </footer>
+
+  <script src="../download.js"></script>
+</body>
+</html>

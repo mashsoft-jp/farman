@@ -81,6 +81,12 @@ code {
 .nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .nav a { color: var(--fg-muted); font-size: .95rem; }
 .nav a:hover { color: var(--fg); text-decoration: none; }
+.lang-switch {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 12px;
+}
+.lang-switch:hover { background: var(--bg-alt); }
 
 /* ===== Hero ===== */
 .hero {
