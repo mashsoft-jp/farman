@@ -2429,14 +2429,17 @@ Last checked: 2026-05-10 09:42
 
 - **アーカイブ作成オプション** — `CreateArchiveDialog` に作成オプションを実装済み。
   読み取り側の password 対応 (`ArchiveContext::password`) と対称:
-  - **パスワード (= 暗号化)** ✅ — zip のみ。`archive_write_set_passphrase` +
-    `zip:encryption=aes256` / `zip:encryption=zipcrypt`。ダイアログでパスワード +
-    確認欄、一致検証あり。**要求した暗号化が libarchive ビルドで使えない場合は
-    平文を黙って作らずエラー終了**する (偽暗号化防止)。
+  - **パスワード (= 暗号化)** ✅ — zip のみ、**AES-256 固定**。
+    `archive_write_set_passphrase` + `zip:encryption=aes256`。ダイアログで
+    パスワード + 確認欄、一致検証あり。**要求した暗号化が libarchive ビルドで
+    使えない場合は平文を黙って作らずエラー終了**する (偽暗号化防止)。
   - **圧縮レベル (0〜9)** ✅ — `<module>:compression-level` (zip / gzip / bzip2 /
     xz)。`-1` で libarchive 既定。無圧縮の Tar は対象外。bzip2 は 1〜9 に丸める。
-  - **暗号化方式 (AES-256 / ZipCrypto)** ✅ — zip + パスワード時のみ選択可。
-    既定 AES-256。ZipCrypto (旧式・脆弱) は互換目的の選択肢。
+  - **暗号化方式の UI 選択** — **不提供** (2026-05-30)。旧式 ZipCrypto は
+    既知平文攻撃で破られている脆弱方式で、現代の zip ツールは AES-256 を
+    一般にサポートするため、選択肢を出してユーザーを脆弱な方を選ばせる
+    foot-gun を避ける。worker 側の enum (`Aes256` / `ZipCrypt`) は将来の
+    再露出に備えて残置している。
     ※ libarchive の値は `aes256` / `zipcrypt` (`zipcrypto` ではない点に注意)。
   - **パス文字コード** (Shift_JIS / UTF-8) — Windows 旧 zip 互換。**見送り**
     (要件が出たら `zip:hdrcharset` 経由で追加)。

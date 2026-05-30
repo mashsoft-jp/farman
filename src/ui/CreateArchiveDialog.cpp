@@ -46,12 +46,14 @@ QString CreateArchiveDialog::passphrase() const {
 }
 
 ArchiveCreateWorker::Encryption CreateArchiveDialog::encryption() const {
+  // zip + パスワードありなら AES-256 で暗号化。旧式 ZipCrypto は脆弱なので
+  // UI からは選択肢を出さず、ここで決め打ちにする (worker 側の enum は将来
+  // 再露出できるよう残してある)。
   if (format() != ArchiveCreateWorker::Format::Zip
       || m_passwordEdit->text().isEmpty()) {
     return ArchiveCreateWorker::Encryption::None;
   }
-  return static_cast<ArchiveCreateWorker::Encryption>(
-    m_encryptionCombo->currentData().toInt());
+  return ArchiveCreateWorker::Encryption::Aes256;
 }
 
 int CreateArchiveDialog::compressionLevel() const {
@@ -148,25 +150,18 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   form->addRow(new QLabel(tr("Compression:"), this), m_compressionCombo);
 
   // Password (zip 暗号化。zip 以外は無効化)
+  // パスワードを入れた zip は AES-256 で暗号化される (方式選択 UI は省略 —
+  // ZipCrypto は脆弱なので一律 AES-256)。
   m_passwordEdit = new QLineEdit(this);
   m_passwordEdit->setFocusPolicy(Qt::StrongFocus);
   m_passwordEdit->setEchoMode(QLineEdit::Password);
-  m_passwordEdit->setPlaceholderText(tr("Leave empty for no encryption (zip only)"));
+  m_passwordEdit->setPlaceholderText(tr("Leave empty for no encryption (zip only, AES-256)"));
   form->addRow(new QLabel(tr("Password:"), this), m_passwordEdit);
 
   m_passwordConfirmEdit = new QLineEdit(this);
   m_passwordConfirmEdit->setFocusPolicy(Qt::StrongFocus);
   m_passwordConfirmEdit->setEchoMode(QLineEdit::Password);
   form->addRow(new QLabel(tr("Confirm:"), this), m_passwordConfirmEdit);
-
-  // Encryption method (パスワードを入れた zip のときだけ有効)
-  m_encryptionCombo = new QComboBox(this);
-  m_encryptionCombo->setFocusPolicy(Qt::StrongFocus);
-  m_encryptionCombo->addItem(tr("AES-256 (recommended)"),
-    static_cast<int>(ArchiveCreateWorker::Encryption::Aes256));
-  m_encryptionCombo->addItem(tr("ZipCrypto (legacy, weak)"),
-    static_cast<int>(ArchiveCreateWorker::Encryption::ZipCrypt));
-  form->addRow(new QLabel(tr("Encryption:"), this), m_encryptionCombo);
 
   mainLayout->addLayout(form);
 
@@ -187,20 +182,16 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   connect(m_browseButton,&QPushButton::clicked, this, &CreateArchiveDialog::onBrowseDir);
   connect(m_formatCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
           this, [this](int) { onFormatChanged(); });
-  // パスワード入力の有無で暗号化方式コンボの有効/無効が変わる
-  connect(m_passwordEdit, &QLineEdit::textChanged,
-          this, [this](const QString&) { updateEncryptionEnabled(); });
 
   // Tab: format → dir → browse → name → compression → password → confirm
-  //       → encryption → Cancel → OK
+  //       → Cancel → OK
   setTabOrder(m_formatCombo,        m_dirEdit);
   setTabOrder(m_dirEdit,            m_browseButton);
   setTabOrder(m_browseButton,       m_nameEdit);
   setTabOrder(m_nameEdit,           m_compressionCombo);
   setTabOrder(m_compressionCombo,   m_passwordEdit);
   setTabOrder(m_passwordEdit,       m_passwordConfirmEdit);
-  setTabOrder(m_passwordConfirmEdit,m_encryptionCombo);
-  setTabOrder(m_encryptionCombo,    cancelBtn);
+  setTabOrder(m_passwordConfirmEdit,cancelBtn);
   setTabOrder(cancelBtn,            okBtn);
 
   // 初期ファイル名 + 形式に応じたフィールドの有効/無効を反映。
@@ -242,20 +233,12 @@ void CreateArchiveDialog::onFormatChanged() {
 
   // 形式に応じてオプション欄の有効/無効を切替える。
   // - 圧縮レベル: 無圧縮の Tar 以外で有効
-  // - 暗号化 (パスワード/確認/方式): zip のみ
+  // - 暗号化 (パスワード/確認): zip のみ (暗号化方式は AES-256 固定で UI なし)
   const bool isZip       = (format() == ArchiveCreateWorker::Format::Zip);
   const bool compressible = (format() != ArchiveCreateWorker::Format::Tar);
   m_compressionCombo->setEnabled(compressible);
   m_passwordEdit->setEnabled(isZip);
   m_passwordConfirmEdit->setEnabled(isZip);
-  updateEncryptionEnabled();
-}
-
-void CreateArchiveDialog::updateEncryptionEnabled() {
-  // 暗号化方式は「zip + パスワード入力あり」のときだけ選べる。
-  const bool active = (format() == ArchiveCreateWorker::Format::Zip)
-                      && !m_passwordEdit->text().isEmpty();
-  m_encryptionCombo->setEnabled(active);
 }
 
 void CreateArchiveDialog::tryAccept() {
