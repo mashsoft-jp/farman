@@ -8,17 +8,31 @@ Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
 
 ## 主な機能
 
-- **2 ペイン UI** + 任意のシングルペイン切替、左右ペイン間でのコピー / 移動 / 同期
+- **2 ペイン UI** + シングルペイン / **プレビューモード (Quick View)** の 3 レイアウト切替
+- **サムネイル表示**: リスト / 小・中・大の 4 段階 (`Cmd/Ctrl+1〜4`)。画像 / PDF 1 ページ目に対応
+- **ディレクトリ比較**: 左右ペインの差分を行ごとに色分け
+- **同期ブラウズ**: 片方のペインを移動するともう片方も相対追従
 - **キー駆動**操作: `c`/`m`/`k`/`d`/`r`/`n`/`a`/`f`/`p`/`u` 等の単一キーで主要操作
 - **ファイル操作**: コピー / 移動 / 削除 (ゴミ箱 or 完全削除) / リネーム /
   **一括リネーム** (テンプレート + 連番 + 正規表現置換 + プレビュー)
-- **アーカイブ**: zip / tar / tar.gz / tar.bz2 / tar.xz の作成・展開 (libarchive)
-- **検索**: バックグラウンド再帰検索、結果からの直接ジャンプ
+- **再帰検索**: バックグラウンド再帰検索、結果からの直接ジャンプ
 - **ブックマーク**, **ディレクトリ履歴** (永続化可)
-- **ビュアー**: テキスト (エンコード自動判定 / 行番号 / ワードラップ) / 画像
-  (ズーム / Fit to Window / 透明背景 Checker / アニメーション GIF・WebP) /
-  バイナリ (16 進ダンプ + アドレス列・文字列列カラーリング)
+- **アーカイブ** (libarchive)
+  - 作成・展開: zip / tar / tar.gz / tar.bz2 / tar.xz
+  - **アーカイブ内ブラウジング** (仮想 FS `archive.zip!/inner/`) と選択抽出
+  - **作成オプション**: 圧縮レベル + zip の **AES-256 パスワード暗号化**
+  - 暗号化 zip の展開 (パスワード入力 + 検証)
+- **組み込みビュアー** (インライン / 別ウィンドウ両対応、全文検索付き):
+  - テキスト (エンコード自動判定 / 行番号 / ワードラップ)
+  - 画像 (ズーム / Fit / 透明背景 Checker / GIF・WebP アニメ / **90° 回転** /
+    **Info ダイアログ** (Exif / ICC プロファイル / DPI) / BMP / **PSD 合成プレビュー**)
+  - バイナリ (16 進ダンプ + アドレス列・文字列列カラーリング)
+  - **Markdown** (CommonMark + GFM / 表 / タスクリスト / 全文検索)
+  - **PDF** (Qt PDF / ページ送り / ズーム / Fit / 全文検索)
+  - **CSV・TSV** (区切り自動判定 / セル検索 / 巨大ファイル遅延ロード)
 - **任意ビュアーで開く** (Ctrl+Enter) / **OS 既定アプリで実行** (Shift+Enter)
+- **自動アップデート**: 起動時に新版チェック → ワンクリックでダウンロード + SHA256 検証 + インストール
+- **設定エクスポート/インポート**: ブックマーク / カスタムコマンド / カラースキーム含む全設定を 1 ファイルで他マシンへ移行
 - **ログペイン** (日次ローテーション + 保持日数設定)
 - **アドレスバー / カーソル / カテゴリ別ファイル色 / 行高** などの外観カスタマイズ
 - **キーバインドの完全カスタマイズ** + デフォルトリセット
@@ -27,47 +41,31 @@ Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
 
 ## スクリーンショット
 
-### メイン 2 ペイン
+### ファイル操作・表示モード
 
-ツールバー + 左右ペイン + ログペインの基本レイアウト。
+| | |
+|---|---|
+| ![Main 2-pane UI](docs/screenshots/01-main-2pane.png) | ![Thumbnail view](docs/screenshots/14-thumbnail-view.png) |
+| メイン 2 ペイン | サムネイル表示 |
+| ![Preview mode](docs/screenshots/10-preview-mode.png) | ![Recursive search](docs/screenshots/16-search.png) |
+| プレビューモード (Quick View) | 再帰検索 |
+| ![Bulk rename](docs/screenshots/17-bulk-rename.png) | ![Archive browsing](docs/screenshots/02-archive-browsing.png) |
+| 一括リネーム (プレビュー付き) | アーカイブブラウジング (仮想 FS) |
+| ![Directory compare](docs/screenshots/03-directory-compare.png) | ![Shortcut list](docs/screenshots/04-shortcut-list.png) |
+| ディレクトリ比較 | ショートカット一覧 |
+| ![Settings](docs/screenshots/05-settings.png) | |
+| 設定 | |
 
-![Main 2-pane UI](docs/screenshots/01-main-2pane.png)
+### 組み込みビュアー
 
-### アーカイブブラウジング
-
-`.zip` / `.tar.gz` などのアーカイブを Enter で開き、仮想 FS (`archive.zip!/inner/`)
-として閲覧。中の単一ファイルだけビュアーで開いたり、選択コピーで取り出せる。
-
-![Archive browsing](docs/screenshots/02-archive-browsing.png)
-
-### ディレクトリ比較
-
-左右ペインで比較対象を開いて `=` で発動。差分のあるファイル / このペインのみに
-存在するファイルを行ごとに色分けハイライト。
-
-![Directory compare](docs/screenshots/03-directory-compare.png)
-
-### ビュアー
-
-テキスト (エンコード自動判定 + 行番号) / 画像 (ズーム + Fit) / バイナリ
-(16 進ダンプ + アドレス列・文字列列カラーリング) の 3 種類が組み込み。
-
-![Text viewer](docs/screenshots/07-text-viewer.png)
-
-![Image viewer](docs/screenshots/08-image-viewer.png)
-
-![Binary viewer](docs/screenshots/09-binary-viewer.png)
-
-### 共通ダイアログ
-
-ショートカット一覧 (`?`) / 設定 / コピー・移動の確認ダイアログ。
-すべて Tab フォーカス + Alt+key で完結。
-
-![Shortcut list](docs/screenshots/04-shortcut-list.png)
-
-![Settings](docs/screenshots/05-settings.png)
-
-![Transfer confirm](docs/screenshots/06-transfer-confirm.png)
+| | |
+|---|---|
+| ![Markdown](docs/screenshots/11-markdown-viewer.png) | ![PDF](docs/screenshots/12-pdf-viewer.png) |
+| Markdown (CommonMark + GFM) | PDF (Qt PDF / 全文検索) |
+| ![CSV/TSV](docs/screenshots/13-csv-viewer.png) | ![Text](docs/screenshots/07-text-viewer.png) |
+| CSV / TSV (区切り自動判定 / セル検索) | テキスト (エンコード自動判定) |
+| ![Image](docs/screenshots/08-image-viewer.png) | ![Binary](docs/screenshots/09-binary-viewer.png) |
+| 画像 (ズーム / Fit / Exif) | バイナリ (16 進ダンプ) |
 
 ## 動作環境
 
@@ -82,32 +80,32 @@ Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
 
 ## バイナリの入手
 
-正式リリース前のため、配布バイナリはまだ提供していません。
-最新の開発ビルドは GitHub Actions の成果物から取得できます:
+公開済みの最新版は **GitHub Releases** から入手できます:
 
-<https://github.com/mashsoft-jp/farman/actions/workflows/build.yml>
+<https://github.com/mashsoft-jp/farman/releases/latest>
 
-該当ワークフローの run を選んで、Artifacts からプラットフォーム別の zip を
-ダウンロードしてください:
+エンドユーザー向けの配布サイト (OS を自動判定してダウンロードボタンを生成)
+も `docs/` 配下に同梱しています (GitHub Pages 配信、URL は別途案内)。
 
-| Artifact 名 | 中身 |
+| OS | 配布形式 |
 |---|---|
-| `farman-macos` | `.dmg` (Qt frameworks 同梱) |
-| `farman-windows` | `farman.exe` + Qt DLL + libarchive / uchardet 関連 DLL |
-| `farman-linux` | `farman-x86_64.AppImage` |
+| macOS (Apple Silicon, arm64) | `farman-vX.Y.Z-macos-arm64.dmg` |
+| Windows (x64) | `farman-vX.Y.Z-windows-x64-setup.exe` (Inno Setup) + `farman-vX.Y.Z-windows-x64.zip` (ポータブル) |
+| Linux (x86_64) | `farman-vX.Y.Z-linux-x86_64.AppImage` + `farman-vX.Y.Z-linux-x86_64.deb` |
 
-> **macOS**: 未署名アプリのため、初回は Gatekeeper による警告が出ます:
+各アセットには `.sha256` チェックサムが付属します。
+
+> **macOS**: v0.9.5 以降は **Apple Developer ID 署名 + 公証 (Notarization)
+> 済み**で配布しています。`.dmg` をマウントして `farman.app` を `/Applications`
+> にドラッグするだけで、Gatekeeper 警告なしで起動できます。
 >
-> - 警告が「**右クリック → Open**」で開けるタイプならそれで OK
-> - 「**壊れているため開けません**」と出る場合は quarantine 属性のせい:
->   ```bash
->   xattr -cr /Applications/farman.app
->   ```
->   を実行してから再度起動 (これは未署名アプリ全般の対処法。
->   Apple Developer ID 署名は v1.0 以降に対応予定)。
+> **Windows**: 現状 **Authenticode 未署名**のため、初回起動時に SmartScreen の
+> 警告が出ます。「詳細情報」→「実行」で起動してください。署名対応は配布数の
+> 推移を見て検討します (第一候補は Azure Trusted Signing)。
 >
-> **Windows**: SmartScreen が警告を出す可能性があります。「詳細情報」→
-> 「実行」で起動してください (未署名のため)。
+> **開発ビルド** (まだ Release に上げていない手元のもの) を試したい場合は
+> GitHub Actions の `build.yml` ワークフローの Artifacts から取得できます
+> (14 日保存)。
 
 ## ソースからのビルド
 
@@ -264,9 +262,11 @@ git push origin v1.0.0
 削除して安全にやり直せる。タグも `git tag -d v0.0.0-test &&
 git push --delete origin v0.0.0-test` で消せる。
 
-コード署名は未対応 (macOS は ad-hoc 署名のみ)。ユーザーは macOS なら
-「右クリック → 開く」、Windows は SmartScreen "詳細情報 → 実行" で
-起動する運用。配布数が増えたら Developer ID / Authenticode を導入予定。
+**コード署名**: macOS は v0.9.5 から **Developer ID 署名 + 公証 (Notarization)
+を CI で実装済み** (`MACOS_CERTIFICATE_BASE64` 等 5 つの Secret を repo に
+設定するとフローが起動。詳細は SPEC.md「コード署名 (CI)」節)。`.app` /
+`.dmg` とも `spctl` で "Notarized Developer ID" として受理される。
+Windows Authenticode は未対応 (SmartScreen 注記で当面回避)。
 
 リリースノートは `release.yml` が GitHub の auto-generated notes として
 コミット / PR の差分を自動収集する。それとは別に、ユーザー視点の主要変更
@@ -278,7 +278,7 @@ git push --delete origin v0.0.0-test` で消せる。
 |---|---|
 | `↑` / `↓` / `Home` / `End` / `PageUp` / `PageDown` | カーソル移動 |
 | `←` / `→` | ペイン端で親ディレクトリ / 反対ペインへ |
-| `Tab` | ペイン切替 |
+| `Tab` / `Shift+Tab` | アクティブペイン内のフォーカス循環 (★ → アドレス → 📁 → リスト → モード)。Dual 表示時は端で対向ペインへ、Preview 表示時はプレビューペインへ |
 | `Enter` | ディレクトリへ入る / ビュアーで開く |
 | `Backspace` | 親ディレクトリへ |
 | `Space` / `Shift+Space` | 選択トグル (移動あり / なし) |
