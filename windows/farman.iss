@@ -65,6 +65,23 @@ UninstallDisplayName=farman {#AppVersion}
 Name: "english";  MessagesFile: "compiler:Default.isl"
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 
+; インストーラのダイアログフォントを「Yu Gothic UI」に固定する。
+; Inno Setup の既定フォント (`MS Shell Dlg 2`) は英語 Windows / Windows Sandbox 等
+; CJK フォントが薄い環境で日本語 .isl が選ばれると豆腐化する事象があった
+; (2026-05-30, Sandbox で再現)。Yu Gothic UI は Windows 10 以降に標準搭載で
+; Latin + CJK 両グリフを持つため、英語版・日本語版どちらの言語が選ばれても
+; 安全に描画できる。`[LangOptions japanese]` で日本語選択時のみ上書きする手も
+; あるが、グローバルに統一しておく方が予期せぬロケールでも安定する。
+[LangOptions]
+DialogFontName=Yu Gothic UI
+DialogFontSize=9
+TitleFontName=Yu Gothic UI
+TitleFontSize=29
+WelcomeFontName=Yu Gothic UI
+WelcomeFontSize=12
+CopyrightFontName=Yu Gothic UI
+CopyrightFontSize=8
+
 [Tasks]
 ; デスクトップショートカットは任意 (デフォルト OFF)
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
