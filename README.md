@@ -315,6 +315,7 @@ Windows Authenticode は未対応 (SmartScreen 注記で当面回避)。
 
 - [SPEC.md](SPEC.md) — 機能仕様書
 - [ARCHITECTURE.md](ARCHITECTURE.md) — コード構成
+- [SIGNING.md](SIGNING.md) — macOS コード署名 (Developer ID + 公証) のセットアップ手順
 - [CLAUDE.md](CLAUDE.md) — Claude Code 用のガイダンス
 
 ## 翻訳
