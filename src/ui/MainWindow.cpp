@@ -20,6 +20,7 @@
 #include "../core/DirectoryHistory.h"
 #include "../model/FileListModel.h"
 #include "../utils/Dialogs.h"
+#include "../utils/FarmanMessageBox.h"
 #include "../utils/EnterClickFilter.h"
 #include "../viewer/TextViewerWindow.h"
 #include "../viewer/ImageViewerWindow.h"
@@ -51,6 +52,12 @@
 #include <QToolButton>
 #include <QAction>
 #include <QToolBar>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QPlainTextEdit>
+#include <QFontDatabase>
+#include <QFile>
+#include <QPushButton>
 
 namespace Farman {
 
@@ -1809,11 +1816,54 @@ void MainWindow::applyToolbarVisibility() {
 
 void MainWindow::showAboutDialog() {
   const QString version = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
-  inform(this, tr("About farman"),
-    tr("<b>farman</b> %1<br><br>"
-       "Copyright &copy; Mashsoft Inc.<br>"
-       "<a href=\"https://www.mashsoft.co.jp\">https://www.mashsoft.co.jp</a>")
-      .arg(version));
+  FarmanMessageBox box(this);
+  box.setIcon(QMessageBox::Information);
+  box.setWindowTitle(tr("About farman"));
+  box.setTextFormat(Qt::RichText);
+  box.setText(tr("<b>farman</b> %1<br><br>"
+                 "Copyright &copy; Mashsoft Inc.<br>"
+                 "<a href=\"https://www.mashsoft.co.jp\">https://www.mashsoft.co.jp</a>")
+                .arg(version));
+  auto* okBtn = box.addButton(QMessageBox::Ok);
+  // farman は Qt (LGPL v3) / libarchive (BSD) / uchardet (MPL 1.1) を利用して
+  // おり、これらは配布バイナリへのライセンス通知が必要。GitHub の README だけ
+  // でなくアプリ内からも全文を参照できるようにする。
+  auto* licenseBtn = box.addButton(tr("License Info..."), QMessageBox::ActionRole);
+  box.setDefaultButton(okBtn);
+  box.enforceTabFocus();
+  box.exec();
+  if (box.clickedButton() == licenseBtn) {
+    showThirdPartyLicenses();
+  }
+}
+
+void MainWindow::showThirdPartyLicenses() {
+  QFile file(QStringLiteral(":/licenses/third-party.txt"));
+  QString text;
+  if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    text = QString::fromUtf8(file.readAll());
+  } else {
+    text = tr("Failed to load license information.");
+  }
+
+  QDialog dlg(this);
+  dlg.setWindowTitle(tr("Third-Party Licenses"));
+  dlg.resize(680, 560);
+  auto* layout = new QVBoxLayout(&dlg);
+
+  auto* view = new QPlainTextEdit(&dlg);
+  view->setReadOnly(true);
+  view->setLineWrapMode(QPlainTextEdit::NoWrap);
+  view->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+  view->setPlainText(text);
+  layout->addWidget(view);
+
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
+  connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+  connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+  layout->addWidget(buttons);
+
+  dlg.exec();
 }
 
 void MainWindow::ensureUpdateChecker() {

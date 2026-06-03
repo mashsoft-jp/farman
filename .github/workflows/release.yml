@@ -280,6 +280,12 @@ jobs:
           mkdir -p build/dmg-staging
           cp -R build/farman.app build/dmg-staging/
 
+          # OSS ライセンス通知を DMG ウィンドウ内に同梱 (BSD/LGPL/MPL の
+          # バイナリ配布通知義務を満たす)。アプリ内 About → License Info でも
+          # 参照できるが、配布物にも人間可読のファイルとして添える。
+          cp LICENSE                                 build/dmg-staging/LICENSE.txt
+          cp resources/licenses/THIRD-PARTY-LICENSES.txt build/dmg-staging/THIRD-PARTY-LICENSES.txt
+
           rm -f build/farman.dmg
           create-dmg \
             --volname "farman" \
@@ -380,6 +386,14 @@ jobs:
           Get-ChildItem build/Release/ -Filter "vcruntime*.dll" |
             ForEach-Object { Write-Host "  bundled: $($_.Name)" }
 
+          # OSS ライセンス通知を Release ディレクトリに同梱する。ここに置くと
+          # 後段の Compress-Archive (zip) と farman.iss の [Files] Source:
+          # "{#SrcDir}\*" の両方で {app} / zip ルートに取り込まれる
+          # (BSD/LGPL/MPL のバイナリ配布通知義務を満たす)。
+          Copy-Item LICENSE -Destination build/Release/LICENSE.txt -Force
+          Copy-Item resources/licenses/THIRD-PARTY-LICENSES.txt `
+            -Destination build/Release/THIRD-PARTY-LICENSES.txt -Force
+
           # CMakeLists.txt の project(farman VERSION X.Y.Z) を抽出して
           # Inno Setup と zip 名に渡す。
           $version = (Select-String -Path CMakeLists.txt -Pattern 'project\(farman VERSION ([0-9.]+)').Matches[0].Groups[1].Value
@@ -422,6 +436,15 @@ jobs:
           chmod +x linuxdeploy*.AppImage
           export APPIMAGE_EXTRACT_AND_RUN=1
           cp images/icon-256.png farman.png
+
+          # OSS ライセンス通知を AppDir に先置きしておく。linuxdeploy は
+          # 既存の AppDir 内容を保持したまま Qt を bundle するので、ここで
+          # /usr/share/doc/farman/ に入れておけば AppImage に取り込まれる
+          # (BSD/LGPL/MPL のバイナリ配布通知義務を満たす)。
+          mkdir -p AppDir/usr/share/doc/farman
+          cp LICENSE                                 AppDir/usr/share/doc/farman/copyright
+          cp resources/licenses/THIRD-PARTY-LICENSES.txt AppDir/usr/share/doc/farman/THIRD-PARTY-LICENSES.txt
+
           export OUTPUT=farman-x86_64.AppImage
           ./linuxdeploy-x86_64.AppImage \
             --appdir AppDir \
@@ -504,6 +527,13 @@ jobs:
           cp linux/farman.desktop "$PKG/usr/share/applications/farman.desktop"
           mkdir -p "$PKG/usr/share/icons/hicolor/256x256/apps"
           cp images/icon-256.png  "$PKG/usr/share/icons/hicolor/256x256/apps/farman.png"
+
+          # OSS ライセンス通知 (Debian 慣習の /usr/share/doc/<pkg>/)。
+          # copyright = farman 自身の MIT、加えて同梱 OSS の通知全文。
+          # BSD/LGPL/MPL のバイナリ配布通知義務を満たす。
+          mkdir -p "$PKG/usr/share/doc/farman"
+          cp LICENSE                                 "$PKG/usr/share/doc/farman/copyright"
+          cp resources/licenses/THIRD-PARTY-LICENSES.txt "$PKG/usr/share/doc/farman/THIRD-PARTY-LICENSES.txt"
 
           # ──── DEBIAN/control メタデータ ────
           mkdir -p "$PKG/DEBIAN"

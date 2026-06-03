@@ -349,5 +349,10 @@ farman は以下のオープンソースソフトウェアを利用していま�
 | [libarchive](https://www.libarchive.org/) | アーカイブ作成・展開 (zip / tar / gz / bz2 / xz) | New BSD |
 | [uchardet](https://www.freedesktop.org/wiki/Software/uchardet/) | テキストエンコード自動判定 | MPL 1.1 (Mozilla Public License 1.1) |
 
-すべて動的リンクで利用しています。バイナリ配布版を作る際は各ライブラリのライセンス
-通知も同梱します。
+すべて動的リンクで利用しています。各ライブラリのライセンス通知は次の 2 経路で提供します。
+
+- **アプリ内**: メニュー → Help → About farman... → **License Info...** で全文を表示
+- **配布物に同梱**:
+  - macOS `.dmg` … ウィンドウ内に `LICENSE.txt` / `THIRD-PARTY-LICENSES.txt`
+  - Windows `.zip` / インストーラ … インストール先 (`{app}`) 直下に同梱
+  - Linux AppImage / `.deb` … `/usr/share/doc/farman/`

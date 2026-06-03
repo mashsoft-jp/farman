@@ -48,6 +48,9 @@ private:
   void registerCommands();
   void createMenus();
   void showAboutDialog();
+  // About ダイアログの「License Info...」から開く、同梱 OSS のライセンス全文
+  // (Qt/LGPL, libarchive/BSD, uchardet/MPL) ビューア。
+  void showThirdPartyLicenses();
   // Help メニュー → "Check for Updates..." の手動チェック。
   void checkForUpdatesManually();
   // 起動シーケンスから呼ばれる、24h スロットル付きの自動チェック。
