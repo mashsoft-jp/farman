@@ -164,7 +164,7 @@ code {
 .section h2 {
   font-size: clamp(1.6rem, 4vw, 2.1rem);
   text-align: center;
-  margin: 0 0 40px;
+  margin: 0 auto 40px;
 }
 
 /* ===== Feature grid ===== */
