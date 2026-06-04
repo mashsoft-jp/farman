@@ -256,7 +256,7 @@ code {
 
 /* ===== About the name ===== */
 .about-name {
-  max-width: 680px;
+  max-width: 760px;
   margin: 0 auto;
   text-align: center;
   color: var(--fg-muted);
