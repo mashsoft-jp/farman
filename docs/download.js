@@ -31,7 +31,6 @@
       zip: "ポータブル版 (.zip)",
       appimage: "AppImage",
       deb: "Debian / Ubuntu (.deb)",
-      smartscreen: "初回起動時に SmartScreen の警告が出たら「詳細情報」→「実行」で起動できます。",
       releasesPage: "リリースページへ",
       allOS: "すべての OS",
       openReleases: "リリースページを開く",
@@ -49,7 +48,6 @@
       zip: "Portable (.zip)",
       appimage: "AppImage",
       deb: "Debian / Ubuntu (.deb)",
-      smartscreen: 'If SmartScreen warns on first launch, click "More info" → "Run anyway".',
       releasesPage: "Releases page",
       allOS: "All platforms",
       openReleases: "Open releases page",
@@ -103,8 +101,7 @@
         title: "Windows",
         arch: "64-bit (x64)",
         primary: urls.windowsSetup ? { label: L.exe, url: urls.windowsSetup } : null,
-        secondary: urls.windowsZip ? { label: L.zip, url: urls.windowsZip } : null,
-        note: L.smartscreen
+        secondary: urls.windowsZip ? { label: L.zip, url: urls.windowsZip } : null
       },
       {
         os: "linux",
