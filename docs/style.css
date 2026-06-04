@@ -102,6 +102,15 @@ code {
   margin: 0 0 12px;
   letter-spacing: -.02em;
 }
+.hero h1 .pron {
+  font-size: .3em;
+  font-weight: 400;
+  color: var(--fg-muted);
+  letter-spacing: 0;
+  vertical-align: middle;
+  margin-left: .4em;
+  white-space: nowrap;
+}
 .tagline {
   font-size: clamp(1.05rem, 2.4vw, 1.3rem);
   color: var(--fg-muted);
@@ -244,6 +253,17 @@ code {
   opacity: .9;
 }
 .download-note { font-size: .9rem; margin-top: 8px; }
+
+/* ===== About the name ===== */
+.about-name {
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--fg-muted);
+}
+.about-name p { margin: 0 0 16px; }
+.about-name p:last-child { margin-bottom: 0; }
+.about-name strong { color: var(--fg); font-weight: 600; }
 
 /* ===== Footer ===== */
 .site-footer {
