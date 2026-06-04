@@ -12,7 +12,8 @@
     するので問題なし。
   - 以前は icon-512.png を読んでいたが、これは macOS スタイルの「白角丸 + 中に絵」
     テンプレートで、Windows タスクバーで他アプリと比べて違和感が出ていた。
-    icon.ico は余白カット + 透明背景の整理済みで、Windows でも自然に表示される。
+    icon.ico は背景なし (透過) + 白フチのデザイン (tools/make_transparent_icon.py で
+    生成) で、明背景・暗背景どちらのタスクバーでも自然に視認できる。
 -->
 <RCC version="1.0">
   <qresource prefix="/icons">

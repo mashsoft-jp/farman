@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# images/icon.{png,svg} から、各プラットフォーム配布物用のアイコンを生成する。
+# images/icon.{png,svg} から、macOS .app バンドル用のアイコン (.icns) を生成する。
 # 入力ソースは以下の優先順位で自動選択する:
 #   1. images/icon.png (1024x1024 以上を推奨。PSD からの書き出し想定)
 #   2. images/icon.svg (PNG が無ければフォールバック)
@@ -8,14 +8,19 @@
 #
 #   出力:
 #     images/icon.icns          (macOS .app の Contents/Resources/icon.icns 用)
-#     images/icon.ico           (Windows 用、ImageMagick が利用可能なら)
-#     images/icon-1024.png      (汎用、Linux 等で /usr/share/icons に置く想定)
-#     images/icon-512.png       (同上、512x512)
-#     images/icon-256.png       (同上、256x256)
+#
+# macOS のアイコンは Apple HIG に合わせた「白角丸 + 中に絵」のデザイン
+# (images/icon.png) をそのまま使う。
+#
+# Windows (.ico) / Linux (icon-256/512/1024.png) は別系統で、
+# 「背景なし (透過) + 白フチ」のデザインを tools/make_transparent_icon.py が
+# images/icon-no-shadow.png から生成する。OS の壁紙やタスクバー上に直接
+# 載るため、白角丸の台紙を付けず、暗背景でも視認できるよう白フチを付ける。
+# アイコン素材を更新したら、本スクリプト (macOS) と make_transparent_icon.py
+# (Windows/Linux) の両方を実行すること。
 #
 # 主な依存:
 #   - macOS 標準: sips, iconutil (これだけで .icns まで生成できる)
-#   - 任意:        magick / convert (ImageMagick) があれば .ico も作る
 #
 # アイコン素材を更新したら本スクリプトを手で実行して、生成物をリポジトリに
 # コミットすること (CMake からは自動実行しない、ビルドのたびに走らせると
@@ -89,34 +94,10 @@ done
 echo "==> Generating icon.icns"
 iconutil -c icns "$ICONSET" -o "$OUT_DIR/icon.icns"
 
-echo "==> Generating PNG copies for non-macOS"
-for sz in 256 512 1024; do
-  sips -z "$sz" "$sz" "$MASTER" --out "$OUT_DIR/icon-$sz.png" >/dev/null
-done
-
-# Windows 用 .ico (任意)
-if command -v magick >/dev/null 2>&1 || command -v convert >/dev/null 2>&1; then
-  echo "==> Generating icon.ico (ImageMagick)"
-  TOOL=$(command -v magick || command -v convert)
-  # 16/32/48/64/128/256 を 1 つの ICO にパッケージ
-  "$TOOL" \
-    "$ICONSET/icon_16x16.png" \
-    "$ICONSET/icon_32x32.png" \
-    "$WORK/master.png[48x48]" 2>/dev/null \
-    "$ICONSET/icon_32x32@2x.png" \
-    "$ICONSET/icon_128x128.png" \
-    "$ICONSET/icon_256x256.png" \
-    "$OUT_DIR/icon.ico" || {
-      # 一部の引数で失敗したら最小限で再試行
-      "$TOOL" "$ICONSET/icon_16x16.png" "$ICONSET/icon_32x32.png" \
-              "$ICONSET/icon_128x128.png" "$ICONSET/icon_256x256.png" \
-              "$OUT_DIR/icon.ico"
-    }
-else
-  echo "==> Skipping icon.ico (ImageMagick not installed; brew install imagemagick)"
-fi
-
 echo
-echo "Done."
+echo "Done (macOS .icns)."
 echo "Generated files in $OUT_DIR/:"
-ls -la "$OUT_DIR" | grep -E 'icon\.(icns|ico)|icon-[0-9]+\.png' || true
+ls -la "$OUT_DIR" | grep -E 'icon\.icns' || true
+echo
+echo "NOTE: Windows (.ico) / Linux (icon-256/512/1024.png) は"
+echo "      tools/make_transparent_icon.py で別途生成すること。"
