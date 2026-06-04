@@ -49,12 +49,12 @@ Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
 | メイン 2 ペイン | サムネイル表示 |
 | ![Preview mode](docs/screenshots/10-preview-mode.png) | ![Recursive search](docs/screenshots/16-search.png) |
 | プレビューモード (Quick View) | 再帰検索 |
-| ![Bulk rename](docs/screenshots/17-bulk-rename.png) | ![Archive browsing](docs/screenshots/02-archive-browsing.png) |
-| 一括リネーム (プレビュー付き) | アーカイブブラウジング (仮想 FS) |
-| ![Directory compare](docs/screenshots/03-directory-compare.png) | ![Shortcut list](docs/screenshots/04-shortcut-list.png) |
-| ディレクトリ比較 | ショートカット一覧 |
-| ![Settings](docs/screenshots/05-settings.png) | |
-| 設定 | |
+| ![Copy / move confirm](docs/screenshots/06-transfer-confirm.png) | ![Bulk rename](docs/screenshots/17-bulk-rename.png) |
+| コピー / 移動確認 | 一括リネーム (プレビュー付き) |
+| ![Archive browsing](docs/screenshots/02-archive-browsing.png) | ![Directory compare](docs/screenshots/03-directory-compare.png) |
+| アーカイブブラウジング (仮想 FS) | ディレクトリ比較 |
+| ![Shortcut list](docs/screenshots/04-shortcut-list.png) | ![Settings](docs/screenshots/05-settings.png) |
+| ショートカット一覧 | 設定 |
 
 ### 組み込みビュアー
 
