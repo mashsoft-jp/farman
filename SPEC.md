@@ -1401,20 +1401,20 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 ### プラグインシステム
 
-**v1.0 ステータス**: 内部アーキテクチャとしての基盤コードはツリーに残して
-あるが、**外部公開はしない**。理由: 仕様 / ABI を実利用で検証できていない
-段階で API を見せると、後方互換維持で身動きが取れなくなる。組み込み 3 ビュアー
-(Text / Image / Binary) は `IViewerPlugin` 実装として登録されており、内部的
-には既に「プラグイン化済み」だが、ユーザー視点では単一バイナリのアプリ。
+**v0.9.6 ステータス**: 外部 **ビュアープラグイン** の最小公開を開始する。
+組み込み 3 ビュアー (Text / Image / Binary) は `IViewerPlugin` 実装として
+登録されており、同じ `ViewerDispatcher` で外部 .dylib / .dll / .so も扱う。
 
-**ユーザー向けに非公開な要素 (v1.0 で意図的に隠している)**
+**ユーザー向けに公開する要素**
 
-- `main.cpp` の `ViewerDispatcher::loadPlugins(QDir)` 呼び出し (起動時に
-  外部 .dylib / .dll / .so を読まない)
-- Help → Plugins... メニューと診断ダイアログ (削除済み)
-- Settings → `behavior.pluginsDirectory` の編集 UI (そもそも未提供)
+- 起動時に `ViewerDispatcher::loadPlugins(QDir)` を呼び、プラグインディレクトリ
+  から外部 .dylib / .dll / .so を読み込む。
+- Settings → General → Viewer Plugins でプラグインディレクトリを指定できる。
+  空欄なら `Settings::defaultPluginsDirectory()` を使う。
+- Help → Plugins... で組み込み / 外部プラグインのロード結果、ID、名前、パス、
+  エラー理由を確認できる。
 
-**残してある基盤コード**
+**基盤 API**
 
 - インターフェース: `IViewerPlugin` ([src/viewer/IViewerPlugin.h](src/viewer/IViewerPlugin.h))
   - `pluginId()` / `pluginName()` / `supportedExtensions()` /
@@ -1428,12 +1428,20 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 - `Settings::pluginsDirectory()` / `defaultPluginsDirectory()` アクセサ
   (JSON キー `behavior.pluginsDirectory` の serialize / deserialize も含む)
 
-**v1.0 後にやること (バックログ)**
+**制約**
 
-1. サンプル外部プラグインを社内で 1〜2 件試作し、API の使いにくさ / 抜けを洗う
-2. 必要なら `IViewerPlugin` を破壊的に改訂 (この段階ならまだ自由が効く)
-3. Help → Plugins... メニュー復活 + プラグインディレクトリの設定 UI 追加
-4. サンプル `.dylib` の配布 / リファレンス文書化
+- v0.9.x では API / ABI の長期互換を保証しない。`IViewerPlugin` の IID は
+  `com.farman.IViewerPlugin/1.0` だが、正式な互換ポリシーはサンプル外部
+  プラグインを試作してから確定する。
+- 外部公開の対象は **ビュアープラグインのみ**。仮想 FS / アーカイブ形式 /
+  追加列などは別 IID の将来拡張とする。
+
+**後続バックログ**
+
+1. リポジトリ同梱のサンプル外部プラグインを 1〜2 件試作 (`IViewerPlugin`
+   実装、CMake から別ターゲットで `.dylib` / `.so` / `.dll` 生成)。
+2. プラグイン作者向けのリファレンス文書 + テンプレートとしてサンプルを公開。
+3. 必要なら `IViewerPlugin` を破壊的に改訂し、IID を上げて段階移行する。
 
 **拡張余地** (将来): WDX 風 (列追加) / WFX 風 (仮想 FS) / WCX 風 (アーカイブ
 フォーマット) は別 IID の `IContentPlugin` / `IFsPlugin` / `IArchivePlugin` を
@@ -2419,15 +2427,9 @@ Last checked: 2026-05-10 09:42
 
 ### 機能拡張系
 
-- **プラグインの正式公開 (v1.0 以降)** — 現状プラグイン機構は内部実装として
-  だけ存在し、外部公開していない (SPEC.md "プラグインシステム" 節参照)。
-  v1.0 リリース後に下記の順で公開検討する:
-  1. リポジトリ同梱のサンプル外部プラグインを 1〜2 件試作 (`IViewerPlugin`
-     実装、CMake から別ターゲットで `.dylib` / `.so` / `.dll` 生成)。API の
-     使いにくさ・抜けをまずこれで洗う。
-  2. 必要なら `IViewerPlugin` を破壊的に改訂 (この段階ならまだ自由が効く)。
-  3. Help → Plugins... メニュー復活 + プラグインディレクトリの設定 UI 追加。
-  4. プラグイン作者向けのリファレンス文書 + テンプレートとしてサンプルを公開。
+- **プラグイン正式公開の拡充** — v0.9.6 で外部ビュアープラグインのロードと
+  診断 UI まで前倒し導入。残件はサンプル外部プラグイン、作者向けリファレンス、
+  テンプレート整備。
 
 - **アーカイブ作成オプション** — `CreateArchiveDialog` に作成オプションを実装済み。
   読み取り側の password 対応 (`ArchiveContext::password`) と対称:

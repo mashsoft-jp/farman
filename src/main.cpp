@@ -114,17 +114,17 @@ int main(int argc, char *argv[]) {
     app.installTranslator(&appTranslator);
   }
 
-  // ビュアー基盤を初期化 (組み込み 3 種のみ)。
-  // 外部プラグイン (.dylib / .dll / .so) のロードは v1.0 では意図的に
-  // 無効化している — IViewerPlugin / ViewerDispatcher / Settings の
-  // pluginsDirectory アクセサ等の基盤コードは将来の正式サポートに備えて
-  // ツリーに残しているが、UI (Help → Plugins... メニューや一覧ダイアログ)
-  // と起動時の loadPlugins() 呼び出しは外している。再有効化はこのブロックを
-  // 復元しメニュー登録を戻すだけで済む。
+  // ビュアー基盤を初期化。組み込みビュアー登録後にユーザー指定ディレクトリ
+  // から外部 IViewerPlugin (.dylib / .dll / .so) を読み込む。
   Farman::PluginContext pluginCtx;
   pluginCtx.farmanVersion = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
   Farman::ViewerDispatcher::instance().setContext(pluginCtx);
   Farman::ViewerDispatcher::instance().registerBuiltins();
+  const QString pluginsDir = Farman::Settings::instance().pluginsDirectory();
+  Farman::ViewerDispatcher::instance().loadPlugins(
+    QDir(pluginsDir.isEmpty()
+           ? Farman::Settings::defaultPluginsDirectory()
+           : pluginsDir));
 
   Farman::MainWindow window;
   window.show();

@@ -45,11 +45,11 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
     rec.origin   = PluginRecord::Origin::External;
     rec.filePath = fileInfo.absoluteFilePath();
 
-    QPluginLoader loader(rec.filePath);
-    QObject* plugin = loader.instance();
+    auto loader = std::make_shared<QPluginLoader>(rec.filePath);
+    QObject* plugin = loader->instance();
     if (!plugin) {
       rec.loaded      = false;
-      rec.errorReason = loader.errorString();
+      rec.errorReason = loader->errorString();
       m_records.append(rec);
       Logger::instance().warn(
         QStringLiteral("Plugins: failed to load %1 (%2)")
@@ -71,6 +71,11 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
     // registerPlugin が成功・失敗ともに m_records に最終結果を追記する。
     registerPlugin(std::shared_ptr<IViewerPlugin>(viewerPlugin, [](IViewerPlugin*){}),
                    /*filePath=*/rec.filePath);
+    if (!m_records.isEmpty() && m_records.last().loaded) {
+      // 登録成功した外部プラグインだけ loader を保持し、プラグイン実体を
+      // アプリ終了まで生かす。
+      m_pluginLoaders.append(loader);
+    }
   }
   // 今回ロード分のサマリログ
   int loadedCount = 0;

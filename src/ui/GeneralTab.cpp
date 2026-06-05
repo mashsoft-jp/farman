@@ -244,6 +244,55 @@ void GeneralTab::setupUi() {
 
   mainLayout->addWidget(logGroup);
 
+  // ─── Viewer plugins ────────────────────────────
+  QGroupBox* pluginsGroup = new QGroupBox(tr("Viewer Plugins"), this);
+  QVBoxLayout* pluginsLayout = new QVBoxLayout(pluginsGroup);
+
+  QLabel* pluginsHint = new QLabel(
+    tr("External viewer plugins are loaded on startup from this directory. "
+       "Leave empty to use the default user plugins directory."), pluginsGroup);
+  pluginsHint->setWordWrap(true);
+  pluginsLayout->addWidget(pluginsHint);
+
+  QWidget* pluginsRow = new QWidget(pluginsGroup);
+  QHBoxLayout* pluginsRowLayout = new QHBoxLayout(pluginsRow);
+  pluginsRowLayout->setContentsMargins(0, 0, 0, 0);
+
+  m_pluginsDirectoryEdit = new QLineEdit(pluginsGroup);
+  m_pluginsDirectoryEdit->setPlaceholderText(Settings::defaultPluginsDirectory());
+  m_pluginsDirectoryEdit->setToolTip(
+    tr("Directory containing external viewer plugins (.dylib, .so, .dll). "
+       "Changes take effect on next launch."));
+  m_pluginsDirectoryBrowse = new QToolButton(pluginsGroup);
+  m_pluginsDirectoryBrowse->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
+  m_pluginsDirectoryBrowse->setToolTip(tr("Choose plugins directory..."));
+  m_pluginsDirectoryDefault = new QToolButton(pluginsGroup);
+  m_pluginsDirectoryDefault->setText(tr("Default"));
+  m_pluginsDirectoryDefault->setToolTip(
+    tr("Use the default user plugins directory."));
+
+  pluginsRowLayout->addWidget(new QLabel(tr("Directory:"), pluginsGroup));
+  pluginsRowLayout->addWidget(m_pluginsDirectoryEdit, 1);
+  pluginsRowLayout->addWidget(m_pluginsDirectoryBrowse);
+  pluginsRowLayout->addWidget(m_pluginsDirectoryDefault);
+  pluginsLayout->addWidget(pluginsRow);
+
+  connect(m_pluginsDirectoryBrowse, &QToolButton::clicked, this, [this]() {
+    const QString start = m_pluginsDirectoryEdit->text().isEmpty()
+                          ? Settings::defaultPluginsDirectory()
+                          : m_pluginsDirectoryEdit->text();
+    const QString selected = QFileDialog::getExistingDirectory(
+      this, tr("Choose plugins directory"), start,
+      QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    if (!selected.isEmpty()) {
+      m_pluginsDirectoryEdit->setText(selected);
+    }
+  });
+  connect(m_pluginsDirectoryDefault, &QToolButton::clicked,
+          m_pluginsDirectoryEdit, &QLineEdit::clear);
+
+  mainLayout->addWidget(pluginsGroup);
+
   // Log の下: Confirm on exit / Language
   // (Tab 順を「ログ → 終了時確認 → 言語」にするため、Confirm/Language は
   //  ログのウィジェットを構築し終えてからここで生成する)
@@ -438,6 +487,8 @@ void GeneralTab::loadSettings() {
   m_logDirectoryBrowse->setEnabled(logFileEnabled);
   m_logRetentionForeverCheck->setEnabled(logFileEnabled);
   m_logRetentionDaysSpin->setEnabled(logFileEnabled && !m_logRetentionForeverCheck->isChecked());
+
+  m_pluginsDirectoryEdit->setText(settings.pluginsDirectory());
 }
 
 void GeneralTab::save() {
@@ -481,6 +532,7 @@ void GeneralTab::save() {
   settings.setLogDirectory(m_logDirectoryEdit->text().trimmed());
   settings.setLogRetentionDays(
     m_logRetentionForeverCheck->isChecked() ? 0 : m_logRetentionDaysSpin->value());
+  settings.setPluginsDirectory(m_pluginsDirectoryEdit->text().trimmed());
 }
 
 void GeneralTab::onWindowSizeModeChanged(int index) {

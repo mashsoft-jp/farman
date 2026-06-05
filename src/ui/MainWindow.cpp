@@ -28,14 +28,21 @@
 #include "../viewer/MarkdownViewerWindow.h"
 #include "../viewer/PdfViewerWindow.h"
 #include "../viewer/CsvViewerWindow.h"
+#include "../viewer/ViewerDispatcher.h"
+#include <QAbstractItemView>
 #include <QActionGroup>
 #include <QDesktopServices>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDir>
+#include <QHeaderView>
 #include <QLocale>
 #include <QScreen>
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QStorageInfo>
+#include <QTableWidget>
+#include <QTableWidgetItem>
 #include <QTimer>
 #include <QLabel>
 #include <QFontMetrics>
@@ -1258,6 +1265,14 @@ void MainWindow::registerCommands() {
     tr("Show or hide the keyboard shortcuts reference window")
   ));
 
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "help.plugins",
+    tr("Plugins..."),
+    [this]() { showPluginsDialog(); },
+    "help",
+    tr("Show loaded viewer plugins and plugin load errors.")
+  ));
+
   // Bookmark commands
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "bookmark.toggle",
@@ -1541,6 +1556,7 @@ void MainWindow::createMenus() {
   QMenu* helpMenu = bar->addMenu(tr("&Help"));
   // ショートカット一覧 (`?` キー)
   addCmd(helpMenu, "help.shortcuts", tr("Keyboard Shortcuts"), /*global=*/true);
+  addCmd(helpMenu, "help.plugins", tr("Plugins..."), /*global=*/true);
   helpMenu->addSeparator();
   // 手動アップデートチェック (macOS の慣習で menuRole = ApplicationSpecific
   // を当てると標準で Help メニューに残る。Help → "Check for Updates..." は
@@ -1835,6 +1851,65 @@ void MainWindow::showAboutDialog() {
   if (box.clickedButton() == licenseBtn) {
     showThirdPartyLicenses();
   }
+}
+
+void MainWindow::showPluginsDialog() {
+  const QList<PluginRecord> records =
+    ViewerDispatcher::instance().pluginRecords();
+
+  QDialog dlg(this);
+  dlg.setWindowTitle(tr("Plugins"));
+  dlg.resize(860, 420);
+
+  auto* layout = new QVBoxLayout(&dlg);
+  auto* hint = new QLabel(
+    tr("Viewer plugins are loaded on startup. Change the plugins directory in "
+       "Settings → General → Viewer Plugins, then restart farman."), &dlg);
+  hint->setWordWrap(true);
+  layout->addWidget(hint);
+
+  auto* table = new QTableWidget(records.size(), 6, &dlg);
+  table->setHorizontalHeaderLabels({
+    tr("Status"),
+    tr("Origin"),
+    tr("Plugin ID"),
+    tr("Name"),
+    tr("Path"),
+    tr("Error")
+  });
+  table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  table->setSelectionBehavior(QAbstractItemView::SelectRows);
+  table->setSelectionMode(QAbstractItemView::SingleSelection);
+  table->verticalHeader()->setVisible(false);
+
+  auto setItem = [table](int row, int col, const QString& text) {
+    auto* item = new QTableWidgetItem(text);
+    item->setToolTip(text);
+    table->setItem(row, col, item);
+  };
+
+  for (int row = 0; row < records.size(); ++row) {
+    const PluginRecord& rec = records[row];
+    setItem(row, 0, rec.loaded ? tr("Loaded") : tr("Failed"));
+    setItem(row, 1, rec.origin == PluginRecord::Origin::Builtin
+                      ? tr("Built-in")
+                      : tr("External"));
+    setItem(row, 2, rec.pluginId);
+    setItem(row, 3, rec.pluginName);
+    setItem(row, 4, rec.filePath);
+    setItem(row, 5, rec.errorReason);
+  }
+
+  table->resizeColumnsToContents();
+  table->horizontalHeader()->setStretchLastSection(true);
+  table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+  layout->addWidget(table, 1);
+
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
+  connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+  layout->addWidget(buttons);
+
+  dlg.exec();
 }
 
 void MainWindow::showThirdPartyLicenses() {

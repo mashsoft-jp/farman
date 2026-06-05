@@ -99,6 +99,11 @@ private:
   QCheckBox*   m_logRetentionForeverCheck  = nullptr;
   QSpinBox*    m_logRetentionDaysSpin      = nullptr;
 
+  // Viewer plugins
+  QLineEdit*   m_pluginsDirectoryEdit       = nullptr;
+  QToolButton* m_pluginsDirectoryBrowse     = nullptr;
+  QToolButton* m_pluginsDirectoryDefault    = nullptr;
+
   // 直前の save() で言語が変更されたか
   bool         m_languageChangedOnSave     = false;
 

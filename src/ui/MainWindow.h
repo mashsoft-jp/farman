@@ -48,6 +48,7 @@ private:
   void registerCommands();
   void createMenus();
   void showAboutDialog();
+  void showPluginsDialog();
   // About ダイアログの「License Info...」から開く、同梱 OSS のライセンス全文
   // (Qt/LGPL, libarchive/BSD, uchardet/MPL) ビューア。
   void showThirdPartyLicenses();

@@ -5,6 +5,8 @@
 #include <QDir>
 #include <memory>
 
+class QPluginLoader;
+
 namespace Farman {
 
 // 1 つのプラグイン (組み込み or 外部) のロード結果。
@@ -62,6 +64,9 @@ private:
                       const QString& filePath = QString());
 
   QList<std::shared_ptr<IViewerPlugin>> m_plugins;
+  // 外部プラグインの QObject 実体は QPluginLoader が所有する。ロード済み
+  // プラグインがアプリ終了まで有効であり続けるよう loader 自体も保持する。
+  QList<std::shared_ptr<QPluginLoader>> m_pluginLoaders;
   // 全プラグインに渡す共通コンテキスト。registerPlugin 内で initialize() に
   // 渡し、createViewer() でも渡す。
   PluginContext m_context;
