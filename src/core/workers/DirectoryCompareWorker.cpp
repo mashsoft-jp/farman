@@ -50,10 +50,6 @@ DiffStatus compareFile(const Snapshot& l, const Snapshot& r,
       const qint64 rt = r.mtime.toSecsSinceEpoch();
       return (lt == rt) ? DiffStatus::Same : DiffStatus::Differ;
     }
-    case CompareGranularity::Hash:
-      // Hash 粒度は未実装 (Phase B-1 で対応予定)。当面 SizeMtime フォールバック。
-      if (l.size != r.size) return DiffStatus::Differ;
-      return DiffStatus::Same;
   }
   return DiffStatus::Same;
 }

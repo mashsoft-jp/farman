@@ -37,12 +37,9 @@ void DirectoryCompareDialog::setupUi(const QString& leftPath, const QString& rig
   auto* granLayout = new QVBoxLayout(granGroup);
   m_radioNameOnly  = new QRadioButton(tr("File name only"), this);
   m_radioSizeMtime = new QRadioButton(tr("Size + modified time"), this);
-  m_radioHash      = new QRadioButton(tr("SHA-256 hash (Phase B, not yet implemented)"), this);
   m_radioSizeMtime->setChecked(true);
-  m_radioHash->setEnabled(false);
   granLayout->addWidget(m_radioNameOnly);
   granLayout->addWidget(m_radioSizeMtime);
-  granLayout->addWidget(m_radioHash);
   main->addWidget(granGroup);
 
   // 再帰: 同名サブディレクトリの中身を再帰的に比較し、ディレクトリエントリの
@@ -67,8 +64,6 @@ CompareOptions DirectoryCompareDialog::options() const {
   CompareOptions o;
   if (m_radioNameOnly && m_radioNameOnly->isChecked()) {
     o.granularity = CompareGranularity::NameOnly;
-  } else if (m_radioHash && m_radioHash->isChecked()) {
-    o.granularity = CompareGranularity::Hash;
   } else {
     o.granularity = CompareGranularity::SizeMtime;
   }

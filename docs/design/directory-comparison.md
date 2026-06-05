@@ -50,13 +50,12 @@ struct CompareEntry {
 ### 新規
 
 - `src/core/DirectoryCompare.{h,cpp}`
-  - `enum class DiffStatus`、`enum class CompareGranularity { NameOnly, SizeMtime, Hash }`、
+  - `enum class DiffStatus`、`enum class CompareGranularity { NameOnly, SizeMtime }`、
     `struct CompareOptions`、`struct CompareResult` 等の型定義。
 
 - `src/core/workers/DirectoryCompareWorker.{h,cpp}`
   - 入力: `leftDir`, `rightDir`, `CompareOptions`
   - 出力: 左右それぞれの `QHash<QString, DiffStatus>`
-  - 進捗: ハッシュ計算時のみ、`progressed/total` バイト
 
 - `src/ui/DirectoryCompareDialog.{h,cpp}`
   - 比較の **設定**（粒度・再帰）と **開始ボタン**
@@ -143,16 +142,6 @@ struct CompareEntry {
 
 ほぼ瞬時。
 
-### Hash
-
-1. NameOnly と同じ手順
-2. 共通項について SHA-256（`QCryptographicHash::Sha256`）を計算
-3. ハッシュ一致 → `Same` / 不一致 → `Differ`
-4. ファイル並列化は最初は無し（後で `QtConcurrent::blockingMap`）
-5. 進捗: 処理済みバイト / 全バイト
-
-重い。`CancellationToken` で中断可能にする。
-
 ### 再帰モード
 
 - 同名サブディレクトリ同士を再帰的に比較
@@ -161,7 +150,7 @@ struct CompareEntry {
   - 1 つでも `Differ` または `OnlyHere` → `Differ`
   - 反対側にディレクトリ自体が無い → `OnlyHere`
 
-再帰ありの場合は overlay の構築コストが大きいので、フェーズ B に分離。
+再帰ありの場合でも、表示する overlay は直下エントリの Same/Differ に集約する。
 
 ---
 
@@ -223,25 +212,24 @@ View メニューから再表示可能）。
 ここまでで「F12 のような何か → ダイアログ → OK で左右に色が乗る → 移動で解除」
 が一通り動く。
 
-### フェーズ B — Hash + 再帰
+### フェーズ B — 再帰
 
-11. SHA-256 比較を `DirectoryCompareWorker` に追加（進捗 + キャンセル）
-12. 再帰比較とディレクトリ集約
-13. 再帰モードのときの「ディレクトリのクリックで掘れるか / 比較解除か」を整理
+11. 再帰比較とディレクトリ集約
+12. 再帰モードのときの「ディレクトリのクリックで掘れるか / 比較解除か」を整理
     - **採用**: 掘ると自動解除（通常の `navigatePane` 経路に乗る）
 
 ### フェーズ C — 同期操作
 
-14. `DirectoryCompareDialog` に同期操作ボタンを追加
-15. 既存 CopyWorker / RemoveWorker への流し込み
-16. 同期完了 → 再比較トリガー
-17. ログ出力 (`Compare sync: copied N items L → R`)
+13. `DirectoryCompareDialog` に同期操作ボタンを追加
+14. 既存 CopyWorker / RemoveWorker への流し込み
+15. 同期完了 → 再比較トリガー
+16. ログ出力 (`Compare sync: copied N items L → R`)
 
 ### フェーズ D — 拡張
 
-18. 結果サマリのログ (`Compare done: +N / -M / =K / Δ L`)
-19. CSV / JSON エクスポート（オプションメニュー）
-20. 単発の Enter（カーソル行のみコピー）
+17. 結果サマリのログ (`Compare done: +N / -M / =K / Δ L`)
+18. CSV / JSON エクスポート（オプションメニュー）
+19. 単発の Enter（カーソル行のみコピー）
 
 ---
 
@@ -269,7 +257,6 @@ View メニューから再表示可能）。
   影響するためフェーズ D。
 - **着色のフィルタ追従** … SPEC.md:1138 に従って **自動追従**。比較結果は
   ファイル名キーなので、ソート・フィルタが変わっても overlay は再評価不要。
-- **大量ファイル時のチャンク進捗** … Hash モードのみ実装、それ以外は無し。
 - **比較結果のキャッシュ永続化** … 比較は毎回新規（ディレクトリ移動で消える）。
 
 ---
@@ -285,8 +272,8 @@ View メニューから再表示可能）。
   ポリシー。
 - **同期操作は既存 CopyWorker / RemoveWorker に集約**: 進捗ダイアログや
   上書き処理を再実装しない。
-- **段階的に Hash を後回し**: SizeMtime まででも実用度が高く、ハッシュ並列化や
-  進捗 UI を必要としないため軽い MVP が出せる。
+- **SizeMtime を既定に固定**: 日常的な同期確認では十分実用的で、重い厳密比較用の
+  進捗 UI やキャンセル制御を持ち込まずに済む。
 - **比較カラーを `ColorScheme` に乗せる**: 既存のテーマ機構 (Light/Dark 2 セット
   + テーマプリセットの import/export) にそのまま乗るため、追加コストがほぼ無く
   整合性も保てる。
