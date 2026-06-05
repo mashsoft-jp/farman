@@ -276,6 +276,15 @@ code {
 .site-footer a { color: var(--fg-muted); }
 .site-footer a:hover { color: var(--fg); }
 .copyright { margin: 8px 0 0; opacity: .8; }
+.footer-logo {
+  display: inline-block;
+  width: 82px;
+  height: 16px;
+  vertical-align: middle;
+  background-color: currentColor;
+  -webkit-mask: url(mashsoft-logo.svg) no-repeat center / contain;
+  mask: url(mashsoft-logo.svg) no-repeat center / contain;
+}
 .disclaimer {
   max-width: 760px;
   margin: 0 auto 20px;
