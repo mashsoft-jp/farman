@@ -188,7 +188,7 @@ code {
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--fg);
-  margin: 48px 0 22px;
+  margin: 48px auto 22px;
 }
 .shot-group:first-of-type { margin-top: 0; }
 .shot-grid + .shot-group { margin-top: 52px; }
