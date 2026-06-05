@@ -62,7 +62,7 @@ Mashsoft Inc. が MIT ライセンスで公開する OSS。リポジトリは
 | グループ | グループ名 (取得不可なら gid) | OFF | ON | macOS / Linux のみ表示 |
 | リンク先 | シンボリックリンクの解決先 (`→ /target`) | OFF | OFF | |
 
-- 列の **表示／非表示** はディレクトリの **2 画面モード / 1 画面モード** ごとに別々に設定できる (Behavior タブ → List Display → Columns)
+- 列の **表示／非表示** はディレクトリの **2 画面モード / 1 画面モード** ごとに別々に設定できる (Behavior カテゴリ → List Display → Columns)
 - 列の **並び順は固定** (上の表の順序)。ヘッダのドラッグ並べ替えは未対応
 
 ### 表示オプション
@@ -166,7 +166,7 @@ Krusader / Total Commander の Sync Browse 相当。
 
 - 切替手段:
   - **View メニュー**: チェック付きの "Sync Browse" 項目。
-  - **キーバインド**: 既定 `y` (Settings → Keybindings で変更可)。
+  - **キーバインド**: 既定 `y` (設定の「キーバインド」で変更可)。
   - **ツールバー**: Single Pane / Sync Browse / Log の並びにトグル
     ボタンとして実装済。
 - ON のときの視覚インジケータ:
@@ -312,14 +312,14 @@ Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
   を編集する（デフォルト: `s`、コマンド `pane.sort_filter`）。
 - ダイアログで「このディレクトリのデフォルトを上書きする (保存)
   / Override defaults for this directory (save)」にチェックを付けて OK すると、
-  そのパス専用の上書きとして永続化する。Behavior タブのデフォルトより
+  そのパス専用の上書きとして永続化する。Behavior カテゴリのデフォルトより
   優先され、このディレクトリを開いたときに自動で適用される。
 - チェックを外して OK した場合は現在のパネルにのみ一時的に適用（保存しない）。
 - 既に保存されているディレクトリでは、設定済みのチェック状態が初期値となる。
-  チェックを外して OK すると保存済み上書きを削除し、Behavior タブの
+  チェックを外して OK すると保存済み上書きを削除し、Behavior カテゴリの
   デフォルトに戻す。
 - ディレクトリに移動した際、保存済み上書きがあれば自動で適用する。
-  なければパネルの既定（Behavior タブのデフォルト）を適用する。
+  なければパネルの既定（Behavior カテゴリのデフォルト）を適用する。
 
 #### 保存形式
 
@@ -334,7 +334,7 @@ Total Commander の Ctrl+Q、macOS Finder の Cover Flow 相当。シングル /
 
 ## キーボード操作
 
-以下はデフォルトキーアサイン。Keybindings タブで全て変更可能。
+以下はデフォルトキーアサイン。設定の「キーバインド」で全て変更可能。
 macOS の `Ctrl` は `⌘`（Command）に割り当てられる。
 
 ### 基本ナビゲーション
@@ -529,16 +529,16 @@ NSTableView 風に、**非アクティブ時はグレーに落とす** スタイ
     `filesDone / filesTotal` をワーカーから逐次通知して反映する。
   - 「完了したら自動的に閉じる」チェックボックスをダイアログに常設。
     その場限りの上書きで、Settings には保存しない。
-  - 既定値は Behavior タブの `Auto-close progress dialog` で指定
+  - 既定値は Behavior カテゴリの `Auto-close progress dialog` で指定
     （初期値 OFF）。OFF のときは完了後もダイアログを残し、
     キャンセルボタンが Close ボタンに切り替わる。
-- 自動リネームの suffix テンプレートは Behavior タブで設定可能
+- 自動リネームの suffix テンプレートは Behavior カテゴリで設定可能
   （`{n}` がカウンタプレースホルダ、デフォルト ` ({n})`）。
 
 ### 削除
 
 - 確認ダイアログで「ゴミ箱へ移動 / 完全削除」を都度選択できる。
-- 既定はどちらかを Behavior タブで設定（`defaultDeleteToTrash`、初期値は
+- 既定はどちらかを Behavior カテゴリで設定（`defaultDeleteToTrash`、初期値は
   ゴミ箱）。ダイアログ上の選択はその場限りで、保存はしない。
 
 ### 圧縮・解凍
@@ -657,7 +657,7 @@ NSTableView 風に、**非アクティブ時はグレーに落とす** スタイ
 
 カーソル位置のファイル / ディレクトリの詳細情報を表示するダイアログ。
 `Alt+Enter` (`file.properties`) で開く。File メニューおよびキーバインド一覧 /
-Settings → Keybindings からも到達可能。
+設定の「キーバインド」からも到達可能。
 
 - 表示項目（フォーム形式、ラベル列は左寄せ）:
   - 名前 / フルパス
@@ -720,7 +720,7 @@ Settings → Keybindings からも到達可能。
   ファイルリスト上にドロップすると、`Copy / Move / Cancel` 選択ダイアログが出る。
   - ドロップを受け取ったパネルがアクティブパネルに切り替わる。
   - 同一ディレクトリ内へのドロップ（実質的に何もしない操作）はその場で破棄。
-  - 上書きモードは `Ask`、自動リネームは Behavior タブの suffix テンプレートに従う。
+  - 上書きモードは `Ask`、自動リネームは Behavior カテゴリの suffix テンプレートに従う。
 - バックグラウンドワーカー (`CopyWorker` / `MoveWorker`) で実行され、
   通常のコピー・移動と同じ進捗ダイアログを使う。
 
@@ -769,7 +769,7 @@ farman 単独で完結しない作業 (シェル操作・テキスト編集な�
 | `builtin` | 組み込みフラグ (`true` なら削除不可・ID 固定) |
 | `builtinKind` | `"terminal"` / `"editor"` / 空 |
 
-各エントリは `CommandRegistry` に **動的登録** され、Keybindings タブで
+各エントリは `CommandRegistry` に **動的登録** され、設定の「キーバインド」で
 任意のキーを割り当てられる。組み込み 2 件のデフォルトキーは
 `T` (terminal) / `E` (editor)。
 
@@ -812,12 +812,12 @@ Settings 変更のたびに `MainWindow::rebuildToolsMenu()` で作り直す。
 組み込み 2 件以外がまだ無い段階では「(no external commands configured)」
 を disabled で表示する (空メニューが消える Qt 仕様の回避)。
 
-### Settings (External Apps タブ)
+### 設定（外部アプリ）
 
-外部アプリ関連の設定は **専用タブ** に分離する (Settings ダイアログ内で
+外部アプリ関連の設定は **専用カテゴリ** に分離する (Settings ダイアログ内で
 General / Behavior / Appearance / Viewers の後ろ、Keybindings の前)。
-Keybindings タブと位置的に隣接させているのは、`T` / `E` 等のキーが指す先が
-このタブのエントリだからで、両者を行き来しやすくする狙い。
+設定の「キーバインド」と位置的に隣接させているのは、`T` / `E` 等のキーが指す先が
+このカテゴリのエントリだからで、両者を行き来しやすくする狙い。
 
 - **Terminal** (組み込み専用 UI)
   - **Preset** コンボ (一番上) — 検出されたインストール済アプリを並べる。
@@ -831,12 +831,12 @@ Keybindings タブと位置的に隣接させているのは、`T` / `E` 等の�
   - 同上
 - **ユーザー定義コマンド** *（フェーズ 2 で UI 追加予定）*
   - 内部モデルは既に `UserCommand` で統一済み。`builtin=false` のエントリを
-    External Apps タブから追加 / 編集 / 削除 / 並び替えする UI を後続で被せる。
+    設定の「外部アプリ」から追加 / 編集 / 削除 / 並び替えする UI を後続で被せる。
   - 現状は手で `settings.json` に書けば動作する (Tools メニューに出る)。
 
 ### インストール済アプリのプリセット検出
 
-External Apps タブを開いた時点で、各 OS で「インストール済」と判定された
+設定の「外部アプリ」を開いた時点で、各 OS で「インストール済」と判定された
 アプリの一覧をコンボボックスに並べる。検出ロジックは
 `src/core/AppPresets.{h,cpp}` で、起動時の同期処理 (10〜20 個のパス確認のみ
 なので体感ゼロ)。
@@ -915,7 +915,7 @@ CLI 版を優先表示)。
 
 実装済:
 - 追加 / 編集 / 削除 / **並び替え** (各行の ↑/↓ ボタン。Tools メニューの
-  並び順 + Settings タブの表示順がこの順序に従う) UI
+  並び順 + Settings カテゴリの表示順がこの順序に従う) UI
 - **インポート / エクスポート** (JSON ファイル経由)。組み込み terminal /
   editor は対象外。
 - アイコン (任意) は省略。Tools メニュー表示 / 将来のツールバー表示の
@@ -1014,7 +1014,7 @@ CLI 版を優先表示)。
   - アーカイブ: `Archive created: <path>` / `Archive extracted: <path>`
 
 ### Settings
-- Behavior タブの「Log」グループに以下を配置:
+- Behavior カテゴリの「Log」グループに以下を配置:
   - 1 行目 (横並び): `Show log pane` (デフォルト ON) / `Height:` SpinBox /
     `Retention:` SpinBox / `Keep forever` (チェックボックス)
   - 2 行目: `Write log to file` (デフォルト ON) / `Directory:` 出力先ディレクトリ入力 + Browse ボタン
@@ -1025,7 +1025,7 @@ CLI 版を優先表示)。
 
 - `v` またはファイルによっては `Enter` で起動
 - 拡張子・MIME タイプから自動判別
-  - Viewers タブで Text / Image 各ビュアーの「対象拡張子」「MIME パターン」を編集可能。
+  - Viewers カテゴリで Text / Image 各ビュアーの「対象拡張子」「MIME パターン」を編集可能。
     Binary Viewer はどちらにもマッチしないファイルのフォールバック先 (常に最後)。
   - 評価順は **Image → Text → Binary フォールバック** で固定。両側にマッチした場合は Image が勝つ。
   - 拡張子はワイルドカード (`*`, `?`) と除外プレフィックス `!` をサポート
@@ -1293,13 +1293,13 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 切替経路:
 
-- **Settings → Viewers タブ → Viewer Display グループ → Display mode**
+- **Settings → Viewers カテゴリ → Viewer Display グループ → Display mode**
   (永続設定。`settings.json` の `behavior.viewerMode` に `inline` /
   `external` で保存)。
 - **View メニュー → External Viewer Window** (チェック付きトグル項目)。
   選択する都度 Settings に書き込み、即時反映される。`Settings::save()` まで
   含めて完結するので、再起動後も状態が残る。
-- **コマンド `view.toggle_viewer_mode`**。Keybindings タブで任意のキーを
+- **コマンド `view.toggle_viewer_mode`**。設定の「キーバインド」で任意のキーを
   割り当て可能。デフォルトキーバインドは付けていない。
 
 実装ポイント:
@@ -1393,7 +1393,7 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
       で表示。レイアウト忠実度は高いが Qt WebEngine 依存が増える。
   - 実装難度: 高。最初は **読み取り専用・テキスト主体・体裁簡略** から始め、
     画像・図形・複雑なスタイルは段階的に対応する。
-- これらは Viewers タブの対応拡張子ルーティングに組み込み、ビュアー固有の
+- これらは Viewers カテゴリの対応拡張子ルーティングに組み込み、ビュアー固有の
   設定 (PDF のページ表示モード、CSV の区切り文字、Office のレンダリング
   バックエンド等) を Settings に持たせる。
 
@@ -1522,7 +1522,7 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
 ## アドレスバー
 
 各パネル上部に [★] [現在のパス入力欄] [📁] の 3 ウィジェットを横並びで持つ。
-見た目は Appearance タブの Address グループで設定できる（フォント・前景色・背景色）。
+見た目は Appearance カテゴリの Address グループで設定できる（フォント・前景色・背景色）。
 
 ### 構成と挙動
 
@@ -1667,7 +1667,7 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
   (Navigation / File / Pane / View / Bookmark / History / Application 等)
   に `commandsGroupedByCategory()` でグループ化し、太字背景色つきの
   カテゴリ見出し行を挟みながら 2 カラム (`Key` / `Command`) のテーブルに
-  並べる。Settings → Keybindings タブと同じ `CommandLayout` を使うので
+  並べる。Settings → 設定の「キーバインド」と同じ `CommandLayout` を使うので
   並び順が一致する。
 - 各コマンドの **説明文は tooltip** に出す (id を Key 列の tooltip に、
   description を Command 列の tooltip に表示)。
@@ -1676,9 +1676,9 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
   通常 Enter と冗長なので一覧からは除外する (バインド自体は有効)。
   macOS の NativeText で記号化される `Home/End/PgUp/PgDn` は、可読性を
   優先してそれぞれの英字表記に置換する。
-- Settings → Keybindings タブで設定中の値をリアルタイムに反映
+- Settings → 設定の「キーバインド」で設定中の値をリアルタイムに反映
   (`Settings::settingsChanged` を受けて `rebuild()` する)。
-- 単純な読み取り専用ウィンドウ。Settings の Keybindings タブで実際の
+- 単純な読み取り専用ウィンドウ。Settings の 設定の「キーバインド」で実際の
   変更を行う住み分け。
 - ヘッダ部分に **インクリメンタル検索ボックス** (`Filter (key, command
   name, or id)`)。テキストが変わるたびに表示行を絞り込む (大文字小文字
@@ -1744,7 +1744,7 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
   先頭に繰り上げて重複を解消する。
 - `h` で履歴ウィンドウを開き、Go / ダブルクリックで
   アクティブパネルがそのパスへ遷移する（戻る／進むスタックではない）。
-- 永続化の ON/OFF は Behavior タブで切り替え可能。
+- 永続化の ON/OFF は Behavior カテゴリで切り替え可能。
   - ON: 終了時に `settings.json` の `paneHistory` に保存、起動時に復元。
   - OFF: セッション限定で、終了時に空で上書きして残留を消す。
 
@@ -1754,21 +1754,21 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
 
 ### カスタマイズ可能な項目
 
-Settings ダイアログは 5 つのトップレベルタブ (`1. General` / `2. Behavior` /
+Settings ダイアログは 5 つのトップレベルカテゴリ (`1. General` / `2. Behavior` /
 `3. Appearance` / `4. Viewers` / `5. Keybindings`) で構成される。
-`Alt+1`〜`Alt+5` で直接タブ切替可能。
-ビュアー固有の設定は Appearance ではなく専用の Viewers タブにまとめ、
+`Alt+1`〜`Alt+5` で直接カテゴリ切替可能。
+ビュアー固有の設定は Appearance ではなく専用の Viewers カテゴリにまとめ、
 ファイルリスト関連の見た目は Appearance に残す。
 
 ボタンバーには通常の `OK` / `Cancel` / `Apply` に加え、`Reset All Settings...`
 ボタンを置く。これは確認ダイアログ経由で **キーバインドを除く全設定** を
-ヘッダ側のデフォルト値に戻す。Keybindings タブにある「Reset to Defaults」は
+ヘッダ側のデフォルト値に戻す。設定の「キーバインド」にある「Reset to Defaults」は
 キーバインドだけを対象にするので、両者は独立している。
 
-#### 1. General タブ
+#### 1. General カテゴリ
 
 アプリ全体・起動時の設定とログ出力をまとめる。**ほぼ「アプリの設定」に
-あたる項目**。日々の操作中に逐次切り替えるものは Behavior タブへ。
+あたる項目**。日々の操作中に逐次切り替えるものは Behavior カテゴリへ。
 
 ##### 起動時設定
 - 初期表示ディレクトリ
@@ -1810,7 +1810,7 @@ Settings ダイアログは 5 つのトップレベルタブ (`1. General` / `2.
 - ログペインの表示 ON/OFF とペイン高さ (px)
 - ファイル出力 ON/OFF / 出力先ディレクトリ / 保持日数 (`0` で永久)
 
-#### 2. Behavior タブ
+#### 2. Behavior カテゴリ
 
 ファイル一覧の操作中に効く **挙動** をまとめる。即時反映。
 
@@ -1843,7 +1843,7 @@ Settings ダイアログは 5 つのトップレベルタブ (`1. General` / `2.
 
 ファイル一覧の **データの見せ方** (装飾ではなく書式) をまとめる。
 2 画面 (Dual) と 1 画面 (Single) でそれぞれ独立した値を持ち、表示中の
-モードに応じて自動で切り替わる。Behavior タブ上は「Dual pane」「Single
+モードに応じて自動で切り替わる。Behavior カテゴリ上は「Dual pane」「Single
 pane」の 2 つのサブグループに分けて配置する。
 
 各サブグループの内容:
@@ -1867,11 +1867,11 @@ pane」の 2 つのサブグループに分けて配置する。
 旧設定 (`fileSizeFormat` / `dateTimeFormat` の単一キー) があれば、Dual /
 Single の両方の既定値にコピーして移行する。
 
-#### 3. Appearance タブ
+#### 3. Appearance カテゴリ
 
 ファイルリストの見た目 (フォント・色・行高) に関する設定をまとめる。
-書式 (サイズ表示形式・日時フォーマット・列の表示) は Behavior タブの
-List Display へ移動済み。ビュアー固有の設定は Viewers タブへ。
+書式 (サイズ表示形式・日時フォーマット・列の表示) は Behavior カテゴリの
+List Display へ移動済み。ビュアー固有の設定は Viewers カテゴリへ。
 コンポーネント単位で 3 グループに分割され、各グループ内の主要項目は横並び (左寄せ) で配置される。
 
 ##### Address グループ
@@ -1897,7 +1897,7 @@ List Display へ移動済み。ビュアー固有の設定は Viewers タブへ�
   - 各状態に Foreground / Background / Bold を指定可能
   - 「Use custom colors for inactive pane」ON で非アクティブパネル用の色も別途設定可能
 
-#### 4. Viewers タブ
+#### 4. Viewers カテゴリ
 
 3 ビュアー (Text Viewer / Image Viewer / Binary Viewer) の設定を `QToolBox` による
 **排他アコーディオン**で配置する (一度に 1 セクションだけ展開、ヘッダークリックで切替)。
@@ -1971,7 +1971,7 @@ List Display へ移動済み。ビュアー固有の設定は Viewers タブへ�
 - これらは Settings に保存される既定値。バイナリビュアー自体のツールバーで
   単位・エンディアン・エンコードをその場で上書きできるが、上書き内容は保存されない。
 
-#### 5. Keybindings タブ
+#### 5. Keybindings カテゴリ
 
 - 全コマンドのキーアサイン設定
   - ナビゲーション系コマンド
@@ -2003,7 +2003,7 @@ List Display へ移動済み。ビュアー固有の設定は Viewers タブへ�
 **プリセット (= farman 同梱の出来合いセット) の選択** をサポートする。
 
 - **キーバインドのインポート / エクスポート**
-  - Settings → Keybindings タブにボタン: `Export...` / `Import...`。
+  - 設定の「キーバインド」にボタン: `Export...` / `Import...`。
   - 形式: `{"version": 1, "bindings": [{"command": "file.copy", "keys": ["C", "Ctrl+C"]}, ...]}`
     のような JSON。コマンド ID は `CommandRegistry` の登録キー。
   - インポート時は既存設定を全置換するか追記/マージするかを選べる。
@@ -2013,7 +2013,7 @@ List Display へ移動済み。ビュアー固有の設定は Viewers タブへ�
     一括適用。
   - 「リセット」は `Default (farman)` プリセットの適用と同義。
 - **配色 (カラー設定) のインポート / エクスポート**
-  - Settings → Appearance タブにボタン: `Export Theme...` / `Import Theme...`。
+  - Settings → Appearance カテゴリにボタン: `Export Theme...` / `Import Theme...`。
   - 対象: アドレスバー / カーソル / ファイル種別 4 状態カラー / 行高 /
     フォント (フォントは OS 依存なのでファミリ名のみ持つ)。
   - 形式: 同様の JSON。`{"version": 1, "address": {...}, "cursor": {...},
@@ -2023,7 +2023,7 @@ List Display へ移動済み。ビュアー固有の設定は Viewers タブへ�
     / `Monokai` 等。リスト選択 + プレビュー → 適用。
   - キーバインドと違って即時切替可能 (再起動不要)。
 - **ユーザー定義コマンドのインポート / エクスポート**
-  - Settings → General タブの「外部アプリ」グループにボタン:
+  - Settings → General カテゴリの「外部アプリ」グループにボタン:
     `Export Commands...` / `Import Commands...`。
   - 形式: `{"version": 1, "commands": [{"name": ..., "command": ...,
     "args": ..., "workdir": ..., "menu": ..., "icon": ...}, ...]}`。
@@ -2250,7 +2250,7 @@ SHA256 チェックサム (`<asset>.sha256` という名前で同じリリース
    タイミングで起動可能。最新が手元と同じなら「You're up to date.」
    ダイアログ、新しいなら通知ダイアログ (上記 1.)。
 
-### Settings → General タブの新設
+### Settings → General カテゴリの新設
 
 ```
 ☑ Check for updates automatically (daily)
