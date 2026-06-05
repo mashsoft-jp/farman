@@ -2628,8 +2628,7 @@ void FileManagerPanel::renameItem() {
 
 // ── ディレクトリ比較 ────────────────────────────────────────────
 // 左右ペインのカレントを突き合わせ、結果オーバーレイを各 model に流し込んで
-// 着色表示する。Phase A スコープ: NameOnly / SizeMtime のみ、非再帰、表示のみ。
-// 同期操作 (差分コピー等) は Phase C で別途追加予定。
+// 着色表示する。NameOnly / SizeMtime 粒度と再帰比較に対応する。
 void FileManagerPanel::startDirectoryCompare() {
   // アーカイブモード中は対象にできない (libarchive エントリは QDir で読めない)
   if (m_leftPane->model()->isInArchiveMode() ||
@@ -2661,8 +2660,8 @@ void FileManagerPanel::startDirectoryCompare() {
   if (dlg.exec() != QDialog::Accepted) return;
   m_compareOptions = dlg.options();
 
-  // 比較は QDir 列挙ベースで NameOnly/SizeMtime なら瞬時。Hash 粒度や再帰
-  // (Phase B 以降) を入れたタイミングで進捗ダイアログを足す予定。今は同期実行。
+  // 比較は QDir 列挙ベースで、NameOnly/SizeMtime なら軽量。再帰 ON 時も
+  // 同名ディレクトリの Same/Differ 集約だけを行うため、進捗ダイアログは出さない。
   auto* worker = new DirectoryCompareWorker(leftPath, rightPath, m_compareOptions, this);
   connect(worker, &WorkerBase::finished, this,
     [this, worker, leftPath, rightPath](bool ok) {

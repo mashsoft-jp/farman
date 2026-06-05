@@ -2070,18 +2070,9 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation>サイズ + 更新日時</translation>
     </message>
     <message>
-        <location filename="../src/ui/DirectoryCompareDialog.cpp" line="40"/>
-        <source>SHA-256 hash (Phase B, not yet implemented)</source>
-        <translation>SHA-256 ハッシュ (フェーズ B、未実装)</translation>
-    </message>
-    <message>
         <location filename="../src/ui/DirectoryCompareDialog.cpp" line="50"/>
         <source>Recurse into subdirectories</source>
         <translation>サブディレクトリを再帰的に比較</translation>
-    </message>
-    <message>
-        <source>Recurse into subdirectories (Phase B, not yet implemented)</source>
-        <translation type="vanished">サブディレクトリを再帰的に比較 (フェーズ B、未実装)</translation>
     </message>
     <message>
         <location filename="../src/ui/DirectoryCompareDialog.cpp" line="56"/>
