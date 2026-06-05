@@ -23,7 +23,7 @@ SPEC.md「ディレクトリ比較」(SPEC.md:1125〜) の実装に向けた設�
 ```cpp
 enum class DiffStatus {
   Same,        // 反対側と一致
-  Differ,      // 両側にあるが内容が違う（サイズ / mtime / hash の判定による）
+  Differ,      // 両側にあるがサイズまたは mtime が違う
   OnlyHere,    // このペインにしかない
 };
 ```
