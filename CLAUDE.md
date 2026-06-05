@@ -90,6 +90,18 @@ src/
 ### Claude Code への指示
 - **日本語で出力してください**: このプロジェクトでは、Claude Code からの全ての出力を日本語で行ってください。
 
+## ブランチ運用
+
+- `main` は常にリリース可能な安定ブランチとして扱い、直接コードを書かない。
+- `develop` / `staging` は使わない。
+- 次リリースに入れる変更をまとめる場合は `release/vX.Y.Z` を作る。
+- 個別作業は `feature/<topic>` または `fix/<topic>` で行い、確認後に対象の
+  `release/vX.Y.Z` へ取り込む。
+- 公開済み版への緊急修正だけ `hotfix/<topic>` を使う。必要に応じて対象タグ
+  または `main` から切る。
+- 公開済みバージョンは `vX.Y.Z` タグで固定する。正式リリース後は
+  `release/vX.Y.Z` を `main` にマージし、main の HEAD に正式タグを打つ。
+
 ## リリースフロー
 
 タグ命名規約:
@@ -97,13 +109,14 @@ src/
 - `vX.Y.Z`: 正式リリース。同じく `release.yml` が走って 3 OS のアセットを Draft 公開する。
 
 リリースする手順 (常にこの順序):
-1. 作業ブランチ (claude/...) で機能実装・コミット。CMakeLists.txt の VERSION も bump 済にしておく。
-2. **`vX.Y.Z-test` タグを作業ブランチの先端に直接打って push**。
-   - main にはまだマージしない。テストで問題が見つかってブランチに修正を入れる場合、main を巻き戻す必要がない。
-   - `git tag -a vX.Y.Z-test -m "..."; git push origin claude/<branch> vX.Y.Z-test`
+1. 個別作業ブランチ (`feature/...` / `fix/...`) で実装・コミットし、対象の
+   `release/vX.Y.Z` に取り込む。CMakeLists.txt の VERSION も bump 済にしておく。
+2. **`vX.Y.Z-test` タグを `release/vX.Y.Z` の先端に直接打って push**。
+   - main にはまだマージしない。テストで問題が見つかって release ブランチに修正を入れる場合、main を巻き戻す必要がない。
+   - `git tag -a vX.Y.Z-test -m "..."; git push origin release/vX.Y.Z vX.Y.Z-test`
 3. CI (release.yml) で 3 OS のビルドが通り、Draft Release ができたら macOS / Windows / Linux に配って動作確認する。
-4. 問題が見つかったら作業ブランチに修正を追加コミット → `vX.Y.Z-test` を **force でリセット** (`git tag -f` + `git push --force origin vX.Y.Z-test`)。Draft Release が新しいビルドで上書き更新される。
-5. テストが完了したら、はじめて **作業ブランチを main に fast-forward マージ** + push。
+4. 問題が見つかったら `release/vX.Y.Z` に修正を追加コミット → `vX.Y.Z-test` を **force でリセット** (`git tag -f` + `git push --force origin vX.Y.Z-test`)。Draft Release が新しいビルドで上書き更新される。
+5. テストが完了したら、はじめて **`release/vX.Y.Z` を main に fast-forward マージ** + push。
 6. main の HEAD に `vX.Y.Z` 正式タグを打って push → 同じ `release.yml` が正式リリースの Draft を作る。
 7. Draft Release を確認してから手動で Publish。Publish された stable リリースを auto-update が検知する。
 
