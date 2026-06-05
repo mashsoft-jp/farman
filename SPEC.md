@@ -829,10 +829,11 @@ General / Behavior / Appearance / Viewers の後ろ、Keybindings の前)。
   - Test launch ボタン (現在のアクティブペインのコンテキストで実起動)
 - **Text Editor** (組み込み専用 UI)
   - 同上
-- **ユーザー定義コマンド** *（フェーズ 2 で UI 追加予定）*
-  - 内部モデルは既に `UserCommand` で統一済み。`builtin=false` のエントリを
-    設定の「外部アプリ」から追加 / 編集 / 削除 / 並び替えする UI を後続で被せる。
-  - 現状は手で `settings.json` に書けば動作する (Tools メニューに出る)。
+- **ユーザー定義コマンド**
+  - 内部モデルは `UserCommand` で統一済み。`builtin=false` のエントリを
+    設定の「外部アプリ」から追加 / 編集 / 削除 / 並び替えできる。
+  - `showInToolsMenu=true` のエントリは Tools メニューに表示され、設定の
+    「キーバインド」から任意のキーを割り当てられる。
 
 ### インストール済アプリのプリセット検出
 
@@ -1190,7 +1191,8 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   ロードを無効化してしまうため、`QHeaderView::setResizeContentsPrecision(100)`
   でサンプル数を上限 100 行に抑えている。
 - External モード時は `CsvViewerWindow` (独立 `QMainWindow`) として開く。
-- 並べ替え (列ヘッダクリック) は Phase 2 以降。
+- 列ソート (列ヘッダクリックで昇順/降順切替) は **不採用** (2026-05-27)。
+  CSV ビュアー側で並べ替えが必要なケースは表計算ソフトで開く想定。
 - ステータスバー (statusInfo): `CSV · <行数> 行 · <列数> 列 · <エンコーディング>
   · <ファイルサイズ>`。
 
