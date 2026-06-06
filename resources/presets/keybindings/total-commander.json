@@ -55,6 +55,7 @@
 
     { "command": "user.cmd.terminal",          "keys": ["Ctrl+T"] },
 
-    { "command": "help.shortcuts",             "keys": ["F1"] }
+    { "command": "help.shortcuts",             "keys": ["F1"] },
+    { "command": "help.plugins",               "keys": ["Ctrl+Shift+P"] }
   ]
 }

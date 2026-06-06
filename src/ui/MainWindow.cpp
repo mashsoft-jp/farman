@@ -1786,6 +1786,7 @@ void MainWindow::createMainToolBar() {
 
   m_toolbar->addSeparator();
   addBtn("help.shortcuts",          tr("Shortcuts"),    QStringLiteral("shortcuts.svg"));
+  addBtn("help.plugins",            tr("Plugins"),      QStringLiteral("plugins.svg"));
   addBtn("app.settings",            tr("Settings"),     QStringLiteral("settings.svg"));
 
   // 右端に「ツールバーを閉じる (×)」ボタン。残りスペースを expanding な

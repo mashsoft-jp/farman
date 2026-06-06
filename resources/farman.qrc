@@ -45,6 +45,7 @@
     <file alias="view-file.svg">icons/toolbar/view-file.svg</file>
     <file alias="external-viewer.svg">icons/toolbar/external-viewer.svg</file>
     <file alias="shortcuts.svg">icons/toolbar/shortcuts.svg</file>
+    <file alias="plugins.svg">icons/toolbar/plugins.svg</file>
     <file alias="terminal.svg">icons/toolbar/terminal.svg</file>
     <file alias="editor.svg">icons/toolbar/editor.svg</file>
     <file alias="fit-to-window.svg">icons/toolbar/fit-to-window.svg</file>

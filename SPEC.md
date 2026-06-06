@@ -1413,6 +1413,14 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
   空欄なら `Settings::defaultPluginsDirectory()` を使う。
 - Help → Plugins... で組み込み / 外部プラグインのロード結果、ID、名前、パス、
   エラー理由を確認できる。
+- プラグイン一覧は Help → Plugins...、メインツールバーの Plugins ボタン、
+  または `help.plugins` コマンド (既定: Ctrl+Shift+P) から開ける。
+- どのファイルに外部ビュアープラグインを適用するかは、現時点では UI では
+  設定しない。各 `IViewerPlugin` が `supportedExtensions()` /
+  `supportedMimeTypes()` / `canHandle(filePath)` / `priority()` で宣言する。
+  例: mp4 を動画プラグインで開く場合、そのプラグインが `supportedExtensions()`
+  で `mp4`、必要に応じて `supportedMimeTypes()` で `video/mp4` を返す。
+  複数プラグインが対応する場合は `priority()` が高いものを使う。
 
 **基盤 API**
 
