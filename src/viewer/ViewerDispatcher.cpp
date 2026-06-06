@@ -51,6 +51,7 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
       rec.loaded      = false;
       rec.errorReason = loader->errorString();
       m_records.append(rec);
+      loader->unload();
       Logger::instance().warn(
         QStringLiteral("Plugins: failed to load %1 (%2)")
           .arg(fileInfo.fileName(), rec.errorReason));
@@ -61,6 +62,7 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
       rec.loaded      = false;
       rec.errorReason = tr("Not an IViewerPlugin (wrong IID?)");
       m_records.append(rec);
+      loader->unload();
       Logger::instance().warn(
         QStringLiteral("Plugins: %1 is not IViewerPlugin (wrong IID?)")
           .arg(fileInfo.fileName()));
@@ -75,6 +77,8 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
       // 登録成功した外部プラグインだけ loader を保持し、プラグイン実体を
       // アプリ終了まで生かす。
       m_pluginLoaders.append(loader);
+    } else {
+      loader->unload();
     }
   }
   // 今回ロード分のサマリログ
