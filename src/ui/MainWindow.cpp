@@ -1919,13 +1919,15 @@ void MainWindow::showPluginsDialog() {
       enabledItem->setToolTip(tr("Changes take effect after restarting farman."));
     } else {
       enabledItem->setCheckState(Qt::Checked);
-      enabledItem->setToolTip(tr("Built-in plugins cannot be disabled."));
+      enabledItem->setToolTip(isExternal
+                                ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
+                                : tr("Built-in plugins cannot be disabled."));
     }
     table->setItem(row, 0, enabledItem);
 
     setItem(row, 1, rec.loaded
                     ? tr("Loaded")
-                    : (rec.errorReason == tr("Disabled by user")
+                    : (rec.disabledByUser
                          ? tr("Disabled")
                          : tr("Failed")));
     setItem(row, 2, rec.origin == PluginRecord::Origin::Builtin

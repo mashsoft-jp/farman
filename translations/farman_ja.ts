@@ -4567,7 +4567,7 @@ File system: %3</source>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="1802"/>
         <location filename="../src/ui/MainWindow.cpp" line="1875"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1973"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1975"/>
         <source>Plugins</source>
         <translation>プラグイン</translation>
     </message>
@@ -4606,48 +4606,48 @@ File system: %3</source>
         <translation>エラー</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1927"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1929"/>
         <source>Loaded</source>
         <translation>読み込み済み</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1930"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1932"/>
         <source>Failed</source>
         <translation>失敗</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1932"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1934"/>
         <source>Built-in</source>
         <translation>組み込み</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1933"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1935"/>
         <source>External</source>
         <translation>外部</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1985"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1987"/>
         <source>Failed to load license information.</source>
         <translation>ライセンス情報の読み込みに失敗しました。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1989"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1991"/>
         <source>Third-Party Licenses</source>
         <translation>サードパーティライセンス</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2060"/>
-        <location filename="../src/ui/MainWindow.cpp" line="2080"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2062"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2082"/>
         <source>You&apos;re using the latest version of farman.</source>
         <translation>最新バージョンを使用しています。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2062"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2064"/>
         <source>This is a development build.</source>
         <translation>開発ビルドです。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2064"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2066"/>
         <source>Could not check for updates: %1</source>
         <translation>アップデートを確認できませんでした: %1</translation>
     </message>
@@ -4827,27 +4827,31 @@ File system: %3</source>
         <translation>変更は farman の再起動後に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1922"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1923"/>
+        <source>Plugin ID is unavailable, so this plugin cannot be toggled.</source>
+        <translation>プラグイン ID を取得できないため、このプラグインは切り替えできません。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MainWindow.cpp" line="1924"/>
         <source>Built-in plugins cannot be disabled.</source>
         <translation>組み込みプラグインは無効化できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1928"/>
         <source>Disabled by user</source>
-        <translation>ユーザーにより無効化されています</translation>
+        <translation type="vanished">ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1929"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1931"/>
         <source>Disabled</source>
         <translation>無効</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1974"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1976"/>
         <source>Plugin enable/disable changes will take effect after restarting farman.</source>
         <translation>プラグインの有効/無効の変更は、farman の再起動後に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2052"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2054"/>
         <source>Update check failed: %1</source>
         <translation>アップデートチェック失敗: %1</translation>
     </message>
@@ -4884,13 +4888,13 @@ Reason: %1</source>
 理由: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2066"/>
-        <location filename="../src/ui/MainWindow.cpp" line="2079"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2068"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2081"/>
         <source>Check for Updates</source>
         <translation>アップデートを確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2071"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2073"/>
         <source>Update check: latest=%1, current=%2, newer=%3</source>
         <translation>アップデートチェック: latest=%1, current=%2, newer=%3</translation>
     </message>
@@ -4903,57 +4907,57 @@ Reason: %1</source>
         <translation type="vanished">farman %1 が最新版です。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2091"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2093"/>
         <source>Update %1 is in skip list, suppressing notification</source>
         <translation>アップデート %1 はスキップ済みリストにあるため通知を抑止します</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2101"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2103"/>
         <source>Silent auto-update: downloading %1</source>
         <translation>サイレント自動アップデート: %1 をダウンロード中</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2118"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2120"/>
         <source>User chose to skip update %1</source>
         <translation>ユーザーがアップデート %1 のスキップを選択しました</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2134"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2136"/>
         <source>Updating farman...</source>
         <translation>farman をアップデート中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2135"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2137"/>
         <source>Preparing download...</source>
         <translation>ダウンロードの準備中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2160"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2162"/>
         <source>Update download failed: %1</source>
         <translation>アップデートのダウンロード失敗: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2161"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2163"/>
         <source>Update Failed</source>
         <translation>アップデート失敗</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2162"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2164"/>
         <source>Could not install the update: %1</source>
         <translation>アップデートをインストールできませんでした: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2165"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2167"/>
         <source>Update install launched, exiting</source>
         <translation>アップデートのインストールを起動しました。farman を終了します</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2239"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2241"/>
         <source>Confirm Exit</source>
         <translation>終了確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2240"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2242"/>
         <source>Are you sure you want to exit farman?</source>
         <translation>farman を終了しますか?</translation>
     </message>
@@ -6149,27 +6153,27 @@ Keybindings are not affected.</source>
         <translation>IViewerPlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="117"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="118"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="241"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="253"/>
         <source>null plugin instance</source>
         <translation>プラグインインスタンスが null</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="250"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="262"/>
         <source>duplicate plugin id (already registered)</source>
         <translation>プラグイン ID が重複 (既に登録済み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="263"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="275"/>
         <source>initialize() returned false</source>
         <translation>initialize() が失敗を返しました</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="277"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="289"/>
         <source>built-in</source>
         <translation>組み込み</translation>
     </message>
@@ -6177,13 +6181,13 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::ViewerPanel</name>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="80"/>
-        <location filename="../src/ui/ViewerPanel.cpp" line="258"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="82"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="309"/>
         <source>Loading...</source>
         <translation>読み込み中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="108"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="110"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>

@@ -184,7 +184,7 @@ void ViewersTab::loadSettings() {
     } else if (!record.loaded
                && record.origin == PluginRecord::Origin::External
                && !record.pluginId.isEmpty()
-               && Settings::instance().isViewerPluginDisabled(record.pluginId)) {
+               && record.disabledByUser) {
       disabledPluginRecords.insert(record.pluginId, record);
     }
   }

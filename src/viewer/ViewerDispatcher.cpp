@@ -114,6 +114,7 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
     rec.supportedExtensions = viewerPlugin->supportedExtensions();
     if (Settings::instance().isViewerPluginDisabled(rec.pluginId)) {
       rec.loaded = false;
+      rec.disabledByUser = true;
       rec.errorReason = tr("Disabled by user");
       m_records.append(rec);
       loader->unload();

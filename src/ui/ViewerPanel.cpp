@@ -178,6 +178,34 @@ bool mimeMatches(const QStringList& patterns, const QMimeType& mime) {
   return false;
 }
 
+bool viewerKindFromPluginId(const QString& pluginId, ViewerPanel::ViewerKind& kind) {
+  if (pluginId == QLatin1String("text_viewer")) {
+    kind = ViewerPanel::ViewerKind::Text;
+    return true;
+  }
+  if (pluginId == QLatin1String("image_viewer")) {
+    kind = ViewerPanel::ViewerKind::Image;
+    return true;
+  }
+  if (pluginId == QLatin1String("binary_viewer")) {
+    kind = ViewerPanel::ViewerKind::Binary;
+    return true;
+  }
+  if (pluginId == QLatin1String("markdown_viewer")) {
+    kind = ViewerPanel::ViewerKind::Markdown;
+    return true;
+  }
+  if (pluginId == QLatin1String("pdf_viewer")) {
+    kind = ViewerPanel::ViewerKind::Pdf;
+    return true;
+  }
+  if (pluginId == QLatin1String("csv_viewer")) {
+    kind = ViewerPanel::ViewerKind::Csv;
+    return true;
+  }
+  return false;
+}
+
 } // anonymous namespace
 
 ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
@@ -238,14 +266,21 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
   // 元拡張子で振り分けたいので)。
   if (kind == ViewerKind::Auto) {
     IViewerPlugin* plugin = ViewerDispatcher::instance().resolvePlugin(pathForStatus);
-    if (plugin
-        && ViewerDispatcher::instance().isExternalPlugin(plugin->pluginId())) {
-      const bool ok = openPluginFile(plugin, filePath, pathForStatus);
-      QApplication::restoreOverrideCursor();
-      return ok;
+    if (plugin) {
+      if (ViewerDispatcher::instance().isExternalPlugin(plugin->pluginId())) {
+        const bool ok = openPluginFile(plugin, filePath, pathForStatus);
+        QApplication::restoreOverrideCursor();
+        return ok;
+      }
+      if (!viewerKindFromPluginId(plugin->pluginId(), kind)) {
+        kind = resolveAuto(pathForStatus);
+      }
+    } else {
+      kind = resolveAuto(pathForStatus);
     }
-    kind = resolveAuto(pathForStatus);
   }
+
+  clearPluginView();
 
   bool ok = false;
   switch (kind) {

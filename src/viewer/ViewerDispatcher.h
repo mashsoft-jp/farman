@@ -19,6 +19,7 @@ struct PluginRecord {
   QString pluginName;   // 同上
   QStringList supportedExtensions;  // 取得できた場合のみ。無効化行の表示にも使う。
   bool    loaded   = false;
+  bool    disabledByUser = false;
   QString errorReason;  // loaded == false のときだけ非空
 };
 
