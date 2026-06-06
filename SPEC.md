@@ -1295,7 +1295,7 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 切替経路:
 
-- **Settings → Viewers カテゴリ → Viewer Display グループ → Display mode**
+- **Settings → Viewer Associations カテゴリ → Viewer Display グループ → Display mode**
   (永続設定。`settings.json` の `behavior.viewerMode` に `inline` /
   `external` で保存)。
 - **View メニュー → External Viewer Window** (チェック付きトグル項目)。
@@ -1402,8 +1402,9 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 ### プラグインシステム
 
 **v0.9.6 ステータス**: 外部 **ビュアープラグイン** の最小公開を開始する。
-組み込み 3 ビュアー (Text / Image / Binary) は `IViewerPlugin` 実装として
-登録されており、同じ `ViewerDispatcher` で外部 .dylib / .dll / .so も扱う。
+組み込みビュアー (Text / Image / Markdown / PDF / CSV・TSV / Binary) は
+`IViewerPlugin` 実装として登録されており、同じ `ViewerDispatcher` で外部
+.dylib / .dll / .so も扱う。
 
 **ユーザー向けに公開する要素**
 
@@ -1415,12 +1416,30 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
   エラー理由を確認できる。
 - プラグイン一覧は Help → Plugins...、メインツールバーの Plugins ボタン、
   または `help.plugins` コマンド (既定: Ctrl+Shift+P) から開ける。
-- どのファイルに外部ビュアープラグインを適用するかは、現時点では UI では
-  設定しない。各 `IViewerPlugin` が `supportedExtensions()` /
-  `supportedMimeTypes()` / `canHandle(filePath)` / `priority()` で宣言する。
-  例: mp4 を動画プラグインで開く場合、そのプラグインが `supportedExtensions()`
-  で `mp4`、必要に応じて `supportedMimeTypes()` で `video/mp4` を返す。
-  複数プラグインが対応する場合は `priority()` が高いものを使う。
+- Help → Plugins... では外部プラグインの有効 / 無効を切り替えられる。
+  無効化された外部プラグインは次回起動時に登録せず、ロード後すぐアンロードする。
+  組み込みビュアーはアプリ本体のフォールバック経路を兼ねるため無効化対象外。
+- Settings → Viewer Associations で、ビュアープラグインごとに拡張子を
+  割り当てられる。例: `video_viewer` 行に `mp4, mkv` を指定する。
+  外部プラグインは組み込みビュアーより上に表示する。
+  無効化された外部プラグインも `Disabled` 状態として表示し、関連付けは
+  編集可能なまま残す。これにより再有効化時に以前の割り当てを復元できる。
+- 拡張子のユーザー既定がある場合はそれを最優先する。未設定、または指定した
+  pluginId がロードされていない場合は、従来どおり各 `IViewerPlugin` が
+  `supportedExtensions()` / `supportedMimeTypes()` / `canHandle(filePath)` /
+  `priority()` で宣言した自動選択にフォールバックする。複数プラグインが
+  対応する場合は `priority()` が高いものを使い、同点なら先に登録されたものを使う。
+- 外部ビュアープラグインは Inline / External のどちらの表示モードでも有効。
+  Inline では `ViewerPanel` 内に返却 QWidget を埋め込み、External では同じ
+  QWidget をトップレベル化して表示する。`IViewerPlugin::createViewer()` は
+  QWidget を生成して返すだけにし、プラグイン側では `show()` しない。
+- 外部プラグインには `PluginContext::appearance` で現在の Appearance
+  スナップショットを渡す。含める値は Light/Dark、UI フォント、背景色、
+  パネル背景色、通常テキスト色、抑制テキスト色、アクセント色、選択背景色、
+  選択テキスト色とする。`Settings*` や `QApplication*` は渡さない。
+- Appearance 変更時は `IViewerPlugin::appearanceChanged(PluginAppearance)` を
+  呼ぶ。Settings ダイアログでの変更だけでなく、Theme = Auto 時に OS 側の
+  Light/Dark が自動切替された場合も同じ通知経路で追随する。
 
 **基盤 API**
 
@@ -1428,9 +1447,11 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
   - `pluginId()` / `pluginName()` / `supportedExtensions()` /
     `supportedMimeTypes()` / `canHandle(filePath)` /
     `createViewer(filePath, parent, ctx)` / `priority()` /
-    `initialize(ctx)` / `shutdown()` / `capabilities()`
-- `PluginContext` 構造体 (将来 logger / settings / mainWindow 等を「引数追加
-  = ABI 破壊」抜きで足せるよう用意)
+    `initialize(ctx)` / `shutdown()` / `appearanceChanged(appearance)` /
+    `capabilities()`
+- `PluginContext` 構造体 (farmanVersion と Appearance スナップショットを保持。
+  将来 logger / settings / mainWindow 等を「引数追加 = ABI 破壊」抜きで
+  足せるよう用意)
 - `ViewerDispatcher::registerBuiltins()` / `loadPlugins(QDir)` /
   `pluginRecords()`
 - `Settings::pluginsDirectory()` / `defaultPluginsDirectory()` アクセサ

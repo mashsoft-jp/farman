@@ -130,11 +130,11 @@ private:
   void      createMainToolBar();
   void      applyToolbarVisibility();
 
-  // External モードのビュアーウィンドウ。同時に開けるのは 1 つだけ。
+  // External モードのビュアーウィジェット。同時に開けるのは 1 つだけ。
   // 別ファイルを開く要求が来たら、前のものを閉じてジオメトリを引き継いだ
-  // 新規ウィンドウを作成する。WA_DeleteOnClose 付きなので X ボタンや Esc で
+  // 新規ウィジェットを作成する。WA_DeleteOnClose 付きなので X ボタンや Esc で
   // 閉じれば自動破棄され、QPointer は自動的に nullptr になる。
-  QPointer<QMainWindow> m_externalViewerWindow;
+  QPointer<QWidget> m_externalViewerWindow;
 
   // Tools メニュー (外部アプリ連携)。UserCommandManager の userCommandsChanged で
   // rebuildToolsMenu() が呼ばれ、addCmd() ベースで再構築する。

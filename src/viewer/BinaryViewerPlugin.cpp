@@ -8,8 +8,6 @@ QWidget* BinaryViewerPlugin::createViewer(const QString&       filePath,
                                           const PluginContext& /*ctx*/)
 {
   auto* window = new BinaryViewerWindow(filePath, QString(), parent);
-  window->setAttribute(Qt::WA_DeleteOnClose);
-  window->show();
   return window;
 }
 

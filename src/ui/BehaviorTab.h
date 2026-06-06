@@ -44,9 +44,6 @@ private:
   QCheckBox*  m_progressAutoCloseCheck = nullptr;
   QLineEdit*  m_searchExcludeDirsEdit;
 
-  // Viewer display mode (Inline / External) — 旧 ViewersTab から移動
-  QComboBox*  m_viewerModeCombo = nullptr;
-
   // List display formats (per dual / single pane)
   QComboBox*  m_fileSizeFormatDualCombo        = nullptr;
   QComboBox*  m_fileSizeFormatSingleCombo      = nullptr;

@@ -2,6 +2,7 @@
 #include "KeybindingTab.h"
 #include "AppearanceTab.h"
 #include "BehaviorTab.h"
+#include "ViewersTab.h"
 #include "GeneralTab.h"
 #include "ExternalAppsTab.h"
 #include "settings/Settings.h"
@@ -40,6 +41,7 @@ SettingsDialog::SettingsDialog(const QString& leftCurrentPath,
   , m_keybindingTab(nullptr)
   , m_appearanceTab(nullptr)
   , m_behaviorTab(nullptr)
+  , m_viewersTab(nullptr)
   , m_externalAppsTab(nullptr)
   , m_buttonBox(nullptr)
   , m_leftCurrentPath(leftCurrentPath)
@@ -85,11 +87,11 @@ void SettingsDialog::setupUi() {
 
   // ── 各ページ生成 ──
   // 旧 ViewersTab はビュアー設定を AppearanceTab のサブタブ
-  // (Main/Text/Binary/Image) へ統合した結果、廃止。Viewer Display Mode
-  // (Inline/External) は BehaviorTab へ移動した。
+  // (Main/Text/Binary/Image) と Viewer Associations ページへ分割した結果、廃止。
   m_keybindingTab   = new KeybindingTab(this);
   m_appearanceTab   = new AppearanceTab(this);
   m_behaviorTab     = new BehaviorTab(this);
+  m_viewersTab = new ViewersTab(this);
   m_generalTab      = new GeneralTab(m_leftCurrentPath, m_rightCurrentPath,
                                      m_currentWindowSize, m_currentWindowPosition,
                                      this);
@@ -112,8 +114,9 @@ void SettingsDialog::setupUi() {
   addPage(m_generalTab,      tr("1. General"));
   addPage(m_behaviorTab,     tr("2. Behavior"));
   addPage(m_appearanceTab,   tr("3. Appearance"));
-  addPage(m_externalAppsTab, tr("4. External Apps"));
-  addPage(m_keybindingTab,   tr("5. Keybindings"));
+  addPage(m_viewersTab, tr("4. Viewers"));
+  addPage(m_externalAppsTab, tr("5. External Apps"));
+  addPage(m_keybindingTab,   tr("6. Keybindings"));
 
   m_sideMenu->setCurrentRow(0);
   connect(m_sideMenu, &QListWidget::currentRowChanged,
@@ -126,7 +129,7 @@ void SettingsDialog::setupUi() {
   // StrongFocus を設定する。Tab キーで全項目を辿れるようにするのが目的。
   const QList<QWidget*> tabRoots = {
     m_generalTab, m_behaviorTab, m_appearanceTab,
-    m_externalAppsTab, m_keybindingTab
+    m_viewersTab, m_externalAppsTab, m_keybindingTab
   };
   for (QWidget* root : tabRoots) {
     const auto widgets = root->findChildren<QWidget*>();
@@ -211,6 +214,7 @@ void SettingsDialog::onApply() {
   m_keybindingTab->save();
   m_appearanceTab->save();
   m_behaviorTab->save();
+  m_viewersTab->save();
   m_generalTab->save();
   m_externalAppsTab->save();
 

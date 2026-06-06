@@ -193,9 +193,21 @@ public:
   // (QStandardPaths::AppDataLocation + "/plugins")。
   QString pluginsDirectory()            const;  // 空のときは defaultPluginsDirectory()
   void    setPluginsDirectory(const QString& dir);
+  QStringList disabledViewerPlugins() const;
+  void setDisabledViewerPlugins(const QStringList& pluginIds);
+  bool isViewerPluginDisabled(const QString& pluginId) const;
+  void setViewerPluginDisabled(const QString& pluginId, bool disabled);
   // 既定のプラグインディレクトリを返す (= 上記の OS 別 path)。
   // pluginsDirectory() が空のとき loadPlugins に使う実体。
   static QString defaultPluginsDirectory();
+
+  // 拡張子ごとの既定ビュアープラグイン。キーは小文字・先頭ドットなし
+  // ("mp4" など)、値は IViewerPlugin::pluginId()。空なら自動選択。
+  QMap<QString, QString> viewerAssociations() const;
+  void setViewerAssociations(const QMap<QString, QString>& associations);
+  QString viewerAssociationForExtension(const QString& extension) const;
+  void setViewerAssociationForExtension(const QString& extension,
+                                        const QString& pluginId);
 
   // ビュアーの表示モード (Inline / External)。Inline はメインウィンドウ内の
   // ViewerPanel を使う現状の挙動、External はファイル毎に独立ウィンドウ。
@@ -542,6 +554,10 @@ private:
   QString          m_autoUpdateChannel = QStringLiteral("stable");
   // ビュアープラグインを置くディレクトリ。空文字 = defaultPluginsDirectory()。
   QString          m_pluginsDirectory;
+  // 起動時に登録しない外部ビュアープラグイン ID。
+  QStringList      m_disabledViewerPlugins;
+  // 拡張子 -> viewer pluginId。空 / 未設定なら priority ベースで自動選択。
+  QMap<QString, QString> m_viewerAssociations;
   // ビュアー表示モード。デフォルトは Inline (ビュアーパネルでの表示)。
   ViewerMode       m_viewerMode      = ViewerMode::Inline;
   // ペインごとの表示モード (List / Thumbnail)。

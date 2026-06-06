@@ -118,6 +118,7 @@ int main(int argc, char *argv[]) {
   // から外部 IViewerPlugin (.dylib / .dll / .so) を読み込む。
   Farman::PluginContext pluginCtx;
   pluginCtx.farmanVersion = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
+  pluginCtx.appearance = Farman::ViewerDispatcher::currentAppearance();
   Farman::ViewerDispatcher::instance().setContext(pluginCtx);
   Farman::ViewerDispatcher::instance().registerBuiltins();
   const QString pluginsDir = Farman::Settings::instance().pluginsDirectory();
@@ -125,6 +126,12 @@ int main(int argc, char *argv[]) {
     QDir(pluginsDir.isEmpty()
            ? Farman::Settings::defaultPluginsDirectory()
            : pluginsDir));
+
+  QObject::connect(&Farman::Settings::instance(), &Farman::Settings::settingsChanged,
+                   &app, [] {
+    Farman::ViewerDispatcher::instance().notifyAppearanceChanged(
+      Farman::ViewerDispatcher::currentAppearance());
+  });
 
   Farman::MainWindow window;
   window.show();

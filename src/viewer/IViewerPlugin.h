@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QColor>
+#include <QFont>
 #include <QString>
 #include <QStringList>
 #include <QWidget>
@@ -7,18 +9,37 @@
 
 namespace Farman {
 
+// 外部ビュアープラグインに渡す Appearance のスナップショット。
+// Settings や QApplication への参照は渡さず、プラグイン API に必要な値だけ
+// 固定形で渡す。
+struct PluginAppearance {
+  enum class Theme { Light, Dark };
+
+  Theme  theme = Theme::Light;
+  QFont  uiFont;
+  QColor windowBackground;
+  QColor panelBackground;
+  QColor text;
+  QColor mutedText;
+  QColor accent;
+  QColor selectionBackground;
+  QColor selectionText;
+};
+
 // プラグインがアプリ本体側の情報を必要とした時の窓口。
 //
-// **将来拡張用のスロット**: v1.0 時点ではほぼ空に近いが、フィールド追加は
-// 構造体ベースで ABI 互換 (バイナリ互換は失われるが、ヘッダを更新して
-// 再ビルドすれば済む)。「createViewer の引数を増やす」のような署名変更を
-// 避けるため、追加情報はすべてここに足す形にする。
+// フィールド追加は構造体ベースで行う。「createViewer の引数を増やす」のような
+// 署名変更を避けるため、追加情報はすべてここに足す形にする。
 //
 // 値渡しせず const 参照で渡すこと。プラグイン側はメンバの読み取りのみ。
 struct PluginContext {
   // 呼び出し時の farman アプリのバージョン文字列 (例 "0.9.0")。
   // プラグインが「自分は farman 1.x 以降が必要」のような互換性判定をするために。
   QString farmanVersion;
+
+  // 起動時 / createViewer 呼び出し時点の Appearance スナップショット。
+  // 起動後の変更は IViewerPlugin::appearanceChanged() で通知される。
+  PluginAppearance appearance;
 
   // 将来追加候補:
   //   - QObject* logger;        // Logger インスタンスへの参照
@@ -55,6 +76,10 @@ public:
   // プラグインアンロード前に 1 回だけ呼ばれる。
   virtual void shutdown() {}
 
+  // Appearance が変更されたときに呼ばれる。Settings ダイアログでの変更だけでなく、
+  // OS のライト / ダーク自動切替に Auto モードで追随した場合も通知される。
+  virtual void appearanceChanged(const PluginAppearance& /*appearance*/) {}
+
   // ── 機能宣言 (任意 override) ────────────────────
   // 将来のフィーチャー判定用。例: {"thumbnail", "async_load", "search"}.
   // 純粋仮想を追加せずに新機能の有無を見分けられるようにする。
@@ -62,6 +87,8 @@ public:
 
   // ── ビュアー生成 ──────────────────────────────
   // 呼び出し元がウィジェットの ownership を持つ。
+  // 返す QWidget は Inline では埋め込み、External ではトップレベル化して表示する。
+  // プラグイン側では show() せず、表示方法は呼び出し側に任せること。
   // ctx には farman 本体側の参照情報が入る (将来拡張)。
   virtual QWidget* createViewer(const QString&       filePath,
                                 QWidget*             parent,

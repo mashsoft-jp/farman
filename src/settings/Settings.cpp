@@ -126,6 +126,9 @@ void Settings::applyDefaults() {
   m_customInitialPath[static_cast<int>(PaneType::Right)].clear();
   m_confirmOnExit = false;
   m_singleInstance = true;
+  m_pluginsDirectory.clear();
+  m_disabledViewerPlugins.clear();
+  m_viewerAssociations.clear();
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
   m_language      = LanguageMode::Auto;
@@ -842,6 +845,87 @@ QString Settings::pluginsDirectory() const {
 
 void Settings::setPluginsDirectory(const QString& dir) {
   m_pluginsDirectory = dir;
+}
+
+QStringList Settings::disabledViewerPlugins() const {
+  return m_disabledViewerPlugins;
+}
+
+void Settings::setDisabledViewerPlugins(const QStringList& pluginIds) {
+  m_disabledViewerPlugins.clear();
+  for (const QString& id : pluginIds) {
+    const QString normalized = id.trimmed();
+    if (!normalized.isEmpty()
+        && !m_disabledViewerPlugins.contains(normalized, Qt::CaseInsensitive)) {
+      m_disabledViewerPlugins.append(normalized);
+    }
+  }
+  m_disabledViewerPlugins.sort(Qt::CaseInsensitive);
+}
+
+bool Settings::isViewerPluginDisabled(const QString& pluginId) const {
+  return m_disabledViewerPlugins.contains(pluginId.trimmed(), Qt::CaseInsensitive);
+}
+
+void Settings::setViewerPluginDisabled(const QString& pluginId, bool disabled) {
+  const QString normalized = pluginId.trimmed();
+  if (normalized.isEmpty()) return;
+  QStringList ids = m_disabledViewerPlugins;
+  if (disabled) {
+    if (!ids.contains(normalized, Qt::CaseInsensitive)) {
+      ids.append(normalized);
+    }
+  } else {
+    for (int i = ids.size() - 1; i >= 0; --i) {
+      if (ids.at(i).compare(normalized, Qt::CaseInsensitive) == 0) {
+        ids.removeAt(i);
+      }
+    }
+  }
+  setDisabledViewerPlugins(ids);
+}
+
+namespace {
+
+QString normalizeViewerAssociationExtension(QString extension) {
+  extension = extension.trimmed().toLower();
+  while (extension.startsWith(QLatin1Char('.'))) {
+    extension.remove(0, 1);
+  }
+  return extension;
+}
+
+} // namespace
+
+QMap<QString, QString> Settings::viewerAssociations() const {
+  return m_viewerAssociations;
+}
+
+void Settings::setViewerAssociations(const QMap<QString, QString>& associations) {
+  m_viewerAssociations.clear();
+  for (auto it = associations.cbegin(); it != associations.cend(); ++it) {
+    const QString extension = normalizeViewerAssociationExtension(it.key());
+    const QString pluginId = it.value().trimmed();
+    if (!extension.isEmpty() && !pluginId.isEmpty()) {
+      m_viewerAssociations.insert(extension, pluginId);
+    }
+  }
+}
+
+QString Settings::viewerAssociationForExtension(const QString& extension) const {
+  return m_viewerAssociations.value(normalizeViewerAssociationExtension(extension));
+}
+
+void Settings::setViewerAssociationForExtension(const QString& extension,
+                                                const QString& pluginId) {
+  const QString normalized = normalizeViewerAssociationExtension(extension);
+  if (normalized.isEmpty()) return;
+  const QString trimmedPluginId = pluginId.trimmed();
+  if (trimmedPluginId.isEmpty()) {
+    m_viewerAssociations.remove(normalized);
+  } else {
+    m_viewerAssociations.insert(normalized, trimmedPluginId);
+  }
 }
 
 QString Settings::defaultPluginsDirectory() {
@@ -1685,6 +1769,22 @@ void Settings::load() {
   m_confirmOnExit = behavior.value("confirmOnExit").toBool(false);
   m_singleInstance = behavior.value("singleInstance").toBool(true);
   m_pluginsDirectory = behavior.value("pluginsDirectory").toString();
+  m_disabledViewerPlugins.clear();
+  {
+    QStringList disabled;
+    const QJsonArray plugins = behavior.value("disabledViewerPlugins").toArray();
+    for (const QJsonValue& value : plugins) {
+      disabled.append(value.toString());
+    }
+    setDisabledViewerPlugins(disabled);
+  }
+  m_viewerAssociations.clear();
+  {
+    const QJsonObject associations = behavior.value("viewerAssociations").toObject();
+    for (auto it = associations.constBegin(); it != associations.constEnd(); ++it) {
+      setViewerAssociationForExtension(it.key(), it.value().toString());
+    }
+  }
   m_syncBrowseShowDisabledDialog = behavior.value("syncBrowseShowDisabledDialog").toBool(true);
   {
     const QString modeStr = behavior.value("viewerMode").toString("inline");
@@ -2217,6 +2317,20 @@ void Settings::save() const {
   behavior["confirmOnExit"] = m_confirmOnExit;
   behavior["singleInstance"] = m_singleInstance;
   behavior["pluginsDirectory"] = m_pluginsDirectory;
+  {
+    QJsonArray disabled;
+    for (const QString& pluginId : m_disabledViewerPlugins) {
+      disabled.append(pluginId);
+    }
+    behavior["disabledViewerPlugins"] = disabled;
+  }
+  {
+    QJsonObject associations;
+    for (auto it = m_viewerAssociations.cbegin(); it != m_viewerAssociations.cend(); ++it) {
+      associations[it.key()] = it.value();
+    }
+    behavior["viewerAssociations"] = associations;
+  }
   behavior["syncBrowseShowDisabledDialog"] = m_syncBrowseShowDisabledDialog;
   behavior["viewerMode"] = (m_viewerMode == ViewerMode::External)
                              ? QStringLiteral("external")

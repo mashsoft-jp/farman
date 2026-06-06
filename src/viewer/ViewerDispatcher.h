@@ -17,6 +17,7 @@ struct PluginRecord {
   QString filePath;     // External のみ実 path。Builtin は空。
   QString pluginId;     // 失敗時は (取得できれば) id、無理なら空
   QString pluginName;   // 同上
+  QStringList supportedExtensions;  // 取得できた場合のみ。無効化行の表示にも使う。
   bool    loaded   = false;
   QString errorReason;  // loaded == false のときだけ非空
 };
@@ -31,6 +32,15 @@ public:
   // registerBuiltins / loadPlugins より前に呼ぶこと。
   // 設定された ctx は initialize() / createViewer() に渡される。
   void setContext(const PluginContext& ctx) { m_context = ctx; }
+  const PluginContext& pluginContext() const { return m_context; }
+
+  // 現在の Settings / QApplication palette からプラグイン向け Appearance を
+  // 作る。起動時コンテキストと変更通知の両方で同じ変換を使う。
+  static PluginAppearance currentAppearance();
+
+  // Settings 変更や OS ライト / ダーク切替に合わせて、登録済みプラグインへ
+  // Appearance の再適用を通知する。
+  void notifyAppearanceChanged(const PluginAppearance& appearance);
 
   // 組み込みビュアーの登録（起動時に呼ぶ）
   void registerBuiltins();
@@ -51,9 +61,12 @@ public:
   // 全登録プラグイン一覧
   QList<IViewerPlugin*> allPlugins() const;
 
+  // 登録済み pluginId が外部プラグイン由来かどうか。
+  bool isExternalPlugin(const QString& pluginId) const;
+
   // 全プラグイン (組み込み + 外部) のロード結果ログ。
   // Help → Plugins... ダイアログがこれを使って状態を表示する。
-  // 成功した組み込み 3 種 + 外部ロード試行 (成功 / 失敗) が全部入る。
+  // 成功した組み込み + 外部ロード試行 (成功 / 失敗) が全部入る。
   QList<PluginRecord> pluginRecords() const { return m_records; }
 
 private:

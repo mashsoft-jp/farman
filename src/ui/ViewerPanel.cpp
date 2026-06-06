@@ -5,9 +5,11 @@
 #include "viewer/BinaryView.h"
 #include "viewer/CsvView.h"
 #include "viewer/ImageView.h"
+#include "viewer/IViewerPlugin.h"
 #include "viewer/MarkdownView.h"
 #include "viewer/PdfView.h"
 #include "viewer/TextView.h"
+#include "viewer/ViewerDispatcher.h"
 #include <QApplication>
 #include <QEventLoop>
 #include <QFileInfo>
@@ -235,6 +237,13 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
   // 拡張子 / MIME ルーティングは「表示用パス」を尊重 (アーカイブ内エントリの
   // 元拡張子で振り分けたいので)。
   if (kind == ViewerKind::Auto) {
+    IViewerPlugin* plugin = ViewerDispatcher::instance().resolvePlugin(pathForStatus);
+    if (plugin
+        && ViewerDispatcher::instance().isExternalPlugin(plugin->pluginId())) {
+      const bool ok = openPluginFile(plugin, filePath, pathForStatus);
+      QApplication::restoreOverrideCursor();
+      return ok;
+    }
     kind = resolveAuto(pathForStatus);
   }
 
@@ -251,6 +260,13 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
 
   QApplication::restoreOverrideCursor();
   return ok;
+}
+
+void ViewerPanel::clearPluginView() {
+  if (!m_pluginView) return;
+  m_stack->removeWidget(m_pluginView);
+  m_pluginView->deleteLater();
+  m_pluginView = nullptr;
 }
 
 void ViewerPanel::showLoadingState(const QString& filePath) {
@@ -472,7 +488,43 @@ bool ViewerPanel::openCsvFile(const QString& filePath,
   return true;
 }
 
+bool ViewerPanel::openPluginFile(IViewerPlugin* plugin,
+                                 const QString& filePath,
+                                 const QString& displayPath) {
+  if (!plugin) return false;
+  clearPluginView();
+
+  QWidget* view = plugin->createViewer(
+    filePath,
+    m_stack,
+    ViewerDispatcher::instance().pluginContext());
+  if (!view) {
+    logViewerLoadResult(QStringLiteral("Plugin:%1").arg(plugin->pluginId()),
+                        displayPath, false, false);
+    return false;
+  }
+
+  // 外部プラグインの createViewer は埋め込み可能な QWidget を返す契約。
+  // 念のためトップレベル指定を外して、ViewerPanel のスタック内で管理する。
+  view->setWindowFlag(Qt::Window, false);
+  view->setAttribute(Qt::WA_DeleteOnClose, false);
+  m_pluginView = view;
+  if (m_stack->indexOf(view) < 0) {
+    m_stack->addWidget(view);
+  }
+  m_stack->setCurrentWidget(view);
+  setFocusProxy(view);
+  view->setFocus(Qt::OtherFocusReason);
+  m_currentFilePath = displayPath;
+  emit fileOpened(displayPath);
+  emit viewerStatusChanged(displayPath, plugin->pluginName());
+  logViewerLoadResult(QStringLiteral("Plugin:%1").arg(plugin->pluginId()),
+                      displayPath, true, false);
+  return true;
+}
+
 void ViewerPanel::clear() {
+  clearPluginView();
   m_textView->clearContent();
   m_imageView->clearContent();
   m_binaryView->clearContent();

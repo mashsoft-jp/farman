@@ -114,7 +114,7 @@ void AppearanceTab::setupUi() {
   // と紐付き、Mode ラジオ切替えで一斉に Light/Dark を行き来する。テーマ非依存
   // フィールド (ビュアーの拡張子/MIME/エンコーディング/zoom 等) は各ビュアー
   // サブタブの中に置く (旧 ViewersTab から統合)。
-  // Viewer Display Mode (Inline/External) は Behavior タブへ移動済み。
+  // Viewer Display Mode (Inline/External) は Viewer Associations ページへ移動済み。
   m_subTabs = new QTabWidget(this);
   m_subTabs->addTab(buildMainPage(),         tr("Main"));
   m_subTabs->addTab(buildTextViewerPage(),   tr("Text Viewer"));

@@ -12,6 +12,7 @@ namespace Farman {
 class KeybindingTab;
 class AppearanceTab;
 class BehaviorTab;
+class ViewersTab;
 class GeneralTab;
 class ExternalAppsTab;
 
@@ -56,6 +57,7 @@ private:
   KeybindingTab*    m_keybindingTab;
   AppearanceTab*    m_appearanceTab;
   BehaviorTab*      m_behaviorTab;
+  ViewersTab*       m_viewersTab;
   GeneralTab*       m_generalTab;
   ExternalAppsTab*  m_externalAppsTab;
   QDialogButtonBox* m_buttonBox;

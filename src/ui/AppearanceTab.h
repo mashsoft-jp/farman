@@ -197,7 +197,7 @@ private:
   // テーマ依存フィールド (font/colors) は loadFromScheme/saveToScheme で読み書き。
   // テーマ非依存フィールド (拡張子/MIME/エンコーディング/zoom 等) は loadSettings
   // と save で直接 Settings に対し読み書きする。
-  // Viewer Display Mode (Inline / External) は Behavior タブへ移動した。
+  // Viewer Display Mode (Inline / External) は Viewer Associations ページへ移動した。
 
   // Text viewer
   QLineEdit*   m_textExtensionsEdit       = nullptr;

@@ -8,8 +8,6 @@ QWidget* TextViewerPlugin::createViewer(const QString&       filePath,
                                         const PluginContext& /*ctx*/)
 {
   auto* window = new TextViewerWindow(filePath, QString(), parent);
-  window->setAttribute(Qt::WA_DeleteOnClose);
-  window->show();
   return window;
 }
 

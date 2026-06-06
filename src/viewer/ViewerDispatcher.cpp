@@ -1,11 +1,17 @@
 #include "ViewerDispatcher.h"
 #include "TextViewerPlugin.h"
+#include "MarkdownViewerPlugin.h"
 #include "ImageViewerPlugin.h"
+#include "PdfViewerPlugin.h"
+#include "CsvViewerPlugin.h"
 #include "BinaryViewerPlugin.h"
 #include "core/Logger.h"
+#include "settings/Settings.h"
+#include <QApplication>
 #include <QDebug>
 #include <QFileInfo>
 #include <QMimeDatabase>
+#include <QPalette>
 #include <QPluginLoader>
 
 namespace Farman {
@@ -18,10 +24,45 @@ ViewerDispatcher& ViewerDispatcher::instance() {
 ViewerDispatcher::ViewerDispatcher(QObject* parent) : QObject(parent) {
 }
 
+PluginAppearance ViewerDispatcher::currentAppearance() {
+  PluginAppearance appearance;
+  const Settings& settings = Settings::instance();
+  appearance.theme = settings.effectiveTheme() == ThemeMode::Dark
+                       ? PluginAppearance::Theme::Dark
+                       : PluginAppearance::Theme::Light;
+
+  if (qApp) {
+    const QPalette palette = qApp->palette();
+    appearance.uiFont = qApp->font();
+    appearance.windowBackground = palette.color(QPalette::Window);
+    appearance.panelBackground = palette.color(QPalette::Base);
+    appearance.text = palette.color(QPalette::Text);
+    appearance.mutedText = palette.color(QPalette::Disabled, QPalette::Text);
+    appearance.accent = palette.color(QPalette::Highlight);
+    appearance.selectionBackground = palette.color(QPalette::Highlight);
+    appearance.selectionText = palette.color(QPalette::HighlightedText);
+  }
+
+  return appearance;
+}
+
+void ViewerDispatcher::notifyAppearanceChanged(
+  const PluginAppearance& appearance) {
+  m_context.appearance = appearance;
+  for (const auto& plugin : m_plugins) {
+    if (plugin) {
+      plugin->appearanceChanged(appearance);
+    }
+  }
+}
+
 void ViewerDispatcher::registerBuiltins() {
   // Register built-in viewers
   registerPlugin(std::make_shared<TextViewerPlugin>());
+  registerPlugin(std::make_shared<MarkdownViewerPlugin>());
   registerPlugin(std::make_shared<ImageViewerPlugin>());
+  registerPlugin(std::make_shared<PdfViewerPlugin>());
+  registerPlugin(std::make_shared<CsvViewerPlugin>());
   // フォールバック (canHandle が false なので resolvePlugin では選ばれない)
   registerPlugin(std::make_shared<BinaryViewerPlugin>());
 }
@@ -68,6 +109,19 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
           .arg(fileInfo.fileName()));
       continue;
     }
+    rec.pluginId = viewerPlugin->pluginId();
+    rec.pluginName = viewerPlugin->pluginName();
+    rec.supportedExtensions = viewerPlugin->supportedExtensions();
+    if (Settings::instance().isViewerPluginDisabled(rec.pluginId)) {
+      rec.loaded = false;
+      rec.errorReason = tr("Disabled by user");
+      m_records.append(rec);
+      loader->unload();
+      Logger::instance().info(
+        QStringLiteral("Plugins: disabled '%1' (%2)")
+          .arg(rec.pluginId, fileInfo.fileName()));
+      continue;
+    }
     // QPluginLoader が QObject (= IViewerPlugin の実体) のライフタイムを
     // 管理するので、shared_ptr 側は delete しない deleter を使う。
     // registerPlugin が成功・失敗ともに m_records に最終結果を追記する。
@@ -104,6 +158,19 @@ IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
   }
 
   QString extension = fileInfo.suffix().toLower();
+
+  const QString preferredPluginId =
+    Settings::instance().viewerAssociationForExtension(extension);
+  if (!preferredPluginId.isEmpty()) {
+    for (const auto& plugin : m_plugins) {
+      if (plugin->pluginId() == preferredPluginId) {
+        return plugin.get();
+      }
+    }
+    Logger::instance().warn(
+      QStringLiteral("Viewer association for .%1 points to missing plugin '%2'")
+        .arg(extension, preferredPluginId));
+  }
 
   // Find matching plugin with highest priority
   IViewerPlugin* bestMatch = nullptr;
@@ -158,6 +225,17 @@ QList<IViewerPlugin*> ViewerDispatcher::allPlugins() const {
   return result;
 }
 
+bool ViewerDispatcher::isExternalPlugin(const QString& pluginId) const {
+  for (const PluginRecord& record : m_records) {
+    if (record.loaded
+        && record.origin == PluginRecord::Origin::External
+        && record.pluginId == pluginId) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
                                       const QString& filePath) {
   // レコード雛形 (組み込みは origin=Builtin / filePath 空、外部は origin=External)。
@@ -167,6 +245,7 @@ void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
   rec.filePath   = filePath;
   rec.pluginId   = plugin ? plugin->pluginId()   : QString();
   rec.pluginName = plugin ? plugin->pluginName() : QString();
+  rec.supportedExtensions = plugin ? plugin->supportedExtensions() : QStringList();
 
   if (!plugin) {
     rec.loaded = false;

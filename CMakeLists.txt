@@ -84,6 +84,7 @@ qt_add_executable(farman
   src/ui/KeybindingTab.cpp
   src/ui/AppearanceTab.cpp
   src/ui/BehaviorTab.cpp
+  src/ui/ViewersTab.cpp
   src/ui/GeneralTab.cpp
   src/ui/ExternalAppsTab.cpp
   src/ui/SortFilterDialog.cpp
@@ -148,7 +149,10 @@ qt_add_executable(farman
   src/viewer/CsvViewerWindow.cpp
   src/viewer/PsdReader.cpp
   src/viewer/TextViewerPlugin.cpp
+  src/viewer/MarkdownViewerPlugin.cpp
   src/viewer/ImageViewerPlugin.cpp
+  src/viewer/PdfViewerPlugin.cpp
+  src/viewer/CsvViewerPlugin.cpp
   src/viewer/BinaryViewerPlugin.cpp
   src/keybinding/ICommand.cpp
   src/keybinding/CommandRegistry.cpp

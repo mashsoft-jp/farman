@@ -469,17 +469,10 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   // (外部ビュアーウィンドウのタイトルにも反映)
   const QString shownPath = displayPath.isEmpty() ? filePath : displayPath;
   // ビュアー表示モード (Inline / External) によって振り分ける。
-  // External 時は独立 QMainWindow を起こす。Inline 時は従来通り内蔵パネル。
+  // External 時は独立ウィジェットを起こす。Inline 時は従来通り内蔵パネル。
   const ViewerMode mode = Settings::instance().viewerMode();
 
   if (mode == ViewerMode::External) {
-    // 拡張子 / MIME ルーティングは ViewerPanel と共通。Auto を解決して
-    // どの *ViewerWindow を起こすか決める。
-    ViewerPanel::ViewerKind effective = kind;
-    if (effective == ViewerPanel::ViewerKind::Auto) {
-      effective = ViewerPanel::resolveAuto(filePath);
-    }
-
     // External ビュアーは同時に 1 つしか開かない方針。前のウィンドウが
     // まだ生きていれば、ジオメトリを引き継いでから破棄する (= ユーザーが
     // 「別ファイルを開いたら同じ場所・同じサイズで上書き」と感じる挙動)。
@@ -494,7 +487,18 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       delete m_externalViewerWindow;
     }
 
-    QMainWindow* w = nullptr;
+    QWidget* w = nullptr;
+    if (kind == ViewerPanel::ViewerKind::Auto) {
+      w = ViewerDispatcher::instance().createViewer(filePath, this);
+    }
+
+    // 明示指定されたビュアーは従来通り直接開く。Auto の場合だけ
+    // ViewerDispatcher を通し、外部プラグインとユーザー関連付けを反映する。
+    ViewerPanel::ViewerKind effective = kind;
+    if (!w && effective == ViewerPanel::ViewerKind::Auto) {
+      effective = ViewerPanel::resolveAuto(filePath);
+    }
+
     switch (effective) {
       case ViewerPanel::ViewerKind::Text:
         w = new TextViewerWindow(filePath, shownPath, this);
@@ -1024,6 +1028,15 @@ void MainWindow::registerCommands() {
       });
       menu.addAction(tr("Image Viewer"), this, [this, path]() {
         showViewerWith(path, ViewerPanel::ViewerKind::Image);
+      });
+      menu.addAction(tr("Markdown Viewer"), this, [this, path]() {
+        showViewerWith(path, ViewerPanel::ViewerKind::Markdown);
+      });
+      menu.addAction(tr("PDF Viewer"), this, [this, path]() {
+        showViewerWith(path, ViewerPanel::ViewerKind::Pdf);
+      });
+      menu.addAction(tr("CSV/TSV Viewer"), this, [this, path]() {
+        showViewerWith(path, ViewerPanel::ViewerKind::Csv);
       });
       menu.addAction(tr("Binary Viewer"), this, [this, path]() {
         showViewerWith(path, ViewerPanel::ViewerKind::Binary);
@@ -1864,13 +1877,14 @@ void MainWindow::showPluginsDialog() {
 
   auto* layout = new QVBoxLayout(&dlg);
   auto* hint = new QLabel(
-    tr("Viewer plugins are loaded on startup. Change the plugins directory in "
-       "Settings → General → Viewer Plugins, then restart farman."), &dlg);
+    tr("Viewer plugins are loaded on startup. Change the plugins directory or "
+       "enable/disable external plugins, then restart farman."), &dlg);
   hint->setWordWrap(true);
   layout->addWidget(hint);
 
-  auto* table = new QTableWidget(records.size(), 6, &dlg);
+  auto* table = new QTableWidget(records.size(), 7, &dlg);
   table->setHorizontalHeaderLabels({
+    tr("Enabled"),
     tr("Status"),
     tr("Origin"),
     tr("Plugin ID"),
@@ -1891,26 +1905,75 @@ void MainWindow::showPluginsDialog() {
 
   for (int row = 0; row < records.size(); ++row) {
     const PluginRecord& rec = records[row];
-    setItem(row, 0, rec.loaded ? tr("Loaded") : tr("Failed"));
-    setItem(row, 1, rec.origin == PluginRecord::Origin::Builtin
+    const bool isExternal = rec.origin == PluginRecord::Origin::External;
+    auto* enabledItem = new QTableWidgetItem();
+    enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    enabledItem->setData(Qt::UserRole, rec.pluginId);
+    enabledItem->setData(Qt::UserRole + 1, isExternal);
+    if (isExternal && !rec.pluginId.isEmpty()) {
+      enabledItem->setFlags(enabledItem->flags() | Qt::ItemIsUserCheckable);
+      enabledItem->setCheckState(
+        Settings::instance().isViewerPluginDisabled(rec.pluginId)
+          ? Qt::Unchecked
+          : Qt::Checked);
+      enabledItem->setToolTip(tr("Changes take effect after restarting farman."));
+    } else {
+      enabledItem->setCheckState(Qt::Checked);
+      enabledItem->setToolTip(tr("Built-in plugins cannot be disabled."));
+    }
+    table->setItem(row, 0, enabledItem);
+
+    setItem(row, 1, rec.loaded
+                    ? tr("Loaded")
+                    : (rec.errorReason == tr("Disabled by user")
+                         ? tr("Disabled")
+                         : tr("Failed")));
+    setItem(row, 2, rec.origin == PluginRecord::Origin::Builtin
                       ? tr("Built-in")
                       : tr("External"));
-    setItem(row, 2, rec.pluginId);
-    setItem(row, 3, rec.pluginName);
-    setItem(row, 4, rec.filePath);
-    setItem(row, 5, rec.errorReason);
+    setItem(row, 3, rec.pluginId);
+    setItem(row, 4, rec.pluginName);
+    setItem(row, 5, rec.filePath);
+    setItem(row, 6, rec.errorReason);
   }
 
   table->resizeColumnsToContents();
   table->horizontalHeader()->setStretchLastSection(true);
-  table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+  table->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
   layout->addWidget(table, 1);
 
-  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok
+                                       | QDialogButtonBox::Cancel, &dlg);
+  connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
   connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
   layout->addWidget(buttons);
 
-  dlg.exec();
+  if (dlg.exec() == QDialog::Accepted) {
+    QStringList disabled = Settings::instance().disabledViewerPlugins();
+    for (int row = 0; row < table->rowCount(); ++row) {
+      const auto* enabledItem = table->item(row, 0);
+      if (!enabledItem || !enabledItem->data(Qt::UserRole + 1).toBool()) {
+        continue;
+      }
+      const QString pluginId = enabledItem->data(Qt::UserRole).toString();
+      if (pluginId.isEmpty()) continue;
+      disabled.removeAll(pluginId);
+      if (enabledItem->checkState() == Qt::Unchecked) {
+        disabled.append(pluginId);
+      }
+    }
+
+    disabled.sort(Qt::CaseInsensitive);
+    disabled.removeDuplicates();
+    if (disabled != Settings::instance().disabledViewerPlugins()) {
+      Settings::instance().setDisabledViewerPlugins(disabled);
+      Settings::instance().save();
+      FarmanMessageBox::information(
+        this,
+        tr("Plugins"),
+        tr("Plugin enable/disable changes will take effect after restarting farman."));
+    }
+  }
 }
 
 void MainWindow::showThirdPartyLicenses() {

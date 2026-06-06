@@ -15,7 +15,7 @@ public:
 
   QStringList supportedExtensions() const override {
     return {
-      "txt", "log", "md", "markdown",
+      "txt", "log",
       "cpp", "h", "hpp", "c", "cc", "cxx",
       "py", "js", "ts", "java", "cs",
       "html", "htm", "css", "json", "xml",
