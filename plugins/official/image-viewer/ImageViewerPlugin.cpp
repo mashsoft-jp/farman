@@ -1,5 +1,5 @@
 #include "ImageViewerPlugin.h"
-#include "ImageViewerWindow.h"
+#include "viewer/ImageViewerWindow.h"
 
 namespace Farman {
 

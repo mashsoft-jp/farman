@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(farman VERSION 0.9.5 LANGUAGES CXX)
+project(farman VERSION 0.9.6 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -148,12 +148,12 @@ qt_add_executable(farman
   src/viewer/CsvView.cpp
   src/viewer/CsvViewerWindow.cpp
   src/viewer/PsdReader.cpp
-  src/viewer/TextViewerPlugin.cpp
-  src/viewer/MarkdownViewerPlugin.cpp
-  src/viewer/ImageViewerPlugin.cpp
-  src/viewer/PdfViewerPlugin.cpp
-  src/viewer/CsvViewerPlugin.cpp
-  src/viewer/BinaryViewerPlugin.cpp
+  plugins/official/text-viewer/TextViewerPlugin.cpp
+  plugins/official/markdown-viewer/MarkdownViewerPlugin.cpp
+  plugins/official/image-viewer/ImageViewerPlugin.cpp
+  plugins/official/pdf-viewer/PdfViewerPlugin.cpp
+  plugins/official/csv-viewer/CsvViewerPlugin.cpp
+  plugins/official/binary-viewer/BinaryViewerPlugin.cpp
   src/keybinding/ICommand.cpp
   src/keybinding/CommandRegistry.cpp
   src/keybinding/CommandLayout.cpp
@@ -192,6 +192,12 @@ endif()
 
 target_include_directories(farman PRIVATE
   ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/plugins/official/text-viewer
+  ${CMAKE_SOURCE_DIR}/plugins/official/markdown-viewer
+  ${CMAKE_SOURCE_DIR}/plugins/official/image-viewer
+  ${CMAKE_SOURCE_DIR}/plugins/official/pdf-viewer
+  ${CMAKE_SOURCE_DIR}/plugins/official/csv-viewer
+  ${CMAKE_SOURCE_DIR}/plugins/official/binary-viewer
 )
 
 # FARMAN_VERSION: 実行ファイルに埋め込むバージョン文字列。

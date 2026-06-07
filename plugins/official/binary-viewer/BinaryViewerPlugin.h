@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IViewerPlugin.h"
+#include "viewer/IViewerPlugin.h"
 
 namespace Farman {
 

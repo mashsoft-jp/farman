@@ -1921,7 +1921,7 @@ void MainWindow::showPluginsDialog() {
       enabledItem->setCheckState(Qt::Checked);
       enabledItem->setToolTip(isExternal
                                 ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
-                                : tr("Built-in plugins cannot be disabled."));
+                                : tr("Bundled plugins cannot be disabled."));
     }
     table->setItem(row, 0, enabledItem);
 
@@ -1930,8 +1930,8 @@ void MainWindow::showPluginsDialog() {
                     : (rec.disabledByUser
                          ? tr("Disabled")
                          : tr("Failed")));
-    setItem(row, 2, rec.origin == PluginRecord::Origin::Builtin
-                      ? tr("Built-in")
+    setItem(row, 2, rec.origin == PluginRecord::Origin::Bundled
+                      ? tr("Bundled")
                       : tr("External"));
     setItem(row, 3, rec.pluginId);
     setItem(row, 4, rec.pluginName);

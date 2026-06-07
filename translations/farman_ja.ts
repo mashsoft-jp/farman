@@ -4606,6 +4606,11 @@ File system: %3</source>
         <translation>エラー</translation>
     </message>
     <message>
+        <location filename="../src/ui/MainWindow.cpp" line="1924"/>
+        <source>Bundled plugins cannot be disabled.</source>
+        <translation>同梱プラグインは無効化できません。</translation>
+    </message>
+    <message>
         <location filename="../src/ui/MainWindow.cpp" line="1929"/>
         <source>Loaded</source>
         <translation>読み込み済み</translation>
@@ -4616,9 +4621,8 @@ File system: %3</source>
         <translation>失敗</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1934"/>
         <source>Built-in</source>
-        <translation>組み込み</translation>
+        <translation type="vanished">組み込み</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="1935"/>
@@ -4832,9 +4836,8 @@ File system: %3</source>
         <translation>プラグイン ID を取得できないため、このプラグインは切り替えできません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1924"/>
         <source>Built-in plugins cannot be disabled.</source>
-        <translation>組み込みプラグインは無効化できません。</translation>
+        <translation type="vanished">組み込みプラグインは無効化できません。</translation>
     </message>
     <message>
         <source>Disabled by user</source>
@@ -4844,6 +4847,11 @@ File system: %3</source>
         <location filename="../src/ui/MainWindow.cpp" line="1931"/>
         <source>Disabled</source>
         <translation>無効</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MainWindow.cpp" line="1934"/>
+        <source>Bundled</source>
+        <translation>同梱</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="1976"/>
@@ -6148,41 +6156,45 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::ViewerDispatcher</name>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="104"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="105"/>
         <source>Not an IViewerPlugin (wrong IID?)</source>
         <translation>IViewerPlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="118"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="119"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="253"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="254"/>
         <source>null plugin instance</source>
         <translation>プラグインインスタンスが null</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="262"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="263"/>
         <source>duplicate plugin id (already registered)</source>
         <translation>プラグイン ID が重複 (既に登録済み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="275"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="276"/>
         <source>initialize() returned false</source>
         <translation>initialize() が失敗を返しました</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="289"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="290"/>
+        <source>bundled</source>
+        <translation>同梱</translation>
+    </message>
+    <message>
         <source>built-in</source>
-        <translation>組み込み</translation>
+        <translation type="vanished">組み込み</translation>
     </message>
 </context>
 <context>
     <name>Farman::ViewerPanel</name>
     <message>
         <location filename="../src/ui/ViewerPanel.cpp" line="82"/>
-        <location filename="../src/ui/ViewerPanel.cpp" line="309"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="312"/>
         <source>Loading...</source>
         <translation>読み込み中...</translation>
     </message>

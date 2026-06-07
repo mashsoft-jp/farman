@@ -1,5 +1,5 @@
 #include "PdfViewerPlugin.h"
-#include "PdfViewerWindow.h"
+#include "viewer/PdfViewerWindow.h"
 #include "settings/Settings.h"
 
 namespace Farman {

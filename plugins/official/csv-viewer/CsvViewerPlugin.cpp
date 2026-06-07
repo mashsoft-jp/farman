@@ -1,5 +1,5 @@
 #include "CsvViewerPlugin.h"
-#include "CsvViewerWindow.h"
+#include "viewer/CsvViewerWindow.h"
 #include "settings/Settings.h"
 
 namespace Farman {

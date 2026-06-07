@@ -56,8 +56,9 @@ void ViewerDispatcher::notifyAppearanceChanged(
   }
 }
 
-void ViewerDispatcher::registerBuiltins() {
-  // Register built-in viewers
+void ViewerDispatcher::registerBundledPlugins() {
+  // Register official bundled viewers. They are linked statically, but exposed
+  // through the same IViewerPlugin path as external plugins.
   registerPlugin(std::make_shared<TextViewerPlugin>());
   registerPlugin(std::make_shared<MarkdownViewerPlugin>());
   registerPlugin(std::make_shared<ImageViewerPlugin>());
@@ -239,9 +240,9 @@ bool ViewerDispatcher::isExternalPlugin(const QString& pluginId) const {
 
 void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
                                       const QString& filePath) {
-  // レコード雛形 (組み込みは origin=Builtin / filePath 空、外部は origin=External)。
+  // レコード雛形 (同梱公式は origin=Bundled / filePath 空、外部は origin=External)。
   PluginRecord rec;
-  rec.origin     = filePath.isEmpty() ? PluginRecord::Origin::Builtin
+  rec.origin     = filePath.isEmpty() ? PluginRecord::Origin::Bundled
                                        : PluginRecord::Origin::External;
   rec.filePath   = filePath;
   rec.pluginId   = plugin ? plugin->pluginId()   : QString();
@@ -286,7 +287,7 @@ void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
   Logger::instance().info(
     QStringLiteral("Plugins: registered '%1' (%2)")
       .arg(plugin->pluginId(),
-           filePath.isEmpty() ? tr("built-in") : filePath));
+           filePath.isEmpty() ? tr("bundled") : filePath));
 }
 
 bool IViewerPlugin::canHandle(const QString& filePath) const {

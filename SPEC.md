@@ -1065,7 +1065,7 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
 `highlightBlock` が同期実行され、`setPlainText` が長時間ブロック
 してしまう。
 
-### 組み込みビュアー
+### 同梱公式ビュアープラグイン
 
 #### テキストビュアー
 
@@ -1402,9 +1402,10 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 ### プラグインシステム
 
 **v0.9.6 ステータス**: 外部 **ビュアープラグイン** の最小公開を開始する。
-組み込みビュアー (Text / Image / Markdown / PDF / CSV・TSV / Binary) は
-`IViewerPlugin` 実装として登録されており、同じ `ViewerDispatcher` で外部
-.dylib / .dll / .so も扱う。
+同梱公式ビュアープラグイン (Text / Image / Markdown / PDF / CSV・TSV /
+Binary) は `IViewerPlugin` 実装として登録されており、同じ `ViewerDispatcher`
+で外部 .dylib / .dll / .so も扱う。v0.9.x では static link された
+bundled official plugin として `plugins/official/` に置く。
 
 **ユーザー向けに公開する要素**
 
@@ -1412,16 +1413,16 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
   から外部 .dylib / .dll / .so を読み込む。
 - Settings → General → Viewer Plugins でプラグインディレクトリを指定できる。
   空欄なら `Settings::defaultPluginsDirectory()` を使う。
-- Help → Plugins... で組み込み / 外部プラグインのロード結果、ID、名前、パス、
+- Help → Plugins... で同梱公式 / 外部プラグインのロード結果、ID、名前、パス、
   エラー理由を確認できる。
 - プラグイン一覧は Help → Plugins...、メインツールバーの Plugins ボタン、
   または `help.plugins` コマンド (既定: Ctrl+Shift+P) から開ける。
 - Help → Plugins... では外部プラグインの有効 / 無効を切り替えられる。
   無効化された外部プラグインは次回起動時に登録せず、ロード後すぐアンロードする。
-  組み込みビュアーはアプリ本体のフォールバック経路を兼ねるため無効化対象外。
+  同梱公式ビュアープラグインはアプリ本体のフォールバック経路を兼ねるため無効化対象外。
 - Settings → Viewer Associations で、ビュアープラグインごとに拡張子を
   割り当てられる。例: `video_viewer` 行に `mp4, mkv` を指定する。
-  外部プラグインは組み込みビュアーより上に表示する。
+  外部プラグインは同梱公式ビュアープラグインより上に表示する。
   無効化された外部プラグインも `Disabled` 状態として表示し、関連付けは
   編集可能なまま残す。これにより再有効化時に以前の割り当てを復元できる。
 - 拡張子のユーザー既定がある場合はそれを最優先する。未設定、または指定した
@@ -1452,7 +1453,7 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 - `PluginContext` 構造体 (farmanVersion と Appearance スナップショットを保持。
   将来 logger / settings / mainWindow 等を「引数追加 = ABI 破壊」抜きで
   足せるよう用意)
-- `ViewerDispatcher::registerBuiltins()` / `loadPlugins(QDir)` /
+- `ViewerDispatcher::registerBundledPlugins()` / `loadPlugins(QDir)` /
   `pluginRecords()`
 - `Settings::pluginsDirectory()` / `defaultPluginsDirectory()` アクセサ
   (JSON キー `behavior.pluginsDirectory` の serialize / deserialize も含む)
@@ -1474,9 +1475,9 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 **拡張余地** (将来): WDX 風 (列追加) / WFX 風 (仮想 FS) / WCX 風 (アーカイブ
 フォーマット) は別 IID の `IContentPlugin` / `IFsPlugin` / `IArchivePlugin` を
-新設する形で、`IViewerPlugin` には触れずに対応可能。「追加ビュアー」を組み込み
-で実装するかプラグインとして外出しにするかは、ライブラリ依存の重さで判断する
-(PDF は組み込み寄り、Office は外部依存が大きいのでプラグイン寄りが妥当)。
+新設する形で、`IViewerPlugin` には触れずに対応可能。「追加ビュアー」を同梱公式
+で実装するか外部プラグインとして外出しにするかは、ライブラリ依存の重さで判断する
+(PDF は同梱公式寄り、Office は外部依存が大きいので外部プラグイン寄りが妥当)。
 
 ---
 
@@ -2377,7 +2378,7 @@ Last checked: 2026-05-10 09:42
 
 ### コンテンツ
 - ヒーロー (キャッチ + OS 判定ダウンロードボタン)、主な機能グリッド、
-  スクリーンショット (「ファイル操作・表示モード」「組み込みビュアー」の 2 群)、
+  スクリーンショット (「ファイル操作・表示モード」「同梱公式ビュアー」の 2 群)、
   OS 別ダウンロード、免責事項 (現状有姿の法律用語は避け「データはバックアップを /
   作者は責任を負わない」を平易に明記)。
 - **Windows ダウンロードカードに SmartScreen 注記** (未署名のため「詳細情報 →

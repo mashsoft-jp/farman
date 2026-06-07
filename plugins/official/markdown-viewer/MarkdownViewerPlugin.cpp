@@ -1,5 +1,5 @@
 #include "MarkdownViewerPlugin.h"
-#include "MarkdownViewerWindow.h"
+#include "viewer/MarkdownViewerWindow.h"
 #include "settings/Settings.h"
 
 namespace Farman {

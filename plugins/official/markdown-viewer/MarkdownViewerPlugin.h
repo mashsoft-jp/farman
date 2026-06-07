@@ -1,16 +1,16 @@
 #pragma once
 
-#include "IViewerPlugin.h"
+#include "viewer/IViewerPlugin.h"
 
 namespace Farman {
 
-class PdfViewerPlugin : public IViewerPlugin {
+class MarkdownViewerPlugin : public IViewerPlugin {
 public:
-  PdfViewerPlugin() = default;
-  ~PdfViewerPlugin() override = default;
+  MarkdownViewerPlugin() = default;
+  ~MarkdownViewerPlugin() override = default;
 
-  QString pluginId() const override { return QStringLiteral("pdf_viewer"); }
-  QString pluginName() const override { return QStringLiteral("PDF Viewer"); }
+  QString pluginId() const override { return QStringLiteral("markdown_viewer"); }
+  QString pluginName() const override { return QStringLiteral("Markdown Viewer"); }
   int priority() const override { return 200; }
 
   QStringList supportedExtensions() const override;

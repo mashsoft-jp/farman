@@ -1,5 +1,5 @@
 #include "TextViewerPlugin.h"
-#include "TextViewerWindow.h"
+#include "viewer/TextViewerWindow.h"
 
 namespace Farman {
 

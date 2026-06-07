@@ -114,13 +114,13 @@ int main(int argc, char *argv[]) {
     app.installTranslator(&appTranslator);
   }
 
-  // ビュアー基盤を初期化。組み込みビュアー登録後にユーザー指定ディレクトリ
+  // ビュアー基盤を初期化。同梱公式ビュアープラグイン登録後にユーザー指定ディレクトリ
   // から外部 IViewerPlugin (.dylib / .dll / .so) を読み込む。
   Farman::PluginContext pluginCtx;
   pluginCtx.farmanVersion = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
   pluginCtx.appearance = Farman::ViewerDispatcher::currentAppearance();
   Farman::ViewerDispatcher::instance().setContext(pluginCtx);
-  Farman::ViewerDispatcher::instance().registerBuiltins();
+  Farman::ViewerDispatcher::instance().registerBundledPlugins();
   const QString pluginsDir = Farman::Settings::instance().pluginsDirectory();
   Farman::ViewerDispatcher::instance().loadPlugins(
     QDir(pluginsDir.isEmpty()

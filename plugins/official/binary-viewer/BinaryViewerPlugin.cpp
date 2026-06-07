@@ -1,5 +1,5 @@
 #include "BinaryViewerPlugin.h"
-#include "BinaryViewerWindow.h"
+#include "viewer/BinaryViewerWindow.h"
 
 namespace Farman {
 
