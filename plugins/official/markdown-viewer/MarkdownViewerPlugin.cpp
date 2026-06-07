@@ -4,6 +4,15 @@
 
 namespace Farman {
 
+bool MarkdownViewerPlugin::initialize(const PluginContext& /*ctx*/) {
+  Settings::instance().load();
+  return true;
+}
+
+void MarkdownViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
+  Settings::instance().load();
+}
+
 QStringList MarkdownViewerPlugin::supportedExtensions() const {
   return Settings::instance().markdownViewerExtensions();
 }
@@ -19,6 +28,7 @@ QWidget* MarkdownViewerPlugin::createViewer(const QString&       filePath,
                                             QWidget*             parent,
                                             const PluginContext& /*ctx*/)
 {
+  Settings::instance().load();
   auto* window = new MarkdownViewerWindow(filePath, QString(), parent);
   return window;
 }

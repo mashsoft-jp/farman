@@ -14,7 +14,7 @@ namespace Farman {
 struct PluginRecord {
   enum class Origin { Bundled, External };
   Origin  origin;
-  QString filePath;     // External のみ実 path。Bundled は空。
+  QString filePath;     // 動的ロード元 path。Bundled / External とも実 path。
   QString pluginId;     // 失敗時は (取得できれば) id、無理なら空
   QString pluginName;   // 同上
   QStringList supportedExtensions;  // 取得できた場合のみ。無効化行の表示にも使う。
@@ -72,10 +72,12 @@ public:
 
 private:
   explicit ViewerDispatcher(QObject* parent = nullptr);
-  // filePath: 外部プラグインの実 path。同梱公式は空文字。レコード生成のために
-  // 使う (失敗時 / 成功時とも m_records にエントリを 1 つ追加)。
+  void loadPluginsFromDirectory(const QDir& pluginDir, PluginRecord::Origin origin);
+  QStringList bundledPluginDirectories() const;
+  // filePath: 動的ロード元 path。レコード生成と明示選択の解決に使う。
   void registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
-                      const QString& filePath = QString());
+                      const QString& filePath,
+                      PluginRecord::Origin origin);
 
   QList<std::shared_ptr<IViewerPlugin>> m_plugins;
   // 外部プラグインの QObject 実体は QPluginLoader が所有する。ロード済み

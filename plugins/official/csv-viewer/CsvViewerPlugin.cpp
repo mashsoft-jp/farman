@@ -4,6 +4,15 @@
 
 namespace Farman {
 
+bool CsvViewerPlugin::initialize(const PluginContext& /*ctx*/) {
+  Settings::instance().load();
+  return true;
+}
+
+void CsvViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
+  Settings::instance().load();
+}
+
 QStringList CsvViewerPlugin::supportedExtensions() const {
   return Settings::instance().csvViewerExtensions();
 }
@@ -19,6 +28,7 @@ QWidget* CsvViewerPlugin::createViewer(const QString&       filePath,
                                        QWidget*             parent,
                                        const PluginContext& /*ctx*/)
 {
+  Settings::instance().load();
   auto* window = new CsvViewerWindow(filePath, QString(), parent);
   return window;
 }

@@ -1,10 +1,15 @@
 #pragma once
 
 #include "viewer/IViewerPlugin.h"
+#include <QObject>
 
 namespace Farman {
 
-class TextViewerPlugin : public IViewerPlugin {
+class TextViewerPlugin : public QObject, public IViewerPlugin {
+  Q_OBJECT
+  Q_PLUGIN_METADATA(IID "com.farman.IViewerPlugin/1.0")
+  Q_INTERFACES(Farman::IViewerPlugin)
+
 public:
   TextViewerPlugin() = default;
   ~TextViewerPlugin() override = default;
@@ -38,6 +43,9 @@ public:
       "application/xml"
     };
   }
+
+  bool initialize(const PluginContext& ctx) override;
+  void appearanceChanged(const PluginAppearance& appearance) override;
 
   QWidget* createViewer(const QString&       filePath,
                         QWidget*             parent,

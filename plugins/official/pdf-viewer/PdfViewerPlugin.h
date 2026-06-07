@@ -1,10 +1,15 @@
 #pragma once
 
 #include "viewer/IViewerPlugin.h"
+#include <QObject>
 
 namespace Farman {
 
-class PdfViewerPlugin : public IViewerPlugin {
+class PdfViewerPlugin : public QObject, public IViewerPlugin {
+  Q_OBJECT
+  Q_PLUGIN_METADATA(IID "com.farman.IViewerPlugin/1.0")
+  Q_INTERFACES(Farman::IViewerPlugin)
+
 public:
   PdfViewerPlugin() = default;
   ~PdfViewerPlugin() override = default;
@@ -15,6 +20,9 @@ public:
 
   QStringList supportedExtensions() const override;
   QStringList supportedMimeTypes() const override;
+
+  bool initialize(const PluginContext& ctx) override;
+  void appearanceChanged(const PluginAppearance& appearance) override;
 
   QWidget* createViewer(const QString&       filePath,
                         QWidget*             parent,

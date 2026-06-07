@@ -1,10 +1,15 @@
 #pragma once
 
 #include "viewer/IViewerPlugin.h"
+#include <QObject>
 
 namespace Farman {
 
-class ImageViewerPlugin : public IViewerPlugin {
+class ImageViewerPlugin : public QObject, public IViewerPlugin {
+  Q_OBJECT
+  Q_PLUGIN_METADATA(IID "com.farman.IViewerPlugin/1.0")
+  Q_INTERFACES(Farman::IViewerPlugin)
+
 public:
   ImageViewerPlugin() = default;
   ~ImageViewerPlugin() override = default;
@@ -32,6 +37,9 @@ public:
       "image/tiff"
     };
   }
+
+  bool initialize(const PluginContext& ctx) override;
+  void appearanceChanged(const PluginAppearance& appearance) override;
 
   QWidget* createViewer(const QString&       filePath,
                         QWidget*             parent,

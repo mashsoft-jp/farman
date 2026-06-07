@@ -134,6 +134,7 @@ qt_add_executable(farman
   src/core/workers/ArchiveExtractEntriesWorker.cpp
   src/core/workers/DirectoryCompareWorker.cpp
   src/model/FileListModel.cpp
+  src/viewer/IViewerPlugin.cpp
   src/viewer/ViewerDispatcher.cpp
   src/viewer/TextView.cpp
   src/viewer/MarkdownView.cpp
@@ -148,12 +149,6 @@ qt_add_executable(farman
   src/viewer/CsvView.cpp
   src/viewer/CsvViewerWindow.cpp
   src/viewer/PsdReader.cpp
-  plugins/official/text-viewer/TextViewerPlugin.cpp
-  plugins/official/markdown-viewer/MarkdownViewerPlugin.cpp
-  plugins/official/image-viewer/ImageViewerPlugin.cpp
-  plugins/official/pdf-viewer/PdfViewerPlugin.cpp
-  plugins/official/csv-viewer/CsvViewerPlugin.cpp
-  plugins/official/binary-viewer/BinaryViewerPlugin.cpp
   src/keybinding/ICommand.cpp
   src/keybinding/CommandRegistry.cpp
   src/keybinding/CommandLayout.cpp
@@ -192,12 +187,6 @@ endif()
 
 target_include_directories(farman PRIVATE
   ${CMAKE_SOURCE_DIR}/src
-  ${CMAKE_SOURCE_DIR}/plugins/official/text-viewer
-  ${CMAKE_SOURCE_DIR}/plugins/official/markdown-viewer
-  ${CMAKE_SOURCE_DIR}/plugins/official/image-viewer
-  ${CMAKE_SOURCE_DIR}/plugins/official/pdf-viewer
-  ${CMAKE_SOURCE_DIR}/plugins/official/csv-viewer
-  ${CMAKE_SOURCE_DIR}/plugins/official/binary-viewer
 )
 
 # FARMAN_VERSION: 実行ファイルに埋め込むバージョン文字列。
@@ -256,6 +245,117 @@ target_link_libraries(farman PRIVATE
   Qt6::Pdf
   Qt6::PdfWidgets
   LibArchive::LibArchive
+)
+
+set(FARMAN_PLUGIN_COMMON_SOURCES
+  src/viewer/IViewerPlugin.cpp
+  src/settings/Settings.cpp
+  src/settings/ColorScheme.cpp
+  src/core/UserCommand.cpp
+  src/core/Logger.cpp
+  src/utils/CancellableLoadPage.cpp
+  src/utils/EnterClickFilter.cpp
+)
+
+function(add_farman_official_viewer_plugin target plugin_dir)
+  qt_add_plugin(${target}
+    CLASS_NAME ${target}
+    ${ARGN}
+  )
+  set_target_properties(${target} PROPERTIES
+    PREFIX ""
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins/viewers"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins/viewers"
+  )
+  if(WIN32)
+    set_target_properties(${target} PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/plugins/viewers"
+      RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/plugins/viewers"
+    )
+  elseif(APPLE)
+    set_target_properties(${target} PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/farman.app/Contents/PlugIns/viewers"
+    )
+  endif()
+  target_include_directories(${target} PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/${plugin_dir}
+  )
+  target_compile_definitions(${target} PRIVATE
+    FARMAN_VERSION=${FARMAN_VERSION_STRING}
+  )
+  target_link_libraries(${target} PRIVATE
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Core5Compat
+    Qt6::Concurrent
+    Qt6::Network
+    Qt6::Svg
+    Qt6::Pdf
+    Qt6::PdfWidgets
+    LibArchive::LibArchive
+  )
+  if(UCHARDET_FOUND)
+    if(TARGET PkgConfig::UCHARDET)
+      target_link_libraries(${target} PRIVATE PkgConfig::UCHARDET)
+    else()
+      target_include_directories(${target} PRIVATE ${UCHARDET_INCLUDE_DIR})
+      target_link_libraries(${target} PRIVATE ${UCHARDET_LIBRARY})
+    endif()
+  endif()
+endfunction()
+
+add_farman_official_viewer_plugin(TextViewerPlugin plugins/official/text-viewer
+  plugins/official/text-viewer/TextViewerPlugin.cpp
+  src/viewer/TextView.cpp
+  src/viewer/TextViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(MarkdownViewerPlugin plugins/official/markdown-viewer
+  plugins/official/markdown-viewer/MarkdownViewerPlugin.cpp
+  src/viewer/MarkdownView.cpp
+  src/viewer/MarkdownViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(ImageViewerPlugin plugins/official/image-viewer
+  plugins/official/image-viewer/ImageViewerPlugin.cpp
+  src/viewer/ImageView.cpp
+  src/viewer/ImageViewerWindow.cpp
+  src/viewer/PsdReader.cpp
+  src/utils/ExifReader.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(PdfViewerPlugin plugins/official/pdf-viewer
+  plugins/official/pdf-viewer/PdfViewerPlugin.cpp
+  src/viewer/PdfView.cpp
+  src/viewer/PdfViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(CsvViewerPlugin plugins/official/csv-viewer
+  plugins/official/csv-viewer/CsvViewerPlugin.cpp
+  src/viewer/CsvView.cpp
+  src/viewer/CsvViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(BinaryViewerPlugin plugins/official/binary-viewer
+  plugins/official/binary-viewer/BinaryViewerPlugin.cpp
+  src/viewer/BinaryView.cpp
+  src/viewer/BinaryViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_dependencies(farman
+  TextViewerPlugin
+  MarkdownViewerPlugin
+  ImageViewerPlugin
+  PdfViewerPlugin
+  CsvViewerPlugin
+  BinaryViewerPlugin
 )
 
 # uchardet をリンク (pkg-config が見つけたら IMPORTED ターゲット、

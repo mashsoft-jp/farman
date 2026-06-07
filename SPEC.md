@@ -1404,13 +1404,15 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 **v0.9.6 ステータス**: 外部 **ビュアープラグイン** の最小公開を開始する。
 同梱公式ビュアープラグイン (Text / Image / Markdown / PDF / CSV・TSV /
 Binary) は `IViewerPlugin` 実装として登録されており、同じ `ViewerDispatcher`
-で外部 .dylib / .dll / .so も扱う。v0.9.x では static link された
-bundled official plugin として `plugins/official/` に置く。
+で外部 .dylib / .dll / .so も扱う。同梱公式ビュアープラグインも
+`plugins/official/` のソースから dynamic plugin としてビルドし、配布物では
+アプリ同梱の `plugins/viewers` 相当ディレクトリに配置してロードする。
 
 **ユーザー向けに公開する要素**
 
-- 起動時に `ViewerDispatcher::loadPlugins(QDir)` を呼び、プラグインディレクトリ
-  から外部 .dylib / .dll / .so を読み込む。
+- 起動時に `ViewerDispatcher::registerBundledPlugins()` でアプリ同梱の
+  dynamic plugin を読み込み、その後 `ViewerDispatcher::loadPlugins(QDir)` で
+  ユーザー指定ディレクトリから外部 .dylib / .dll / .so を読み込む。
 - Settings → General → Viewer Plugins でプラグインディレクトリを指定できる。
   空欄なら `Settings::defaultPluginsDirectory()` を使う。
 - Help → Plugins... で同梱公式 / 外部プラグインのロード結果、ID、名前、パス、

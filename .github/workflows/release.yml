@@ -254,7 +254,11 @@ jobs:
         run: |
           # macdeployqt で Qt frameworks を .app に埋める
           # (-libpath: Homebrew の libwebp / libsharpyuv を解決させる)
-          macdeployqt build/farman.app -libpath=/opt/homebrew/lib
+          plugin_exec_args=()
+          for plugin in build/farman.app/Contents/PlugIns/viewers/*.dylib; do
+            plugin_exec_args+=( "-executable=$plugin" )
+          done
+          macdeployqt build/farman.app -libpath=/opt/homebrew/lib "${plugin_exec_args[@]}"
 
           if [ "$SIGN_AVAILABLE" = "true" ]; then
             # 正式署名: Hardened Runtime (notarization 必須) + timestamp
@@ -444,6 +448,12 @@ jobs:
           mkdir -p AppDir/usr/share/doc/farman
           cp LICENSE                                 AppDir/usr/share/doc/farman/copyright
           cp resources/licenses/THIRD-PARTY-LICENSES.txt AppDir/usr/share/doc/farman/THIRD-PARTY-LICENSES.txt
+
+          # 同梱公式ビュアープラグイン。farman は実行ファイル横の
+          # ../plugins/viewers を探索するため、AppDir/usr/plugins/viewers に
+          # 先置きして AppImage / .deb の両方へ取り込む。
+          mkdir -p AppDir/usr/plugins/viewers
+          cp build/plugins/viewers/* AppDir/usr/plugins/viewers/
 
           export OUTPUT=farman-x86_64.AppImage
           ./linuxdeploy-x86_64.AppImage \

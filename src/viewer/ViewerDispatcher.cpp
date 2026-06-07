@@ -1,16 +1,10 @@
 #include "ViewerDispatcher.h"
-#include "TextViewerPlugin.h"
-#include "MarkdownViewerPlugin.h"
-#include "ImageViewerPlugin.h"
-#include "PdfViewerPlugin.h"
-#include "CsvViewerPlugin.h"
-#include "BinaryViewerPlugin.h"
 #include "core/Logger.h"
 #include "settings/Settings.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QDebug>
 #include <QFileInfo>
-#include <QMimeDatabase>
 #include <QPalette>
 #include <QPluginLoader>
 
@@ -57,19 +51,49 @@ void ViewerDispatcher::notifyAppearanceChanged(
 }
 
 void ViewerDispatcher::registerBundledPlugins() {
-  // Register official bundled viewers. They are linked statically, but exposed
-  // through the same IViewerPlugin path as external plugins.
-  registerPlugin(std::make_shared<TextViewerPlugin>());
-  registerPlugin(std::make_shared<MarkdownViewerPlugin>());
-  registerPlugin(std::make_shared<ImageViewerPlugin>());
-  registerPlugin(std::make_shared<PdfViewerPlugin>());
-  registerPlugin(std::make_shared<CsvViewerPlugin>());
-  // フォールバック (canHandle が false なので resolvePlugin では選ばれない)
-  registerPlugin(std::make_shared<BinaryViewerPlugin>());
+  const QStringList candidates = bundledPluginDirectories();
+  for (const QString& path : candidates) {
+    const QDir dir(path);
+    if (dir.exists()) {
+      loadPluginsFromDirectory(dir, PluginRecord::Origin::Bundled);
+      return;
+    }
+  }
+
+  Logger::instance().warn(
+    QStringLiteral("Plugins: bundled viewer plugin directory not found (%1)")
+      .arg(candidates.join(QStringLiteral(", "))));
 }
 
 void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
-  // Load external plugins from directory
+  loadPluginsFromDirectory(pluginDir, PluginRecord::Origin::External);
+}
+
+QStringList ViewerDispatcher::bundledPluginDirectories() const {
+  QStringList dirs;
+  const QString appDirPath = QCoreApplication::applicationDirPath();
+  QDir appDir(appDirPath);
+
+#ifdef Q_OS_MAC
+  QDir macBundleDir(appDirPath);
+  if (macBundleDir.dirName() == QLatin1String("MacOS")
+      && macBundleDir.cdUp()
+      && macBundleDir.cd(QStringLiteral("PlugIns"))) {
+    dirs.append(macBundleDir.filePath(QStringLiteral("viewers")));
+  }
+#endif
+
+  dirs.append(appDir.filePath(QStringLiteral("plugins/viewers")));
+  QDir parentDir(appDirPath);
+  if (parentDir.cdUp()) {
+    dirs.append(parentDir.filePath(QStringLiteral("plugins/viewers")));
+  }
+  dirs.removeDuplicates();
+  return dirs;
+}
+
+void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
+                                                PluginRecord::Origin origin) {
   if (!pluginDir.exists()) {
     Logger::instance().info(
       QStringLiteral("Plugins: directory not found, skipping (%1)")
@@ -84,7 +108,7 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
   const int recordsBefore = m_records.size();
   for (const QFileInfo& fileInfo : plugins) {
     PluginRecord rec;
-    rec.origin   = PluginRecord::Origin::External;
+    rec.origin   = origin;
     rec.filePath = fileInfo.absoluteFilePath();
 
     auto loader = std::make_shared<QPluginLoader>(rec.filePath);
@@ -113,7 +137,8 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
     rec.pluginId = viewerPlugin->pluginId();
     rec.pluginName = viewerPlugin->pluginName();
     rec.supportedExtensions = viewerPlugin->supportedExtensions();
-    if (Settings::instance().isViewerPluginDisabled(rec.pluginId)) {
+    if (origin == PluginRecord::Origin::External
+        && Settings::instance().isViewerPluginDisabled(rec.pluginId)) {
       rec.loaded = false;
       rec.disabledByUser = true;
       rec.errorReason = tr("Disabled by user");
@@ -128,7 +153,8 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
     // 管理するので、shared_ptr 側は delete しない deleter を使う。
     // registerPlugin が成功・失敗ともに m_records に最終結果を追記する。
     registerPlugin(std::shared_ptr<IViewerPlugin>(viewerPlugin, [](IViewerPlugin*){}),
-                   /*filePath=*/rec.filePath);
+                   rec.filePath,
+                   origin);
     if (!m_records.isEmpty() && m_records.last().loaded) {
       // 登録成功した外部プラグインだけ loader を保持し、プラグイン実体を
       // アプリ終了まで生かす。
@@ -145,8 +171,13 @@ void ViewerDispatcher::loadPlugins(const QDir& pluginDir) {
     else                      ++failedCount;
   }
   Logger::instance().info(
-    QStringLiteral("Plugins: %1 loaded, %2 failed from %3")
-      .arg(loadedCount).arg(failedCount).arg(pluginDir.absolutePath()));
+    QStringLiteral("Plugins: %1 loaded, %2 failed from %3 (%4)")
+      .arg(loadedCount)
+      .arg(failedCount)
+      .arg(pluginDir.absolutePath(),
+           origin == PluginRecord::Origin::Bundled
+             ? QStringLiteral("bundled")
+             : QStringLiteral("external")));
 }
 
 IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
@@ -239,15 +270,14 @@ bool ViewerDispatcher::isExternalPlugin(const QString& pluginId) const {
 }
 
 void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
-                                      const QString& filePath) {
-  // レコード雛形 (同梱公式は origin=Bundled / filePath 空、外部は origin=External)。
+                                      const QString& filePath,
+                                      PluginRecord::Origin origin) {
+  // レコード雛形 (同梱公式は origin=Bundled、外部は origin=External)。
   PluginRecord rec;
-  rec.origin     = filePath.isEmpty() ? PluginRecord::Origin::Bundled
-                                       : PluginRecord::Origin::External;
+  rec.origin     = origin;
   rec.filePath   = filePath;
   rec.pluginId   = plugin ? plugin->pluginId()   : QString();
   rec.pluginName = plugin ? plugin->pluginName() : QString();
-  rec.supportedExtensions = plugin ? plugin->supportedExtensions() : QStringList();
 
   if (!plugin) {
     rec.loaded = false;
@@ -281,36 +311,14 @@ void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
     return;
   }
 
+  rec.supportedExtensions = plugin->supportedExtensions();
   m_plugins.append(plugin);
   rec.loaded = true;
   m_records.append(rec);
   Logger::instance().info(
     QStringLiteral("Plugins: registered '%1' (%2)")
       .arg(plugin->pluginId(),
-           filePath.isEmpty() ? tr("bundled") : filePath));
-}
-
-bool IViewerPlugin::canHandle(const QString& filePath) const {
-  QFileInfo fileInfo(filePath);
-  QString extension = fileInfo.suffix().toLower();
-
-  // Check by extension
-  if (!extension.isEmpty() &&
-      supportedExtensions().contains(extension, Qt::CaseInsensitive)) {
-    return true;
-  }
-
-  // Check by MIME type
-  QMimeDatabase mimeDb;
-  QMimeType mimeType = mimeDb.mimeTypeForFile(filePath);
-
-  for (const QString& supportedMime : supportedMimeTypes()) {
-    if (mimeType.inherits(supportedMime)) {
-      return true;
-    }
-  }
-
-  return false;
+           origin == PluginRecord::Origin::Bundled ? tr("bundled") : filePath));
 }
 
 } // namespace Farman
