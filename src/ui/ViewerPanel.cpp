@@ -299,6 +299,9 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
 
 void ViewerPanel::clearPluginView() {
   if (!m_pluginView) return;
+  if (focusProxy() == m_pluginView) {
+    setFocusProxy(nullptr);
+  }
   m_stack->removeWidget(m_pluginView);
   m_pluginView->deleteLater();
   m_pluginView = nullptr;
