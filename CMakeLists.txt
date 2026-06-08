@@ -295,13 +295,11 @@ function(add_farman_official_viewer_plugin target plugin_dir)
     Qt6::PdfWidgets
     LibArchive::LibArchive
   )
-  if(UCHARDET_FOUND)
-    if(TARGET PkgConfig::UCHARDET)
-      target_link_libraries(${target} PRIVATE PkgConfig::UCHARDET)
-    else()
-      target_include_directories(${target} PRIVATE ${UCHARDET_INCLUDE_DIR})
-      target_link_libraries(${target} PRIVATE ${UCHARDET_LIBRARY})
-    endif()
+  if(TARGET PkgConfig::UCHARDET)
+    target_link_libraries(${target} PRIVATE PkgConfig::UCHARDET)
+  else()
+    target_include_directories(${target} PRIVATE ${UCHARDET_INCLUDE_DIR})
+    target_link_libraries(${target} PRIVATE ${UCHARDET_LIBRARY})
   endif()
 endfunction()
 
