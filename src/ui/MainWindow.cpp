@@ -14,6 +14,7 @@
 #include "../core/UpdateDownloader.h"
 #include "../core/UserCommand.h"
 #include "UpdateAvailableDialog.h"
+#include "WhatsNewDialog.h"
 #include "../core/UserCommandManager.h"
 #include "../core/PlaceholderExpander.h"
 #include "../keybinding/ICommand.h"
@@ -156,6 +157,10 @@ MainWindow::MainWindow(QWidget* parent)
   // Settings に保存されているレイアウトを復元 (前回終了時が Preview なら Preview)。
   m_fileManagerPanel->setLayoutMode(Settings::instance().layoutMode());
   m_fileManagerPanel->activePane()->view()->setFocus();
+
+  // アップデート直後 / 初回起動なら What's New を 1 回表示 (singleShot で
+  // ウィンドウ表示後に出す)。
+  maybeShowWhatsNew();
 }
 
 MainWindow::~MainWindow() = default;
@@ -1283,7 +1288,16 @@ void MainWindow::registerCommands() {
     tr("Plugins..."),
     [this]() { showPluginsDialog(); },
     "help",
-    tr("Show loaded viewer plugins and plugin load errors.")
+    tr("Open plugin settings: load status, enable/disable, directory, and "
+       "viewer associations.")
+  ));
+
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "help.whats_new",
+    tr("What's New..."),
+    [this]() { showWhatsNewDialog(); },
+    "help",
+    tr("Show what changed in this version of farman.")
   ));
 
   // Bookmark commands
@@ -1571,6 +1585,8 @@ void MainWindow::createMenus() {
   addCmd(helpMenu, "help.shortcuts", tr("Keyboard Shortcuts"), /*global=*/true);
   addCmd(helpMenu, "help.plugins", tr("Plugins..."), /*global=*/true);
   helpMenu->addSeparator();
+  // アップデート内容の再表示 (起動時の自動表示と同じダイアログ)。
+  addCmd(helpMenu, "help.whats_new", tr("What's New..."), /*global=*/true);
   // 手動アップデートチェック (macOS の慣習で menuRole = ApplicationSpecific
   // を当てると標準で Help メニューに残る。Help → "Check for Updates..." は
   // Sparkle 系アプリの慣習で違和感ない位置)。
@@ -1868,114 +1884,10 @@ void MainWindow::showAboutDialog() {
 }
 
 void MainWindow::showPluginsDialog() {
-  const QList<PluginRecord> records =
-    ViewerDispatcher::instance().pluginRecords();
-
-  QDialog dlg(this);
-  dlg.setWindowTitle(tr("Plugins"));
-  dlg.resize(860, 420);
-
-  auto* layout = new QVBoxLayout(&dlg);
-  auto* hint = new QLabel(
-    tr("Viewer plugins are loaded on startup. Change the plugins directory or "
-       "enable/disable external plugins, then restart farman."), &dlg);
-  hint->setWordWrap(true);
-  layout->addWidget(hint);
-
-  auto* table = new QTableWidget(records.size(), 7, &dlg);
-  table->setHorizontalHeaderLabels({
-    tr("Enabled"),
-    tr("Status"),
-    tr("Origin"),
-    tr("Plugin ID"),
-    tr("Name"),
-    tr("Path"),
-    tr("Error")
-  });
-  table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-  table->setSelectionBehavior(QAbstractItemView::SelectRows);
-  table->setSelectionMode(QAbstractItemView::SingleSelection);
-  table->verticalHeader()->setVisible(false);
-
-  auto setItem = [table](int row, int col, const QString& text) {
-    auto* item = new QTableWidgetItem(text);
-    item->setToolTip(text);
-    table->setItem(row, col, item);
-  };
-
-  for (int row = 0; row < records.size(); ++row) {
-    const PluginRecord& rec = records[row];
-    const bool isExternal = rec.origin == PluginRecord::Origin::External;
-    auto* enabledItem = new QTableWidgetItem();
-    enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    enabledItem->setData(Qt::UserRole, rec.pluginId);
-    enabledItem->setData(Qt::UserRole + 1, isExternal);
-    if (isExternal && !rec.pluginId.isEmpty()) {
-      enabledItem->setFlags(enabledItem->flags() | Qt::ItemIsUserCheckable);
-      enabledItem->setCheckState(
-        Settings::instance().isViewerPluginDisabled(rec.pluginId)
-          ? Qt::Unchecked
-          : Qt::Checked);
-      enabledItem->setToolTip(tr("Changes take effect after restarting farman."));
-    } else {
-      enabledItem->setCheckState(Qt::Checked);
-      enabledItem->setToolTip(isExternal
-                                ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
-                                : tr("Bundled plugins cannot be disabled."));
-    }
-    table->setItem(row, 0, enabledItem);
-
-    setItem(row, 1, rec.loaded
-                    ? tr("Loaded")
-                    : (rec.disabledByUser
-                         ? tr("Disabled")
-                         : tr("Failed")));
-    setItem(row, 2, rec.origin == PluginRecord::Origin::Bundled
-                      ? tr("Bundled")
-                      : tr("External"));
-    setItem(row, 3, rec.pluginId);
-    setItem(row, 4, rec.pluginName);
-    setItem(row, 5, rec.filePath);
-    setItem(row, 6, rec.errorReason);
-  }
-
-  table->resizeColumnsToContents();
-  table->horizontalHeader()->setStretchLastSection(true);
-  table->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
-  layout->addWidget(table, 1);
-
-  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok
-                                       | QDialogButtonBox::Cancel, &dlg);
-  connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-  connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-  layout->addWidget(buttons);
-
-  if (dlg.exec() == QDialog::Accepted) {
-    QStringList disabled = Settings::instance().disabledViewerPlugins();
-    for (int row = 0; row < table->rowCount(); ++row) {
-      const auto* enabledItem = table->item(row, 0);
-      if (!enabledItem || !enabledItem->data(Qt::UserRole + 1).toBool()) {
-        continue;
-      }
-      const QString pluginId = enabledItem->data(Qt::UserRole).toString();
-      if (pluginId.isEmpty()) continue;
-      disabled.removeAll(pluginId);
-      if (enabledItem->checkState() == Qt::Unchecked) {
-        disabled.append(pluginId);
-      }
-    }
-
-    disabled.sort(Qt::CaseInsensitive);
-    disabled.removeDuplicates();
-    if (disabled != Settings::instance().disabledViewerPlugins()) {
-      Settings::instance().setDisabledViewerPlugins(disabled);
-      Settings::instance().save();
-      FarmanMessageBox::information(
-        this,
-        tr("Plugins"),
-        tr("Plugin enable/disable changes will take effect after restarting farman."));
-    }
-  }
+  // プラグイン関連 (ディレクトリ / ロード状況 / 有効・無効 / 拡張子の紐付け)
+  // は Settings → Plugins ページに集約した。Help → Plugins... やツールバーの
+  // Plugins ボタンからは、そのページを直接開く。
+  showSettingsDialog(SettingsDialog::Page::Plugins);
 }
 
 void MainWindow::showThirdPartyLicenses() {
@@ -2036,6 +1948,31 @@ void MainWindow::maybeCheckForUpdatesOnStartup() {
     m_updateCheckIsManual = false;
     m_updateChecker->checkLatest();
   });
+}
+
+void MainWindow::maybeShowWhatsNew() {
+  const QString current = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
+  if (Settings::instance().whatsNewShownVersion() == current) return;
+
+  // コンストラクタから呼ばれるので、ウィンドウが表示されてイベントループが
+  // 回り始めてからダイアログを出す。自動アップデートチェック (1500ms 遅延)
+  // より先に表示される。
+  QTimer::singleShot(0, this, [this, current]() {
+    Logger::instance().info(
+      tr("Showing What's New for %1").arg(current));
+    showWhatsNewDialog();
+    // リソースが読めなかった場合も記録して、起動のたびに再試行しない。
+    auto& s = Settings::instance();
+    s.setWhatsNewShownVersion(current);
+    s.save();
+  });
+}
+
+void MainWindow::showWhatsNewDialog() {
+  const QString notes = WhatsNewDialog::loadBundledNotes();
+  if (notes.isEmpty()) return;  // 同梱リソース欠落時は何もしない
+  WhatsNewDialog dlg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)), notes, this);
+  dlg.exec();
 }
 
 void MainWindow::onUpdateCheckFinished(bool ok, const ReleaseInfo& info,
@@ -2206,7 +2143,7 @@ void MainWindow::toggleShortcutList() {
   m_shortcutListDialog->activateWindow();
 }
 
-void MainWindow::showSettingsDialog() {
+void MainWindow::showSettingsDialog(SettingsDialog::Page page) {
   SettingsDialog* dialog = new SettingsDialog(
     m_fileManagerPanel->leftPath(),
     m_fileManagerPanel->rightPath(),
@@ -2214,6 +2151,7 @@ void MainWindow::showSettingsDialog() {
     this
   );
   connect(dialog, &SettingsDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
+  dialog->setCurrentPage(page);
   dialog->exec();
   delete dialog;
 }

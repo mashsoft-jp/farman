@@ -7,6 +7,7 @@
 #include "../core/UpdateChecker.h"
 #include "../keybinding/CommandRegistry.h"
 #include "../keybinding/KeyBindingManager.h"
+#include "SettingsDialog.h"
 #include "ViewerPanel.h"
 
 class QAction;
@@ -44,7 +45,9 @@ private:
   // ビュアーを呼び出し側で固定して開く（任意ビュアー機能から使う）
   void showViewerWith(const QString& filePath, ViewerPanel::ViewerKind kind,
                       const QString& displayPath = {});
-  void showSettingsDialog();
+  // page 指定でそのカテゴリを選択した状態で開く (既定は General)。
+  void showSettingsDialog(
+    SettingsDialog::Page page = SettingsDialog::Page::General);
   void registerCommands();
   void createMenus();
   void showAboutDialog();
@@ -57,6 +60,14 @@ private:
   // 起動シーケンスから呼ばれる、24h スロットル付きの自動チェック。
   // Settings::autoUpdateCheckOnStartup が ON のときだけ実行する。
   void maybeCheckForUpdatesOnStartup();
+  // アップデート直後 (または初回起動時) に 1 回だけアップデート内容
+  // (What's New) ダイアログを表示する。Settings::whatsNewShownVersion と
+  // 現バージョンの不一致が条件。表示後にバージョンを記録するので、
+  // 以降はアップデートのたびに 1 回ずつ表示される。
+  void maybeShowWhatsNew();
+  // What's New ダイアログを無条件に表示する。起動時の自動表示と
+  // Help → "What's New..." の手動表示の両方から使う。
+  void showWhatsNewDialog();
   // UpdateAvailableDialog で "Update Now" が押されたあとのダウンロード +
   // インストール起動。完了で QApplication::quit() してインストール側に
   // 制御を移す。

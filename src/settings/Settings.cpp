@@ -838,6 +838,8 @@ void Settings::addAutoUpdateSkippedVersion(const QString& version) {
 }
 QString Settings::autoUpdateChannel() const { return m_autoUpdateChannel; }
 void Settings::setAutoUpdateChannel(const QString& channel) { m_autoUpdateChannel = channel; }
+QString Settings::whatsNewShownVersion() const { return m_whatsNewShownVersion; }
+void Settings::setWhatsNewShownVersion(const QString& version) { m_whatsNewShownVersion = version; }
 
 QString Settings::pluginsDirectory() const {
   return m_pluginsDirectory;
@@ -1820,6 +1822,7 @@ void Settings::load() {
     }
     m_autoUpdateChannel = au.value("channel").toString(QStringLiteral("stable"));
   }
+  m_whatsNewShownVersion = behavior.value("whatsNewShownVersion").toString();
   {
     const QString langStr = behavior.value("language").toString("auto");
     if      (langStr == "en") m_language = LanguageMode::English;
@@ -2356,6 +2359,7 @@ void Settings::save() const {
     au["channel"] = m_autoUpdateChannel;
     behavior["autoUpdate"] = au;
   }
+  behavior["whatsNewShownVersion"] = m_whatsNewShownVersion;
   switch (m_language) {
     case LanguageMode::English:  behavior["language"] = "en";   break;
     case LanguageMode::Japanese: behavior["language"] = "ja";   break;

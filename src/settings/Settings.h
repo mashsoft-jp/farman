@@ -265,6 +265,13 @@ public:
   QString   autoUpdateChannel()                const;  // 現状 "stable" 固定
   void      setAutoUpdateChannel(const QString& channel);
 
+  // ── What's New ダイアログ ─────────────────────
+  // 最後に「アップデート内容」ダイアログを表示したバージョン。
+  // 起動時に現バージョンと不一致なら 1 回だけ表示して更新する
+  // (空 = 未表示。初回起動でも表示される)。
+  QString whatsNewShownVersion()        const;
+  void    setWhatsNewShownVersion(const QString& version);
+
   // ── 言語設定 ─────────────────────────────
   // UI 言語。変更は次回起動時に反映される (実装上の制限、再起動を促す)。
   LanguageMode language()               const;
@@ -552,6 +559,8 @@ private:
   QDateTime        m_autoUpdateLastCheckedAt;       // null = 未チェック
   QStringList      m_autoUpdateSkippedVersions;     // ["1.2.3", ...]
   QString          m_autoUpdateChannel = QStringLiteral("stable");
+  // 最後に What's New を表示したバージョン (空 = 未表示)。
+  QString          m_whatsNewShownVersion;
   // ビュアープラグインを置くディレクトリ。空文字 = defaultPluginsDirectory()。
   QString          m_pluginsDirectory;
   // 起動時に登録しない外部ビュアープラグイン ID。

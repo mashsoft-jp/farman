@@ -1428,16 +1428,19 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
 - 起動時に `ViewerDispatcher::registerBundledPlugins()` でアプリ同梱の
   dynamic plugin を読み込み、その後 `ViewerDispatcher::loadPlugins(QDir)` で
   ユーザー指定ディレクトリから外部 .dylib / .dll / .so を読み込む。
-- Settings → General → Viewer Plugins でプラグインディレクトリを指定できる。
-  空欄なら `Settings::defaultPluginsDirectory()` を使う。
-- Help → Plugins... で同梱公式 / 外部プラグインのロード結果、ID、名前、パス、
-  エラー理由を確認できる。
-- プラグイン一覧は Help → Plugins...、メインツールバーの Plugins ボタン、
-  または `help.plugins` コマンド (既定: Ctrl+Shift+P) から開ける。
-- Help → Plugins... では外部プラグインの有効 / 無効を切り替えられる。
+- プラグイン関連の設定と診断情報は **Settings → Plugins** ページに集約する
+  (ディレクトリ / 一覧・ロード状況 / 有効・無効 / ビュアーの拡張子紐付け)。
+  Help → Plugins...、メインツールバーの Plugins ボタン、`help.plugins`
+  コマンド (既定: Ctrl+Shift+P) はいずれもこのページを直接開く。
+- Plugins Directory: プラグインディレクトリを指定できる。空欄なら
+  `Settings::defaultPluginsDirectory()` を使う。
+- Installed Plugins: 同梱公式 / 外部プラグインのロード結果、種別 (現状は
+  Viewer のみ)、ID、名前、パス、エラー理由を一覧表示する。将来 Content /
+  FS / Archive 等の種別が増えても Type 列の値を増やすだけで拡張できる。
+- Installed Plugins では外部プラグインの有効 / 無効を切り替えられる。
   無効化された外部プラグインは次回起動時に登録せず、ロード後すぐアンロードする。
   同梱公式ビュアープラグインはアプリ本体のフォールバック経路を兼ねるため無効化対象外。
-- Settings → Viewer Associations で、ビュアープラグインごとに拡張子を
+- Viewer Associations で、ビュアープラグインごとに拡張子を
   割り当てられる。例: `video_viewer` 行に `mp4, mkv` を指定する。
   外部プラグインは同梱公式ビュアープラグインより上に表示する。
   無効化された外部プラグインも `Disabled` 状態として表示し、関連付けは

@@ -3,6 +3,7 @@
 #include "AppearanceTab.h"
 #include "BehaviorTab.h"
 #include "ViewersTab.h"
+#include "PluginsTab.h"
 #include "GeneralTab.h"
 #include "ExternalAppsTab.h"
 #include "settings/Settings.h"
@@ -42,6 +43,7 @@ SettingsDialog::SettingsDialog(const QString& leftCurrentPath,
   , m_appearanceTab(nullptr)
   , m_behaviorTab(nullptr)
   , m_viewersTab(nullptr)
+  , m_pluginsTab(nullptr)
   , m_externalAppsTab(nullptr)
   , m_buttonBox(nullptr)
   , m_leftCurrentPath(leftCurrentPath)
@@ -86,12 +88,11 @@ void SettingsDialog::setupUi() {
   contentLayout->addWidget(m_stackedWidget, /*stretch*/ 1);
 
   // ── 各ページ生成 ──
-  // 旧 ViewersTab はビュアー設定を AppearanceTab のサブタブ
-  // (Main/Text/Binary/Image) と Viewer Associations ページへ分割した結果、廃止。
   m_keybindingTab   = new KeybindingTab(this);
   m_appearanceTab   = new AppearanceTab(this);
   m_behaviorTab     = new BehaviorTab(this);
-  m_viewersTab = new ViewersTab(this);
+  m_viewersTab      = new ViewersTab(this);
+  m_pluginsTab      = new PluginsTab(this);
   m_generalTab      = new GeneralTab(m_leftCurrentPath, m_rightCurrentPath,
                                      m_currentWindowSize, m_currentWindowPosition,
                                      this);
@@ -111,12 +112,14 @@ void SettingsDialog::setupUi() {
     scroll->setWidget(page);
     m_stackedWidget->addWidget(scroll);
   };
+  // 順序は Page enum と 1:1 (setCurrentPage が enum 値を行番号として使う)。
   addPage(m_generalTab,      tr("1. General"));
   addPage(m_behaviorTab,     tr("2. Behavior"));
   addPage(m_appearanceTab,   tr("3. Appearance"));
-  addPage(m_viewersTab, tr("4. Viewers"));
-  addPage(m_externalAppsTab, tr("5. External Apps"));
-  addPage(m_keybindingTab,   tr("6. Keybindings"));
+  addPage(m_viewersTab,      tr("4. Viewers"));
+  addPage(m_pluginsTab,      tr("5. Plugins"));
+  addPage(m_externalAppsTab, tr("6. External Apps"));
+  addPage(m_keybindingTab,   tr("7. Keybindings"));
 
   m_sideMenu->setCurrentRow(0);
   connect(m_sideMenu, &QListWidget::currentRowChanged,
@@ -129,7 +132,7 @@ void SettingsDialog::setupUi() {
   // StrongFocus を設定する。Tab キーで全項目を辿れるようにするのが目的。
   const QList<QWidget*> tabRoots = {
     m_generalTab, m_behaviorTab, m_appearanceTab,
-    m_viewersTab, m_externalAppsTab, m_keybindingTab
+    m_viewersTab, m_pluginsTab, m_externalAppsTab, m_keybindingTab
   };
   for (QWidget* root : tabRoots) {
     const auto widgets = root->findChildren<QWidget*>();
@@ -138,6 +141,21 @@ void SettingsDialog::setupUi() {
           qobject_cast<QSpinBox*>(w)    || qobject_cast<QLineEdit*>(w) ||
           qobject_cast<QPushButton*>(w) || qobject_cast<QToolButton*>(w)) {
         w->setFocusPolicy(Qt::StrongFocus);
+      }
+      // macOS では QToolButton にネイティブのフォーカスリングが描かれず、
+      // Tab で到達しても視認できない。独自スタイルを持たないものに限り、
+      // ボタン風の通常時スタイル + フォーカス時のハイライト枠を一律に当てる
+      // (ExternalAppsTab の browse ボタンと同じ手法)。
+      if (auto* toolBtn = qobject_cast<QToolButton*>(w)) {
+        if (toolBtn->styleSheet().isEmpty()) {
+          toolBtn->setStyleSheet(QStringLiteral(
+            "QToolButton { padding: 2px 6px; border: 1px solid palette(mid); "
+                          "border-radius: 4px; "
+                          "background-color: palette(button); }"
+            "QToolButton:pressed { background-color: palette(midlight); }"
+            "QToolButton:focus { border: 2px solid palette(highlight); "
+                                "padding: 1px 5px; }"));
+        }
       }
     }
   }
@@ -204,6 +222,10 @@ void SettingsDialog::setupUi() {
   connect(m_resetShortcut, &QShortcut::activated, this, &SettingsDialog::onResetToDefaults);
 }
 
+void SettingsDialog::setCurrentPage(Page page) {
+  m_sideMenu->setCurrentRow(static_cast<int>(page));
+}
+
 void SettingsDialog::onOk() {
   onApply();
   accept();
@@ -215,6 +237,7 @@ void SettingsDialog::onApply() {
   m_appearanceTab->save();
   m_behaviorTab->save();
   m_viewersTab->save();
+  m_pluginsTab->save();
   m_generalTab->save();
   m_externalAppsTab->save();
 
@@ -226,6 +249,12 @@ void SettingsDialog::onApply() {
 
   // Notify that settings have changed
   emit settingsChanged();
+
+  // プラグインの有効/無効・ディレクトリは次回起動から反映されるため通知する。
+  if (m_pluginsTab->restartRequiredOnSave()) {
+    inform(this, tr("Plugins"),
+           tr("Plugin changes will take effect after restarting farman."));
+  }
 
   // 言語が変わっていたら、現プロセスでは適切に切り替えられないので
   // 再起動を促す。Yes なら新プロセスを起動してから旧プロセスを即終了。
