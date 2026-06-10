@@ -1,11 +1,20 @@
 #include "MediaViewerPlugin.h"
 #include "viewer/MediaViewerWindow.h"
+#include "core/Logger.h"
 #include "settings/Settings.h"
 
 namespace Farman {
 
 bool MediaViewerPlugin::initialize(const PluginContext& /*ctx*/) {
-  Settings::instance().load();
+  Settings& settings = Settings::instance();
+  settings.load();
+  // プラグイン dylib は Logger シングルトンを自前で持つ (アプリ本体とは別
+  // インスタンス) ため、本体と同じ設定でファイル出力を有効化しておく。
+  // これが無いと createViewer 後の非同期ロード結末 (logViewerLoadResult) が
+  // どこにも記録されない。
+  Logger::instance().setFileOutput(settings.logToFile(),
+                                   settings.logDirectory(),
+                                   settings.logRetentionDays());
   return true;
 }
 

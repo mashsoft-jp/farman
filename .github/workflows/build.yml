@@ -237,6 +237,15 @@ jobs:
           # windeployqt で Qt DLL をフラットにコピー
           windeployqt --release --no-translations build/Release/farman.exe
 
+          # 同梱公式ビュアープラグインの Qt 依存も deploy する。farman.exe 自体が
+          # リンクしない Qt モジュール (例: MediaViewerPlugin の Qt6Multimedia +
+          # ffmpeg バックエンド) は exe への windeployqt では取り込まれないため、
+          # 各プラグイン DLL を --dir で exe と同じディレクトリへ deploy する
+          # (release.yml と同じ処置)。
+          Get-ChildItem build/Release/plugins/viewers/*.dll | ForEach-Object {
+            windeployqt --release --no-translations --dir build/Release $_.FullName
+          }
+
           # vcpkg 経由で入れた libarchive / uchardet とその依存 DLL を
           # コピー。include 関係 / debug 用 .pdb は不要なので .dll だけ。
           Copy-Item "$env:VCPKG_ROOT/installed/x64-windows/bin/*.dll" `
@@ -295,6 +304,12 @@ jobs:
           # 先置きして AppImage へ取り込む。
           mkdir -p AppDir/usr/plugins/viewers
           cp build/plugins/viewers/* AppDir/usr/plugins/viewers/
+
+          # Qt Multimedia の ffmpeg バックエンドプラグイン (plugins/multimedia/)。
+          # farman 本体は Qt6Multimedia をリンクしないため linuxdeploy-plugin-qt の
+          # 自動検出に乗らない。EXTRA_QT_PLUGINS で明示的に取り込む
+          # (MediaViewerPlugin.so の動画 / 音声再生に必要。release.yml と同じ処置)。
+          export EXTRA_QT_PLUGINS="multimedia"
 
           ./linuxdeploy-x86_64.AppImage \
             --appdir AppDir \

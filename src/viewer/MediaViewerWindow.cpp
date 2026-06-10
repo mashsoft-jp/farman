@@ -18,15 +18,23 @@ MediaViewerWindow::MediaViewerWindow(const QString& filePath,
 
   // QMediaPlayer のロードは非同期なので、他ビュアーのような
   // CancellableLoadPage は挟まずに即ビューを出してロード結末だけログする。
-  // Inline 埋め込み時は ViewerPanel::openPluginFile が既にログを出すので、
-  // トップレベル (External) のときだけこちらでログする。
+  // Inline 埋め込み時は ViewerPanel::openPluginFile が createViewer 成功時点で
+  // 成功ログを出すので、こちらでは失敗 (InvalidMedia / エラー) だけ追記する。
+  // トップレベル (External) のときは成功・失敗の両方をログする。
   connect(m_mediaView, &MediaView::loadFinished, this, [this](bool ok) {
     if (isWindow()) {
       logViewerLoadResult(QStringLiteral("Media, external"),
                           m_displayPath, ok, false);
+    } else if (!ok) {
+      logViewerLoadResult(QStringLiteral("Media"),
+                          m_displayPath, false, false);
     }
   });
   m_mediaView->openFile(filePath);
+  // External モードで開いた直後からキー操作 (Space / 矢印 / M / L / F) が
+  // 効くよう明示的にフォーカスを当てる (ImageViewerWindow と同じ作法)。
+  // Inline 埋め込み時は ViewerPanel::openPluginFile が改めてフォーカスを移す。
+  m_mediaView->setFocus(Qt::OtherFocusReason);
 }
 
 void MediaViewerWindow::setupUi() {
