@@ -52,6 +52,11 @@
     <file alias="fit-window-to-image.svg">icons/toolbar/fit-window-to-image.svg</file>
     <file alias="play.svg">icons/toolbar/play.svg</file>
     <file alias="pause.svg">icons/toolbar/pause.svg</file>
+    <file alias="stop.svg">icons/toolbar/stop.svg</file>
+    <file alias="loop.svg">icons/toolbar/loop.svg</file>
+    <file alias="volume.svg">icons/toolbar/volume.svg</file>
+    <file alias="volume-muted.svg">icons/toolbar/volume-muted.svg</file>
+    <file alias="fullscreen.svg">icons/toolbar/fullscreen.svg</file>
     <file alias="transparency.svg">icons/toolbar/transparency.svg</file>
     <file alias="rotate-cw.svg">icons/toolbar/rotate-cw.svg</file>
     <file alias="line-numbers.svg">icons/toolbar/line-numbers.svg</file>

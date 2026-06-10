@@ -15,7 +15,7 @@ set(CMAKE_AUTOUIC ON)
 # (Qt 側はその結果を見て該当機能を無効化するだけで実害はない)。
 set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets Multimedia MultimediaWidgets LinguistTools)
 
 # Homebrew の libarchive は keg-only なので明示的にパスを通す。
 # Apple Silicon は /opt/homebrew、Intel Mac は /usr/local が Homebrew prefix。
@@ -347,6 +347,18 @@ add_farman_official_viewer_plugin(BinaryViewerPlugin plugins/official/binary-vie
   ${FARMAN_PLUGIN_COMMON_SOURCES}
 )
 
+add_farman_official_viewer_plugin(MediaViewerPlugin plugins/official/media-viewer
+  plugins/official/media-viewer/MediaViewerPlugin.cpp
+  src/viewer/MediaView.cpp
+  src/viewer/MediaViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+# Qt Multimedia はこのプラグインだけが使う (farman 本体にはリンクしない)。
+target_link_libraries(MediaViewerPlugin PRIVATE
+  Qt6::Multimedia
+  Qt6::MultimediaWidgets
+)
+
 add_dependencies(farman
   TextViewerPlugin
   MarkdownViewerPlugin
@@ -354,6 +366,7 @@ add_dependencies(farman
   PdfViewerPlugin
   CsvViewerPlugin
   BinaryViewerPlugin
+  MediaViewerPlugin
 )
 
 # uchardet をリンク (pkg-config が見つけたら IMPORTED ターゲット、

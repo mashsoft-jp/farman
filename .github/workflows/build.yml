@@ -106,7 +106,9 @@ jobs:
           #   開発機 (Homebrew Qt の全部入り) との挙動差が出る。
           # qtpdf: Qt PDF / Qt PdfWidgets (PDF ビュアー)。PDFium ベースで
           #   essential 外なので明示。
-          modules: 'qt5compat qtimageformats qtpdf'
+          # qtmultimedia: Qt Multimedia / MultimediaWidgets (動画・音声
+          #   ビュアープラグイン MediaViewerPlugin)。essential 外なので明示。
+          modules: 'qt5compat qtimageformats qtpdf qtmultimedia'
           cache: true
 
       # ──────── 依存ライブラリ ────────

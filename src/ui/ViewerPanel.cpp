@@ -273,7 +273,11 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
         return ok;
       }
       if (!viewerKindFromPluginId(plugin->pluginId(), kind)) {
-        kind = resolveAuto(pathForStatus);
+        // 内蔵ビュー (ViewerKind) を持たない同梱公式プラグイン
+        // (media_viewer 等) は外部プラグインと同じ埋め込み経路で表示する。
+        const bool ok = openPluginFile(plugin, filePath, pathForStatus);
+        QApplication::restoreOverrideCursor();
+        return ok;
       }
     } else {
       kind = resolveAuto(pathForStatus);

@@ -1237,6 +1237,36 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   truncate して表示する (テキスト / バイナリと同じ作法)。
 - ステータスバー (statusInfo): `<行数> 行 · <エンコーディング> · <ファイルサイズ>`。
 
+#### 動画 / 音声ビュアー
+
+- 同梱公式プラグイン `media_viewer` (Qt Multimedia ベース)。コーデック対応は
+  プラットフォームのバックエンドに依存する (macOS: AVFoundation /
+  Windows: Media Foundation / Linux: GStreamer。Qt 6.5+ のバイナリ配布では
+  同梱 FFmpeg バックエンドが既定)。
+- 対象拡張子 (既定。Settings → Viewer Associations で変更可):
+  - 動画: `.mp4` `.mov` `.m4v` `.webm` `.avi` `.mkv`
+  - 音声: `.wav` `.mp3` `.m4a` `.flac` `.ogg` `.aac`
+- 機能: 再生 / 一時停止 (Space) / 停止 / シーク (スライダ + ←/→ = 5 秒、
+  Shift+←/→ = 30 秒) / 音量 (↑/↓ + スライダ) / ミュート (M) /
+  ループ再生切替 (L) / 再生速度 (0.5x / 1.0x / 1.5x / 2.0x)。
+- 動画はアスペクト比保持で表示領域にフィット。`F` またはダブルクリックで
+  フルスクリーン切替 (Esc で解除)。
+- 音声のみのファイルはコンパクト UI: 埋め込みカバーアート (あれば) +
+  タイトル / アーティスト — アルバムをメタデータから表示。
+- ファイルを開くと自動再生する。`QMediaPlayer::setSource` はメタデータのみ
+  先読みし、本体ストリームは再生開始時にロードされる (大きいファイルでも
+  起動が重くならない)。
+- ロードは QMediaPlayer 自身が非同期に行うため、他ビュアーの
+  prepareLoad / CancellableLoadPage パターンは使わない。ロード結末
+  (Loaded / Invalid) は他ビュアーと同じ `logViewerLoadResult` でログする。
+- 内蔵 `ViewerKind` は持たない唯一の同梱公式プラグイン。Inline モードでは
+  `ViewerPanel::openFile` が外部プラグインと同じ埋め込み経路
+  (`openPluginFile`) で表示する。このため `media_viewer` のロードに失敗した
+  環境では従来どおり Binary ビュアーにフォールバックする。
+- 実装: `plugins/official/media-viewer/` + `src/viewer/MediaView.{h,cpp}` /
+  `MediaViewerWindow.{h,cpp}`。Qt6::Multimedia / Qt6::MultimediaWidgets は
+  この plugin ターゲットだけがリンクする (farman 本体には増やさない)。
+
 ### 表示モードの切替
 
 ビュアーを **アプリ内パネルとして表示** するか、**独立した外部ウィンドウで
@@ -1334,26 +1364,11 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
     数式 (KaTeX) / Mermaid 図 / 目次サイドバー。いずれも外部 JS エンジン
     (`QWebEngineView`) もしくは独自パーサを要し、現時点では導入コストに見合う
     ニーズが無いため見送り。
-- **動画 / 音声ビュアー** *(後日 or プラグインビュアー対応)*
-  - 本体取り込みは依存ライブラリ + OS 毎コーデック検証が大きい (Qt
-    Multimedia の native backend は macOS / Windows / Linux で挙動が
-    違う) ので、**v1.0 では未対応**。プラグインシステムを正式公開した
-    段階で外部プラグイン候補に回す方が現実的。
-  - 対象 (動画): `.mp4` `.mov` `.m4v` `.webm` `.avi` `.mkv` 他
-  - 対象 (音声): `.wav` `.mp3` `.m4a` `.flac` `.ogg` `.aac` 他
-  - 候補ライブラリ: Qt Multimedia (`QMediaPlayer` + 動画用 `QVideoWidget`、
-    音声単体用 `QAudioOutput`) が第一候補。コーデック対応はプラットフォーム
-    のネイティブバックエンド (macOS: AVFoundation / Windows: Media
-    Foundation / Linux: GStreamer) に依存する。
-  - 必要機能: 再生 / 一時停止 / 停止 / シーク (スライダ + ←/→ で
-    数秒単位、Shift+←/→ で大きく) / 音量 / ミュート / ループ再生切替 /
-    再生速度 (0.5x / 1.0x / 1.5x / 2.0x)。
-  - 動画ビュアーはアスペクト比保持で表示領域にフィットさせる。フルスクリーン
-    切替も対応したい (ビュアー側で `Qt::Key_F` などにバインド)。
-  - 音声単体ファイルは波形プレビューや再生位置だけのコンパクト UI で良い。
-    将来的に簡易な波形描画 (peaks) を入れる余地は残す。
-  - ファイルが大きいことが多いので、起動時はメタデータだけ読んで本体ストリーム
-    は再生開始時にロードする (`QMediaPlayer::setSource`)。
+- **動画 / 音声ビュアー** — **実装済 (v0.9.6)**
+  - 同梱公式プラグイン `media_viewer` として実装 (上記
+    `#### 動画 / 音声ビュアー` 参照)。Qt Multimedia (`QMediaPlayer` +
+    動画用 `QVideoWidget`、音声用 `QAudioOutput`)。
+  - 残件: 簡易な波形描画 (peaks)。ニーズが出たら検討。
 - **CSV ビュアー (拡張)** — 完了扱い
   - Phase 1 (表形式表示 / 区切り自動判定 + 手動切替 / ヘッダ行扱いトグル /
     エンコーディング選択 / RFC 4180 quoted-field パース) と Phase 2
@@ -1403,7 +1418,7 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 **v0.9.6 ステータス**: 外部 **ビュアープラグイン** の最小公開を開始する。
 同梱公式ビュアープラグイン (Text / Image / Markdown / PDF / CSV・TSV /
-Binary) は `IViewerPlugin` 実装として登録されており、同じ `ViewerDispatcher`
+Binary / Media) は `IViewerPlugin` 実装として登録されており、同じ `ViewerDispatcher`
 で外部 .dylib / .dll / .so も扱う。同梱公式ビュアープラグインも
 `plugins/official/` のソースから dynamic plugin としてビルドし、配布物では
 アプリ同梱の `plugins/viewers` 相当ディレクトリに配置してロードする。
