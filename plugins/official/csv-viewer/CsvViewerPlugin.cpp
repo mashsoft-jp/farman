@@ -5,12 +5,12 @@
 namespace Farman {
 
 bool CsvViewerPlugin::initialize(const PluginContext& /*ctx*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
   return true;
 }
 
 void CsvViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
 }
 
 QStringList CsvViewerPlugin::supportedExtensions() const {

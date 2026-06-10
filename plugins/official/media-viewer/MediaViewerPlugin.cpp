@@ -1,34 +1,16 @@
 #include "MediaViewerPlugin.h"
 #include "viewer/MediaViewerWindow.h"
-#include "core/Logger.h"
 #include "settings/Settings.h"
 
 namespace Farman {
 
-namespace {
-// Settings を再ロードし、プラグイン側 Logger をアプリ本体と同じ設定に揃える。
-// プラグイン dylib は Settings / Logger シングルトンを自前で持つ (本体とは別
-// インスタンス) ため、これが無いと createViewer 後の非同期ロード結末
-// (logViewerLoadResult) がどこにも記録されない。
-// 起動時 (initialize) と設定変更時 (appearanceChanged が settingsChanged の
-// 通知経路を兼ねる) の両方から呼んで、ログ出力 ON/OFF / ディレクトリ /
-// 保持日数の変更にも追従させる。
-void syncFromHostSettings() {
-  Settings& settings = Settings::instance();
-  settings.load();
-  Logger::instance().setFileOutput(settings.logToFile(),
-                                   settings.logDirectory(),
-                                   settings.logRetentionDays());
-}
-} // namespace
-
 bool MediaViewerPlugin::initialize(const PluginContext& /*ctx*/) {
-  syncFromHostSettings();
+  syncPluginFromHostSettings();
   return true;
 }
 
 void MediaViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
-  syncFromHostSettings();
+  syncPluginFromHostSettings();
 }
 
 QStringList MediaViewerPlugin::supportedExtensions() const {

@@ -50,6 +50,15 @@ struct PluginContext {
   // プラグイン作者には「PluginContext のサイズは固定でない」ことを明示する。
 };
 
+// Settings を再ロードし、プラグイン側 Logger をアプリ本体と同じ設定に揃える。
+// プラグイン dylib は Settings / Logger シングルトンを自前で持つ (本体とは別
+// インスタンス) ため、これが無いと createViewer 後の非同期ロード結末
+// (logViewerLoadResult) がどこにも記録されない。
+// 各プラグインは起動時 (initialize) と設定変更時 (appearanceChanged が
+// settingsChanged の通知経路を兼ねる) の両方から呼んで、ログ出力 ON/OFF /
+// ディレクトリ / 保持日数の変更にも追従させること。
+void syncPluginFromHostSettings();
+
 // ビュアープラグインのインターフェース。
 // IID は `com.farman.IViewerPlugin/<major>.<minor>` 形式。互換性のない変更時に
 // メジャー番号を上げ、Dispatcher で両方のバージョンを試すことで段階移行する。

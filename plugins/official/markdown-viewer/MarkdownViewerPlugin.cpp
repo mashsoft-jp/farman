@@ -5,12 +5,12 @@
 namespace Farman {
 
 bool MarkdownViewerPlugin::initialize(const PluginContext& /*ctx*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
   return true;
 }
 
 void MarkdownViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
 }
 
 QStringList MarkdownViewerPlugin::supportedExtensions() const {

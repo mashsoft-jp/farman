@@ -5,12 +5,12 @@
 namespace Farman {
 
 bool ImageViewerPlugin::initialize(const PluginContext& /*ctx*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
   return true;
 }
 
 void ImageViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
 }
 
 QWidget* ImageViewerPlugin::createViewer(const QString&       filePath,

@@ -5,12 +5,12 @@
 namespace Farman {
 
 bool TextViewerPlugin::initialize(const PluginContext& /*ctx*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
   return true;
 }
 
 void TextViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
 }
 
 QWidget* TextViewerPlugin::createViewer(const QString&       filePath,

@@ -5,12 +5,12 @@
 namespace Farman {
 
 bool PdfViewerPlugin::initialize(const PluginContext& /*ctx*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
   return true;
 }
 
 void PdfViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
 }
 
 QStringList PdfViewerPlugin::supportedExtensions() const {

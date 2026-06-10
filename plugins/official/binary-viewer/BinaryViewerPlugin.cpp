@@ -5,12 +5,12 @@
 namespace Farman {
 
 bool BinaryViewerPlugin::initialize(const PluginContext& /*ctx*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
   return true;
 }
 
 void BinaryViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/) {
-  Settings::instance().load();
+  syncPluginFromHostSettings();
 }
 
 QWidget* BinaryViewerPlugin::createViewer(const QString&       filePath,
