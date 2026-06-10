@@ -11,10 +11,20 @@ Seeking, volume, looping, and fullscreen are supported.
 The bundled viewers (Text / Image / PDF / CSV / Markdown / Binary / Media)
 have been migrated to dynamically loaded official plugins.
 
-- Enable or disable each plugin in Settings → Viewers
-- Per-extension Viewer Associations now also apply in Inline mode
-- Check plugin load status via Help → Plugins... (toolbar button / shortcut available)
 - User-built external viewer plugins (.dylib / .so / .dll) can be loaded
+- Per-extension Viewer Associations now also apply in Inline mode
+
+### New "Plugins" Settings Page
+
+Everything plugin-related now lives in one place: the plugins
+directory, the installed plugin list (load status) with
+enable/disable toggles, and Viewer Associations. Help → Plugins...
+(toolbar button / shortcut available) opens the page directly.
+
+### What's New Dialog
+
+After an update, farman shows this dialog once on first launch.
+You can reopen it any time via Help → What's New...
 
 ### Other Changes
 
