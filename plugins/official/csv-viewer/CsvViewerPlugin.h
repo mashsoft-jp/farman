@@ -7,7 +7,7 @@ namespace Farman {
 
 class CsvViewerPlugin : public QObject, public IViewerPlugin {
   Q_OBJECT
-  Q_PLUGIN_METADATA(IID "com.farman.IViewerPlugin/1.0")
+  Q_PLUGIN_METADATA(IID FarmanIViewerPlugin_iid)
   Q_INTERFACES(Farman::IViewerPlugin)
 
 public:
@@ -16,7 +16,7 @@ public:
 
   QString pluginId() const override { return QStringLiteral("csv_viewer"); }
   QString pluginName() const override { return QStringLiteral("CSV/TSV Viewer"); }
-  int priority() const override { return 200; }
+  int priority() const override { return 10000; }
 
   QStringList supportedExtensions() const override;
   QStringList supportedMimeTypes() const override;

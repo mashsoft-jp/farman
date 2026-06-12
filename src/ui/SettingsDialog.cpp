@@ -8,6 +8,7 @@
 #include "ExternalAppsTab.h"
 #include "settings/Settings.h"
 #include "keybinding/KeyBindingManager.h"
+#include "viewer/ViewerDispatcher.h"
 #include "utils/Dialogs.h"
 #include <QApplication>
 #include <QCheckBox>
@@ -51,6 +52,10 @@ namespace {
 #else
   QProcess::startDetached(QApplication::applicationFilePath(), QStringList());
 #endif
+  // プラグイン契約 (アンロード前に shutdown() を 1 回) をこの経路でも守る。
+  // _Exit はデストラクタを走らせないため、アンロード済みコードに触れる
+  // 後続処理は無い。
+  ViewerDispatcher::instance().shutdownPlugins();
   std::_Exit(0);
 }
 

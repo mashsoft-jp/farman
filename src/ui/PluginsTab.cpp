@@ -25,6 +25,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <limits>
 
 namespace Farman {
 
@@ -192,14 +193,23 @@ bool PluginsTab::eventFilter(QObject* watched, QEvent* event) {
 void PluginsTab::loadSettings() {
   m_pluginsDirectoryEdit->setText(Settings::instance().pluginsDirectory());
   m_pluginRecords = ViewerDispatcher::instance().pluginRecords();
-  // 切り替えできるプラグインを上、コア (固定) ビュアーを下に並べる。
-  // 各グループ内は登録順を保つ。
-  std::stable_partition(m_pluginRecords.begin(), m_pluginRecords.end(),
-                        [](const PluginRecord& rec) {
-    return !ViewerDispatcher::isCoreViewerPlugin(rec.pluginId);
+  // 優先度 (0 が最優先) の昇順に並べる。外部 (0〜9999) → PDF/CSV/Markdown
+  // (10000) → コア (99996〜99999) の順になり、コア (固定) ビュアーが一番下に
+  // 来る。優先度不明 (ロード失敗など) は最後尾。同点は登録順を保つ。
+  std::stable_sort(m_pluginRecords.begin(), m_pluginRecords.end(),
+                   [](const PluginRecord& lhs, const PluginRecord& rhs) {
+    auto key = [](const PluginRecord& rec) {
+      return rec.priority >= 0 ? rec.priority
+                               : std::numeric_limits<int>::max();
+    };
+    return key(lhs) < key(rhs);
   });
-  const QStringList disabled = Settings::instance().disabledViewerPlugins();
-  m_disabledPluginIds = QSet<QString>(disabled.cbegin(), disabled.cend());
+  // ロード側 (Settings::isViewerPluginDisabled) は case-insensitive に判定
+  // するので、UI 側の編集状態も小文字に正規化して持ち、判定を一致させる。
+  m_disabledPluginIds.clear();
+  for (const QString& id : Settings::instance().disabledViewerPlugins()) {
+    m_disabledPluginIds.insert(id.trimmed().toLower());
+  }
   loadExtensionState();  // 一覧の拡張子列が現在値を参照するので先に作る
   loadPluginList();
 }
@@ -227,7 +237,7 @@ void PluginsTab::loadPluginList() {
     auto* enabledItem = new QTableWidgetItem();
     enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     enabledItem->setCheckState(
-      toggleable && m_disabledPluginIds.contains(rec.pluginId)
+      toggleable && isPluginDisabled(rec.pluginId)
         ? Qt::Unchecked
         : Qt::Checked);
     if (toggleable) {
@@ -354,7 +364,7 @@ void PluginsTab::showPluginDetails(int row) {
     && !ViewerDispatcher::isCoreViewerPlugin(rec.pluginId);
   auto* enabledCheck = new QCheckBox(&dialog);
   enabledCheck->setChecked(
-    !(enabledEditable && m_disabledPluginIds.contains(rec.pluginId)));
+    !(enabledEditable && isPluginDisabled(rec.pluginId)));
   enabledCheck->setEnabled(enabledEditable);
   if (enabledEditable) {
     enabledCheck->setToolTip(tr("Changes take effect after restarting farman."));
@@ -368,6 +378,9 @@ void PluginsTab::showPluginDetails(int row) {
   addField(tr("Type:"), tr("Viewer"));
   addField(tr("Status:"), pluginStatusEmoji(rec) + QStringLiteral(" ")
                             + pluginStatusText(rec));
+  // 優先度 (0 が最優先)。取得できなかった場合は "-"。
+  addField(tr("Priority:"),
+           rec.priority >= 0 ? QString::number(rec.priority) : QString());
   addField(tr("Origin:"), rec.origin == PluginRecord::Origin::Bundled
                             ? tr("Bundled")
                             : tr("External"));
@@ -416,9 +429,9 @@ void PluginsTab::showPluginDetails(int row) {
 
   if (enabledEditable) {
     if (enabledCheck->isChecked()) {
-      m_disabledPluginIds.remove(rec.pluginId);
+      m_disabledPluginIds.remove(rec.pluginId.trimmed().toLower());
     } else {
-      m_disabledPluginIds.insert(rec.pluginId);
+      m_disabledPluginIds.insert(rec.pluginId.trimmed().toLower());
     }
     // 一覧の「有効」列にも編集後の状態を反映する
     if (auto* item = m_pluginTable->item(row, 0)) {
@@ -609,9 +622,12 @@ void PluginsTab::save() {
   QStringList disabled = settings.disabledViewerPlugins();
   for (const PluginRecord& rec : m_pluginRecords) {
     if (rec.pluginId.isEmpty()) continue;
-    disabled.removeAll(rec.pluginId);
+    // ロード側の判定 (case-insensitive) に合わせ、大小違いの残留も取り除く
+    disabled.removeIf([&rec](const QString& id) {
+      return id.trimmed().compare(rec.pluginId, Qt::CaseInsensitive) == 0;
+    });
     if (!ViewerDispatcher::isCoreViewerPlugin(rec.pluginId)
-        && m_disabledPluginIds.contains(rec.pluginId)) {
+        && isPluginDisabled(rec.pluginId)) {
       disabled.append(rec.pluginId);
     }
   }

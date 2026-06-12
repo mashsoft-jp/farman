@@ -62,6 +62,9 @@ void syncPluginFromHostSettings();
 // ビュアープラグインのインターフェース。
 // IID は `com.farman.IViewerPlugin/<major>.<minor>` 形式。互換性のない変更時に
 // メジャー番号を上げ、Dispatcher で両方のバージョンを試すことで段階移行する。
+// プラグイン側の Q_PLUGIN_METADATA でも必ずこのマクロを使うこと
+// (文字列を直書きすると IID 更新時に追従漏れする)。
+#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/2.0"
 class IViewerPlugin {
 public:
   virtual ~IViewerPlugin() = default;
@@ -69,7 +72,12 @@ public:
   // ── プラグイン識別情報 ─────────────────────────
   virtual QString     pluginId()   const = 0;  // "text_viewer"
   virtual QString     pluginName() const = 0;  // "テキストビュアー"
-  virtual int         priority()   const { return 0; }  // 高いほど優先
+  // 優先度: 0 が最優先で、数値が小さいほど優先される。
+  // ユーザー作成の外部プラグインは 0〜9999 を指定する (範囲外はロード時に
+  // エラーとなり使用不可)。10000 以上は同梱公式プラグイン用の予約域:
+  // PDF / CSV / Markdown = 10000、コアビュアーはメディア 99996 /
+  // 画像 99997 / テキスト 99998 / バイナリ 99999 (最後のフォールバック)。
+  virtual int         priority()   const { return 0; }
 
   // ── 対応ファイルの宣言 ─────────────────────────
   virtual QStringList supportedExtensions() const = 0;  // {"txt","log","cpp"}
@@ -82,7 +90,8 @@ public:
   // プラグインロード直後に 1 回だけ呼ばれる。
   // 失敗時は false を返す (Dispatcher は登録を取り消す)。default 実装は何もしない。
   virtual bool initialize(const PluginContext& /*ctx*/) { return true; }
-  // プラグインアンロード前に 1 回だけ呼ばれる。
+  // initialize() が成功したプラグインに対し、アンロード前に 1 回だけ呼ばれる
+  // (initialize 失敗時や登録前に弾かれた場合は呼ばれない)。
   virtual void shutdown() {}
 
   // Appearance が変更されたときに呼ばれる。Settings ダイアログでの変更だけでなく、
@@ -106,4 +115,8 @@ public:
 
 } // namespace Farman
 
-Q_DECLARE_INTERFACE(Farman::IViewerPlugin, "com.farman.IViewerPlugin/1.0")
+// 仮想関数の追加・削除・並び替えなど ABI 互換が壊れる変更をしたら、
+// 必ずこの IID のバージョンを上げること (旧 IID のプラグインは
+// qobject_cast に失敗し、ロードエラーとして安全に拒否される)。
+// 2.0: appearanceChanged() の追加と priority() の意味変更 (0 が最優先)。
+Q_DECLARE_INTERFACE(Farman::IViewerPlugin, FarmanIViewerPlugin_iid)

@@ -18,6 +18,7 @@ struct PluginRecord {
   QString pluginId;     // 失敗時は (取得できれば) id、無理なら空
   QString pluginName;   // 同上
   QStringList supportedExtensions;  // 取得できた場合のみ。無効化行の表示にも使う。
+  int     priority = -1;            // 取得できた場合のみ (-1 = 不明)。0 が最優先。
   bool    loaded   = false;
   bool    disabledByUser = false;
   QString errorReason;  // loaded == false のときだけ非空
@@ -52,6 +53,12 @@ public:
 
   // 同梱公式ビュアープラグインの登録（起動時に呼ぶ）
   void registerBundledPlugins();
+
+  // 登録済みプラグインの shutdown() を呼んでからアンロードする。
+  // IViewerPlugin のライフサイクル契約 (initialize 成功後、アンロード前に
+  // shutdown を 1 回呼ぶ) を守るため、QApplication が生きているうちに
+  // main() の app.exec() 後に呼ぶ。
+  void shutdownPlugins();
 
   // プラグインディレクトリからロード
   void loadPlugins(const QDir& pluginDir);

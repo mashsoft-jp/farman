@@ -133,29 +133,46 @@ int main(int argc, char *argv[]) {
       Farman::ViewerDispatcher::currentAppearance());
   });
 
-  Farman::MainWindow window;
-  window.show();
+  int exitCode = 0;
+  {
+    // MainWindow はこのスコープで破棄する。プラグイン生成の QWidget
+    // (Inline ビュー / External ウィンドウ) は MainWindow 配下にあるため、
+    // shutdownPlugins() による dylib アンロードより先に破棄されている
+    // 必要がある (アンロード後に vtable / デストラクタへ飛ぶと UB)。
+    Farman::MainWindow window;
+    window.show();
 
-  // 後続インスタンスからの activate 要求でこのウィンドウを前面に出す。
-  if (singleInstanceServer) {
-    QObject::connect(singleInstanceServer, &QLocalServer::newConnection,
-      [&window]() {
-        QLocalSocket* client = singleInstanceServer->nextPendingConnection();
-        if (!client) return;
-        QObject::connect(client, &QLocalSocket::readyRead, &window,
-          [client, &window]() {
-            const QByteArray msg = client->readAll();
-            if (msg.contains("activate")) {
-              if (window.isMinimized()) window.showNormal();
-              window.show();
-              window.raise();
-              window.activateWindow();
-            }
-          });
-        QObject::connect(client, &QLocalSocket::disconnected,
-                         client, &QObject::deleteLater);
-      });
+    // 後続インスタンスからの activate 要求でこのウィンドウを前面に出す。
+    if (singleInstanceServer) {
+      QObject::connect(singleInstanceServer, &QLocalServer::newConnection,
+        [&window]() {
+          QLocalSocket* client = singleInstanceServer->nextPendingConnection();
+          if (!client) return;
+          QObject::connect(client, &QLocalSocket::readyRead, &window,
+            [client, &window]() {
+              const QByteArray msg = client->readAll();
+              if (msg.contains("activate")) {
+                if (window.isMinimized()) window.showNormal();
+                window.show();
+                window.raise();
+                window.activateWindow();
+              }
+            });
+          QObject::connect(client, &QLocalSocket::disconnected,
+                           client, &QObject::deleteLater);
+        });
+    }
+
+    exitCode = app.exec();
+
+    // deleteLater() 済みのプラグインビューなど、保留中の破棄イベントを
+    // MainWindow 破棄前に流しておく。
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
   }
 
-  return app.exec();
+  // プラグイン契約: アンロード前に shutdown() を 1 回呼ぶ。MainWindow の
+  // 破棄後・QApplication の生存中というこの位置が安全なタイミング。
+  Farman::ViewerDispatcher::instance().shutdownPlugins();
+
+  return exitCode;
 }

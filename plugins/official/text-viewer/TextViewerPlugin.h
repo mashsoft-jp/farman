@@ -7,7 +7,7 @@ namespace Farman {
 
 class TextViewerPlugin : public QObject, public IViewerPlugin {
   Q_OBJECT
-  Q_PLUGIN_METADATA(IID "com.farman.IViewerPlugin/1.0")
+  Q_PLUGIN_METADATA(IID FarmanIViewerPlugin_iid)
   Q_INTERFACES(Farman::IViewerPlugin)
 
 public:
@@ -16,7 +16,7 @@ public:
 
   QString pluginId() const override { return "text_viewer"; }
   QString pluginName() const override { return "Text Viewer"; }
-  int priority() const override { return 100; }
+  int priority() const override { return 99998; }
 
   QStringList supportedExtensions() const override {
     return {

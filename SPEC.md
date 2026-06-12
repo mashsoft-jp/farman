@@ -1460,7 +1460,14 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
   pluginId がロードされていない場合は、従来どおり各 `IViewerPlugin` が
   `supportedExtensions()` / `supportedMimeTypes()` / `canHandle(filePath)` /
   `priority()` で宣言した自動選択にフォールバックする。複数プラグインが
-  対応する場合は `priority()` が高いものを使い、同点なら先に登録されたものを使う。
+  対応する場合は `priority()` の数値が小さいもの (0 が最優先) を使い、
+  同点なら先に登録されたものを使う。
+- `priority()` の値域: ユーザー作成の外部プラグインは 0〜9999 を指定する。
+  範囲外 (負の値または 10000 以上) はロード時にエラーとして拒否され使用不可。
+  10000 以上は同梱公式プラグイン用の予約域で、PDF / CSV / Markdown は 10000、
+  コアビュアーはメディア 99996 / 画像 99997 / テキスト 99998 /
+  バイナリ 99999 (最後のフォールバック) とする。
+  Settings → Plugins の一覧は優先度の昇順 (0 が一番上) に並ぶ。
 - 外部ビュアープラグインは Inline / External のどちらの表示モードでも有効。
   Inline では `ViewerPanel` 内に返却 QWidget を埋め込み、External では同じ
   QWidget をトップレベル化して表示する。`IViewerPlugin::createViewer()` は
@@ -1492,8 +1499,10 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
 **制約**
 
 - v0.9.x では API / ABI の長期互換を保証しない。`IViewerPlugin` の IID は
-  `com.farman.IViewerPlugin/1.0` だが、正式な互換ポリシーはサンプル外部
-  プラグインを試作してから確定する。
+  `com.farman.IViewerPlugin/2.0` (`FarmanIViewerPlugin_iid` マクロ)。仮想関数の
+  追加など ABI 互換が壊れる変更時は必ずバージョンを上げ、旧 IID のプラグインは
+  qobject_cast 失敗 (ロードエラー) として安全に拒否する。正式な互換ポリシーは
+  サンプル外部プラグインを試作してから確定する。
 - 外部公開の対象は **ビュアープラグインのみ**。仮想 FS / アーカイブ形式 /
   追加列などは別 IID の将来拡張とする。
 

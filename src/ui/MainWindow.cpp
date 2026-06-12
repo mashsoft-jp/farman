@@ -494,7 +494,15 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
 
     QWidget* w = nullptr;
     if (kind == ViewerPanel::ViewerKind::Auto) {
-      w = ViewerDispatcher::instance().createViewer(filePath, this);
+      // Inline (ViewerPanel::openFile) と同じ判定にするため resolvePlugin()
+      // を使う。ViewerDispatcher::createViewer() は未解決時にバイナリ
+      // ビュアーへフォールバックするため、ここで使うと下の resolveAuto()
+      // (Settings の拡張子 / MIME ルーティング) に到達できず、Inline と
+      // 選択結果がズレる。
+      auto& dispatcher = ViewerDispatcher::instance();
+      if (IViewerPlugin* plugin = dispatcher.resolvePlugin(filePath)) {
+        w = plugin->createViewer(filePath, this, dispatcher.pluginContext());
+      }
     }
 
     // 明示指定されたビュアーは従来通り直接開く。Auto の場合だけ
@@ -2174,8 +2182,11 @@ void MainWindow::onSettingsChanged() {
 void MainWindow::closeEvent(QCloseEvent* event) {
   auto& settings = Settings::instance();
 
-  // Show confirmation dialog if enabled
-  if (settings.confirmOnExit()) {
+  // Show confirmation dialog if enabled.
+  // OS のシャットダウン / 再起動 / ログアウトなどセッションマネージャ経由の
+  // 終了要求では確認せずに終了する (ダイアログ待ちで OS の終了を
+  // ブロックしないため)。状態の保存処理は通常どおり下で実行される。
+  if (settings.confirmOnExit() && !qApp->isSavingSession()) {
     if (!confirm(this, tr("Confirm Exit"),
                  tr("Are you sure you want to exit farman?"))) {
       event->ignore();

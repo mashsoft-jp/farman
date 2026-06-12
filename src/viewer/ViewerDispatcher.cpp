@@ -8,6 +8,7 @@
 #include <QPalette>
 #include <QPluginLoader>
 #include <QSet>
+#include <limits>
 
 namespace Farman {
 
@@ -61,6 +62,25 @@ bool ViewerDispatcher::isCoreViewerPlugin(const QString& pluginId) {
     QStringLiteral("media_viewer"),
   };
   return coreIds.contains(pluginId);
+}
+
+void ViewerDispatcher::shutdownPlugins() {
+  // initialize() が成功した (= 登録済みの) プラグインだけが対象。
+  // 無効化や検証エラーで登録前に弾いたものは initialize していないので
+  // shutdown も呼ばない。
+  for (const auto& plugin : m_plugins) {
+    if (plugin) {
+      plugin->shutdown();
+    }
+  }
+  m_plugins.clear();
+  // QObject 実体は loader が所有しているので、shutdown 後にアンロードして解放。
+  for (const auto& loader : m_pluginLoaders) {
+    if (loader) {
+      loader->unload();
+    }
+  }
+  m_pluginLoaders.clear();
 }
 
 void ViewerDispatcher::registerBundledPlugins() {
@@ -150,6 +170,23 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
     rec.pluginId = viewerPlugin->pluginId();
     rec.pluginName = viewerPlugin->pluginName();
     rec.supportedExtensions = viewerPlugin->supportedExtensions();
+    rec.priority = viewerPlugin->priority();
+    // ユーザー作成の外部プラグインの優先度は 0〜9999 のみ許可する。
+    // 10000 以上は同梱公式プラグイン用の予約域、負の値は不正。
+    if (origin == PluginRecord::Origin::External
+        && (rec.priority < 0 || rec.priority > 9999)) {
+      rec.loaded = false;
+      rec.errorReason =
+        tr("Invalid priority %1 (external plugins must use 0-9999)")
+          .arg(rec.priority);
+      m_records.append(rec);
+      loader->unload();
+      Logger::instance().warn(
+        QStringLiteral("Plugins: rejected '%1' (%2): priority %3 out of range")
+          .arg(rec.pluginId, fileInfo.fileName())
+          .arg(rec.priority));
+      continue;
+    }
     if (!isCoreViewerPlugin(rec.pluginId)
         && Settings::instance().isViewerPluginDisabled(rec.pluginId)) {
       rec.loaded = false;
@@ -218,23 +255,24 @@ IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
         .arg(extension, preferredPluginId));
   }
 
-  // Find matching plugin with highest priority
+  // 対応するプラグインのうち優先度が最も高い (= priority 値が最小の) ものを
+  // 選ぶ。同点なら先に登録されたものを使う。
   IViewerPlugin* bestMatch = nullptr;
-  int highestPriority = -1;
+  int bestPriority = std::numeric_limits<int>::max();
 
   for (const auto& plugin : m_plugins) {
     // Check if plugin can handle this file
     if (plugin->canHandle(filePath)) {
-      if (plugin->priority() > highestPriority) {
+      if (plugin->priority() < bestPriority) {
         bestMatch = plugin.get();
-        highestPriority = plugin->priority();
+        bestPriority = plugin->priority();
       }
     } else if (!extension.isEmpty() &&
                plugin->supportedExtensions().contains(extension, Qt::CaseInsensitive)) {
       // Check by extension
-      if (plugin->priority() > highestPriority) {
+      if (plugin->priority() < bestPriority) {
         bestMatch = plugin.get();
-        highestPriority = plugin->priority();
+        bestPriority = plugin->priority();
       }
     }
   }
@@ -291,6 +329,7 @@ void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
   rec.filePath   = filePath;
   rec.pluginId   = plugin ? plugin->pluginId()   : QString();
   rec.pluginName = plugin ? plugin->pluginName() : QString();
+  rec.priority   = plugin ? plugin->priority()   : -1;
 
   if (!plugin) {
     rec.loaded = false;

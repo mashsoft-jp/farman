@@ -66,6 +66,11 @@ private:
   QString pluginStatusEmoji(const PluginRecord& record) const;
   QString extensionsDisplayText(const PluginRecord& record) const;
   void updatePluginTablePalette(bool focused);
+  // m_disabledPluginIds は小文字正規化済み。ロード側
+  // (Settings::isViewerPluginDisabled) の case-insensitive 判定に合わせる。
+  bool isPluginDisabled(const QString& pluginId) const {
+    return m_disabledPluginIds.contains(pluginId.trimmed().toLower());
+  }
 
   // 拡張子紐付けのヘルパー (旧 ViewersTab から移設)
   QString normalizedExtension(const QString& extension) const;
@@ -86,8 +91,8 @@ private:
   // 一覧の行番号 → レコード。詳細ダイアログの表示に使う。
   QList<PluginRecord> m_pluginRecords;
 
-  // 外部プラグインの有効 / 無効の編集状態 (無効化する pluginId の集合)。
-  // 詳細ダイアログで編集し、save() で Settings に書き戻す。
+  // プラグインの有効 / 無効の編集状態 (無効化する pluginId の集合、
+  // 小文字正規化済み)。詳細ダイアログで編集し、save() で Settings に書き戻す。
   QSet<QString> m_disabledPluginIds;
 
   // ビュアーの拡張子紐付けの編集状態 (詳細ダイアログで編集し save() で保存)。
