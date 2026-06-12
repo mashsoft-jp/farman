@@ -17,8 +17,10 @@ have been migrated to dynamically loaded official plugins.
 ### New "Plugins" Settings Page
 
 Everything plugin-related now lives in one place: the plugins
-directory, the installed plugin list (load status) with
-enable/disable toggles, and Viewer Associations. Help → Plugins...
+directory and the installed plugin list, grouped into per-type tabs,
+with load status and enable/disable toggles. Each row's "Details..."
+shows the full plugin information, and for viewers the extension
+associations can be edited there too. Help → Plugins...
 (toolbar button / shortcut available) opens the page directly.
 
 ### What's New Dialog

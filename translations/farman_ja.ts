@@ -5312,180 +5312,263 @@ The format or codec is not supported on this platform.</source>
 <context>
     <name>Farman::PluginsTab</name>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="32"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="41"/>
         <source>Plugins Directory</source>
         <translation>プラグインディレクトリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="36"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="45"/>
         <source>External plugins are loaded on startup from this directory. Leave empty to use the default user plugins directory.</source>
         <translation>外部プラグインは起動時にこのディレクトリから読み込まれます。空欄にすると既定のユーザー用プラグインディレクトリを使います。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="48"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="57"/>
         <source>Directory containing external viewer plugins (.dylib, .so, .dll). Changes take effect on next launch.</source>
         <translation>外部ビュアープラグイン (.dylib, .so, .dll) を置くディレクトリです。変更は次回起動時に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="52"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="61"/>
         <source>Choose plugins directory...</source>
         <translation>プラグインディレクトリを選択...</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="54"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="63"/>
         <source>Default</source>
         <translation>既定</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="56"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="65"/>
         <source>Use the default user plugins directory.</source>
         <translation>既定のユーザー用プラグインディレクトリを使います。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="58"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="67"/>
         <source>Directory:</source>
         <translation>ディレクトリ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="69"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="78"/>
         <source>Choose plugins directory</source>
         <translation>プラグインディレクトリを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="81"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="90"/>
         <source>Installed Plugins</source>
         <translation>インストール済みプラグイン</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="85"/>
         <source>Plugins are loaded on startup. Enable/disable changes take effect after restarting farman. Bundled plugins cannot be disabled.</source>
-        <translation>プラグインは起動時に読み込まれます。有効/無効の変更は farman の再起動後に反映されます。同梱プラグインは無効化できません。</translation>
+        <translation type="vanished">プラグインは起動時に読み込まれます。有効/無効の変更は farman の再起動後に反映されます。同梱プラグインは無効化できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="94"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="113"/>
         <source>Enabled</source>
         <translation>有効</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="95"/>
         <source>Type</source>
-        <translation>種別</translation>
+        <translation type="vanished">種別</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="96"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="114"/>
         <source>Status</source>
         <translation>状態</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="97"/>
         <source>Origin</source>
-        <translation>区分</translation>
+        <translation type="vanished">区分</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="98"/>
         <source>Plugin ID</source>
-        <translation>プラグイン ID</translation>
+        <translation type="vanished">プラグイン ID</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="99"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="115"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="100"/>
         <source>Path</source>
-        <translation>パス</translation>
+        <translation type="vanished">パス</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="101"/>
         <source>Error</source>
-        <translation>エラー</translation>
+        <translation type="vanished">エラー</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="112"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="257"/>
+        <source>Details...</source>
+        <translation>詳細...</translation>
+    </message>
+    <message>
+        <source>Show all information about the selected plugin.</source>
+        <translation type="vanished">選択したプラグインの全情報を表示します。</translation>
+    </message>
+    <message>
         <source>Viewer Associations</source>
-        <translation>ビュアー関連付け</translation>
+        <translation type="vanished">ビュアー関連付け</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="116"/>
         <source>Each viewer starts with the extensions declared by its plugin. Edit a row to override those defaults; unchanged rows keep following the plugin defaults.</source>
-        <translation>各ビュアーは、プラグインが宣言した拡張子を初期値として表示します。行を編集するとその既定値を上書きし、未変更の行はプラグイン側の既定値に追従します。</translation>
+        <translation type="vanished">各ビュアーは、プラグインが宣言した拡張子を初期値として表示します。行を編集するとその既定値を上書きし、未変更の行はプラグイン側の既定値に追従します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="125"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="178"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="128"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="335"/>
         <source>Viewer</source>
         <translation>ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="125"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="116"/>
         <source>Extensions</source>
         <translation>拡張子</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="167"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="94"/>
+        <source>Plugins are loaded on startup. Enable/disable changes take effect after restarting farman. The core viewer plugins (Text / Image / Binary / Media) are always enabled.</source>
+        <translation>プラグインは起動時に読み込まれます。有効/無効の変更は farman の再起動後に反映されます。コアビュアープラグイン (テキスト / 画像 / バイナリ / メディア) は常に有効です。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="223"/>
+        <source>Enable/disable can be changed in the Details dialog.</source>
+        <translation>有効 / 無効は「詳細...」ダイアログで変更できます。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="227"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="331"/>
+        <source>This core viewer plugin is always enabled.</source>
+        <translation>このコアビュアープラグインは常に有効で、無効化できません。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="327"/>
         <source>Changes take effect after restarting farman.</source>
         <translation>変更は farman の再起動後に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="171"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="226"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="330"/>
         <source>Plugin ID is unavailable, so this plugin cannot be toggled.</source>
         <translation>プラグイン ID を取得できないため、このプラグインは切り替えできません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="172"/>
         <source>Bundled plugins cannot be disabled.</source>
-        <translation>同梱プラグインは無効化できません。</translation>
+        <translation type="vanished">同梱プラグインは無効化できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="180"/>
+        <source>Yes</source>
+        <translation type="vanished">あり</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="249"/>
+        <source>Error: %1</source>
+        <translation>エラー: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="259"/>
+        <source>Show all information about this plugin.</source>
+        <translation>このプラグインの全情報を表示します。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="289"/>
         <source>Loaded</source>
         <translation>読み込み済み</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="182"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="290"/>
         <source>Disabled</source>
         <translation>無効</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="183"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="290"/>
         <source>Failed</source>
         <translation>失敗</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="185"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="303"/>
+        <source>Plugin Details</source>
+        <translation>プラグインの詳細</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="333"/>
+        <source>Enabled:</source>
+        <translation>有効:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="335"/>
+        <source>Type:</source>
+        <translation>種別:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="336"/>
+        <source>Status:</source>
+        <translation>状態:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="338"/>
+        <source>Origin:</source>
+        <translation>区分:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="339"/>
         <source>Bundled</source>
         <translation>同梱</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="186"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="340"/>
         <source>External</source>
         <translation>外部</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="278"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="341"/>
+        <source>Plugin ID:</source>
+        <translation>プラグイン ID:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="342"/>
+        <source>Name:</source>
+        <translation>名前:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="364"/>
+        <source>Path:</source>
+        <translation>パス:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="358"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="360"/>
+        <source>Extensions:</source>
+        <translation>拡張子:</translation>
+    </message>
+    <message>
+        <source>The viewer starts with the extensions declared by the plugin. Edit the value to override; while it matches the defaults it keeps following them. Changes are applied when the settings are saved.</source>
+        <translation type="vanished">ビュアーは、プラグインが宣言した拡張子を初期値として表示します。値を編集するとその既定値を上書きし、既定値と一致している間はプラグイン側の既定値に追従します。変更は設定の保存時に反映されます。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="366"/>
+        <source>Error:</source>
+        <translation>エラー:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="355"/>
         <source>mp4, mkv</source>
         <translation>mp4, mkv</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="279"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="357"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
         <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="337"/>
         <source>Disabled plugin</source>
-        <translation>無効なプラグイン</translation>
+        <translation type="vanished">無効なプラグイン</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="338"/>
         <source>%1 (disabled)</source>
-        <translation>%1 (無効)</translation>
+        <translation type="vanished">%1 (無効)</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="379"/>
         <source>Missing plugin</source>
-        <translation>見つからないプラグイン</translation>
+        <translation type="vanished">見つからないプラグイン</translation>
     </message>
 </context>
 <context>
@@ -5985,42 +6068,42 @@ Enter キーでビュアーを開いてください。</translation>
         <translation>7. キーバインド</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="181"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="196"/>
         <source>Reset All Settings...</source>
         <translation>全設定をリセット...</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="183"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="198"/>
         <source>Reset every setting (except keybindings) to its default value.</source>
         <translation>すべての設定 (キーバインドを除く) をデフォルト値に戻します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="240"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="255"/>
         <source>Plugins</source>
         <translation>プラグイン</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="241"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="256"/>
         <source>Plugin changes will take effect after restarting farman.</source>
         <translation>プラグインの変更は farman の再起動後に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="249"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="264"/>
         <source>Language Changed</source>
         <translation>言語が変更されました</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="250"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="265"/>
         <source>Restart farman now to apply the new language?</source>
         <translation>新しい言語を反映するために farman を再起動しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="283"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="298"/>
         <source>Reset All Settings</source>
         <translation>全設定をリセット</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="284"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="299"/>
         <source>Reset all settings to their default values?
 Keybindings are not affected.</source>
         <translation>すべての設定をデフォルトに戻しますか?
@@ -6411,32 +6494,32 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::ViewerDispatcher</name>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="129"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="142"/>
         <source>Not an IViewerPlugin (wrong IID?)</source>
         <translation>IViewerPlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="144"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="157"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="284"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="297"/>
         <source>null plugin instance</source>
         <translation>プラグインインスタンスが null</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="293"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="306"/>
         <source>duplicate plugin id (already registered)</source>
         <translation>プラグイン ID が重複 (既に登録済み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="306"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="319"/>
         <source>initialize() returned false</source>
         <translation>initialize() が失敗を返しました</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="321"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="334"/>
         <source>bundled</source>
         <translation>同梱</translation>
     </message>

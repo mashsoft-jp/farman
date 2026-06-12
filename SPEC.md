@@ -1243,7 +1243,7 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   プラットフォームのバックエンドに依存する (macOS: AVFoundation /
   Windows: Media Foundation / Linux: GStreamer。Qt 6.5+ のバイナリ配布では
   同梱 FFmpeg バックエンドが既定)。
-- 対象拡張子 (既定。Settings → Viewer Associations で変更可):
+- 対象拡張子 (既定。Settings → Plugins のプラグイン詳細ダイアログで変更可):
   - 動画: `.mp4` `.mov` `.m4v` `.webm` `.avi` `.mkv`
   - 音声: `.wav` `.mp3` `.m4a` `.flac` `.ogg` `.aac`
 - 機能: 再生 / 一時停止 (Space) / 停止 / シーク (スライダ + ←/→ = 5 秒、
@@ -1325,7 +1325,7 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 切替経路:
 
-- **Settings → Viewer Associations カテゴリ → Viewer Display グループ → Display mode**
+- **Settings → Viewers カテゴリ → Viewer Display グループ → Display mode**
   (永続設定。`settings.json` の `behavior.viewerMode` に `inline` /
   `external` で保存)。
 - **View メニュー → External Viewer Window** (チェック付きトグル項目)。
@@ -1434,17 +1434,28 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
   コマンド (既定: Ctrl+Shift+P) はいずれもこのページを直接開く。
 - Plugins Directory: プラグインディレクトリを指定できる。空欄なら
   `Settings::defaultPluginsDirectory()` を使う。
-- Installed Plugins: 同梱公式 / 外部プラグインのロード結果、種別 (現状は
-  Viewer のみ)、ID、名前、パス、エラー理由を一覧表示する。将来 Content /
-  FS / Archive 等の種別が増えても Type 列の値を増やすだけで拡張できる。
-- Installed Plugins では外部プラグインの有効 / 無効を切り替えられる。
-  無効化された外部プラグインは次回起動時に登録せず、ロード後すぐアンロードする。
-  同梱公式ビュアープラグインはアプリ本体のフォールバック経路を兼ねるため無効化対象外。
-- Viewer Associations で、ビュアープラグインごとに拡張子を
-  割り当てられる。例: `video_viewer` 行に `mp4, mkv` を指定する。
-  外部プラグインは同梱公式ビュアープラグインより上に表示する。
-  無効化された外部プラグインも `Disabled` 状態として表示し、関連付けは
-  編集可能なまま残す。これにより再有効化時に以前の割り当てを復元できる。
+- Installed Plugins: 種別ごとのタブ (現状は Viewer のみ) に分けて、同梱公式 /
+  外部プラグインを一覧表示する。一覧の列は有効 / 状態 / 名前 / 拡張子に絞り
+  (いずれも表示のみ)、エラーがあるプラグインは名前の前に警告アイコンを出す。
+  区分 (同梱 / 外部)・ID・パス・エラー全文は各行の「詳細...」ボタンで開く
+  ダイアログで確認する。詳細は一覧の Enter / Space でも開ける。一覧内の
+  行移動は ↑/↓ のみで、Tab は設定ダイアログの OK ボタンへ抜ける。
+  将来 Content / FS / Archive 等の種別が増えてもタブを増やすだけで拡張できる。
+- プラグインの有効 / 無効は詳細ダイアログで切り替えられる (一覧の
+  「有効」列は表示のみ)。
+  無効化されたプラグインは次回起動時に登録せず、ロード後すぐアンロードする。
+  テキスト / 画像 / バイナリ / メディア (動画・音声) の 4 つは、アプリ本体の
+  フォールバック経路を兼ねる固定 (コア) ビュアープラグインとして既定で有効、
+  かつ無効化できない (`ViewerDispatcher::isCoreViewerPlugin`)。それ以外の
+  同梱プラグイン (PDF / CSV / Markdown) は既定で有効だが、外部プラグインと
+  同様にユーザーが有効 / 無効を切り替えられる。
+- ビュアープラグインごとの拡張子の割り当て (関連付け) は、詳細ダイアログの
+  Extensions 欄で確認・編集できる。例: `video_viewer` に `mp4, mkv` を指定する。
+  値がプラグイン既定の拡張子と一致している間は既定に追従し、編集して
+  異なる値にしたものだけを設定として保存する。
+  無効化された外部プラグインの関連付けも編集可能なまま残し、一覧に
+  存在しないプラグインへの関連付けは設定にそのまま保持する。これにより
+  再有効化 / 再インストール時に以前の割り当てを復元できる。
 - 拡張子のユーザー既定がある場合はそれを最優先する。未設定、または指定した
   pluginId がロードされていない場合は、従来どおり各 `IViewerPlugin` が
   `supportedExtensions()` / `supportedMimeTypes()` / `canHandle(filePath)` /

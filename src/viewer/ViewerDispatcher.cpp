@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QPalette>
 #include <QPluginLoader>
+#include <QSet>
 
 namespace Farman {
 
@@ -48,6 +49,18 @@ void ViewerDispatcher::notifyAppearanceChanged(
       plugin->appearanceChanged(appearance);
     }
   }
+}
+
+bool ViewerDispatcher::isCoreViewerPlugin(const QString& pluginId) {
+  // テキスト / 画像 / バイナリ / メディアはフォールバック経路を兼ねる
+  // 固定ビュアーとして常に有効にする (ヘッダコメント参照)。
+  static const QSet<QString> coreIds = {
+    QStringLiteral("text_viewer"),
+    QStringLiteral("image_viewer"),
+    QStringLiteral("binary_viewer"),
+    QStringLiteral("media_viewer"),
+  };
+  return coreIds.contains(pluginId);
 }
 
 void ViewerDispatcher::registerBundledPlugins() {
@@ -137,7 +150,7 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
     rec.pluginId = viewerPlugin->pluginId();
     rec.pluginName = viewerPlugin->pluginName();
     rec.supportedExtensions = viewerPlugin->supportedExtensions();
-    if (origin == PluginRecord::Origin::External
+    if (!isCoreViewerPlugin(rec.pluginId)
         && Settings::instance().isViewerPluginDisabled(rec.pluginId)) {
       rec.loaded = false;
       rec.disabledByUser = true;
