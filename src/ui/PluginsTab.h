@@ -65,6 +65,7 @@ private:
   QString pluginStatusText(const PluginRecord& record) const;
   QString pluginStatusEmoji(const PluginRecord& record) const;
   QString extensionsDisplayText(const PluginRecord& record) const;
+  void updatePluginTablePalette(bool focused);
 
   // 拡張子紐付けのヘルパー (旧 ViewersTab から移設)
   QString normalizedExtension(const QString& extension) const;

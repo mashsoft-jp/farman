@@ -125,6 +125,7 @@ void PluginsTab::setupUi() {
   // 制御は eventFilter で明示的に行う (ヘッダコメント参照)。
   m_pluginTable->setTabKeyNavigation(false);
   m_pluginTable->installEventFilter(this);
+  updatePluginTablePalette(/*focused=*/false);  // 初期状態は非フォーカス
   m_pluginTabs->addTab(m_pluginTable, tr("Viewer"));
   listLayout->addWidget(m_pluginTabs, 1);
 
@@ -141,9 +142,14 @@ bool PluginsTab::eventFilter(QObject* watched, QEvent* event) {
 
   // フォーカスを得たとき行未選択なら先頭行を選び、すぐ ↑/↓ で動かせるようにする。
   if (event->type() == QEvent::FocusIn) {
+    updatePluginTablePalette(/*focused=*/true);
     if (m_pluginTable->currentRow() < 0 && m_pluginTable->rowCount() > 0) {
       m_pluginTable->selectRow(0);
     }
+    return QWidget::eventFilter(watched, event);
+  }
+  if (event->type() == QEvent::FocusOut) {
+    updatePluginTablePalette(/*focused=*/false);
     return QWidget::eventFilter(watched, event);
   }
 
@@ -289,6 +295,27 @@ QString PluginsTab::extensionsDisplayText(const PluginRecord& record) const {
     return m_extensions.value(record.pluginId).join(QStringLiteral(", "));
   }
   return record.supportedExtensions.join(QStringLiteral(", "));
+}
+
+// 一覧の選択行 (カーソル) の色をフォーカス状態に合わせる。
+// 項目ビューの描画はウィンドウのアクティブ状態しか見ないため、テーブルが
+// フォーカスを失っただけでは選択色が変わらない。非フォーカス時は Highlight
+// を非アクティブ用のグレーに差し替えて、カーソルが効いていないことを示す。
+void PluginsTab::updatePluginTablePalette(bool focused) {
+  if (focused) {
+    m_pluginTable->setPalette(QPalette());  // 既定 (親のパレット) に戻す
+    return;
+  }
+  QPalette pal;
+  QColor inactive = pal.color(QPalette::Inactive, QPalette::Highlight);
+  if (inactive == pal.color(QPalette::Active, QPalette::Highlight)) {
+    // OS パレットが非アクティブ用の色を持たない場合のフォールバック
+    inactive = pal.color(QPalette::Active, QPalette::Window).darker(115);
+  }
+  pal.setColor(QPalette::Highlight, inactive);
+  pal.setColor(QPalette::HighlightedText,
+               pal.color(QPalette::Active, QPalette::Text));
+  m_pluginTable->setPalette(pal);
 }
 
 QString PluginsTab::pluginStatusText(const PluginRecord& record) const {

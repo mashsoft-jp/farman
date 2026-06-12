@@ -31,6 +31,31 @@
 
 namespace Farman {
 
+namespace {
+
+// farman を再起動する: 新プロセスを起動してから旧プロセスを即終了する。
+// QApplication::quit() はモーダルダイアログの内側から呼ぶと外側の
+// event loop が終了せず、旧プロセスが残ったまま新プロセスが立ち上がる
+// ことがあるため、Settings の save() 後に Qt のクリーンアップを
+// スキップして即終了する。
+[[noreturn]] void restartFarman() {
+#ifdef Q_OS_MACOS
+  // applicationFilePath() は <bundle>.app/Contents/MacOS/<exe> を返す。
+  // 裸の exe を直接起動すると LaunchServices が別アプリ扱いし、Dock に
+  // も別エントリで現れるので .app の根を open(1) -n で起動する。
+  QString bundlePath = QApplication::applicationFilePath();
+  const int idx = bundlePath.indexOf(QStringLiteral("/Contents/MacOS/"));
+  if (idx > 0) bundlePath.truncate(idx);
+  QProcess::startDetached(QStringLiteral("/usr/bin/open"),
+                          QStringList{QStringLiteral("-n"), bundlePath});
+#else
+  QProcess::startDetached(QApplication::applicationFilePath(), QStringList());
+#endif
+  std::_Exit(0);
+}
+
+} // namespace
+
 SettingsDialog::SettingsDialog(const QString& leftCurrentPath,
                                const QString& rightCurrentPath,
                                const QSize&   currentWindowSize,
@@ -250,38 +275,27 @@ void SettingsDialog::onApply() {
   // Notify that settings have changed
   emit settingsChanged();
 
-  // プラグインの有効/無効・ディレクトリは次回起動から反映されるため通知する。
+  // プラグインの有効/無効・ディレクトリは次回起動から反映されるため、
+  // 再起動するか確認し、Yes なら即再起動する。
+  // Y/N の単押し対応のため独自の confirm() ヘルパを使う。
   if (m_pluginsTab->restartRequiredOnSave()) {
-    inform(this, tr("Plugins"),
-           tr("Plugin changes will take effect after restarting farman."));
+    if (confirm(this,
+                tr("Plugins"),
+                tr("Plugin changes will take effect after restarting farman.\n"
+                   "Restart farman now?"),
+                /*defaultYes=*/true)) {
+      restartFarman();
+    }
   }
 
   // 言語が変わっていたら、現プロセスでは適切に切り替えられないので
-  // 再起動を促す。Yes なら新プロセスを起動してから旧プロセスを即終了。
-  // Y/N の単押し対応のため独自の confirm() ヘルパを使う。
+  // 再起動を促す。
   if (m_generalTab->languageChangedOnSave()) {
     if (confirm(this,
                 tr("Language Changed"),
                 tr("Restart farman now to apply the new language?"),
                 /*defaultYes=*/true)) {
-#ifdef Q_OS_MACOS
-      // applicationFilePath() は <bundle>.app/Contents/MacOS/<exe> を返す。
-      // 裸の exe を直接起動すると LaunchServices が別アプリ扱いし、Dock に
-      // も別エントリで現れるので .app の根を open(1) -n で起動する。
-      QString bundlePath = QApplication::applicationFilePath();
-      const int idx = bundlePath.indexOf(QStringLiteral("/Contents/MacOS/"));
-      if (idx > 0) bundlePath.truncate(idx);
-      QProcess::startDetached(QStringLiteral("/usr/bin/open"),
-                              QStringList{QStringLiteral("-n"), bundlePath});
-#else
-      QProcess::startDetached(QApplication::applicationFilePath(), QStringList());
-#endif
-      // 新プロセスを起動した後、旧プロセスを「確実に」終了させる。
-      // QApplication::quit() はモーダルダイアログの内側から呼ぶと外側の
-      // event loop が終了せず、旧プロセスが残ったまま新プロセスが立ち上がる
-      // ことがある。Settings は既に save() 済みなので、Qt のクリーンアップを
-      // スキップして即終了する。
-      std::_Exit(0);
+      restartFarman();
     }
   }
 }
