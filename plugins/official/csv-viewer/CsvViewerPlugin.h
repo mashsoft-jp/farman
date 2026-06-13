@@ -16,6 +16,8 @@ public:
 
   QString pluginId() const override { return QStringLiteral("csv_viewer"); }
   QString pluginName() const override { return QStringLiteral("CSV/TSV Viewer"); }
+  QString author() const override { return QStringLiteral("Mashsoft Inc."); }
+  QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
   int priority() const override { return 10000; }
 
   QStringList supportedExtensions() const override;

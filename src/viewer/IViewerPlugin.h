@@ -64,7 +64,7 @@ void syncPluginFromHostSettings();
 // メジャー番号を上げ、Dispatcher で両方のバージョンを試すことで段階移行する。
 // プラグイン側の Q_PLUGIN_METADATA でも必ずこのマクロを使うこと
 // (文字列を直書きすると IID 更新時に追従漏れする)。
-#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/2.0"
+#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/3.0"
 class IViewerPlugin {
 public:
   virtual ~IViewerPlugin() = default;
@@ -72,6 +72,11 @@ public:
   // ── プラグイン識別情報 ─────────────────────────
   virtual QString     pluginId()   const = 0;  // "text_viewer"
   virtual QString     pluginName() const = 0;  // "テキストビュアー"
+  // 制作者情報。外部プラグインは author() (制作者名 / 組織名) を必ず返すこと
+  // (空だとロード時にエラーとなり使用不可)。authorUrl() は任意で、Web サイト
+  // や連絡先の URL を返すと詳細ダイアログにリンクとして表示される。
+  virtual QString     author()    const { return {}; }  // "Mashsoft Inc."
+  virtual QString     authorUrl() const { return {}; }  // "https://example.com"
   // 優先度: 0 が最優先で、数値が小さいほど優先される。
   // ユーザー作成の外部プラグインは 0〜9999 を指定する (範囲外はロード時に
   // エラーとなり使用不可)。10000 以上は同梱公式プラグイン用の予約域:
@@ -115,6 +120,7 @@ public:
 
 } // namespace Farman
 
+// 3.0: author() / authorUrl() の追加。
 // 仮想関数の追加・削除・並び替えなど ABI 互換が壊れる変更をしたら、
 // 必ずこの IID のバージョンを上げること (旧 IID のプラグインは
 // qobject_cast に失敗し、ロードエラーとして安全に拒否される)。

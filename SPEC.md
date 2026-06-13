@@ -1468,6 +1468,10 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
   コアビュアーはメディア 99996 / 画像 99997 / テキスト 99998 /
   バイナリ 99999 (最後のフォールバック) とする。
   Settings → Plugins の一覧は優先度の昇順 (0 が一番上) に並ぶ。
+- 制作者情報: 外部プラグインは `author()` (制作者名 / 組織名) の提供を必須と
+  する。空の場合はロード時にエラーとして拒否され使用不可。`authorUrl()` は
+  任意で、指定すると詳細ダイアログにクリック可能なリンクとして表示される。
+  これらは Settings → Plugins のプラグイン詳細ダイアログで確認できる。
 - 外部ビュアープラグインは Inline / External のどちらの表示モードでも有効。
   Inline では `ViewerPanel` 内に返却 QWidget を埋め込み、External では同じ
   QWidget をトップレベル化して表示する。`IViewerPlugin::createViewer()` は
@@ -1483,8 +1487,8 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
 **基盤 API**
 
 - インターフェース: `IViewerPlugin` ([src/viewer/IViewerPlugin.h](src/viewer/IViewerPlugin.h))
-  - `pluginId()` / `pluginName()` / `supportedExtensions()` /
-    `supportedMimeTypes()` / `canHandle(filePath)` /
+  - `pluginId()` / `pluginName()` / `author()` / `authorUrl()` /
+    `supportedExtensions()` / `supportedMimeTypes()` / `canHandle(filePath)` /
     `createViewer(filePath, parent, ctx)` / `priority()` /
     `initialize(ctx)` / `shutdown()` / `appearanceChanged(appearance)` /
     `capabilities()`
@@ -1499,7 +1503,7 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
 **制約**
 
 - v0.9.x では API / ABI の長期互換を保証しない。`IViewerPlugin` の IID は
-  `com.farman.IViewerPlugin/2.0` (`FarmanIViewerPlugin_iid` マクロ)。仮想関数の
+  `com.farman.IViewerPlugin/3.0` (`FarmanIViewerPlugin_iid` マクロ)。仮想関数の
   追加など ABI 互換が壊れる変更時は必ずバージョンを上げ、旧 IID のプラグインは
   qobject_cast 失敗 (ロードエラー) として安全に拒否する。正式な互換ポリシーは
   サンプル外部プラグインを試作してから確定する。

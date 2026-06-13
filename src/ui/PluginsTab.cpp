@@ -386,6 +386,17 @@ void PluginsTab::showPluginDetails(int row) {
                             : tr("External"));
   addField(tr("Plugin ID:"), rec.pluginId);
   addField(tr("Name:"), rec.pluginName);
+  addField(tr("Author:"), rec.author);
+  // 制作者 URL はリンクとして表示し、クリックで既定ブラウザを開く。
+  if (!rec.authorUrl.isEmpty()) {
+    auto* urlLabel = new QLabel(
+      QStringLiteral("<a href=\"%1\">%1</a>")
+        .arg(rec.authorUrl.toHtmlEscaped()), &dialog);
+    urlLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    urlLabel->setOpenExternalLinks(true);
+    urlLabel->setWordWrap(true);
+    form->addRow(tr("Author URL:"), urlLabel);
+  }
 
   // 拡張子の紐付け: ビュアープラグインはここで確認・変更できる。
   // 値がプラグイン既定の拡張子と一致している間は既定に追従する。

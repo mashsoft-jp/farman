@@ -169,6 +169,8 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
     }
     rec.pluginId = viewerPlugin->pluginId();
     rec.pluginName = viewerPlugin->pluginName();
+    rec.author = viewerPlugin->author();
+    rec.authorUrl = viewerPlugin->authorUrl();
     rec.supportedExtensions = viewerPlugin->supportedExtensions();
     rec.priority = viewerPlugin->priority();
     // ユーザー作成の外部プラグインの優先度は 0〜9999 のみ許可する。
@@ -185,6 +187,19 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
         QStringLiteral("Plugins: rejected '%1' (%2): priority %3 out of range")
           .arg(rec.pluginId, fileInfo.fileName())
           .arg(rec.priority));
+      continue;
+    }
+    // 外部プラグインは制作者情報 (author) の提供を必須とする。
+    if (origin == PluginRecord::Origin::External
+        && rec.author.trimmed().isEmpty()) {
+      rec.loaded = false;
+      rec.errorReason =
+        tr("Missing author information (external plugins must declare author())");
+      m_records.append(rec);
+      loader->unload();
+      Logger::instance().warn(
+        QStringLiteral("Plugins: rejected '%1' (%2): author() is empty")
+          .arg(rec.pluginId, fileInfo.fileName()));
       continue;
     }
     if (!isCoreViewerPlugin(rec.pluginId)
@@ -329,6 +344,8 @@ void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
   rec.filePath   = filePath;
   rec.pluginId   = plugin ? plugin->pluginId()   : QString();
   rec.pluginName = plugin ? plugin->pluginName() : QString();
+  rec.author     = plugin ? plugin->author()     : QString();
+  rec.authorUrl  = plugin ? plugin->authorUrl()  : QString();
   rec.priority   = plugin ? plugin->priority()   : -1;
 
   if (!plugin) {

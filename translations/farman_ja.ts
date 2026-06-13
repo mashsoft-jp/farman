@@ -5552,13 +5552,23 @@ The format or codec is not supported on this platform.</source>
         <translation>名前:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="410"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="389"/>
+        <source>Author:</source>
+        <translation>制作者:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="398"/>
+        <source>Author URL:</source>
+        <translation>制作者URL:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="421"/>
         <source>Path:</source>
         <translation>パス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="404"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="406"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="415"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="417"/>
         <source>Extensions:</source>
         <translation>拡張子:</translation>
     </message>
@@ -5567,17 +5577,17 @@ The format or codec is not supported on this platform.</source>
         <translation type="vanished">ビュアーは、プラグインが宣言した拡張子を初期値として表示します。値を編集するとその既定値を上書きし、既定値と一致している間はプラグイン側の既定値に追従します。変更は設定の保存時に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="412"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="423"/>
         <source>Error:</source>
         <translation>エラー:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="401"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="412"/>
         <source>mp4, mkv</source>
         <translation>mp4, mkv</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="403"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="414"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
         <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
@@ -6566,32 +6576,37 @@ Keybindings are not affected.</source>
         <translation>IViewerPlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="180"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="182"/>
         <source>Invalid priority %1 (external plugins must use 0-9999)</source>
         <translation>優先度 %1 は不正です (外部プラグインは 0〜9999 を指定してください)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="194"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="197"/>
+        <source>Missing author information (external plugins must declare author())</source>
+        <translation>制作者情報がありません (外部プラグインは author() を宣言する必要があります)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="209"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="336"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="353"/>
         <source>null plugin instance</source>
         <translation>プラグインインスタンスが null</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="345"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="362"/>
         <source>duplicate plugin id (already registered)</source>
         <translation>プラグイン ID が重複 (既に登録済み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="358"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="375"/>
         <source>initialize() returned false</source>
         <translation>initialize() が失敗を返しました</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="373"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="390"/>
         <source>bundled</source>
         <translation>同梱</translation>
     </message>

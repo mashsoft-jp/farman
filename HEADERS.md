@@ -446,7 +446,7 @@ public:
 
 } // namespace Farman
 
-#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/2.0"
+#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/3.0"
 Q_DECLARE_INTERFACE(Farman::IViewerPlugin, FarmanIViewerPlugin_iid)
 ```
 

@@ -16,6 +16,8 @@ public:
 
   QString pluginId() const override { return "text_viewer"; }
   QString pluginName() const override { return "Text Viewer"; }
+  QString author() const override { return QStringLiteral("Mashsoft Inc."); }
+  QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
   int priority() const override { return 99998; }
 
   QStringList supportedExtensions() const override {

@@ -16,6 +16,8 @@ public:
 
   QString pluginId() const override { return QStringLiteral("pdf_viewer"); }
   QString pluginName() const override { return QStringLiteral("PDF Viewer"); }
+  QString author() const override { return QStringLiteral("Mashsoft Inc."); }
+  QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
   int priority() const override { return 10000; }
 
   QStringList supportedExtensions() const override;

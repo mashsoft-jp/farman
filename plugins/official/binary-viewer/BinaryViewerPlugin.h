@@ -19,6 +19,8 @@ public:
 
   QString pluginId()   const override { return QStringLiteral("binary_viewer"); }
   QString pluginName() const override { return QStringLiteral("Binary Viewer"); }
+  QString author() const override { return QStringLiteral("Mashsoft Inc."); }
+  QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
   int     priority()   const override { return 99999; }
 
   QStringList supportedExtensions() const override { return {}; }
