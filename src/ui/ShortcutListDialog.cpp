@@ -50,7 +50,7 @@ ShortcutListDialog::ShortcutListDialog(QWidget* parent)
   : QDialog(parent) {
   // モードレスダイアログ。閉じるまで親ウィンドウの操作を妨げない。
   setWindowFlags(Qt::Tool | Qt::WindowCloseButtonHint | Qt::WindowTitleHint);
-  setWindowTitle(tr("Keyboard Shortcuts"));
+  setWindowTitle(tr("Keybinding List"));
   setModal(false);
   resize(640, 720);
   setupUi();
@@ -98,12 +98,11 @@ void ShortcutListDialog::rebuild() {
   m_table->setRowCount(0);
   m_table->setUpdatesEnabled(false);
 
-  const auto groups = commandsGroupedByCategory(CommandRegistry::instance());
-  for (const auto& group : groups) {
-    // 見出し行 (1 セルを 2 列にまたがらせる)
+  // 見出し行 (1 セルを 2 列にまたがらせる)
+  auto addHeaderRow = [this](const QString& display) {
     const int hdrRow = m_table->rowCount();
     m_table->insertRow(hdrRow);
-    auto* hdr = new QTableWidgetItem(group.display);
+    auto* hdr = new QTableWidgetItem(display);
     QFont f = hdr->font();
     f.setBold(true);
     hdr->setFont(f);
@@ -114,6 +113,27 @@ void ShortcutListDialog::rebuild() {
     hdr->setFlags(Qt::ItemIsEnabled);  // 選択不可
     m_table->setItem(hdrRow, 0, hdr);
     m_table->setSpan(hdrRow, 0, 1, 2);
+  };
+
+  // 組み込みの固定キー用の行 (キーバインド設定では変更できない)。
+  // CommandRegistry にはコマンドとして登録されていないため表示専用。
+  auto addBuiltinRow = [this](const QString& keyText, const QString& label,
+                              const QString& description) {
+    const int row = m_table->rowCount();
+    m_table->insertRow(row);
+    auto* keyItem  = new QTableWidgetItem(keyText);
+    auto* nameItem = new QTableWidgetItem(label);
+    keyItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    nameItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    keyItem->setToolTip(description);
+    nameItem->setToolTip(description);
+    m_table->setItem(row, 0, keyItem);
+    m_table->setItem(row, 1, nameItem);
+  };
+
+  const auto groups = commandsGroupedByCategory(CommandRegistry::instance());
+  for (const auto& group : groups) {
+    addHeaderRow(group.display);
 
     // 各コマンド行 (登録順)
     for (ICommand* cmd : group.commands) {
@@ -147,6 +167,23 @@ void ShortcutListDialog::rebuild() {
 
       m_table->setItem(row, 0, keyItem);
       m_table->setItem(row, 1, nameItem);
+
+      // 組み込みの固定キーを Web マニュアルと同じ位置 (Backspace の直後)
+      // に差し込む。
+      if (cmd->id() == QLatin1String("navigate.parent")) {
+        addBuiltinRow(
+          tr("Tab / Shift+Tab"),
+          tr("Cycle focus (★ → address → 📁 → list → mode)"),
+          tr("Cycles focus between the pane controls; wraps to the opposite "
+             "pane / preview at the ends. This key is fixed and cannot be "
+             "rebound."));
+        addBuiltinRow(
+          tr("Shift+letter"),
+          tr("Jump to the next file starting with the typed letter"),
+          tr("Moves the cursor to the next file or directory whose name starts "
+             "with the typed letter, wrapping around to the top. Press again to "
+             "cycle through matches. This key is fixed and cannot be rebound."));
+      }
     }
   }
 

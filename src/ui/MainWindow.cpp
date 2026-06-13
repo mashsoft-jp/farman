@@ -1282,13 +1282,13 @@ void MainWindow::registerCommands() {
        "matching file in the other pane.")
   ));
 
-  // ショートカット一覧の表示トグル (`?` キー)
+  // キーバインド一覧の表示トグル (`?` キー)
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "help.shortcuts",
-    tr("Keyboard Shortcuts"),
+    tr("Keybinding List"),
     [this]() { toggleShortcutList(); },
     "help",
-    tr("Show or hide the keyboard shortcuts reference window")
+    tr("Show or hide the keybinding list window")
   ));
 
   registry.registerCommand(std::make_shared<LambdaCommand>(
@@ -1589,8 +1589,8 @@ void MainWindow::createMenus() {
 
   // Help
   QMenu* helpMenu = bar->addMenu(tr("&Help"));
-  // ショートカット一覧 (`?` キー)
-  addCmd(helpMenu, "help.shortcuts", tr("Keyboard Shortcuts"), /*global=*/true);
+  // キーバインド一覧 (`?` キー)
+  addCmd(helpMenu, "help.shortcuts", tr("Keybinding List"), /*global=*/true);
   addCmd(helpMenu, "help.plugins", tr("Plugins..."), /*global=*/true);
   helpMenu->addSeparator();
   // アップデート内容の再表示 (起動時の自動表示と同じダイアログ)。
@@ -1822,7 +1822,7 @@ void MainWindow::createMainToolBar() {
   // 操作 (Single Pane / Sync Browse / Compare / Log etc.) に限定する。
 
   m_toolbar->addSeparator();
-  addBtn("help.shortcuts",          tr("Shortcuts"),    QStringLiteral("shortcuts.svg"));
+  addBtn("help.shortcuts",          tr("Keybindings"),  QStringLiteral("shortcuts.svg"));
   addBtn("help.plugins",            tr("Plugins"),      QStringLiteral("plugins.svg"));
   addBtn("app.settings",            tr("Settings"),     QStringLiteral("settings.svg"));
 
