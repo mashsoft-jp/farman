@@ -31,6 +31,11 @@ public:
 
   void setUrlsProvider(UrlsProvider provider) { m_urlsProvider = std::move(provider); }
 
+  // 現在のレイアウトでの 1 行あたりの列数 (グリッドの横方向セル数)。
+  // カーソルのグリッド移動 (左右=横 / 上下=縦) の計算に使う。
+  // 実レイアウト (visualRect) から求めるので spacing / 余白に依存しない。
+  int gridColumnCount() const;
+
   // サムネイルサイズの設定。iconSize と gridSize を一括で更新する。
   // gridSize を設定しないと IconMode では各セル幅が画像のアスペクト比やファイル名
   // 長に依存して可変になり、長いファイル名が隣のサムネイルの上に被って描画される。

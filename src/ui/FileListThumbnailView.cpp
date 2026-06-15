@@ -31,6 +31,28 @@ FileListThumbnailView::FileListThumbnailView(QWidget* parent) : QListView(parent
   setDragDropMode(QAbstractItemView::DragDrop);
 }
 
+int FileListThumbnailView::gridColumnCount() const {
+  const auto* m = model();
+  const int n = m ? m->rowCount() : 0;
+  if (n <= 1) return qMax(1, n);
+
+  const QRect first = visualRect(m->index(0, 0));
+  if (!first.isValid() || gridSize().width() <= 0) {
+    // レイアウト未確定時のフォールバック (グリッド幅から概算)。
+    const int gw = gridSize().width() > 0 ? gridSize().width() : 1;
+    return qMax(1, viewport()->width() / gw);
+  }
+
+  // 先頭行に並ぶ要素数 = 列数。visualRect の top が変わるまで数える。
+  const int firstTop = first.top();
+  int cols = 1;
+  for (int i = 1; i < n; ++i) {
+    if (visualRect(m->index(i, 0)).top() != firstTop) break;
+    ++cols;
+  }
+  return cols;
+}
+
 void FileListThumbnailView::setThumbnailSizePx(int sizePx) {
   setIconSize(QSize(sizePx, sizePx));
   // セル全体サイズを固定する。FileListThumbnailDelegate::sizeHint と完全に

@@ -1,5 +1,6 @@
 #include "FileManagerPanel.h"
 #include "FileListPane.h"
+#include "FileListThumbnailView.h"
 #include "LogPane.h"
 #include "PreviewPane.h"
 #include "PreviewController.h"
@@ -692,43 +693,64 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
     }
   }
 
+  // ここから先は矢印 / 文字キーなどカーソル操作。List / Thumbnail 両対応。
+  // 両ビューは selectionModel を共有するので、active view に setCurrentIndex
+  // すれば非 active 側も同期する (scrollTo は active 側でのみ走る)。
+  FileListPane* pane = activePane();
+  if (!pane) return false;
+  FileListModel* model = pane->model();
+  QAbstractItemView* av = pane->activeView();
+  if (!av) av = pane->view();
+  // サムネイル (グリッド) 表示では左右=横移動 / 上下=縦移動にする。列数を実
+  // レイアウトから取得し、端 (左右端の列 / 上下端の行) を越える方向キーのとき
+  // だけ従来のペイン移動・親移動にフォールバックする。
+  auto* thumbView = qobject_cast<FileListThumbnailView*>(av);
+  const bool grid = (thumbView != nullptr);
+  const int cols  = grid ? thumbView->gridColumnCount() : 1;
+
   // 左キーの処理
   if (event->key() == Qt::Key_Left) {
-    if (!isDualPaneMode()) {
-      // シングル / プレビュー: 親ディレクトリに移動
-      handleBackspaceKey();
+    const QModelIndex cur = av->currentIndex();
+    // グリッドで左端列より右にいるなら横移動。
+    if (grid && cur.isValid() && (cur.row() % cols) > 0) {
+      av->setCurrentIndex(model->index(cur.row() - 1, 0));
       return true;
-    } else {
-      // 2ペインモード
-      if (m_activePane == PaneType::Left) {
-        // 左ペインで←キー: 親ディレクトリに移動
-        handleBackspaceKey();
-        return true;
-      } else {
-        // 右ペインで←キー: 左ペインに切り替え
-        setActivePane(PaneType::Left);
-        return true;
-      }
     }
+    // 左端列 (または List 表示) → 従来動作。
+    //   シングル / プレビュー、または左ペイン: 親ディレクトリへ
+    //   右ペイン: 左ペインへ切り替え
+    if (!isDualPaneMode() || m_activePane == PaneType::Left) {
+      handleBackspaceKey();
+    } else {
+      setActivePane(PaneType::Left);
+    }
+    return true;
   }
 
   // 右キーの処理
   if (event->key() == Qt::Key_Right) {
-    if (!isDualPaneMode()) {
-      // シングル / プレビュー: 何もしない (相方ペインが居ない / ビュアー)
-      return true;
-    } else {
-      // 2ペインモード
-      if (m_activePane == PaneType::Right) {
-        // 右ペインで→キー: 親ディレクトリに移動
-        handleBackspaceKey();
-        return true;
-      } else {
-        // 左ペインで→キー: 右ペインに切り替え
-        setActivePane(PaneType::Right);
+    const QModelIndex cur = av->currentIndex();
+    // グリッドで右端列より左、かつ最終要素でないなら横移動。
+    if (grid && cur.isValid()) {
+      const int r = cur.row();
+      const int count = model->rowCount();
+      if ((r % cols) < cols - 1 && r < count - 1) {
+        av->setCurrentIndex(model->index(r + 1, 0));
         return true;
       }
     }
+    // 右端列 / 最終要素 (または List 表示) → 従来動作。
+    //   シングル / プレビュー: 相方ペインが居ないので何もしない
+    //   右ペイン: 親ディレクトリへ / 左ペイン: 右ペインへ切り替え
+    if (!isDualPaneMode()) {
+      return true;
+    }
+    if (m_activePane == PaneType::Right) {
+      handleBackspaceKey();
+    } else {
+      setActivePane(PaneType::Right);
+    }
+    return true;
   }
 
   // Ctrl+A (Windows/Linux) or Cmd+A (Mac) for select all
@@ -738,24 +760,19 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
     return true;
   }
 
-  FileListPane* pane = activePane();
-  FileListModel* model = pane->model();
-  // List / Thumbnail の両モードで動くよう active な view を経由する。
-  // 両ビューは selectionModel を共有しているので、片方 setCurrentIndex すれば
-  // もう一方も同期する。scrollTo は active 側でしか走らないため active を使う。
-  QAbstractItemView* av = pane->activeView();
-  if (!av) av = pane->view();
-
   switch (event->key()) {
     case Qt::Key_Up: {
       QModelIndex current = av->currentIndex();
       if (!current.isValid()) {
         return true;
       }
-      int rows = model->rowCount();
-      if (current.row() > 0) {
-        av->setCurrentIndex(model->index(current.row() - 1, 0));
-      } else if (Settings::instance().cursorLoop() && rows > 0) {
+      const int rows = model->rowCount();
+      // グリッドでは 1 行 (= cols 個) 上へ。List では 1 個上へ。
+      const int step = grid ? cols : 1;
+      if (current.row() - step >= 0) {
+        av->setCurrentIndex(model->index(current.row() - step, 0));
+      } else if (!grid && Settings::instance().cursorLoop() && rows > 0) {
+        // List の最上段ループのみ維持 (グリッドの縦ループは直感的でないので無効)。
         av->setCurrentIndex(model->index(rows - 1, 0));
       }
       return true;
@@ -766,10 +783,11 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
       if (!current.isValid()) {
         return true;
       }
-      int rows = model->rowCount();
-      if (current.row() < rows - 1) {
-        av->setCurrentIndex(model->index(current.row() + 1, 0));
-      } else if (Settings::instance().cursorLoop() && rows > 0) {
+      const int rows = model->rowCount();
+      const int step = grid ? cols : 1;
+      if (current.row() + step < rows) {
+        av->setCurrentIndex(model->index(current.row() + step, 0));
+      } else if (!grid && Settings::instance().cursorLoop() && rows > 0) {
         av->setCurrentIndex(model->index(0, 0));
       }
       return true;
