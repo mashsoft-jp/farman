@@ -29,6 +29,33 @@ constexpr qreal kZoomStep    = 1.25;   // 25% ずつ
 constexpr qreal kZoomMin     = 0.10;
 constexpr qreal kZoomMax     = 8.00;
 constexpr qreal kDefaultZoom = 1.00;
+
+// ページ番号スピンボックス。一般的な PDF ビューアと同じく
+// 「↑ = 前ページ・↓ = 次ページ」になるよう、矢印キーだけ反転する。
+// QSpinBox 既定では ↑ で値 +1 (= ページ番号が増えて次ページ)・↓ で -1 と
+// なり PDF のページ送りとしては直感と逆なので、keyPressEvent を override して
+// 向きを入れ替える (▲▼ ボタンは標準動作のまま)。
+//
+// 注意: macOS では矢印キーに Qt::KeypadModifier が付く。NoModifier と厳密
+// 比較すると一致せず判定をすり抜けるため、実モディファイア (Shift / Ctrl /
+// Alt / Meta) だけを見る (Transfer/Archive 各ダイアログと同じ作法)。
+class PageSpinBox : public QSpinBox {
+public:
+  using QSpinBox::QSpinBox;
+
+protected:
+  void keyPressEvent(QKeyEvent* event) override {
+    const auto mods = event->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier
+                                            | Qt::AltModifier | Qt::MetaModifier);
+    if (mods == Qt::NoModifier
+        && (event->key() == Qt::Key_Up || event->key() == Qt::Key_Down)) {
+      stepBy(event->key() == Qt::Key_Up ? -1 : +1);
+      event->accept();
+      return;
+    }
+    QSpinBox::keyPressEvent(event);
+  }
+};
 } // namespace
 
 PdfView::PdfView(QWidget* parent) : QWidget(parent) {
@@ -56,7 +83,7 @@ void PdfView::setupUi() {
   connect(m_prevButton, &QToolButton::clicked, this, &PdfView::onPrevPage);
   m_toolbar->addWidget(m_prevButton);
 
-  m_pageSpin = new QSpinBox(m_toolbar);
+  m_pageSpin = new PageSpinBox(m_toolbar);
   m_pageSpin->setRange(1, 1);
   m_pageSpin->setValue(1);
   m_pageSpin->setFixedWidth(60);
