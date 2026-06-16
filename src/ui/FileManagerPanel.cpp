@@ -152,6 +152,14 @@ void FileManagerPanel::setupUi() {
   // hide 中なので幅 0 扱いになる)。
   m_splitter->setSizes(QList<int>() << 600 << 600 << 600);
 
+  // リサイズ時に各ペインが等しく伸縮するよう stretch を揃える。これをしないと
+  // QTableView (Expanding) のファイルペインが拡大分の余白を総取りし、起動時の
+  // 復元など「小さい幅で 50/50 を設定 → ウィンドウ拡大」の流れでプレビューが
+  // 極端に狭くなる (Linux で顕著)。
+  m_splitter->setStretchFactor(0, 1);  // 左ペイン
+  m_splitter->setStretchFactor(1, 1);  // 右ペイン
+  m_splitter->setStretchFactor(2, 1);  // プレビューペイン
+
   // 非アクティブペインのビューをマウスクリックされたら、そのペインを
   // アクティブに切り替える。QTableView はマウスイベントを viewport に
   // 配送するので、eventFilter は viewport 側に仕込む。
