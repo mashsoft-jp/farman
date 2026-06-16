@@ -208,21 +208,21 @@ private:
   PreviewPane*       m_previewPane       = nullptr;
   PreviewController* m_previewController = nullptr;
 
-  // Splitter のサイズ記憶 (Dual / Preview を独立に保存)。
-  // setLayoutMode で切替前のサイズを退避し、復帰時に元のサイズに戻す。
-  // Single は片側が hide されてサイズが歪むため記録対象外。
-  QList<int> m_savedSplitterSizesDual;
-  QList<int> m_savedSplitterSizesPreview;
+  // スプリッタの分割比を「左ペインの占有率」で 1 つ保持する。Dual / Preview
+  // で共有するので、Preview ↔ Dual を行き来しても左右 (左 / プレビュー) の比率
+  // が維持される。既定 0.5 = 50/50。
+  // 絶対 px ではなく比率で持つことで、ウィンドウリサイズや「起動時は小さい幅
+  // → 後で最終サイズ」のような状況でも、常に同じ比率を再現できる
+  // (px だと小さい幅でペイン最小幅にクランプされ比率が崩れる)。
+  double m_leftPaneFraction = 0.5;
+  bool   m_applyFractionScheduled = false;
 
-  // mode 切替時のスプリッタサイズ適用。キャッシュがあればそれを、無ければ
-  // 表示中 2 スロットへ均等配分する。均等配分が実際に ~50/50 になったか
-  // (= ペイン最小幅でクランプされていないか) を返す。
-  bool applyModeSplitSizes(LayoutMode mode);
-  // 既定 50/50 がクランプで偏ったまま確定できていないとき true。
-  // スプリッタが最終サイズに広がった Resize で再適用して 50/50 に直す。
-  // (起動時の Preview 復元はウィンドウが最終サイズになる前に走るため、
-  //  小さい幅で 50/50 を設定すると左ペイン最小幅にクランプされて狭くなる)
-  bool m_pendingDefaultSplit = false;
+  // 現在のスプリッタサイズから m_leftPaneFraction を更新 (ユーザーのドラッグ時)。
+  void updateFractionFromSizes();
+  // m_leftPaneFraction を現在のスプリッタ幅に適用する。
+  void applyFraction();
+  // 次のイベントループで applyFraction() を実行 (Resize 後に確実に効かせる)。
+  void scheduleApplyFraction();
 
   // ── Sync Browse ─────────────────────
   // ON/OFF はメニュー (View → Sync Browse) または `y` キーで切替。

@@ -40,6 +40,8 @@
 #include <QLocale>
 #include <QSet>
 #include <QSplitter>
+#include <QSplitterHandle>
+#include <QTimer>
 #include <QTemporaryDir>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -160,9 +162,15 @@ void FileManagerPanel::setupUi() {
   m_splitter->setStretchFactor(1, 1);  // 右ペイン
   m_splitter->setStretchFactor(2, 1);  // プレビューペイン
 
-  // スプリッタが最終サイズに広がった瞬間を捕まえて、保留中の既定 50/50 を
-  // 再適用する (起動時の Preview 復元対策。下の eventFilter 参照)。
+  // スプリッタの Resize を捕まえて分割比を適用し直す (起動時に小さい幅で
+  // 設定された比率を、最終サイズに広がってから正す)。下の eventFilter 参照。
   m_splitter->installEventFilter(this);
+  // ユーザーが区切りをドラッグしたら比率を覚える。
+  connect(m_splitter, &QSplitter::splitterMoved, this,
+          [this](int, int) { updateFractionFromSizes(); });
+  // 区切りのダブルクリックで 50/50 に戻す (handle に eventFilter を仕掛ける)。
+  if (auto* h = m_splitter->handle(1)) h->installEventFilter(this);
+  if (auto* h = m_splitter->handle(2)) h->installEventFilter(this);
 
   // 非アクティブペインのビューをマウスクリックされたら、そのペインを
   // アクティブに切り替える。QTableView はマウスイベントを viewport に
@@ -660,16 +668,20 @@ void FileManagerPanel::syncOtherToActive() {
 }
 
 bool FileManagerPanel::eventFilter(QObject* watched, QEvent* event) {
-  // スプリッタが最終サイズに広がったら、保留中の既定 50/50 を再適用する。
-  // 起動時の Preview 復元はウィンドウが最終サイズになる前に走るため、その
-  // 時点の小さい幅で 50/50 を設定すると左ペイン最小幅にクランプされて
-  // プレビューが狭くなる。広がった幅で適用し直せばクランプされず 50/50 になる。
+  // 区切り (QSplitterHandle) のダブルクリックで 50/50 に戻す。
+  if (event->type() == QEvent::MouseButtonDblClick
+      && qobject_cast<QSplitterHandle*>(watched)) {
+    m_leftPaneFraction = 0.5;
+    applyFraction();
+    return true;
+  }
+
+  // スプリッタがリサイズされたら分割比を適用し直す。Resize ハンドラより後の
+  // QSplitter 自身の再配分で上書きされないよう、次のイベントループに遅延させる。
+  // 起動時は Preview 復元がウィンドウ最終サイズより前に走り、その時点では幅 0 で
+  // applyFraction が効かないが、ここでの遅延適用が最終サイズで確実に効く。
   if (watched == m_splitter && event->type() == QEvent::Resize) {
-    if (m_pendingDefaultSplit && m_layoutMode != LayoutMode::Single) {
-      if (applyModeSplitSizes(m_layoutMode)) {
-        m_pendingDefaultSplit = false;
-      }
-    }
+    scheduleApplyFraction();
     return QWidget::eventFilter(watched, event);
   }
 
@@ -1269,39 +1281,44 @@ void FileManagerPanel::setSinglePaneMode(bool single) {
   setLayoutMode(single ? LayoutMode::Single : LayoutMode::Dual);
 }
 
-bool FileManagerPanel::applyModeSplitSizes(LayoutMode mode) {
-  if (!m_splitter) return true;
-
-  // キャッシュがあればそれを適用 (= ユーザーが調整した比率。確定扱い)。
-  if (mode == LayoutMode::Dual && !m_savedSplitterSizesDual.isEmpty()) {
-    m_splitter->setSizes(m_savedSplitterSizesDual);
-    return true;
+void FileManagerPanel::updateFractionFromSizes() {
+  if (!m_splitter) return;
+  // 表示中の右スロット (Dual=右ペイン / Preview=プレビュー) を可視状態で判定する。
+  // setLayoutMode の保存タイミングでは m_layoutMode は既に新モードだが表示は
+  // まだ旧モードなので、m_layoutMode ではなく isVisible() で見るのが正しい。
+  const QList<int> sizes = m_splitter->sizes();
+  const int left = sizes.value(0);
+  int right = 0;
+  if (m_previewPane && m_previewPane->isVisible())      right = sizes.value(2);
+  else if (m_rightPane && m_rightPane->isVisible())     right = sizes.value(1);
+  else return;  // Single (片側のみ表示): 比率は更新しない
+  const int visible = left + right;
+  if (visible > 0) {
+    m_leftPaneFraction = qBound(0.1, static_cast<double>(left) / visible, 0.9);
   }
-  if (mode == LayoutMode::Preview && !m_savedSplitterSizesPreview.isEmpty()) {
-    m_splitter->setSizes(m_savedSplitterSizesPreview);
-    return true;
-  }
+}
 
-  // 既定: 表示中の 2 スロットに均等配分 (非表示スロットは 0)。
-  int total = m_splitter->width();
-  if (total <= 0) total = 1200;  // 未レイアウト時のフォールバック
-  const int half = total / 2;
+void FileManagerPanel::applyFraction() {
+  if (!m_splitter || m_layoutMode == LayoutMode::Single) return;
+  const int total = m_splitter->width();
+  if (total <= 0) return;  // 未レイアウト時は適用しない (Resize で再適用される)
+  const int leftW = qRound(total * m_leftPaneFraction);
   QList<int> sizes;
-  if (mode == LayoutMode::Dual) {
-    sizes = QList<int>() << half << (total - half) << 0;   // 左 | 右 | (preview)
+  if (m_layoutMode == LayoutMode::Dual) {
+    sizes = QList<int>() << leftW << (total - leftW) << 0;   // 左 | 右 | (preview)
   } else {  // Preview
-    sizes = QList<int>() << half << 0 << (total - half);   // 左 | (right) | preview
+    sizes = QList<int>() << leftW << 0 << (total - leftW);   // 左 | (right) | preview
   }
   m_splitter->setSizes(sizes);
+}
 
-  // 実際に ~50/50 になったか確認する。スプリッタ幅が小さいと左 (ファイル) ペイン
-  // の最小幅でクランプされ、もう片方が極端に狭くなる。その場合は「未確定」を
-  // 返し、後で広い幅で再適用させる。
-  const QList<int> applied = m_splitter->sizes();
-  const int a = applied.value(0);
-  const int b = (mode == LayoutMode::Dual) ? applied.value(1) : applied.value(2);
-  const int visible = a + b;
-  return visible > 0 && static_cast<double>(qMin(a, b)) / visible >= 0.4;
+void FileManagerPanel::scheduleApplyFraction() {
+  if (m_applyFractionScheduled) return;
+  m_applyFractionScheduled = true;
+  QTimer::singleShot(0, this, [this]() {
+    m_applyFractionScheduled = false;
+    applyFraction();
+  });
 }
 
 void FileManagerPanel::setLayoutMode(LayoutMode mode) {
@@ -1322,13 +1339,11 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
     stopDirectoryCompare();
   }
 
-  // ── Splitter サイズ記憶 (Dual / Preview を独立に保存) ──
-  // 切替前のサイズをモード別キャッシュに退避してから、切替先のキャッシュを
-  // 復元する。Single は片側が非表示なので Splitter サイズ記憶は不要。
-  if (m_splitter) {
-    const QList<int> sizes = m_splitter->sizes();
-    if (prev == LayoutMode::Dual)         m_savedSplitterSizesDual    = sizes;
-    else if (prev == LayoutMode::Preview) m_savedSplitterSizesPreview = sizes;
+  // 分割比 (m_leftPaneFraction) は Dual / Preview で共有する。切替前に現在の
+  // サイズから比率を覚えておき、切替後に同じ比率を適用することで、Preview ↔
+  // Dual を行き来しても左右 (左 / プレビュー) の比率が維持される。
+  if (m_splitter && prev != LayoutMode::Single) {
+    updateFractionFromSizes();
   }
 
   // ── ウィジェットの可視性 ──
@@ -1362,18 +1377,13 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
       break;
   }
 
-  // 切替先のサイズを適用。記憶済みキャッシュがあればそれを、無ければ表示中の
-  // スロットへ均等配分する既定サイズを使う。
-  // 自動レイアウト任せ (旧実装) だと、構築時に hide 状態 = 幅 0 扱いだった
-  // PreviewPane が show() 後も 0 幅のままになり (特に Linux/X11)、「プレビューが
-  // 出ずファイルビューが全幅」になることがある。初回でも明示的にサイズを与える。
-  // 既定 50/50 が小さい幅でクランプされて偏った場合は m_pendingDefaultSplit を
-  // 立て、スプリッタが最終サイズに広がった Resize で再適用する (eventFilter)。
-  if (m_splitter && mode != LayoutMode::Single) {
-    m_pendingDefaultSplit = !applyModeSplitSizes(mode);
-  } else {
-    m_pendingDefaultSplit = false;
-  }
+  // 切替先のサイズを適用。保持している分割比 (m_leftPaneFraction) を現在の幅に
+  // 当てはめる。これで PreviewPane が 0 幅のまま (特に Linux/X11) や全幅になる
+  // 不具合を防ぎ、Dual ↔ Preview で比率も維持される。起動時の Preview 復元では
+  // この時点でまだ幅 0 のことがあるが、その場合は applyFraction が何もせず、
+  // スプリッタが最終サイズに広がった Resize (scheduleApplyFraction) で確実に
+  // 適用される。
+  applyFraction();
 
   // 列表示・size/mtime のフォーマットは「ペインが全幅かどうか」で決まる。
   // Single だけが全幅 (= 広い表示)。Dual / Preview はどちらも半幅 (= 狭い)。
