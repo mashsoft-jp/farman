@@ -214,6 +214,16 @@ private:
   QList<int> m_savedSplitterSizesDual;
   QList<int> m_savedSplitterSizesPreview;
 
+  // mode 切替時のスプリッタサイズ適用。キャッシュがあればそれを、無ければ
+  // 表示中 2 スロットへ均等配分する。均等配分が実際に ~50/50 になったか
+  // (= ペイン最小幅でクランプされていないか) を返す。
+  bool applyModeSplitSizes(LayoutMode mode);
+  // 既定 50/50 がクランプで偏ったまま確定できていないとき true。
+  // スプリッタが最終サイズに広がった Resize で再適用して 50/50 に直す。
+  // (起動時の Preview 復元はウィンドウが最終サイズになる前に走るため、
+  //  小さい幅で 50/50 を設定すると左ペイン最小幅にクランプされて狭くなる)
+  bool m_pendingDefaultSplit = false;
+
   // ── Sync Browse ─────────────────────
   // ON/OFF はメニュー (View → Sync Browse) または `y` キーで切替。
   // アンカー (起点) は持たず、片方のペインがディレクトリを移動した瞬間に

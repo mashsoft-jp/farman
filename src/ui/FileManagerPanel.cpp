@@ -160,6 +160,10 @@ void FileManagerPanel::setupUi() {
   m_splitter->setStretchFactor(1, 1);  // 右ペイン
   m_splitter->setStretchFactor(2, 1);  // プレビューペイン
 
+  // スプリッタが最終サイズに広がった瞬間を捕まえて、保留中の既定 50/50 を
+  // 再適用する (起動時の Preview 復元対策。下の eventFilter 参照)。
+  m_splitter->installEventFilter(this);
+
   // 非アクティブペインのビューをマウスクリックされたら、そのペインを
   // アクティブに切り替える。QTableView はマウスイベントを viewport に
   // 配送するので、eventFilter は viewport 側に仕込む。
@@ -656,6 +660,19 @@ void FileManagerPanel::syncOtherToActive() {
 }
 
 bool FileManagerPanel::eventFilter(QObject* watched, QEvent* event) {
+  // スプリッタが最終サイズに広がったら、保留中の既定 50/50 を再適用する。
+  // 起動時の Preview 復元はウィンドウが最終サイズになる前に走るため、その
+  // 時点の小さい幅で 50/50 を設定すると左ペイン最小幅にクランプされて
+  // プレビューが狭くなる。広がった幅で適用し直せばクランプされず 50/50 になる。
+  if (watched == m_splitter && event->type() == QEvent::Resize) {
+    if (m_pendingDefaultSplit && m_layoutMode != LayoutMode::Single) {
+      if (applyModeSplitSizes(m_layoutMode)) {
+        m_pendingDefaultSplit = false;
+      }
+    }
+    return QWidget::eventFilter(watched, event);
+  }
+
   if (event->type() == QEvent::MouseButtonPress) {
     // クリックされた viewport がどちらのペインかを判定して、非アクティブ側
     // だった場合はそのペインをアクティブに切り替える。実際のクリック
@@ -1252,6 +1269,41 @@ void FileManagerPanel::setSinglePaneMode(bool single) {
   setLayoutMode(single ? LayoutMode::Single : LayoutMode::Dual);
 }
 
+bool FileManagerPanel::applyModeSplitSizes(LayoutMode mode) {
+  if (!m_splitter) return true;
+
+  // キャッシュがあればそれを適用 (= ユーザーが調整した比率。確定扱い)。
+  if (mode == LayoutMode::Dual && !m_savedSplitterSizesDual.isEmpty()) {
+    m_splitter->setSizes(m_savedSplitterSizesDual);
+    return true;
+  }
+  if (mode == LayoutMode::Preview && !m_savedSplitterSizesPreview.isEmpty()) {
+    m_splitter->setSizes(m_savedSplitterSizesPreview);
+    return true;
+  }
+
+  // 既定: 表示中の 2 スロットに均等配分 (非表示スロットは 0)。
+  int total = m_splitter->width();
+  if (total <= 0) total = 1200;  // 未レイアウト時のフォールバック
+  const int half = total / 2;
+  QList<int> sizes;
+  if (mode == LayoutMode::Dual) {
+    sizes = QList<int>() << half << (total - half) << 0;   // 左 | 右 | (preview)
+  } else {  // Preview
+    sizes = QList<int>() << half << 0 << (total - half);   // 左 | (right) | preview
+  }
+  m_splitter->setSizes(sizes);
+
+  // 実際に ~50/50 になったか確認する。スプリッタ幅が小さいと左 (ファイル) ペイン
+  // の最小幅でクランプされ、もう片方が極端に狭くなる。その場合は「未確定」を
+  // 返し、後で広い幅で再適用させる。
+  const QList<int> applied = m_splitter->sizes();
+  const int a = applied.value(0);
+  const int b = (mode == LayoutMode::Dual) ? applied.value(1) : applied.value(2);
+  const int visible = a + b;
+  return visible > 0 && static_cast<double>(qMin(a, b)) / visible >= 0.4;
+}
+
 void FileManagerPanel::setLayoutMode(LayoutMode mode) {
   const LayoutMode prev = m_layoutMode;
   if (prev == mode) return;
@@ -1315,25 +1367,12 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
   // 自動レイアウト任せ (旧実装) だと、構築時に hide 状態 = 幅 0 扱いだった
   // PreviewPane が show() 後も 0 幅のままになり (特に Linux/X11)、「プレビューが
   // 出ずファイルビューが全幅」になることがある。初回でも明示的にサイズを与える。
+  // 既定 50/50 が小さい幅でクランプされて偏った場合は m_pendingDefaultSplit を
+  // 立て、スプリッタが最終サイズに広がった Resize で再適用する (eventFilter)。
   if (m_splitter && mode != LayoutMode::Single) {
-    QList<int> sizes;
-    if (mode == LayoutMode::Dual && !m_savedSplitterSizesDual.isEmpty()) {
-      sizes = m_savedSplitterSizesDual;
-    } else if (mode == LayoutMode::Preview
-               && !m_savedSplitterSizesPreview.isEmpty()) {
-      sizes = m_savedSplitterSizesPreview;
-    } else {
-      // 既定: 表示中の 2 スロットに均等配分 (非表示スロットは 0)。
-      int total = m_splitter->width();
-      if (total <= 0) total = 1200;  // 未レイアウト時のフォールバック
-      const int half = total / 2;
-      if (mode == LayoutMode::Dual) {
-        sizes = QList<int>() << half << (total - half) << 0;          // 左 | 右 | (preview)
-      } else {  // Preview
-        sizes = QList<int>() << half << 0 << (total - half);          // 左 | (right) | preview
-      }
-    }
-    m_splitter->setSizes(sizes);
+    m_pendingDefaultSplit = !applyModeSplitSizes(mode);
+  } else {
+    m_pendingDefaultSplit = false;
   }
 
   // 列表示・size/mtime のフォーマットは「ペインが全幅かどうか」で決まる。
