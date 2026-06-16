@@ -1302,15 +1302,30 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
       break;
   }
 
-  // 切替先のキャッシュサイズを適用 (空のときは未介入、Splitter 自身の
-  // 自動レイアウトに任せる)。
-  if (m_splitter) {
+  // 切替先のサイズを適用。記憶済みキャッシュがあればそれを、無ければ表示中の
+  // スロットへ均等配分する既定サイズを使う。
+  // 自動レイアウト任せ (旧実装) だと、構築時に hide 状態 = 幅 0 扱いだった
+  // PreviewPane が show() 後も 0 幅のままになり (特に Linux/X11)、「プレビューが
+  // 出ずファイルビューが全幅」になることがある。初回でも明示的にサイズを与える。
+  if (m_splitter && mode != LayoutMode::Single) {
+    QList<int> sizes;
     if (mode == LayoutMode::Dual && !m_savedSplitterSizesDual.isEmpty()) {
-      m_splitter->setSizes(m_savedSplitterSizesDual);
+      sizes = m_savedSplitterSizesDual;
     } else if (mode == LayoutMode::Preview
                && !m_savedSplitterSizesPreview.isEmpty()) {
-      m_splitter->setSizes(m_savedSplitterSizesPreview);
+      sizes = m_savedSplitterSizesPreview;
+    } else {
+      // 既定: 表示中の 2 スロットに均等配分 (非表示スロットは 0)。
+      int total = m_splitter->width();
+      if (total <= 0) total = 1200;  // 未レイアウト時のフォールバック
+      const int half = total / 2;
+      if (mode == LayoutMode::Dual) {
+        sizes = QList<int>() << half << (total - half) << 0;          // 左 | 右 | (preview)
+      } else {  // Preview
+        sizes = QList<int>() << half << 0 << (total - half);          // 左 | (right) | preview
+      }
     }
+    m_splitter->setSizes(sizes);
   }
 
   // 列表示・size/mtime のフォーマットは「ペインが全幅かどうか」で決まる。
