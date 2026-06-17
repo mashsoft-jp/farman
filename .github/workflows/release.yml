@@ -497,12 +497,18 @@ jobs:
           # (MediaViewerPlugin.so の動画 / 音声再生に必要)。
           export EXTRA_QT_PLUGINS="multimedia"
 
+          # MediaViewerPlugin.so は QPluginLoader で動的ロードされるため
+          # linuxdeploy の依存スキャン (本体 exe + EXTRA_QT_PLUGINS) に乗らず、
+          # それだけが必要とする libQt6MultimediaWidgets が取りこぼされていた
+          # (結果 Linux でメディアプラグインがロード失敗し mp3/mp4 が再生不可)。
+          # --deploy-deps-only でプラグイン本体はコピーせず依存だけ取り込ませる。
           export OUTPUT=farman-x86_64.AppImage
           ./linuxdeploy-x86_64.AppImage \
             --appdir AppDir \
             -e build/farman \
             -i farman.png \
             -d linux/farman.desktop \
+            --deploy-deps-only AppDir/usr/plugins/viewers/MediaViewerPlugin.so \
             --plugin qt \
             --output appimage
           ls -la farman-x86_64.AppImage
