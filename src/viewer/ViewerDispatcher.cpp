@@ -270,29 +270,35 @@ IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
         .arg(extension, preferredPluginId));
   }
 
-  // 対応するプラグインのうち優先度が最も高い (= priority 値が最小の) ものを
-  // 選ぶ。同点なら先に登録されたものを使う。
-  IViewerPlugin* bestMatch = nullptr;
-  int bestPriority = std::numeric_limits<int>::max();
+  // 対応プラグインの選択は 2 段階。いずれも優先度が最も高い (= priority 値が
+  // 最小の) ものを選び、同点なら先に登録されたものを使う。
+  //   1. 拡張子で明示的に対応宣言しているプラグイン (最優先)
+  //   2. (1 が無ければ) canHandle が true のプラグイン
+  // 拡張子一致を MIME 一致より優先するのは、内容スニッフが当てにならない
+  // ケースへの対策。例: HEIC は MP4/MOV と同じ ISO BMFF コンテナなので、
+  // 拡張子から MIME を確定できない環境 (Windows 等) では内容スニッフで
+  // video/mp4 と誤判定され、media_viewer (高優先度) に静止画が奪われていた。
+  IViewerPlugin* bestByExt   = nullptr;  int bestExtPrio   = std::numeric_limits<int>::max();
+  IViewerPlugin* bestByMatch = nullptr;  int bestMatchPrio = std::numeric_limits<int>::max();
 
   for (const auto& plugin : m_plugins) {
-    // Check if plugin can handle this file
-    if (plugin->canHandle(filePath)) {
-      if (plugin->priority() < bestPriority) {
-        bestMatch = plugin.get();
-        bestPriority = plugin->priority();
+    const bool extMatch =
+      !extension.isEmpty()
+      && plugin->supportedExtensions().contains(extension, Qt::CaseInsensitive);
+    if (extMatch) {
+      if (plugin->priority() < bestExtPrio) {
+        bestByExt = plugin.get();
+        bestExtPrio = plugin->priority();
       }
-    } else if (!extension.isEmpty() &&
-               plugin->supportedExtensions().contains(extension, Qt::CaseInsensitive)) {
-      // Check by extension
-      if (plugin->priority() < bestPriority) {
-        bestMatch = plugin.get();
-        bestPriority = plugin->priority();
+    } else if (plugin->canHandle(filePath)) {
+      if (plugin->priority() < bestMatchPrio) {
+        bestByMatch = plugin.get();
+        bestMatchPrio = plugin->priority();
       }
     }
   }
 
-  return bestMatch;
+  return bestByExt ? bestByExt : bestByMatch;
 }
 
 QWidget* ViewerDispatcher::createViewer(

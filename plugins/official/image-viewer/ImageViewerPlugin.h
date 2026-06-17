@@ -23,7 +23,11 @@ public:
   QStringList supportedExtensions() const override {
     return {
       "png", "jpg", "jpeg", "gif", "bmp",
-      "svg", "webp", "ico", "tiff", "tif"
+      "svg", "webp", "ico", "tiff", "tif",
+      // HEIC / HEIF は MP4/MOV と同じ ISO BMFF コンテナのため、拡張子で
+      // 明示宣言しておかないと内容スニッフで動画扱いされ media_viewer に
+      // 奪われる (resolvePlugin が拡張子一致を最優先するので静止画へ回る)。
+      "heic", "heif"
     };
   }
 
@@ -36,7 +40,9 @@ public:
       "image/svg+xml",
       "image/webp",
       "image/x-icon",
-      "image/tiff"
+      "image/tiff",
+      "image/heic",
+      "image/heif"
     };
   }
 
