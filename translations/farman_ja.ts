@@ -5055,53 +5055,277 @@ Reason: %1</source>
 <context>
     <name>Farman::MediaView</name>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="104"/>
+        <location filename="../src/viewer/MediaView.cpp" line="111"/>
         <source>Play / Pause (Space)</source>
         <translation>再生 / 一時停止 (Space)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="112"/>
+        <location filename="../src/viewer/MediaView.cpp" line="119"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="137"/>
+        <location filename="../src/viewer/MediaView.cpp" line="144"/>
         <source>Loop playback (L)</source>
         <translation>ループ再生 (L)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="150"/>
+        <location filename="../src/viewer/MediaView.cpp" line="157"/>
         <source>Playback speed</source>
         <translation>再生速度</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="159"/>
+        <location filename="../src/viewer/MediaView.cpp" line="166"/>
         <source>Mute (M)</source>
         <translation>ミュート (M)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="172"/>
+        <location filename="../src/viewer/MediaView.cpp" line="179"/>
         <source>Volume (Up/Down)</source>
         <translation>音量 (Up/Down)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="179"/>
+        <location filename="../src/viewer/MediaView.cpp" line="186"/>
         <source>Full screen (F / double-click, Esc to exit)</source>
         <translation>フルスクリーン (F / ダブルクリック、Esc で解除)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="232"/>
+        <location filename="../src/viewer/MediaView.cpp" line="202"/>
+        <source>Show media information / metadata (I)</source>
+        <translation>メディア情報 / メタデータを表示 (I)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="255"/>
         <source>Cannot play this file.
 The format or codec is not supported on this platform.</source>
         <translation>このファイルは再生できません。
 このプラットフォームではフォーマットまたはコーデックが未対応です。</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="242"/>
+        <location filename="../src/viewer/MediaView.cpp" line="265"/>
         <source>Failed to load media:
 %1</source>
         <translation>メディアの読み込みに失敗しました:
 %1</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="480"/>
+        <source>Media Information</source>
+        <translation>メディア情報</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="518"/>
+        <source>Album artist</source>
+        <translation>アルバムアーティスト</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="519"/>
+        <source>Lead performer</source>
+        <translation>主演者</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="521"/>
+        <source>Track number</source>
+        <translation>トラック番号</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="526"/>
+        <source>Description</source>
+        <translation>説明</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="528"/>
+        <source>Author</source>
+        <translation>作成者</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="529"/>
+        <source>Publisher</source>
+        <translation>発行元</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="530"/>
+        <source>Language</source>
+        <translation>言語</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="531"/>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="532"/>
+        <source>Orientation</source>
+        <translation>向き</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="533"/>
+        <source>Media type</source>
+        <translation>メディア種別</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="556"/>
+        <source>(embedded)</source>
+        <translation>(埋め込み)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="592"/>
+        <source>File: %1</source>
+        <translation>ファイル: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="603"/>
+        <source>Seekable</source>
+        <translation>シーク可能</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="604"/>
+        <source>Yes</source>
+        <translation>はい</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="604"/>
+        <source>No</source>
+        <translation>いいえ</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="611"/>
+        <source>--- Metadata ---</source>
+        <translation>--- メタデータ ---</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="625"/>
+        <source>--- Audio track %1 ---</source>
+        <translation>--- 音声トラック %1 ---</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="626"/>
+        <source>--- Video track %1 ---</source>
+        <translation>--- 映像トラック %1 ---</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="627"/>
+        <source>--- Subtitle track %1 ---</source>
+        <translation>--- 字幕トラック %1 ---</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="534"/>
+        <source>Format</source>
+        <translation>形式</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="596"/>
+        <source>Type</source>
+        <translation>種類</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="597"/>
+        <source>Video</source>
+        <translation>動画</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="597"/>
+        <source>Audio</source>
+        <translation>音声</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="600"/>
+        <source>Duration</source>
+        <translation>再生時間</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="593"/>
+        <source>File size</source>
+        <translation>ファイルサイズ</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="537"/>
+        <source>Resolution</source>
+        <translation>解像度</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="561"/>
+        <source>%1 x %2 px</source>
+        <translation>%1 x %2 px</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="535"/>
+        <source>Video codec</source>
+        <translation>映像コーデック</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="538"/>
+        <source>Frame rate</source>
+        <translation>フレームレート</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="567"/>
+        <source>%1 fps</source>
+        <translation>%1 fps</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="539"/>
+        <source>Video bit rate</source>
+        <translation>映像ビットレート</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="573"/>
+        <source>%1 kbps</source>
+        <translation>%1 kbps</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="536"/>
+        <source>Audio codec</source>
+        <translation>音声コーデック</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="540"/>
+        <source>Audio bit rate</source>
+        <translation>音声ビットレート</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="516"/>
+        <source>Title</source>
+        <translation>タイトル</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="517"/>
+        <source>Artist</source>
+        <translation>アーティスト</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="520"/>
+        <source>Album</source>
+        <translation>アルバム</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="522"/>
+        <source>Genre</source>
+        <translation>ジャンル</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="523"/>
+        <source>Date</source>
+        <translation>日付</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="524"/>
+        <source>Composer</source>
+        <translation>作曲者</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="525"/>
+        <source>Comment</source>
+        <translation>コメント</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="527"/>
+        <source>Copyright</source>
+        <translation>著作権</translation>
+    </message>
+    <message>
+        <source>--- Tags ---</source>
+        <translation type="vanished">--- タグ ---</translation>
     </message>
 </context>
 <context>

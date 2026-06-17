@@ -6,6 +6,8 @@
 class QAction;
 class QAudioOutput;
 class QComboBox;
+class QDialog;
+class QMediaMetaData;
 class QLabel;
 class QSlider;
 class QStackedWidget;
@@ -30,6 +32,7 @@ class EnterClickFilter;
 //   ↑/↓         音量 ±5
 //   M            ミュート切替
 //   L            ループ再生切替
+//   I            メディア情報 / メタデータの表示切替
 //   F / ダブルクリック  フルスクリーン切替 (動画のみ。Esc で解除)
 class MediaView : public QWidget {
   Q_OBJECT
@@ -70,6 +73,15 @@ private:
   void updateMetadataCard();
   void updateCurrentPage();
 
+  // メディア情報 / メタデータダイアログ (ImageView の情報表示と同じ作法)。
+  void toggleMediaInfoDialog();
+  void refreshMediaInfoDialog();
+  QString buildMediaInfoText() const;
+  // 1 つの QMediaMetaData が持つ全キーを body へ追記する (取得できた分だけ)。
+  // 既知キーは日本語ラベル、未知キーは Qt のキー名で表示する。
+  void appendMetaData(QString& body, const QMediaMetaData& md,
+                      const QString& indent) const;
+
   QString formatTime(qint64 ms) const;
 
   QString m_filePath;
@@ -97,6 +109,8 @@ private:
   QToolButton* m_muteButton       = nullptr;
   QSlider*     m_volumeSlider     = nullptr;
   QToolButton* m_fullScreenButton = nullptr;
+  QToolButton* m_infoButton        = nullptr;
+  QDialog*     m_infoDialog         = nullptr;  // モードレス。WA_DeleteOnClose=false
   // QToolBar::addWidget が返す QAction。ツールバー内ウィジェットの表示 /
   // 非表示はウィジェット直接ではなくこの action で切り替える必要がある。
   QAction*     m_fullScreenAction = nullptr;

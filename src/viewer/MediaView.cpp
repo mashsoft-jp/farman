@@ -4,10 +4,17 @@
 #include <QAudio>
 #include <QAudioOutput>
 #include <QComboBox>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QFileInfo>
+#include <QFont>
+#include <QFontDatabase>
+#include <QHash>
 #include <QKeyEvent>
 #include <QLabel>
+#include <QLocale>
 #include <QMediaMetaData>
+#include <QPlainTextEdit>
 #include <QSlider>
 #include <QStackedWidget>
 #include <QToolBar>
@@ -185,6 +192,19 @@ void MediaView::setupUi() {
   // 動画のあるファイルでのみ表示 (updateCurrentPage で切替)。
   m_fullScreenAction->setVisible(false);
 
+  // 情報 (メタデータ) ボタン。ImageView と同じく斜体太字の "i"。
+  m_infoButton = new QToolButton(m_toolbar);
+  m_infoButton->setText(QStringLiteral("i"));
+  QFont infoFont = m_infoButton->font();
+  infoFont.setItalic(true);
+  infoFont.setBold(true);
+  m_infoButton->setFont(infoFont);
+  m_infoButton->setToolTip(tr("Show media information / metadata (I)"));
+  m_infoButton->setFocusPolicy(Qt::StrongFocus);
+  connect(m_infoButton, &QToolButton::clicked,
+          this,         &MediaView::toggleMediaInfoDialog);
+  m_toolbar->addWidget(m_infoButton);
+
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
@@ -197,6 +217,7 @@ void MediaView::setupUi() {
   setTabOrder(m_loopButton, m_rateCombo);
   setTabOrder(m_rateCombo,  m_muteButton);
   setTabOrder(m_muteButton, m_fullScreenButton);
+  setTabOrder(m_fullScreenButton, m_infoButton);
 
   // ツールバー内ボタンで Tab フォーカス中に Enter を押したらクリック扱いに
   // する (親の「Enter で戻る」が誤発火しないように)。ImageView と同じ。
@@ -214,6 +235,8 @@ void MediaView::setupUi() {
     m_positionSlider->setRange(0, int(dur));
     m_positionSlider->setEnabled(dur > 0);
     updateTimeLabel();
+    // duration はメタデータより後に確定することがあるので情報も更新する。
+    refreshMediaInfoDialog();
   });
   connect(m_player, &QMediaPlayer::playbackStateChanged,
           this,     &MediaView::updatePlayButton);
@@ -309,6 +332,9 @@ bool MediaView::handleViewerKey(QKeyEvent* event) {
       return true;
     case Qt::Key_L:
       m_loopButton->toggle();
+      return true;
+    case Qt::Key_I:
+      toggleMediaInfoDialog();
       return true;
     case Qt::Key_F:
       if (m_player->hasVideo()) {
@@ -437,6 +463,170 @@ void MediaView::updateMetadataCard() {
     m_coverLabel->setFont(noteFont);
     m_coverLabel->setText(QStringLiteral("♪"));
   }
+
+  // 情報ダイアログが開いていればメタデータ更新に追従させる。
+  refreshMediaInfoDialog();
+}
+
+void MediaView::toggleMediaInfoDialog() {
+  if (m_filePath.isEmpty()) return;
+  // 表示中ならトグルで閉じる。
+  if (m_infoDialog && m_infoDialog->isVisible()) {
+    m_infoDialog->close();
+    return;
+  }
+  if (!m_infoDialog) {
+    m_infoDialog = new QDialog(this);
+    m_infoDialog->setWindowTitle(tr("Media Information"));
+    m_infoDialog->setAttribute(Qt::WA_DeleteOnClose, false);
+    m_infoDialog->resize(560, 420);
+
+    auto* layout = new QVBoxLayout(m_infoDialog);
+    auto* edit = new QPlainTextEdit(m_infoDialog);
+    edit->setObjectName(QStringLiteral("mediaInfoEdit"));
+    edit->setReadOnly(true);
+    edit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    layout->addWidget(edit);
+
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, m_infoDialog);
+    connect(buttons, &QDialogButtonBox::rejected, m_infoDialog, &QDialog::close);
+    layout->addWidget(buttons);
+  }
+  if (auto* edit = m_infoDialog->findChild<QPlainTextEdit*>(
+        QStringLiteral("mediaInfoEdit"))) {
+    edit->setPlainText(buildMediaInfoText());
+  }
+  m_infoDialog->show();
+  m_infoDialog->raise();
+  m_infoDialog->activateWindow();
+}
+
+void MediaView::refreshMediaInfoDialog() {
+  if (!m_infoDialog || !m_infoDialog->isVisible()) return;
+  if (auto* edit = m_infoDialog->findChild<QPlainTextEdit*>(
+        QStringLiteral("mediaInfoEdit"))) {
+    edit->setPlainText(buildMediaInfoText());
+  }
+}
+
+void MediaView::appendMetaData(QString& body, const QMediaMetaData& md,
+                               const QString& indent) const {
+  // 既知キーは日本語ラベル、未知キーは Qt のキー名で表示する。
+  const QHash<QMediaMetaData::Key, QString> labels = {
+    {QMediaMetaData::Title,              tr("Title")},
+    {QMediaMetaData::ContributingArtist, tr("Artist")},
+    {QMediaMetaData::AlbumArtist,        tr("Album artist")},
+    {QMediaMetaData::LeadPerformer,      tr("Lead performer")},
+    {QMediaMetaData::AlbumTitle,         tr("Album")},
+    {QMediaMetaData::TrackNumber,        tr("Track number")},
+    {QMediaMetaData::Genre,              tr("Genre")},
+    {QMediaMetaData::Date,               tr("Date")},
+    {QMediaMetaData::Composer,           tr("Composer")},
+    {QMediaMetaData::Comment,            tr("Comment")},
+    {QMediaMetaData::Description,         tr("Description")},
+    {QMediaMetaData::Copyright,          tr("Copyright")},
+    {QMediaMetaData::Author,             tr("Author")},
+    {QMediaMetaData::Publisher,          tr("Publisher")},
+    {QMediaMetaData::Language,           tr("Language")},
+    {QMediaMetaData::Url,                tr("URL")},
+    {QMediaMetaData::Orientation,        tr("Orientation")},
+    {QMediaMetaData::MediaType,          tr("Media type")},
+    {QMediaMetaData::FileFormat,         tr("Format")},
+    {QMediaMetaData::VideoCodec,         tr("Video codec")},
+    {QMediaMetaData::AudioCodec,         tr("Audio codec")},
+    {QMediaMetaData::Resolution,         tr("Resolution")},
+    {QMediaMetaData::VideoFrameRate,     tr("Frame rate")},
+    {QMediaMetaData::VideoBitRate,       tr("Video bit rate")},
+    {QMediaMetaData::AudioBitRate,       tr("Audio bit rate")},
+  };
+
+  const QList<QMediaMetaData::Key> keys = md.keys();
+  for (QMediaMetaData::Key key : keys) {
+    // Duration は上部でプレイヤー値を表示するので重複を避ける。
+    if (key == QMediaMetaData::Duration) continue;
+
+    const QString label =
+      labels.value(key, QMediaMetaData::metaDataKeyToString(key));
+
+    QString value;
+    switch (key) {
+      case QMediaMetaData::CoverArtImage:
+      case QMediaMetaData::ThumbnailImage:
+        // バイナリ画像はテキストに出さず存在のみ示す。
+        value = tr("(embedded)");
+        break;
+      case QMediaMetaData::Resolution: {
+        const QSize sz = md.value(key).toSize();
+        if (sz.isValid() && sz.width() > 0 && sz.height() > 0) {
+          value = tr("%1 x %2 px").arg(sz.width()).arg(sz.height());
+        }
+        break;
+      }
+      case QMediaMetaData::VideoFrameRate: {
+        const double fr = md.value(key).toDouble();
+        if (fr > 0.0) value = tr("%1 fps").arg(QString::number(fr, 'g', 4));
+        break;
+      }
+      case QMediaMetaData::VideoBitRate:
+      case QMediaMetaData::AudioBitRate: {
+        const int br = md.value(key).toInt();
+        if (br > 0) value = tr("%1 kbps").arg(br / 1000);
+        break;
+      }
+      default:
+        value = md.stringValue(key);
+        break;
+    }
+
+    if (!value.trimmed().isEmpty()) {
+      body += indent + label + QStringLiteral(": ") + value + QLatin1Char('\n');
+    }
+  }
+}
+
+QString MediaView::buildMediaInfoText() const {
+  if (m_filePath.isEmpty()) return QString();
+  const QFileInfo fi(m_filePath);
+
+  QString body;
+  body += tr("File: %1").arg(m_filePath) + QLatin1Char('\n');
+  body += tr("File size") + QStringLiteral(": ")
+        + QLocale(QLocale::English).formattedDataSize(fi.size())
+        + QLatin1Char('\n');
+  body += tr("Type") + QStringLiteral(": ")
+        + (m_player->hasVideo() ? tr("Video") : tr("Audio"))
+        + QLatin1Char('\n');
+  if (m_player->duration() > 0) {
+    body += tr("Duration") + QStringLiteral(": ")
+          + formatTime(m_player->duration()) + QLatin1Char('\n');
+  }
+  body += tr("Seekable") + QStringLiteral(": ")
+        + (m_player->isSeekable() ? tr("Yes") : tr("No"))
+        + QLatin1Char('\n');
+
+  // コンテナ / ストリーム全体のメタデータ (取得できた分だけ総当たりで表示)。
+  QString general;
+  appendMetaData(general, m_player->metaData(), QString());
+  if (!general.isEmpty()) {
+    body += QLatin1Char('\n') + tr("--- Metadata ---") + QLatin1Char('\n')
+          + general;
+  }
+
+  // トラック単位のメタデータ (多言語音声・字幕など)。
+  auto dumpTracks = [this, &body](const QString& heading,
+                                  const QList<QMediaMetaData>& tracks) {
+    for (int i = 0; i < tracks.size(); ++i) {
+      QString t;
+      appendMetaData(t, tracks.at(i), QStringLiteral("  "));
+      if (t.isEmpty()) continue;
+      body += QLatin1Char('\n') + heading.arg(i + 1) + QLatin1Char('\n') + t;
+    }
+  };
+  dumpTracks(tr("--- Audio track %1 ---"),    m_player->audioTracks());
+  dumpTracks(tr("--- Video track %1 ---"),    m_player->videoTracks());
+  dumpTracks(tr("--- Subtitle track %1 ---"), m_player->subtitleTracks());
+
+  return body;
 }
 
 void MediaView::updateCurrentPage() {
