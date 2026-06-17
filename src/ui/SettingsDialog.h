@@ -12,7 +12,6 @@ namespace Farman {
 class KeybindingTab;
 class AppearanceTab;
 class BehaviorTab;
-class ViewersTab;
 class PluginsTab;
 class GeneralTab;
 class ExternalAppsTab;
@@ -26,7 +25,6 @@ public:
     General = 0,
     Behavior,
     Appearance,
-    Viewers,
     Plugins,
     ExternalApps,
     Keybindings,
@@ -72,7 +70,6 @@ private:
   KeybindingTab*    m_keybindingTab;
   AppearanceTab*    m_appearanceTab;
   BehaviorTab*      m_behaviorTab;
-  ViewersTab*       m_viewersTab;
   PluginsTab*       m_pluginsTab;
   GeneralTab*       m_generalTab;
   ExternalAppsTab*  m_externalAppsTab;

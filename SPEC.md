@@ -1325,9 +1325,10 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 切替経路:
 
-- **Settings → Viewers カテゴリ → Viewer Display グループ → Display mode**
+- **Settings → Behavior カテゴリ → Viewer Display グループ → Display mode**
   (永続設定。`settings.json` の `behavior.viewerMode` に `inline` /
-  `external` で保存)。
+  `external` で保存)。表示モードのみだった旧「Viewers」カテゴリは廃止し、
+  この設定は Behavior カテゴリへ移設した (拡張子の対応付け等は Plugins カテゴリ)。
 - **View メニュー → External Viewer Window** (チェック付きトグル項目)。
   選択する都度 Settings に書き込み、即時反映される。`Settings::save()` まで
   含めて完結するので、再起動後も状態が残る。
@@ -1981,10 +1982,13 @@ List Display へ移動済み。ビュアー固有の設定は Viewers カテゴ�
   - 各状態に Foreground / Background / Bold を指定可能
   - 「Use custom colors for inactive pane」ON で非アクティブパネル用の色も別途設定可能
 
-#### 4. Viewers カテゴリ
+#### 4. Viewers カテゴリ (廃止)
 
-3 ビュアー (Text Viewer / Image Viewer / Binary Viewer) の設定を `QToolBox` による
-**排他アコーディオン**で配置する (一度に 1 セクションだけ展開、ヘッダークリックで切替)。
+独立した「Viewers」カテゴリは廃止した。表示モード (Inline / External) は
+**Behavior カテゴリ → Viewer Display** に移し、拡張子の対応付けは **Plugins**
+カテゴリへ集約済み。以下は各ビュアー設定項目の仕様 (配置先タブは上記に移行)。
+
+3 ビュアー (Text Viewer / Image Viewer / Binary Viewer) の設定項目:
 各ビュアーの主要項目は横並び (左寄せ) で配置する。
 
 ##### テキストビューア

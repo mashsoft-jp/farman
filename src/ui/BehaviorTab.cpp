@@ -369,12 +369,40 @@ void BehaviorTab::setupUi() {
 
   mainLayout->addWidget(listDisplayGroup);
 
+  // ─── Viewer Display グループ (旧 Viewers タブから移設) ───
+  // ビュアーを本体内に表示 (Inline) するか別ウィンドウ (External) で開くか。
+  QGroupBox* viewerGroup = new QGroupBox(tr("Viewer Display"), this);
+  QFormLayout* viewerForm = new QFormLayout(viewerGroup);
+  viewerForm->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+
+  m_viewerModeCombo = new QComboBox(this);
+  m_viewerModeCombo->addItem(tr("Inline (in main window)"),
+                             static_cast<int>(ViewerMode::Inline));
+  m_viewerModeCombo->addItem(tr("External (separate windows)"),
+                             static_cast<int>(ViewerMode::External));
+  m_viewerModeCombo->setToolTip(tr(
+    "Inline: show the viewer inside the main window (Enter / Esc returns to "
+    "the file list).\n"
+    "External: open a separate window per file (multiple files can be open "
+    "side by side, can be moved to another display)."));
+  viewerForm->addRow(tr("Display mode:"), m_viewerModeCombo);
+  mainLayout->addWidget(viewerGroup);
+
   mainLayout->addStretch();
 }
 
 
 void BehaviorTab::loadSettings() {
   auto& settings = Settings::instance();
+
+  // Viewer display mode (Inline / External)
+  const auto viewerMode = settings.viewerMode();
+  for (int i = 0; i < m_viewerModeCombo->count(); ++i) {
+    if (m_viewerModeCombo->itemData(i).toInt() == static_cast<int>(viewerMode)) {
+      m_viewerModeCombo->setCurrentIndex(i);
+      break;
+    }
+  }
 
   // Load default sort settings from left pane (as template)
   PaneSettings pane = settings.paneSettings(PaneType::Left);
@@ -465,6 +493,10 @@ void BehaviorTab::loadSettings() {
 
 void BehaviorTab::save() {
   auto& settings = Settings::instance();
+
+  // Viewer display mode (Inline / External)
+  settings.setViewerMode(
+    static_cast<ViewerMode>(m_viewerModeCombo->currentData().toInt()));
 
   // Get current pane settings
   PaneSettings leftPane = settings.paneSettings(PaneType::Left);
