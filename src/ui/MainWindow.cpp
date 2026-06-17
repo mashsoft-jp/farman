@@ -567,13 +567,20 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   // 並んでいる) ので、表示領域を画面いっぱい使えるよう一時的に非表示にする。
   // ファイラに戻る showFileManager() で Settings::showToolbar() に従って復元。
   if (m_toolbar) m_toolbar->setVisible(false);
-  m_viewerPanel->setFocus();
   updateStatusBar();
 
   if (!m_viewerPanel->openFile(filePath, kind, displayPath)) {
     // 失敗時はファイルマネージャパネルへ戻す
     showFileManager();
+    return;
   }
+
+  // フォーカスは openFile の後に当てる。openFile の中で初めて該当ビューが
+  // current になり setFocusProxy(該当ビュー) が張られるため、先に setFocus する
+  // と focusProxy がまだ前回開いた別ビューを指しており、初回表示のビュー本体に
+  // 焦点が渡らず Qt がツールバー先頭フィールド (PDF=ページ数 / Text=エンコー
+  // ディング等) を選んでしまう。これが「ビュアー種別ごとに初回だけ」起きていた。
+  m_viewerPanel->setFocus();
 }
 
 bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
