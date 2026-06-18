@@ -120,6 +120,13 @@ public:
     return nullptr;
   }
 
+  // 拡張子の紐付けを自前の設定ページ内で編集する場合は true を返す。
+  // farman は Settings → Plugins → 詳細でホスト側の「拡張子」欄を出さず、
+  // 編集はプラグインの設定ページに一任する (ホストのグローバル関連付け
+  // viewerAssociations もこのプラグインについては書き換えない)。
+  // false (既定) のプラグインは従来どおりホスト側の欄で編集する。
+  virtual bool managesOwnExtensions() const { return false; }
+
   // ── ビュアー生成 ──────────────────────────────
   // 呼び出し元がウィジェットの ownership を持つ。
   // 返す QWidget は Inline では埋め込み、External ではトップレベル化して表示する。
@@ -132,6 +139,7 @@ public:
 
 } // namespace Farman
 
+// 4.0: hasSettings() / createSettingsPage() / managesOwnExtensions() の追加。
 // 3.0: author() / authorUrl() の追加。
 // 仮想関数の追加・削除・並び替えなど ABI 互換が壊れる変更をしたら、
 // 必ずこの IID のバージョンを上げること (旧 IID のプラグインは

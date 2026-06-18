@@ -314,6 +314,7 @@ add_farman_official_viewer_plugin(TextViewerPlugin plugins/official/text-viewer
 
 add_farman_official_viewer_plugin(MarkdownViewerPlugin plugins/official/markdown-viewer
   plugins/official/markdown-viewer/MarkdownViewerPlugin.cpp
+  plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp
   src/viewer/MarkdownView.cpp
   src/viewer/MarkdownViewerWindow.cpp
   ${FARMAN_PLUGIN_COMMON_SOURCES}
@@ -331,6 +332,7 @@ add_farman_official_viewer_plugin(ImageViewerPlugin plugins/official/image-viewe
 
 add_farman_official_viewer_plugin(PdfViewerPlugin plugins/official/pdf-viewer
   plugins/official/pdf-viewer/PdfViewerPlugin.cpp
+  plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp
   src/viewer/PdfView.cpp
   src/viewer/PdfViewerWindow.cpp
   ${FARMAN_PLUGIN_COMMON_SOURCES}
@@ -338,6 +340,7 @@ add_farman_official_viewer_plugin(PdfViewerPlugin plugins/official/pdf-viewer
 
 add_farman_official_viewer_plugin(CsvViewerPlugin plugins/official/csv-viewer
   plugins/official/csv-viewer/CsvViewerPlugin.cpp
+  plugins/official/csv-viewer/CsvViewerSettingsPage.cpp
   src/viewer/CsvView.cpp
   src/viewer/CsvViewerWindow.cpp
   ${FARMAN_PLUGIN_COMMON_SOURCES}
@@ -353,6 +356,7 @@ add_farman_official_viewer_plugin(BinaryViewerPlugin plugins/official/binary-vie
 
 add_farman_official_viewer_plugin(MediaViewerPlugin plugins/official/media-viewer
   plugins/official/media-viewer/MediaViewerPlugin.cpp
+  plugins/official/media-viewer/MediaViewerSettingsPage.cpp
   src/viewer/MediaView.cpp
   src/viewer/MediaViewerWindow.cpp
   ${FARMAN_PLUGIN_COMMON_SOURCES}

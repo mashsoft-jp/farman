@@ -392,6 +392,33 @@ public:
   void               setBinaryViewerAddressForeground(const QColor& c);
   void               setBinaryViewerAddressBackground(const QColor& c);
 
+  // ── PDF ビュアー既定 ───────────────────────
+  bool             pdfViewerContinuous()     const;
+  void             setPdfViewerContinuous(bool on);
+  PdfViewerFitMode pdfViewerFitMode()        const;
+  void             setPdfViewerFitMode(PdfViewerFitMode mode);
+
+  // ── CSV/TSV ビュアー既定 ───────────────────
+  // 区切り文字: "auto" / "comma" / "tab" / "semicolon"
+  QString          csvViewerDelimiter()        const;
+  void             setCsvViewerDelimiter(const QString& d);
+  bool             csvViewerFirstRowAsHeader()  const;
+  void             setCsvViewerFirstRowAsHeader(bool on);
+
+  // ── Markdown ビュアー既定 ──────────────────
+  bool             markdownViewerShowSource()   const;
+  void             setMarkdownViewerShowSource(bool on);
+
+  // ── メディアビュアー既定 ───────────────────
+  QStringList      mediaViewerExtensions()      const;
+  void             setMediaViewerExtensions(const QStringList& exts);
+  int              mediaViewerVolume()          const;   // 0..100
+  void             setMediaViewerVolume(int volume);
+  bool             mediaViewerLoop()            const;
+  void             setMediaViewerLoop(bool on);
+  bool             mediaViewerAutoplay()        const;
+  void             setMediaViewerAutoplay(bool on);
+
   // ディレクトリ履歴を終了時に保存し、起動時に復元するか
   bool persistHistory()                 const;
   void setPersistHistory(bool persist);
@@ -662,6 +689,27 @@ private:
   QColor             m_binaryViewerSelectedBg   = QColor(0x31, 0x6A, 0xC5);
   QColor             m_binaryViewerAddressFg    = QColor(Qt::darkGray);
   QColor             m_binaryViewerAddressBg    = QColor(0xF0, 0xF0, 0xF0);
+
+  // PDF viewer
+  bool             m_pdfViewerContinuous = true;
+  PdfViewerFitMode m_pdfViewerFitMode    = PdfViewerFitMode::ActualSize;
+  // CSV/TSV viewer
+  QString          m_csvViewerDelimiter        = QStringLiteral("auto");
+  bool             m_csvViewerFirstRowAsHeader = false;
+  // Markdown viewer
+  bool             m_markdownViewerShowSource  = false;
+  // Media viewer
+  // メディア (動画 + 音声)。プラットフォームのデコーダ依存だが既定一覧を持つ。
+  QStringList      m_mediaViewerExtensions = {
+    // 動画
+    "mp4", "mov", "m4v", "webm", "avi", "mkv",
+    // 音声
+    "wav", "mp3", "m4a", "flac", "ogg", "aac",
+  };
+  int              m_mediaViewerVolume   = 80;
+  bool             m_mediaViewerLoop     = false;
+  bool             m_mediaViewerAutoplay = true;
+
   bool             m_persistHistory  = false;
   QStringList      m_paneHistory[static_cast<int>(PaneType::Count)];
   QString          m_autoRenameTemplate = QStringLiteral(" ({n})");

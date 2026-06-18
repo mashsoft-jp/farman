@@ -399,14 +399,27 @@ void PluginsTab::showPluginDetails(int row) {
     form->addRow(tr("Author URL:"), urlLabel);
   }
 
+  // ロード済みプラグインの本体ポインタ。設定ページの有無や拡張子を自前管理
+  // するか (managesOwnExtensions) の判定に使う。
+  IViewerPlugin* plugin =
+    (rec.loaded && !rec.pluginId.isEmpty())
+      ? ViewerDispatcher::instance().pluginById(rec.pluginId)
+      : nullptr;
+  const bool pluginManagesExtensions = plugin && plugin->managesOwnExtensions();
+
   // 拡張子の紐付け: ビュアープラグインはここで確認・変更できる。
   // 値がプラグイン既定の拡張子と一致している間は既定に追従する。
   // ID 不明 (ロード失敗など) のプラグインは編集できないので、プラグインが
   // 宣言する対応拡張子を表示するだけにとどめる。
+  // 拡張子を自前管理するプラグインは、下の「設定」ページ内に拡張子欄を持つ
+  // ので、ここ (ホスト側) には出さない。
   QLineEdit* extensionsEdit = nullptr;
   const bool extensionsEditable =
-    !rec.pluginId.isEmpty() && m_extensions.contains(rec.pluginId);
-  if (extensionsEditable) {
+    !pluginManagesExtensions
+    && !rec.pluginId.isEmpty() && m_extensions.contains(rec.pluginId);
+  if (pluginManagesExtensions) {
+    // 何も出さない (設定ページが担当)。
+  } else if (extensionsEditable) {
     extensionsEdit = new QLineEdit(&dialog);
     extensionsEdit->setText(
       m_extensions.value(rec.pluginId).join(QStringLiteral(", ")));
@@ -428,19 +441,15 @@ void PluginsTab::showPluginDetails(int row) {
   // 設定 UI を持つロード済みプラグインは、設定ページを詳細ダイアログ内に直接
   // 埋め込む (別ウィンドウにしない)。項目数が少ないので 1 枚で完結させる。
   IPluginSettingsPage* settingsPage = nullptr;
-  if (rec.loaded && !rec.pluginId.isEmpty()) {
-    if (IViewerPlugin* plugin =
-          ViewerDispatcher::instance().pluginById(rec.pluginId);
-        plugin && plugin->hasSettings()) {
-      auto* group = new QGroupBox(tr("Settings"), &dialog);
-      auto* groupLayout = new QVBoxLayout(group);
-      settingsPage = plugin->createSettingsPage(group);
-      if (settingsPage) {
-        groupLayout->addWidget(settingsPage);
-        layout->addWidget(group);
-      } else {
-        delete group;
-      }
+  if (plugin && plugin->hasSettings()) {
+    auto* group = new QGroupBox(tr("Settings"), &dialog);
+    auto* groupLayout = new QVBoxLayout(group);
+    settingsPage = plugin->createSettingsPage(group);
+    if (settingsPage) {
+      groupLayout->addWidget(settingsPage);
+      layout->addWidget(group);
+    } else {
+      delete group;
     }
   }
 
@@ -686,6 +695,13 @@ void PluginsTab::save() {
   // 既定に追従しているプラグインは書かず、明示的に変えたものだけ保存する。
   QMap<QString, QString> associations;
   for (const QString& pluginId : m_extensionOrder) {
+    // 拡張子を自前管理するプラグインは、グローバル関連付けではなく
+    // 自分の Settings キー (supportedExtensions 経由) で解決するので、
+    // ここでは関連付けを書かない (古い明示割り当ても合わせて落とす)。
+    if (IViewerPlugin* p = ViewerDispatcher::instance().pluginById(pluginId);
+        p && p->managesOwnExtensions()) {
+      continue;
+    }
     const QStringList extensions = m_extensions.value(pluginId);
     if (extensions == m_extensionDefaults.value(pluginId)) {
       continue;

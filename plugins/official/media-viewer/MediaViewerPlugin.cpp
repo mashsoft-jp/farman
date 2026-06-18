@@ -1,8 +1,13 @@
 #include "MediaViewerPlugin.h"
+#include "MediaViewerSettingsPage.h"
 #include "viewer/MediaViewerWindow.h"
 #include "settings/Settings.h"
 
 namespace Farman {
+
+IPluginSettingsPage* MediaViewerPlugin::createSettingsPage(QWidget* parent) {
+  return new MediaViewerSettingsPage(parent);
+}
 
 bool MediaViewerPlugin::initialize(const PluginContext& /*ctx*/) {
   syncPluginFromHostSettings();
@@ -14,17 +19,10 @@ void MediaViewerPlugin::appearanceChanged(const PluginAppearance& /*appearance*/
 }
 
 QStringList MediaViewerPlugin::supportedExtensions() const {
-  // SPEC の対象拡張子 (動画 + 音声)。実際のデコード可否はプラットフォームの
-  // Qt Multimedia バックエンド依存。ユーザーの上書きは Settings →
-  // Viewer Associations で行う。
-  return {
-    // 動画
-    QStringLiteral("mp4"), QStringLiteral("mov"), QStringLiteral("m4v"),
-    QStringLiteral("webm"), QStringLiteral("avi"), QStringLiteral("mkv"),
-    // 音声
-    QStringLiteral("wav"), QStringLiteral("mp3"), QStringLiteral("m4a"),
-    QStringLiteral("flac"), QStringLiteral("ogg"), QStringLiteral("aac"),
-  };
+  // 対象拡張子 (動画 + 音声)。実際のデコード可否はプラットフォームの
+  // Qt Multimedia バックエンド依存。既定一覧は Settings が持ち、設定ページ
+  // (Plugins → 詳細) から変更できる。
+  return Settings::instance().mediaViewerExtensions();
 }
 
 QStringList MediaViewerPlugin::supportedMimeTypes() const {

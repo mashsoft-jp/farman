@@ -1,14 +1,29 @@
 #include "TextViewerSettingsPage.h"
 
 #include "settings/Settings.h"
+#include "viewer/ExtensionsField.h"
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
+#include <QLineEdit>
 #include <QVBoxLayout>
 
 namespace Farman {
+
+namespace {
+// 既定の対応拡張子 (Settings::m_textViewerExtensions と一致させる)。
+const QStringList kDefExtensions = {
+  "txt", "log",
+  "c*", "!class", "!cab", "!chm", "!com",
+  "h", "hpp",
+  "py", "js", "ts", "java", "rs", "go", "rb", "php", "pl", "pm",
+  "htm*", "json", "xml",
+  "*sh", "fish",
+  "yml", "yaml", "toml", "ini"
+};
+} // namespace
 
 TextViewerSettingsPage::TextViewerSettingsPage(QWidget* parent)
   : IPluginSettingsPage(parent) {
@@ -16,6 +31,11 @@ TextViewerSettingsPage::TextViewerSettingsPage(QWidget* parent)
 
   auto* form = new QFormLayout();
   form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+
+  m_extensionsEdit = new QLineEdit(this);
+  m_extensionsEdit->setToolTip(
+    tr("Comma, semicolon, or space separated extensions without leading dots."));
+  form->addRow(tr("Extensions:"), m_extensionsEdit);
 
   m_encodingCombo = new QComboBox(this);
   m_encodingCombo->setEditable(true);
@@ -40,13 +60,15 @@ TextViewerSettingsPage::TextViewerSettingsPage(QWidget* parent)
 
   Settings& s = Settings::instance();
   s.load();
-  applyValuesToUi(s.textViewerEncoding(), s.textViewerShowLineNumbers(),
-                  s.textViewerWordWrap());
+  applyValuesToUi(s.textViewerExtensions(), s.textViewerEncoding(),
+                  s.textViewerShowLineNumbers(), s.textViewerWordWrap());
 }
 
-void TextViewerSettingsPage::applyValuesToUi(const QString& encoding,
+void TextViewerSettingsPage::applyValuesToUi(const QStringList& extensions,
+                                             const QString& encoding,
                                              bool showLineNumbers,
                                              bool wordWrap) {
+  m_extensionsEdit->setText(joinExtensionsText(extensions));
   m_encodingCombo->setCurrentText(encoding);
   m_lineNumbersCheck->setChecked(showLineNumbers);
   m_wordWrapCheck->setChecked(wordWrap);
@@ -54,6 +76,8 @@ void TextViewerSettingsPage::applyValuesToUi(const QString& encoding,
 
 void TextViewerSettingsPage::save() {
   Settings& s = Settings::instance();
+  const QStringList exts = parseExtensionsText(m_extensionsEdit->text());
+  if (!exts.isEmpty()) s.setTextViewerExtensions(exts);
   s.setTextViewerEncoding(m_encodingCombo->currentText().trimmed());
   s.setTextViewerShowLineNumbers(m_lineNumbersCheck->isChecked());
   s.setTextViewerWordWrap(m_wordWrapCheck->isChecked());
@@ -62,8 +86,8 @@ void TextViewerSettingsPage::save() {
 
 void TextViewerSettingsPage::restoreDefaults() {
   // Settings の初期値に合わせる。
-  applyValuesToUi(QStringLiteral("Auto"), /*showLineNumbers=*/true,
-                  /*wordWrap=*/false);
+  applyValuesToUi(kDefExtensions, QStringLiteral("Auto"),
+                  /*showLineNumbers=*/true, /*wordWrap=*/false);
 }
 
 } // namespace Farman

@@ -19,9 +19,16 @@ have been migrated to dynamically loaded official plugins.
 Everything plugin-related now lives in one place: the plugins
 directory and the installed plugin list, grouped into per-type tabs,
 with load status and enable/disable toggles. Each row's "Details..."
-shows the full plugin information, and for viewers the extension
-associations can be edited there too. Help → Plugins...
+shows the full plugin information. Help → Plugins...
 (toolbar button / shortcut available) opens the page directly.
+
+### Change Viewer Defaults from "Details"
+
+Each viewer's defaults can now be changed from a settings page inside
+its plugin "Details". Besides the associated extensions, you can set
+the default text encoding, image Fit / zoom, PDF view mode, CSV
+delimiter, media volume / autoplay, and more. When several viewers
+list the same extension, the one with the higher priority is used.
 
 ### What's New Dialog
 

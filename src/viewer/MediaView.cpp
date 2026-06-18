@@ -1,4 +1,5 @@
 #include "MediaView.h"
+#include "settings/Settings.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QAudio>
@@ -29,7 +30,6 @@ namespace {
 constexpr qint64 kSeekStepMs      = 5000;
 constexpr qint64 kSeekLargeStepMs = 30000;
 constexpr int    kVolumeStep      = 5;
-constexpr int    kDefaultVolume   = 80;
 } // namespace
 
 MediaView::MediaView(QWidget* parent)
@@ -146,6 +146,7 @@ void MediaView::setupUi() {
   connect(m_loopButton, &QToolButton::toggled, this, [this](bool checked) {
     m_player->setLoops(checked ? QMediaPlayer::Infinite : QMediaPlayer::Once);
   });
+  m_loopButton->setChecked(Settings::instance().mediaViewerLoop());
   m_toolbar->addWidget(m_loopButton);
 
   m_rateCombo = new QComboBox(m_toolbar);
@@ -174,7 +175,7 @@ void MediaView::setupUi() {
   m_volumeSlider = new QSlider(Qt::Horizontal, m_toolbar);
   m_volumeSlider->setFocusPolicy(Qt::NoFocus);
   m_volumeSlider->setRange(0, 100);
-  m_volumeSlider->setValue(kDefaultVolume);
+  m_volumeSlider->setValue(Settings::instance().mediaViewerVolume());
   m_volumeSlider->setFixedWidth(100);
   m_volumeSlider->setToolTip(tr("Volume (Up/Down)"));
   connect(m_volumeSlider, &QSlider::valueChanged,
@@ -276,9 +277,11 @@ void MediaView::openFile(const QString& filePath) {
   m_loadNotified = false;
   updateMetadataCard();
   m_player->setSource(QUrl::fromLocalFile(filePath));
-  // ビュアーとして明示的に開かれた場面なので、そのまま再生を開始する
-  // (QuickLook 等のプレビュー系と同じ挙動)。
-  m_player->play();
+  // ビュアーとして明示的に開かれた場面なので、既定では再生を開始する
+  // (QuickLook 等のプレビュー系と同じ挙動)。自動再生は設定で無効化できる。
+  if (Settings::instance().mediaViewerAutoplay()) {
+    m_player->play();
+  }
 }
 
 void MediaView::clearContent() {

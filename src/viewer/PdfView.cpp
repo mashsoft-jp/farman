@@ -1,5 +1,6 @@
 #include "PdfView.h"
 
+#include "settings/Settings.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QApplication>
@@ -212,6 +213,19 @@ void PdfView::setupUi() {
   m_view->setZoomMode(QPdfView::ZoomMode::Custom);
   m_view->setZoomFactor(kDefaultZoom);
   root->addWidget(m_view, /*stretch*/ 1);
+
+  // 既定の表示設定 (Settings → Plugins → PDF Viewer)。トグルの signal は
+  // ドキュメント未ロードでも m_view に対して安全に効くので、ここで適用する。
+  {
+    Settings& s = Settings::instance();
+    m_continuousButton->setChecked(s.pdfViewerContinuous());
+    switch (s.pdfViewerFitMode()) {
+      case PdfViewerFitMode::FitWidth: m_fitWidthButton->setChecked(true); break;
+      case PdfViewerFitMode::FitPage:  m_fitPageButton->setChecked(true);  break;
+      case PdfViewerFitMode::ActualSize:
+      default: break;
+    }
+  }
 
   setFocusProxy(m_view);
 }

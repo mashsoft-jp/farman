@@ -1,10 +1,12 @@
 #include "ImageViewerSettingsPage.h"
 
 #include "settings/Settings.h"
+#include "viewer/ExtensionsField.h"
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFormLayout>
+#include <QLineEdit>
 #include <QVBoxLayout>
 
 namespace Farman {
@@ -14,6 +16,10 @@ namespace {
 constexpr int  kDefZoomPercent = 100;
 constexpr bool kDefFit         = false;
 constexpr bool kDefAnimation   = false;
+// 既定の対応拡張子 (Settings::m_imageViewerExtensions と一致させる)。
+const QStringList kDefExtensions = {
+  "png", "jp*g", "gif", "bmp", "svg", "webp", "ico", "tif*", "psd"
+};
 } // namespace
 
 ImageViewerSettingsPage::ImageViewerSettingsPage(QWidget* parent)
@@ -26,6 +32,10 @@ ImageViewerSettingsPage::ImageViewerSettingsPage(QWidget* parent)
   auto* form = new QFormLayout();
   form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
   form->setContentsMargins(0, 0, 0, 0);
+  m_extensionsEdit = new QLineEdit(this);
+  m_extensionsEdit->setToolTip(
+    tr("Comma, semicolon, or space separated extensions without leading dots."));
+  form->addRow(tr("Extensions:"), m_extensionsEdit);
   m_zoomCombo = new QComboBox(this);
   m_zoomCombo->setEditable(true);
   for (int p : { 25, 50, 75, 100, 200 }) {
@@ -50,12 +60,14 @@ ImageViewerSettingsPage::ImageViewerSettingsPage(QWidget* parent)
   // 読み直してから取る (本体での変更を取りこぼさないため)。
   Settings& s = Settings::instance();
   s.load();
-  applyValuesToUi(s.imageViewerZoomPercent(), s.imageViewerFitToWindow(),
-                  s.imageViewerAnimation());
+  applyValuesToUi(s.imageViewerExtensions(), s.imageViewerZoomPercent(),
+                  s.imageViewerFitToWindow(), s.imageViewerAnimation());
 }
 
-void ImageViewerSettingsPage::applyValuesToUi(int zoomPercent, bool fit,
+void ImageViewerSettingsPage::applyValuesToUi(const QStringList& extensions,
+                                              int zoomPercent, bool fit,
                                               bool animation) {
+  m_extensionsEdit->setText(joinExtensionsText(extensions));
   m_zoomCombo->setCurrentText(QString::number(zoomPercent) + QLatin1Char('%'));
   m_fitCheck->setChecked(fit);
   m_animCheck->setChecked(animation);
@@ -63,6 +75,9 @@ void ImageViewerSettingsPage::applyValuesToUi(int zoomPercent, bool fit,
 
 void ImageViewerSettingsPage::save() {
   Settings& s = Settings::instance();
+
+  const QStringList exts = parseExtensionsText(m_extensionsEdit->text());
+  if (!exts.isEmpty()) s.setImageViewerExtensions(exts);
 
   bool ok = false;
   const int zoom =
@@ -77,7 +92,7 @@ void ImageViewerSettingsPage::save() {
 }
 
 void ImageViewerSettingsPage::restoreDefaults() {
-  applyValuesToUi(kDefZoomPercent, kDefFit, kDefAnimation);
+  applyValuesToUi(kDefExtensions, kDefZoomPercent, kDefFit, kDefAnimation);
 }
 
 } // namespace Farman

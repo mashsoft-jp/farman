@@ -29,6 +29,10 @@ public:
   QWidget* createViewer(const QString&       filePath,
                         QWidget*             parent,
                         const PluginContext& ctx) override;
+
+  bool hasSettings() const override { return true; }
+  IPluginSettingsPage* createSettingsPage(QWidget* parent) override;
+  bool managesOwnExtensions() const override { return true; }
 };
 
 } // namespace Farman

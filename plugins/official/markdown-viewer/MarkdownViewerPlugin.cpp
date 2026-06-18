@@ -1,8 +1,13 @@
 #include "MarkdownViewerPlugin.h"
+#include "MarkdownViewerSettingsPage.h"
 #include "viewer/MarkdownViewerWindow.h"
 #include "settings/Settings.h"
 
 namespace Farman {
+
+IPluginSettingsPage* MarkdownViewerPlugin::createSettingsPage(QWidget* parent) {
+  return new MarkdownViewerSettingsPage(parent);
+}
 
 bool MarkdownViewerPlugin::initialize(const PluginContext& /*ctx*/) {
   syncPluginFromHostSettings();

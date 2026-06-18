@@ -51,6 +51,7 @@ public:
 
   bool hasSettings() const override { return true; }
   IPluginSettingsPage* createSettingsPage(QWidget* parent) override;
+  bool managesOwnExtensions() const override { return true; }
 
   QWidget* createViewer(const QString&       filePath,
                         QWidget*             parent,

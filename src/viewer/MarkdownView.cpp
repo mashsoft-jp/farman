@@ -74,10 +74,14 @@ void MarkdownView::setupUi() {
   // 「ソース表示」トグル: ON = 生 Markdown (= テキストエディタ風)、
   //                      OFF = 整形表示 (= QTextDocument::setMarkdown)。
   // アイコンは流用が無いので簡易にラベル表示。
+  // 既定の表示モード (Settings → Plugins → Markdown Viewer)。connect 前に
+  // 設定するので slot は走らない。実描画は loadFile → renderCurrent が行う。
+  m_rawSource = Settings::instance().markdownViewerShowSource();
+
   m_rawSourceButton = new QToolButton(m_toolbar);
   m_rawSourceButton->setText(tr("Source"));
   m_rawSourceButton->setCheckable(true);
-  m_rawSourceButton->setChecked(false);
+  m_rawSourceButton->setChecked(m_rawSource);
   m_rawSourceButton->setToolTip(
     tr("Show raw Markdown source (off = rendered HTML)"));
   m_rawSourceButton->setFocusPolicy(Qt::StrongFocus);

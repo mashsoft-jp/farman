@@ -4,6 +4,7 @@
 
 class QCheckBox;
 class QComboBox;
+class QLineEdit;
 
 namespace Farman {
 
@@ -21,9 +22,10 @@ public:
   void restoreDefaults() override;
 
 private:
-  void applyValuesToUi(const QString& encoding, bool showLineNumbers,
-                       bool wordWrap);
+  void applyValuesToUi(const QStringList& extensions, const QString& encoding,
+                       bool showLineNumbers, bool wordWrap);
 
+  QLineEdit* m_extensionsEdit   = nullptr;
   QComboBox* m_encodingCombo   = nullptr;
   QCheckBox* m_lineNumbersCheck = nullptr;
   QCheckBox* m_wordWrapCheck    = nullptr;

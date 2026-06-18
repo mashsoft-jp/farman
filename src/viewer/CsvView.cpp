@@ -1,5 +1,6 @@
 #include "CsvView.h"
 
+#include "settings/Settings.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QApplication>
@@ -543,6 +544,20 @@ void CsvView::setupUi() {
           this,              &CsvView::onDelimiterComboChanged);
   connect(m_headerToggle, &QToolButton::toggled,
           this,            &CsvView::onHeaderToggleChanged);
+
+  // 既定の表示設定 (Settings → Plugins → CSV/TSV Viewer)。combo / toggle を
+  // 設定値に合わせる (slot が m_userDelimiter / model を更新する)。
+  {
+    Settings& s = Settings::instance();
+    const QString d = s.csvViewerDelimiter();
+    Delimiter def = Delimiter::Auto;
+    if      (d == QLatin1String("comma"))     def = Delimiter::Comma;
+    else if (d == QLatin1String("tab"))       def = Delimiter::Tab;
+    else if (d == QLatin1String("semicolon")) def = Delimiter::Semicolon;
+    const int idx = m_delimiterCombo->findData(int(def));
+    if (idx >= 0) m_delimiterCombo->setCurrentIndex(idx);
+    m_headerToggle->setChecked(s.csvViewerFirstRowAsHeader());
+  }
 
   Q_UNUSED(kHeaderStyle);
 }

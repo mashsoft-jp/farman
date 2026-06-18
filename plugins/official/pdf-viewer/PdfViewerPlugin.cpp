@@ -1,8 +1,13 @@
 #include "PdfViewerPlugin.h"
+#include "PdfViewerSettingsPage.h"
 #include "viewer/PdfViewerWindow.h"
 #include "settings/Settings.h"
 
 namespace Farman {
+
+IPluginSettingsPage* PdfViewerPlugin::createSettingsPage(QWidget* parent) {
+  return new PdfViewerSettingsPage(parent);
+}
 
 bool PdfViewerPlugin::initialize(const PluginContext& /*ctx*/) {
   syncPluginFromHostSettings();

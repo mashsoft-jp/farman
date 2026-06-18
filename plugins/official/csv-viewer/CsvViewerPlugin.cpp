@@ -1,8 +1,13 @@
 #include "CsvViewerPlugin.h"
+#include "CsvViewerSettingsPage.h"
 #include "viewer/CsvViewerWindow.h"
 #include "settings/Settings.h"
 
 namespace Farman {
+
+IPluginSettingsPage* CsvViewerPlugin::createSettingsPage(QWidget* parent) {
+  return new CsvViewerSettingsPage(parent);
+}
 
 bool CsvViewerPlugin::initialize(const PluginContext& /*ctx*/) {
   syncPluginFromHostSettings();

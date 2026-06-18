@@ -4,6 +4,7 @@
 
 class QCheckBox;
 class QComboBox;
+class QLineEdit;
 
 namespace Farman {
 
@@ -21,8 +22,10 @@ public:
   void restoreDefaults() override;
 
 private:
-  void applyValuesToUi(int zoomPercent, bool fit, bool animation);
+  void applyValuesToUi(const QStringList& extensions, int zoomPercent,
+                       bool fit, bool animation);
 
+  QLineEdit* m_extensionsEdit = nullptr;
   QComboBox* m_zoomCombo = nullptr;
   QCheckBox* m_fitCheck  = nullptr;
   QCheckBox* m_animCheck = nullptr;
