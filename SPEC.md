@@ -1492,7 +1492,13 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
     `supportedExtensions()` / `supportedMimeTypes()` / `canHandle(filePath)` /
     `createViewer(filePath, parent, ctx)` / `priority()` /
     `initialize(ctx)` / `shutdown()` / `appearanceChanged(appearance)` /
-    `capabilities()`
+    `capabilities()` / `hasSettings()` / `createSettingsPage(parent)`
+- 設定 UI: プラグインは `hasSettings()` を true にし、`createSettingsPage()` で
+  `IPluginSettingsPage` ([src/viewer/IPluginSettingsPage.h](src/viewer/IPluginSettingsPage.h))
+  派生のページを返すと、Settings → Plugins → 詳細の「設定...」から farman 標準の
+  ダイアログ枠 (OK / Cancel / Apply / 既定に戻す) に載って開く。確定時に
+  farman が `page->save()` を呼び、続けて `Settings::load()` で再読込して開いて
+  いるビュアーへ反映する。公式・外部プラグイン共通の仕組み。
 - `PluginContext` 構造体 (farmanVersion と Appearance スナップショットを保持。
   将来 logger / settings / mainWindow 等を「引数追加 = ABI 破壊」抜きで
   足せるよう用意)
@@ -1504,7 +1510,7 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
 **制約**
 
 - v0.9.x では API / ABI の長期互換を保証しない。`IViewerPlugin` の IID は
-  `com.farman.IViewerPlugin/3.0` (`FarmanIViewerPlugin_iid` マクロ)。仮想関数の
+  `com.farman.IViewerPlugin/4.0` (`FarmanIViewerPlugin_iid` マクロ)。仮想関数の
   追加など ABI 互換が壊れる変更時は必ずバージョンを上げ、旧 IID のプラグインは
   qobject_cast 失敗 (ロードエラー) として安全に拒否する。正式な互換ポリシーは
   サンプル外部プラグインを試作してから確定する。

@@ -62,6 +62,9 @@ private:
   // 外部プラグインの有効 / 無効の切り替えと、ビュアーの拡張子紐付けの
   // 確認・変更もここで行う (一覧は表示のみ)。
   void showPluginDetails(int row);
+  // プラグインの設定ページ (IPluginSettingsPage) を farman 標準のダイアログ枠
+  // (OK/Cancel/Apply/既定に戻す) に載せて開く。詳細ダイアログの「設定...」から。
+  void openPluginSettings(IViewerPlugin* plugin, QWidget* parent);
   QString pluginStatusText(const PluginRecord& record) const;
   QString pluginStatusEmoji(const PluginRecord& record) const;
   QString extensionsDisplayText(const PluginRecord& record) const;

@@ -256,7 +256,7 @@ public:
 };
 
 // Qt プラグインマクロ
-#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/3.0"
+#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/4.0"
 Q_DECLARE_INTERFACE(IViewerPlugin, FarmanIViewerPlugin_iid)
 ```
 

@@ -330,6 +330,16 @@ QList<IViewerPlugin*> ViewerDispatcher::allPlugins() const {
   return result;
 }
 
+IViewerPlugin* ViewerDispatcher::pluginById(const QString& pluginId) const {
+  if (pluginId.isEmpty()) return nullptr;
+  for (const auto& plugin : m_plugins) {
+    if (plugin && plugin->pluginId() == pluginId) {
+      return plugin.get();
+    }
+  }
+  return nullptr;
+}
+
 bool ViewerDispatcher::isExternalPlugin(const QString& pluginId) const {
   for (const PluginRecord& record : m_records) {
     if (record.loaded

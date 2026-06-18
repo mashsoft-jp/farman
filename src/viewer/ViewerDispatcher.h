@@ -68,6 +68,10 @@ public:
   // ファイルに対応するビュアーを返す（nullptr = 対応なし）
   IViewerPlugin* resolvePlugin(const QString& filePath) const;
 
+  // pluginId からロード済みプラグイン本体を返す (無ければ nullptr)。
+  // PluginsTab の詳細ダイアログが設定 UI を呼び出すのに使う。
+  IViewerPlugin* pluginById(const QString& pluginId) const;
+
   // ビュアーウィジェットを生成して返す
   // 対応ビュアーがない場合は BinaryViewer にフォールバック
   QWidget* createViewer(

@@ -1,5 +1,6 @@
 #include "PluginsTab.h"
 #include "settings/Settings.h"
+#include "viewer/IPluginSettingsPage.h"
 #include "viewer/IViewerPlugin.h"
 #include "viewer/ViewerDispatcher.h"
 #include <QCheckBox>
@@ -431,6 +432,19 @@ void PluginsTab::showPluginDetails(int row) {
     &dialog);
   connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
   connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+  // 設定 UI を持つロード済みプラグインには「設定...」を出す。押すと farman が
+  // 用意した枠にプラグインの設定ページを載せて開く。
+  if (rec.loaded && !rec.pluginId.isEmpty()) {
+    if (IViewerPlugin* plugin =
+          ViewerDispatcher::instance().pluginById(rec.pluginId);
+        plugin && plugin->hasSettings()) {
+      auto* settingsBtn =
+        buttons->addButton(tr("Settings..."), QDialogButtonBox::ActionRole);
+      connect(settingsBtn, &QPushButton::clicked, &dialog,
+              [this, plugin, &dialog]() { openPluginSettings(plugin, &dialog); });
+    }
+  }
   layout->addWidget(buttons);
 
   // パスが長いと初期幅が画面いっぱいまで伸びるので適度に抑える。
@@ -459,6 +473,47 @@ void PluginsTab::showPluginDetails(int row) {
       item->setToolTip(text);
     }
   }
+}
+
+void PluginsTab::openPluginSettings(IViewerPlugin* plugin, QWidget* parent) {
+  if (!plugin) return;
+
+  QDialog dlg(parent);
+  dlg.setWindowTitle(tr("%1 Settings").arg(plugin->pluginName()));
+  auto* layout = new QVBoxLayout(&dlg);
+
+  IPluginSettingsPage* page = plugin->createSettingsPage(&dlg);
+  if (!page) return;  // hasSettings と矛盾するが念のため
+  layout->addWidget(page, 1);
+
+  auto* box = new QDialogButtonBox(
+    QDialogButtonBox::Ok | QDialogButtonBox::Cancel
+      | QDialogButtonBox::Apply | QDialogButtonBox::RestoreDefaults,
+    &dlg);
+  layout->addWidget(box);
+
+  // Apply / OK: ページに永続化させ、本体 Settings を再読込して開いている
+  // ビュアーへ反映する (load() が settingsChanged を発火する)。
+  auto applyAndReload = [page]() {
+    page->save();
+    Settings::instance().load();
+  };
+  connect(box, &QDialogButtonBox::accepted, &dlg, [&dlg, applyAndReload]() {
+    applyAndReload();
+    dlg.accept();
+  });
+  connect(box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+  if (auto* applyBtn = box->button(QDialogButtonBox::Apply)) {
+    connect(applyBtn, &QPushButton::clicked, &dlg, applyAndReload);
+  }
+  if (auto* rdBtn = box->button(QDialogButtonBox::RestoreDefaults)) {
+    connect(rdBtn, &QPushButton::clicked, page,
+            [page]() { page->restoreDefaults(); });
+  }
+
+  dlg.resize(std::clamp(dlg.sizeHint().width(), 460, 720),
+             std::clamp(dlg.sizeHint().height(), 320, 640));
+  dlg.exec();
 }
 
 QString PluginsTab::normalizedExtension(const QString& extension) const {

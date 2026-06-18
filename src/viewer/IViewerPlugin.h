@@ -64,7 +64,8 @@ void syncPluginFromHostSettings();
 // メジャー番号を上げ、Dispatcher で両方のバージョンを試すことで段階移行する。
 // プラグイン側の Q_PLUGIN_METADATA でも必ずこのマクロを使うこと
 // (文字列を直書きすると IID 更新時に追従漏れする)。
-#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/3.0"
+#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/4.0"
+class IPluginSettingsPage;  // IPluginSettingsPage.h
 class IViewerPlugin {
 public:
   virtual ~IViewerPlugin() = default;
@@ -107,6 +108,17 @@ public:
   // 将来のフィーチャー判定用。例: {"thumbnail", "async_load", "search"}.
   // 純粋仮想を追加せずに新機能の有無を見分けられるようにする。
   virtual QStringList capabilities() const { return {}; }
+
+  // ── 設定 UI (任意 override) ─────────────────────
+  // 設定画面を持つなら hasSettings() を true にし、createSettingsPage() で
+  // IPluginSettingsPage 派生のページを返す。farman が Settings → Plugins →
+  // 詳細の「設定...」から標準ダイアログ枠 (OK / Cancel / Apply / 既定に戻す)
+  // に載せ、確定時に page->save() を呼ぶ。farman は save() 後に Settings を
+  // 再読込して開いているビュアーへ反映する。ページの ownership は farman 側。
+  virtual bool hasSettings() const { return false; }
+  virtual IPluginSettingsPage* createSettingsPage(QWidget* /*parent*/) {
+    return nullptr;
+  }
 
   // ── ビュアー生成 ──────────────────────────────
   // 呼び出し元がウィジェットの ownership を持つ。
