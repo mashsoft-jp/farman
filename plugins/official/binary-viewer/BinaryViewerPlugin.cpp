@@ -1,8 +1,13 @@
 #include "BinaryViewerPlugin.h"
+#include "BinaryViewerSettingsPage.h"
 #include "settings/Settings.h"
 #include "viewer/BinaryViewerWindow.h"
 
 namespace Farman {
+
+IPluginSettingsPage* BinaryViewerPlugin::createSettingsPage(QWidget* parent) {
+  return new BinaryViewerSettingsPage(parent);
+}
 
 bool BinaryViewerPlugin::initialize(const PluginContext& /*ctx*/) {
   syncPluginFromHostSettings();

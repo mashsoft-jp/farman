@@ -306,6 +306,7 @@ endfunction()
 
 add_farman_official_viewer_plugin(TextViewerPlugin plugins/official/text-viewer
   plugins/official/text-viewer/TextViewerPlugin.cpp
+  plugins/official/text-viewer/TextViewerSettingsPage.cpp
   src/viewer/TextView.cpp
   src/viewer/TextViewerWindow.cpp
   ${FARMAN_PLUGIN_COMMON_SOURCES}
@@ -344,6 +345,7 @@ add_farman_official_viewer_plugin(CsvViewerPlugin plugins/official/csv-viewer
 
 add_farman_official_viewer_plugin(BinaryViewerPlugin plugins/official/binary-viewer
   plugins/official/binary-viewer/BinaryViewerPlugin.cpp
+  plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp
   src/viewer/BinaryView.cpp
   src/viewer/BinaryViewerWindow.cpp
   ${FARMAN_PLUGIN_COMMON_SOURCES}

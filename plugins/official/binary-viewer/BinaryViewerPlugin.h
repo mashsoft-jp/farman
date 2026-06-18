@@ -31,6 +31,9 @@ public:
   bool initialize(const PluginContext& ctx) override;
   void appearanceChanged(const PluginAppearance& appearance) override;
 
+  bool hasSettings() const override { return true; }
+  IPluginSettingsPage* createSettingsPage(QWidget* parent) override;
+
   QWidget* createViewer(const QString&       filePath,
                         QWidget*             parent,
                         const PluginContext& ctx) override;

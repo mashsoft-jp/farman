@@ -1,8 +1,13 @@
 #include "TextViewerPlugin.h"
+#include "TextViewerSettingsPage.h"
 #include "settings/Settings.h"
 #include "viewer/TextViewerWindow.h"
 
 namespace Farman {
+
+IPluginSettingsPage* TextViewerPlugin::createSettingsPage(QWidget* parent) {
+  return new TextViewerSettingsPage(parent);
+}
 
 bool TextViewerPlugin::initialize(const PluginContext& /*ctx*/) {
   syncPluginFromHostSettings();

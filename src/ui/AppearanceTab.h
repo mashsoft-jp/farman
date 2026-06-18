@@ -204,9 +204,7 @@ private:
   QLineEdit*   m_textMimePatternsEdit     = nullptr;
   QPushButton* m_textFontButton           = nullptr;
   QFont        m_textSelectedFont;
-  QComboBox*   m_textEncodingCombo        = nullptr;
-  QCheckBox*   m_textShowLineNumbersCheck = nullptr;
-  QCheckBox*   m_textWordWrapCheck        = nullptr;
+  // エンコーディング / 行番号 / 折り返しはテキストビュアープラグインの設定へ移設済み。
   QPushButton* m_textNormalFgButton       = nullptr;
   QPushButton* m_textNormalBgButton       = nullptr;
   QPushButton* m_textSelectedFgButton     = nullptr;
@@ -234,9 +232,7 @@ private:
   QColor        m_imageSolidColorValue;
 
   // Binary viewer
-  QComboBox*   m_binaryUnitCombo        = nullptr;
-  QComboBox*   m_binaryEndianCombo      = nullptr;
-  QComboBox*   m_binaryEncodingCombo    = nullptr;
+  // 単位 / エンディアン / エンコーディングはバイナリビュアープラグインの設定へ移設済み。
   QPushButton* m_binaryFontButton       = nullptr;
   QFont        m_binarySelectedFont;
   QPushButton* m_binaryNormalFgButton   = nullptr;

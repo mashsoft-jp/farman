@@ -345,12 +345,12 @@
         <translation>Auto は OS の外観設定に追従する。編集対象は現在アクティブな側に自動で切り替わる。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1047"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="983"/>
         <source>(currently applying: Light)</source>
         <translation>(現在の適用先: Light)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1046"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="982"/>
         <source>(currently applying: Dark)</source>
         <translation>(現在の適用先: Dark)</translation>
     </message>
@@ -369,8 +369,8 @@
         <translation>テーマ JSON ファイルを読み込む。片側だけのファイルは該当側のみ更新する。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1153"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1158"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1089"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1094"/>
         <source>Apply Theme Preset</source>
         <translation>テーマプリセット適用</translation>
     </message>
@@ -379,20 +379,20 @@
         <translation type="vanished">現在のテーマ色を「%1」プリセットで全置換しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1180"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1186"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1116"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1122"/>
         <source>Export Theme</source>
         <translation>テーマをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1182"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1194"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1118"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1130"/>
         <source>JSON Files (*.json)</source>
         <translation>JSON ファイル (*.json)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1193"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1199"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1129"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1135"/>
         <source>Import Theme</source>
         <translation>テーマをインポート</translation>
     </message>
@@ -401,7 +401,7 @@
         <location filename="../src/ui/AppearanceTab.cpp" line="212"/>
         <location filename="../src/ui/AppearanceTab.cpp" line="327"/>
         <location filename="../src/ui/AppearanceTab.cpp" line="478"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="558"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="544"/>
         <source>Select Font...</source>
         <translation>フォントを選択...</translation>
     </message>
@@ -410,7 +410,7 @@
         <location filename="../src/ui/AppearanceTab.cpp" line="235"/>
         <location filename="../src/ui/AppearanceTab.cpp" line="330"/>
         <location filename="../src/ui/AppearanceTab.cpp" line="491"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="571"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="557"/>
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
@@ -597,15 +597,15 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="355"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="518"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="612"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="503"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="565"/>
         <source>Foreground</source>
         <translation>文字色</translation>
     </message>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="356"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="519"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="613"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="504"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="566"/>
         <source>Background</source>
         <translation>背景色</translation>
     </message>
@@ -718,7 +718,7 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="452"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="645"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="598"/>
         <source>Whitespace-separated list of extensions (without leading dot). Wildcards `*` and `?` are supported (e.g. c*, htm*). Prefix with `!` to exclude (e.g. `c* !class` matches c-prefixed extensions except &apos;class&apos;)</source>
         <translation>拡張子を空白区切りで指定 (先頭のドット不要)。ワイルドカード `*` `?` をサポート (例: c*, htm*)。先頭に `!` で除外 (例: `c* !class` は c で始まる拡張子のうち &apos;class&apos; を除外)</translation>
     </message>
@@ -729,13 +729,13 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="465"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="658"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="611"/>
         <source>Extensions:</source>
         <translation>拡張子:</translation>
     </message>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="466"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="659"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="612"/>
         <source>MIME patterns:</source>
         <translation>MIME パターン:</translation>
     </message>
@@ -750,41 +750,37 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>テキストビュアーフォント</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="503"/>
         <source>Default encoding for opening text files. &apos;Auto&apos; detects the encoding from the file content.</source>
-        <translation>テキストファイルを開くときの既定エンコーディング。&apos;Auto&apos; はファイル内容から自動判定します。</translation>
+        <translation type="vanished">テキストファイルを開くときの既定エンコーディング。&apos;Auto&apos; はファイル内容から自動判定します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="505"/>
         <source>Encoding:</source>
-        <translation>エンコーディング:</translation>
+        <translation type="vanished">エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="507"/>
         <source>Show line numbers</source>
-        <translation>行番号を表示</translation>
+        <translation type="vanished">行番号を表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="509"/>
         <source>Word wrap</source>
-        <translation>ワードラップ</translation>
+        <translation type="vanished">ワードラップ</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="521"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="615"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="506"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="568"/>
         <source>Normal Foreground</source>
         <translation>通常文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="522"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="616"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="507"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="569"/>
         <source>Normal Background</source>
         <translation>通常背景色</translation>
     </message>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="237"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="523"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="617"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="508"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="570"/>
         <source>Normal:</source>
         <translation>通常:</translation>
     </message>
@@ -794,125 +790,113 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>アーカイブ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="527"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="621"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="512"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="574"/>
         <source>Selected Foreground</source>
         <translation>選択中文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="528"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="622"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="513"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="575"/>
         <source>Selected Background</source>
         <translation>選択中背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="529"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="623"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="514"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="576"/>
         <source>Selected:</source>
         <translation>選択中:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="533"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="518"/>
         <source>Line Number Foreground</source>
         <translation>行番号文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="534"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="519"/>
         <source>Line Number Background</source>
         <translation>行番号背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="535"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="520"/>
         <source>Line Number:</source>
         <translation>行番号:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="559"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="545"/>
         <source>Choose the font for the binary viewer hex dump</source>
         <translation>バイナリビュアー (16 進ダンプ) のフォントを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="563"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="549"/>
         <source>Binary Viewer Font</source>
         <translation>バイナリビュアーフォント</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="574"/>
         <source>1 Byte</source>
-        <translation>1 バイト</translation>
+        <translation type="vanished">1 バイト</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="575"/>
         <source>2 Byte</source>
-        <translation>2 バイト</translation>
+        <translation type="vanished">2 バイト</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="576"/>
         <source>4 Byte</source>
-        <translation>4 バイト</translation>
+        <translation type="vanished">4 バイト</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="577"/>
         <source>8 Byte</source>
-        <translation>8 バイト</translation>
+        <translation type="vanished">8 バイト</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="579"/>
         <source>Number of bytes per hex column (each line still shows 16 bytes)</source>
-        <translation>16 進列 1 つあたりのバイト数 (1 行は常に 16 バイト)</translation>
+        <translation type="vanished">16 進列 1 つあたりのバイト数 (1 行は常に 16 バイト)</translation>
+    </message>
+    <message>
+        <source>Unit:</source>
+        <translation type="vanished">単位:</translation>
+    </message>
+    <message>
+        <source>Little Endian</source>
+        <translation type="vanished">リトルエンディアン</translation>
+    </message>
+    <message>
+        <source>Big Endian</source>
+        <translation type="vanished">ビッグエンディアン</translation>
+    </message>
+    <message>
+        <source>Byte order applied when the unit is larger than 1 byte</source>
+        <translation type="vanished">単位が 1 バイトより大きいときのバイトオーダー</translation>
+    </message>
+    <message>
+        <source>Endian:</source>
+        <translation type="vanished">エンディアン:</translation>
+    </message>
+    <message>
+        <source>Text encoding for the string column on the right</source>
+        <translation type="vanished">右側の文字列列のテキストエンコーディング</translation>
+    </message>
+    <message>
+        <source>String Encoding:</source>
+        <translation type="vanished">文字列エンコーディング:</translation>
     </message>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="580"/>
-        <source>Unit:</source>
-        <translation>単位:</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="583"/>
-        <source>Little Endian</source>
-        <translation>リトルエンディアン</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="585"/>
-        <source>Big Endian</source>
-        <translation>ビッグエンディアン</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="588"/>
-        <source>Byte order applied when the unit is larger than 1 byte</source>
-        <translation>単位が 1 バイトより大きいときのバイトオーダー</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="589"/>
-        <source>Endian:</source>
-        <translation>エンディアン:</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="600"/>
-        <source>Text encoding for the string column on the right</source>
-        <translation>右側の文字列列のテキストエンコーディング</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="604"/>
-        <source>String Encoding:</source>
-        <translation>文字列エンコーディング:</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="627"/>
         <source>Address Foreground</source>
         <translation>アドレス文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="628"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="581"/>
         <source>Address Background</source>
         <translation>アドレス背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="629"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="582"/>
         <source>Address:</source>
         <translation>アドレス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="652"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="605"/>
         <source>Whitespace-separated MIME patterns. Use trailing &apos;*&apos; for prefix match (e.g. image/*)</source>
         <translation>MIME パターンを空白区切りで指定。末尾 &apos;*&apos; で前方一致 (例: image/*)</translation>
     </message>
@@ -937,68 +921,68 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">アニメーションを再生 (GIF / WebP)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="668"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="621"/>
         <source>Transparency</source>
         <translation>透明部分</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="673"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="626"/>
         <source>Checker</source>
         <translation>チェッカー</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="675"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="628"/>
         <source>Checker Color 1</source>
         <translation>チェッカー色 1</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="676"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="629"/>
         <source>Checker Color 2</source>
         <translation>チェッカー色 2</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="677"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="630"/>
         <source>Color 1:</source>
         <translation>色 1:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="679"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="632"/>
         <source>Color 2:</source>
         <translation>色 2:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="686"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="688"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="639"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="641"/>
         <source>Solid Color</source>
         <translation>単色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="689"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="642"/>
         <source>Color:</source>
         <translation>色:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1012"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="948"/>
         <source>(Choose a preset...)</source>
         <translation>(プリセットを選択...)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1056"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="992"/>
         <source>Select Font</source>
         <translation>フォントを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1086"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1022"/>
         <source>Select Foreground Color</source>
         <translation>文字色を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1104"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1040"/>
         <source>Select Background Color</source>
         <translation>背景色を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="1127"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="1063"/>
         <source>(none)</source>
         <translation>(なし)</translation>
     </message>
@@ -1526,6 +1510,69 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <location filename="../src/viewer/BinaryView.cpp" line="432"/>
         <source>  ·  truncated to first %1</source>
         <translation>  ·  先頭 %1 件まで表示</translation>
+    </message>
+</context>
+<context>
+    <name>Farman::BinaryViewerSettingsPage</name>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="19"/>
+        <source>1 Byte</source>
+        <translation>1 バイト</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="20"/>
+        <source>2 Byte</source>
+        <translation>2 バイト</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="21"/>
+        <source>4 Byte</source>
+        <translation>4 バイト</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="22"/>
+        <source>8 Byte</source>
+        <translation>8 バイト</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="23"/>
+        <source>Number of bytes grouped per value column.</source>
+        <translation>値カラム 1 つにまとめるバイト数。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="24"/>
+        <source>Unit:</source>
+        <translation>単位:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="27"/>
+        <source>Little Endian</source>
+        <translation>リトルエンディアン</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="29"/>
+        <source>Big Endian</source>
+        <translation>ビッグエンディアン</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="31"/>
+        <source>Byte order used when grouping multiple bytes.</source>
+        <translation>複数バイトをまとめるときのバイト順。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="32"/>
+        <source>Endian:</source>
+        <translation>エンディアン:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="41"/>
+        <source>Encoding used for the string (ASCII/text) column.</source>
+        <translation>文字列 (ASCII/テキスト) カラムに使うエンコーディング。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="42"/>
+        <source>String Encoding:</source>
+        <translation>文字列エンコーディング:</translation>
     </message>
 </context>
 <context>
@@ -6682,6 +6729,29 @@ Keybindings are not affected.</source>
     </message>
 </context>
 <context>
+    <name>Farman::TextViewerSettingsPage</name>
+    <message>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="26"/>
+        <source>Default encoding for opening text files. &apos;Auto&apos; detects the encoding from the file content.</source>
+        <translation>テキストファイルを開く際の既定エンコーディング。「Auto」はファイル内容から自動判別します。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="29"/>
+        <source>Encoding:</source>
+        <translation>エンコーディング:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="33"/>
+        <source>Show line numbers</source>
+        <translation>行番号を表示</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="35"/>
+        <source>Word wrap</source>
+        <translation>折り返し</translation>
+    </message>
+</context>
+<context>
     <name>Farman::TransferConfirmDialog</name>
     <message>
         <location filename="../src/ui/TransferConfirmDialog.cpp" line="42"/>
@@ -7229,8 +7299,8 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>混在</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="790"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="870"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="726"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="806"/>
         <source>(none)</source>
         <translation>(なし)</translation>
     </message>
