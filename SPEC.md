@@ -1495,10 +1495,11 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
     `capabilities()` / `hasSettings()` / `createSettingsPage(parent)`
 - 設定 UI: プラグインは `hasSettings()` を true にし、`createSettingsPage()` で
   `IPluginSettingsPage` ([src/viewer/IPluginSettingsPage.h](src/viewer/IPluginSettingsPage.h))
-  派生のページを返すと、Settings → Plugins → 詳細の「設定...」から farman 標準の
-  ダイアログ枠 (OK / Cancel / Apply / 既定に戻す) に載って開く。確定時に
+  派生のページを返すと、Settings → Plugins → 詳細ダイアログ内に「設定」グループ
+  として直接埋め込まれる (別ウィンドウにはしない)。詳細ダイアログの OK 確定時に
   farman が `page->save()` を呼び、続けて `Settings::load()` で再読込して開いて
-  いるビュアーへ反映する。公式・外部プラグイン共通の仕組み。
+  いるビュアーへ反映する。設定ページがある場合は「既定に戻す」ボタンも出る。
+  公式・外部プラグイン共通の仕組み。
 - `PluginContext` 構造体 (farmanVersion と Appearance スナップショットを保持。
   将来 logger / settings / mainWindow 等を「引数追加 = ABI 破壊」抜きで
   足せるよう用意)

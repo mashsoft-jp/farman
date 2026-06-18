@@ -5866,14 +5866,17 @@ The format or codec is not supported on this platform.</source>
         <translation>パス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="443"/>
-        <source>Settings...</source>
-        <translation>設定...</translation>
+        <location filename="../src/ui/PluginsTab.cpp" line="435"/>
+        <source>Settings</source>
+        <translation>設定</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="482"/>
+        <source>Settings...</source>
+        <translation type="vanished">設定...</translation>
+    </message>
+    <message>
         <source>%1 Settings</source>
-        <translation>%1 の設定</translation>
+        <translation type="vanished">%1 の設定</translation>
     </message>
     <message>
         <location filename="../src/ui/PluginsTab.cpp" line="416"/>

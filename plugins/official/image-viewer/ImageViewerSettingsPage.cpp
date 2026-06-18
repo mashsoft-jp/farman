@@ -4,8 +4,7 @@
 
 #include <QCheckBox>
 #include <QComboBox>
-#include <QHBoxLayout>
-#include <QLabel>
+#include <QFormLayout>
 #include <QVBoxLayout>
 
 namespace Farman {
@@ -21,9 +20,12 @@ ImageViewerSettingsPage::ImageViewerSettingsPage(QWidget* parent)
   : IPluginSettingsPage(parent) {
   auto* outer = new QVBoxLayout(this);
 
-  auto* row = new QHBoxLayout();
-  row->setSpacing(12);
-  row->addWidget(new QLabel(tr("Zoom:"), this));
+  // ズームはラベル付きフォーム行。チェックボックスはフォームの「フィールド列」
+  // に入れるとラベル分インデントされ、ズームに関連した項目のように見えてしまう
+  // ため、フォームの外 (左端) に独立して並べる。
+  auto* form = new QFormLayout();
+  form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+  form->setContentsMargins(0, 0, 0, 0);
   m_zoomCombo = new QComboBox(this);
   m_zoomCombo->setEditable(true);
   for (int p : { 25, 50, 75, 100, 200 }) {
@@ -31,18 +33,17 @@ ImageViewerSettingsPage::ImageViewerSettingsPage(QWidget* parent)
   }
   m_zoomCombo->setToolTip(
     tr("Default zoom factor (used when 'Fit to window' is off)"));
-  row->addWidget(m_zoomCombo);
+  form->addRow(tr("Zoom:"), m_zoomCombo);
+  outer->addLayout(form);
 
   m_fitCheck = new QCheckBox(tr("Fit image to window"), this);
   m_fitCheck->setToolTip(tr(
     "Scale the image to fit within the viewer; zoom factor is ignored "
     "while this is on."));
-  row->addWidget(m_fitCheck);
+  outer->addWidget(m_fitCheck);
 
   m_animCheck = new QCheckBox(tr("Play animation (GIF / WebP)"), this);
-  row->addWidget(m_animCheck);
-  row->addStretch();
-  outer->addLayout(row);
+  outer->addWidget(m_animCheck);
   outer->addStretch();
 
   // 現在値を読み込む。プラグイン dylib 側の Settings インスタンスをファイルから

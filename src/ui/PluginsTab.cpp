@@ -425,25 +425,38 @@ void PluginsTab::showPluginDetails(int row) {
   }
   layout->addLayout(form);
 
-  const bool editable = extensionsEditable || enabledEditable;
+  // 設定 UI を持つロード済みプラグインは、設定ページを詳細ダイアログ内に直接
+  // 埋め込む (別ウィンドウにしない)。項目数が少ないので 1 枚で完結させる。
+  IPluginSettingsPage* settingsPage = nullptr;
+  if (rec.loaded && !rec.pluginId.isEmpty()) {
+    if (IViewerPlugin* plugin =
+          ViewerDispatcher::instance().pluginById(rec.pluginId);
+        plugin && plugin->hasSettings()) {
+      auto* group = new QGroupBox(tr("Settings"), &dialog);
+      auto* groupLayout = new QVBoxLayout(group);
+      settingsPage = plugin->createSettingsPage(group);
+      if (settingsPage) {
+        groupLayout->addWidget(settingsPage);
+        layout->addWidget(group);
+      } else {
+        delete group;
+      }
+    }
+  }
+
+  // 設定ページがある場合も OK/Cancel を出す (Apply で確定 / Cancel で破棄)。
+  const bool editable = extensionsEditable || enabledEditable || settingsPage;
   auto* buttons = new QDialogButtonBox(
     editable ? (QDialogButtonBox::Ok | QDialogButtonBox::Cancel)
              : QDialogButtonBox::StandardButtons(QDialogButtonBox::Close),
     &dialog);
   connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
   connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
-
-  // 設定 UI を持つロード済みプラグインには「設定...」を出す。押すと farman が
-  // 用意した枠にプラグインの設定ページを載せて開く。
-  if (rec.loaded && !rec.pluginId.isEmpty()) {
-    if (IViewerPlugin* plugin =
-          ViewerDispatcher::instance().pluginById(rec.pluginId);
-        plugin && plugin->hasSettings()) {
-      auto* settingsBtn =
-        buttons->addButton(tr("Settings..."), QDialogButtonBox::ActionRole);
-      connect(settingsBtn, &QPushButton::clicked, &dialog,
-              [this, plugin, &dialog]() { openPluginSettings(plugin, &dialog); });
-    }
+  // 設定ページがあるときだけ「既定に戻す」を出す。
+  if (settingsPage) {
+    auto* rd = buttons->addButton(QDialogButtonBox::RestoreDefaults);
+    connect(rd, &QPushButton::clicked, settingsPage,
+            [settingsPage]() { settingsPage->restoreDefaults(); });
   }
   layout->addWidget(buttons);
 
@@ -451,6 +464,12 @@ void PluginsTab::showPluginDetails(int row) {
   dialog.resize(std::clamp(dialog.sizeHint().width(), 420, 560),
                 dialog.sizeHint().height());
   if (dialog.exec() != QDialog::Accepted) return;
+
+  // 設定ページを永続化し、本体 Settings を再読込して開いているビュアーへ反映。
+  if (settingsPage) {
+    settingsPage->save();
+    Settings::instance().load();
+  }
 
   if (enabledEditable) {
     if (enabledCheck->isChecked()) {
@@ -473,47 +492,6 @@ void PluginsTab::showPluginDetails(int row) {
       item->setToolTip(text);
     }
   }
-}
-
-void PluginsTab::openPluginSettings(IViewerPlugin* plugin, QWidget* parent) {
-  if (!plugin) return;
-
-  QDialog dlg(parent);
-  dlg.setWindowTitle(tr("%1 Settings").arg(plugin->pluginName()));
-  auto* layout = new QVBoxLayout(&dlg);
-
-  IPluginSettingsPage* page = plugin->createSettingsPage(&dlg);
-  if (!page) return;  // hasSettings と矛盾するが念のため
-  layout->addWidget(page, 1);
-
-  auto* box = new QDialogButtonBox(
-    QDialogButtonBox::Ok | QDialogButtonBox::Cancel
-      | QDialogButtonBox::Apply | QDialogButtonBox::RestoreDefaults,
-    &dlg);
-  layout->addWidget(box);
-
-  // Apply / OK: ページに永続化させ、本体 Settings を再読込して開いている
-  // ビュアーへ反映する (load() が settingsChanged を発火する)。
-  auto applyAndReload = [page]() {
-    page->save();
-    Settings::instance().load();
-  };
-  connect(box, &QDialogButtonBox::accepted, &dlg, [&dlg, applyAndReload]() {
-    applyAndReload();
-    dlg.accept();
-  });
-  connect(box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-  if (auto* applyBtn = box->button(QDialogButtonBox::Apply)) {
-    connect(applyBtn, &QPushButton::clicked, &dlg, applyAndReload);
-  }
-  if (auto* rdBtn = box->button(QDialogButtonBox::RestoreDefaults)) {
-    connect(rdBtn, &QPushButton::clicked, page,
-            [page]() { page->restoreDefaults(); });
-  }
-
-  dlg.resize(std::clamp(dlg.sizeHint().width(), 460, 720),
-             std::clamp(dlg.sizeHint().height(), 320, 640));
-  dlg.exec();
 }
 
 QString PluginsTab::normalizedExtension(const QString& extension) const {
