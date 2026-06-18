@@ -223,9 +223,7 @@ private:
   // Image viewer
   QLineEdit*    m_imageExtensionsEdit           = nullptr;
   QLineEdit*    m_imageMimePatternsEdit         = nullptr;
-  QComboBox*    m_imageZoomCombo                = nullptr;
-  QCheckBox*    m_imageFitToWindowCheck         = nullptr;
-  QCheckBox*    m_imageAnimationCheck           = nullptr;
+  // ズーム / フィット / アニメは画像ビュアープラグインの設定へ移設済み。
   QRadioButton* m_imageTransparencyCheckerRadio = nullptr;
   QRadioButton* m_imageTransparencySolidRadio   = nullptr;
   QPushButton*  m_imageCheckerColor1Button      = nullptr;

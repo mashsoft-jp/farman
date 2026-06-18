@@ -320,6 +320,7 @@ add_farman_official_viewer_plugin(MarkdownViewerPlugin plugins/official/markdown
 
 add_farman_official_viewer_plugin(ImageViewerPlugin plugins/official/image-viewer
   plugins/official/image-viewer/ImageViewerPlugin.cpp
+  plugins/official/image-viewer/ImageViewerSettingsPage.cpp
   src/viewer/ImageView.cpp
   src/viewer/ImageViewerWindow.cpp
   src/viewer/PsdReader.cpp

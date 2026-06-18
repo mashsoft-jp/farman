@@ -660,27 +660,9 @@ QWidget* AppearanceTab::buildImageViewerPage() {
     outer->addLayout(assoc);
   }
 
-  // ── 上段: Zoom / Fit / Animation ──
-  QHBoxLayout* topRow = new QHBoxLayout();
-  topRow->setSpacing(12);
-  topRow->addWidget(new QLabel(tr("Zoom:"), page));
-  m_imageZoomCombo = new QComboBox(page);
-  m_imageZoomCombo->setEditable(true);
-  for (int p : { 25, 50, 75, 100, 200 }) {
-    m_imageZoomCombo->addItem(QString::number(p) + QLatin1Char('%'), p);
-  }
-  m_imageZoomCombo->setToolTip(tr("Default zoom factor (used when 'Fit to window' is off)"));
-  topRow->addWidget(m_imageZoomCombo);
-
-  m_imageFitToWindowCheck = new QCheckBox(tr("Fit image to window"), page);
-  m_imageFitToWindowCheck->setToolTip(
-    tr("Scale the image to fit within the viewer; zoom factor is ignored while this is on."));
-  topRow->addWidget(m_imageFitToWindowCheck);
-
-  m_imageAnimationCheck = new QCheckBox(tr("Play animation (GIF / WebP)"), page);
-  topRow->addWidget(m_imageAnimationCheck);
-  topRow->addStretch();
-  outer->addLayout(topRow);
+  // 既定ズーム / ウィンドウに合わせる / アニメ再生は、テーマ非依存の表示設定
+  // として画像ビュアープラグインの設定 (Settings → Plugins → 詳細 → 設定...)
+  // へ移設した。ここ (外観) にはテーマと一体の色設定 (透過) のみ残す。
 
   // ── Transparency セクション ──
   QGroupBox* transparencyGroup = new QGroupBox(tr("Transparency"), page);
@@ -775,9 +757,7 @@ void AppearanceTab::loadSettings() {
   // Image viewer
   m_imageExtensionsEdit->setText(settings.imageViewerExtensions().join(QLatin1Char(' ')));
   m_imageMimePatternsEdit->setText(settings.imageViewerMimePatterns().join(QLatin1Char(' ')));
-  m_imageZoomCombo->setCurrentText(QString::number(settings.imageViewerZoomPercent()) + QLatin1Char('%'));
-  m_imageFitToWindowCheck->setChecked(settings.imageViewerFitToWindow());
-  m_imageAnimationCheck->setChecked(settings.imageViewerAnimation());
+  // ズーム / フィット / アニメはプラグイン設定へ移設したのでここでは扱わない。
   if (settings.imageViewerTransparencyMode() == ImageTransparencyMode::SolidColor) {
     m_imageTransparencySolidRadio->setChecked(true);
   } else {
@@ -1311,18 +1291,10 @@ void AppearanceTab::save() {
   // Image viewer
   settings.setImageViewerExtensions(splitList(m_imageExtensionsEdit->text()));
   settings.setImageViewerMimePatterns(splitList(m_imageMimePatternsEdit->text()));
-  {
-    QString s = m_imageZoomCombo->currentText().trimmed();
-    if (s.endsWith(QLatin1Char('%'))) s.chop(1);
-    bool ok = false;
-    int v = s.toInt(&ok);
-    if (ok) settings.setImageViewerZoomPercent(v);
-  }
+  // ズーム / フィット / アニメはプラグイン設定へ移設したのでここでは保存しない。
   // Image viewer checker colors (theme-independent)
   settings.setImageViewerCheckerColor1(m_imageCheckerColor1Value);
   settings.setImageViewerCheckerColor2(m_imageCheckerColor2Value);
-  settings.setImageViewerFitToWindow(m_imageFitToWindowCheck->isChecked());
-  settings.setImageViewerAnimation(m_imageAnimationCheck->isChecked());
   settings.setImageViewerTransparencyMode(
     m_imageTransparencySolidRadio->isChecked()
       ? ImageTransparencyMode::SolidColor
