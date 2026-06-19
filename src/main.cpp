@@ -1,11 +1,13 @@
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QDialogButtonBox>
 #include <QDir>
 #include <QIcon>
 #include <QLibraryInfo>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QLocale>
+#include <QProxyStyle>
 #include <QStandardPaths>
 #include <QStyleHints>
 #include <QTranslator>
@@ -14,6 +16,45 @@
 #include "settings/Settings.h"
 
 namespace {
+
+// ダイアログのボタン配置を全 OS で統一するためのスタイル。QDialogButtonBox は
+// 既定で OS ネイティブのボタン順 (Windows は OK が左、macOS は OK が右) に従う
+// が、farman では「OK を右端」(macOS / GNOME 風、既存の Tab 順 Cancel→Apply→OK
+// とも一致) に固定する。
+class FarmanProxyStyle : public QProxyStyle {
+public:
+  using QProxyStyle::QProxyStyle;
+  int styleHint(StyleHint hint, const QStyleOption* option = nullptr,
+                const QWidget* widget = nullptr,
+                QStyleHintReturn* returnData = nullptr) const override {
+    if (hint == QStyle::SH_DialogButtonLayout) {
+      return QDialogButtonBox::MacLayout;
+    }
+    return QProxyStyle::styleHint(hint, option, widget, returnData);
+  }
+};
+
+// Qt 標準ボタン (OK / Cancel / Apply など) の文言は本来 Qt 同梱の翻訳
+// (qt_<lang>.qm) が供給するが、Windows 配布は windeployqt --no-translations の
+// ため未同梱で英語のままになる。farman 自前のカタログ (リソース埋め込みで全 OS
+// ロードされる) に QPlatformTheme 文脈の訳を持たせ、どの OS でも同じ表記になる
+// ようにする。ここでの QT_TRANSLATE_NOOP は lupdate にソース文字列を拾わせる
+// ためだけのもので、実際の変換は QDialogButtonBox 側の translate() が行う。
+[[maybe_unused]] static const char* const kStandardButtonTexts[] = {
+  QT_TRANSLATE_NOOP("QPlatformTheme", "OK"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Cancel"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Apply"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Close"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Reset"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Restore Defaults"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Save"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Discard"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Open"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Help"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "&Yes"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "&No"),
+};
+
 // 二重起動検出用のサーバー名。HOME や AppConfigLocation のハッシュを混ぜて
 // 同一ユーザーの異なるセッション (例: SSH 経由の別ホスト) で衝突しないように
 // する。マルチユーザー環境でも同じ socket 名を取り合わないように、
@@ -32,6 +73,10 @@ int main(int argc, char *argv[]) {
   app.setOrganizationName("Farman");
   app.setApplicationName("farman");
   app.setApplicationVersion(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)));
+
+  // ダイアログのボタン配置を全 OS で統一する (OK を右端)。既定のスタイルを
+  // ラップするので、ボタン順以外のネイティブな見た目はそのまま維持される。
+  app.setStyle(new FarmanProxyStyle);
 
   // --version / --help を処理して即終了する (GUI を立ち上げない)。
   // process() は該当オプションが付いていたら stdout に出力して exit() する。
