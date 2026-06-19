@@ -5,6 +5,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFileInfo>
+#include <QJsonObject>
 #include <QPalette>
 #include <QPluginLoader>
 #include <QSet>
@@ -145,6 +146,18 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
     rec.filePath = fileInfo.absoluteFilePath();
 
     auto loader = std::make_shared<QPluginLoader>(rec.filePath);
+
+    // Qt プラグインのメタデータ (IID) を持たないファイルは、そもそも Qt
+    // プラグインではない (例: Windows で同梱ビュアーが依存する uchardet.dll
+    // などのネイティブ DLL)。一覧に「失敗したプラグイン」として並べると
+    // 紛らわしいので、ロードを試みず静かにスキップする。
+    if (loader->metaData().value(QStringLiteral("IID")).toString().isEmpty()) {
+      Logger::instance().info(
+        QStringLiteral("Plugins: skipping non-plugin library %1")
+          .arg(fileInfo.fileName()));
+      continue;
+    }
+
     QObject* plugin = loader->instance();
     if (!plugin) {
       rec.loaded      = false;
