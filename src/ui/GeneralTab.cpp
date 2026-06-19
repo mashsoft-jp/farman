@@ -185,17 +185,13 @@ void GeneralTab::setupUi() {
   m_logRetentionForeverCheck->setToolTip(
     tr("If checked, never delete old daily log files."));
 
+  // 1 行目: ログパネルの表示設定 (パネル表示 / 高さ)。
   QHBoxLayout* logVisibleRow = new QHBoxLayout();
   logVisibleRow->setContentsMargins(0, 0, 0, 0);
   logVisibleRow->addWidget(m_logVisibleCheck);
   logVisibleRow->addSpacing(16);
   logVisibleRow->addWidget(new QLabel(tr("Height:"), this));
   logVisibleRow->addWidget(m_logPaneHeightSpin);
-  logVisibleRow->addSpacing(16);
-  logVisibleRow->addWidget(new QLabel(tr("Retention:"), this));
-  logVisibleRow->addWidget(m_logRetentionDaysSpin);
-  logVisibleRow->addSpacing(8);
-  logVisibleRow->addWidget(m_logRetentionForeverCheck);
   logVisibleRow->addStretch(1);
   logGroupLayout->addLayout(logVisibleRow);
 
@@ -212,6 +208,7 @@ void GeneralTab::setupUi() {
   m_logDirectoryBrowse->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
   m_logDirectoryBrowse->setToolTip(tr("Choose log directory..."));
 
+  // 2 行目: ログをファイルに保存 (有効時のみ下の保持設定が効く)。
   QHBoxLayout* logFileRow = new QHBoxLayout();
   logFileRow->setContentsMargins(0, 0, 0, 0);
   logFileRow->addWidget(m_logToFileCheck);
@@ -219,6 +216,18 @@ void GeneralTab::setupUi() {
   logFileRow->addWidget(m_logDirectoryEdit, 1);
   logFileRow->addWidget(m_logDirectoryBrowse);
   logGroupLayout->addLayout(logFileRow);
+
+  // 3 行目: 保存日数 / 永久に保持。ファイル保存が有効なときだけ意味を持つ
+  // 設定なので、「ログをファイルに保存」の下に字下げして配置する。
+  QHBoxLayout* logRetentionRow = new QHBoxLayout();
+  logRetentionRow->setContentsMargins(0, 0, 0, 0);
+  logRetentionRow->addSpacing(24);
+  logRetentionRow->addWidget(new QLabel(tr("Retention:"), this));
+  logRetentionRow->addWidget(m_logRetentionDaysSpin);
+  logRetentionRow->addSpacing(8);
+  logRetentionRow->addWidget(m_logRetentionForeverCheck);
+  logRetentionRow->addStretch(1);
+  logGroupLayout->addLayout(logRetentionRow);
 
   auto updateLogFileEnabled = [this]() {
     const bool fileEnabled = m_logToFileCheck->isChecked();
