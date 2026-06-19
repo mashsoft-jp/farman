@@ -16,8 +16,11 @@
 #include <QLocale>
 #include <QMediaMetaData>
 #include <QPlainTextEdit>
+#include <QMouseEvent>
 #include <QSlider>
 #include <QStackedWidget>
+#include <QStyle>
+#include <QStyleOptionSlider>
 #include <QToolBar>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -30,6 +33,44 @@ namespace {
 constexpr qint64 kSeekStepMs      = 5000;
 constexpr qint64 kSeekLargeStepMs = 30000;
 constexpr int    kVolumeStep      = 5;
+
+// 溝の任意の位置をクリックしたら、その位置へ即移動するスライダー。
+// 既定の QSlider はクリックでページ単位送りになるだけで、シーク/音量バーでは
+// 「クリックした位置で即変わってほしい」という挙動にならない。マウス押下時に
+// クリック座標から値を求めて setValue + sliderMoved を発火し、既存の接続
+// (sliderMoved→シーク / valueChanged→音量) でそのまま反映させる。
+// その後 base 実装を呼ぶことで、つまみがクリック位置に来た状態からドラッグも
+// 継続できる。新しい signal/slot は追加しないので Q_OBJECT は不要。
+class ClickSeekSlider : public QSlider {
+public:
+  using QSlider::QSlider;
+
+protected:
+  void mousePressEvent(QMouseEvent* ev) override {
+    if (ev->button() == Qt::LeftButton) {
+      QStyleOptionSlider opt;
+      initStyleOption(&opt);
+      const QRect groove =
+        style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, this);
+      const QRect handle =
+        style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
+      // つまみそのものを掴んだときは通常のドラッグに任せる。
+      if (!handle.contains(ev->position().toPoint())) {
+        const int span = (orientation() == Qt::Horizontal)
+                           ? groove.width()  - handle.width()
+                           : groove.height() - handle.height();
+        const int pos  = (orientation() == Qt::Horizontal)
+                           ? ev->position().toPoint().x() - groove.x() - handle.width()  / 2
+                           : ev->position().toPoint().y() - groove.y() - handle.height() / 2;
+        const int value = QStyle::sliderValueFromPosition(
+          minimum(), maximum(), pos, span, opt.upsideDown);
+        setValue(value);
+        emit sliderMoved(value);
+      }
+    }
+    QSlider::mousePressEvent(ev);
+  }
+};
 } // namespace
 
 MediaView::MediaView(QWidget* parent)
@@ -125,7 +166,8 @@ void MediaView::setupUi() {
   // 矢印キーをビュアー全体のシーク / 音量操作に使うので、スライダ自体には
   // キーボードフォーカスを与えない (マウス操作専用)。
   // Expanding ポリシーでツールバーの余白を全部使う。
-  m_positionSlider = new QSlider(Qt::Horizontal, m_toolbar);
+  // 溝のクリックでその位置へ即シークできるよう ClickSeekSlider を使う。
+  m_positionSlider = new ClickSeekSlider(Qt::Horizontal, m_toolbar);
   m_positionSlider->setFocusPolicy(Qt::NoFocus);
   m_positionSlider->setEnabled(false);
   m_positionSlider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -172,7 +214,8 @@ void MediaView::setupUi() {
   });
   m_toolbar->addWidget(m_muteButton);
 
-  m_volumeSlider = new QSlider(Qt::Horizontal, m_toolbar);
+  // 音量バーもクリック位置へ即移動できるよう ClickSeekSlider を使う。
+  m_volumeSlider = new ClickSeekSlider(Qt::Horizontal, m_toolbar);
   m_volumeSlider->setFocusPolicy(Qt::NoFocus);
   m_volumeSlider->setRange(0, 100);
   m_volumeSlider->setValue(Settings::instance().mediaViewerVolume());
