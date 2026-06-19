@@ -32,12 +32,16 @@ QStringList MediaViewerPlugin::supportedMimeTypes() const {
     QStringLiteral("video/webm"),
     QStringLiteral("video/x-matroska"),
     QStringLiteral("video/x-msvideo"),
+    QStringLiteral("video/x-ms-wmv"),
+    QStringLiteral("video/mpeg"),
+    QStringLiteral("video/mp2t"),
     QStringLiteral("audio/mpeg"),
     QStringLiteral("audio/mp4"),
     QStringLiteral("audio/flac"),
     QStringLiteral("audio/ogg"),
     QStringLiteral("audio/x-wav"),
     QStringLiteral("audio/aac"),
+    QStringLiteral("audio/x-ms-wma"),
   };
 }
 

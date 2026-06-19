@@ -18,7 +18,8 @@ constexpr bool kDefLoop     = false;
 constexpr bool kDefAutoplay = true;
 const QStringList kDefExtensions = {
   "mp4", "mov", "m4v", "webm", "avi", "mkv",
-  "wav", "mp3", "m4a", "flac", "ogg", "aac",
+  "wmv", "mpg", "mpeg", "m2v", "m2ts", "mts", "ts",
+  "wav", "mp3", "m4a", "flac", "ogg", "aac", "wma",
 };
 } // namespace
 

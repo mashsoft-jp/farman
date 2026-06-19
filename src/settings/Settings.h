@@ -703,8 +703,9 @@ private:
   QStringList      m_mediaViewerExtensions = {
     // 動画
     "mp4", "mov", "m4v", "webm", "avi", "mkv",
+    "wmv", "mpg", "mpeg", "m2v", "m2ts", "mts", "ts",
     // 音声
-    "wav", "mp3", "m4a", "flac", "ogg", "aac",
+    "wav", "mp3", "m4a", "flac", "ogg", "aac", "wma",
   };
   int              m_mediaViewerVolume   = 80;
   bool             m_mediaViewerLoop     = false;
