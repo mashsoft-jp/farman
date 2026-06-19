@@ -175,16 +175,6 @@ void GeneralTab::setupUi() {
   m_logPaneHeightSpin->setSuffix(tr(" px"));
   m_logPaneHeightSpin->setToolTip(tr("Fixed height of the log pane in pixels."));
 
-  m_logRetentionDaysSpin = new QSpinBox(this);
-  m_logRetentionDaysSpin->setRange(1, 36500);
-  m_logRetentionDaysSpin->setSuffix(tr(" days"));
-  m_logRetentionDaysSpin->setToolTip(
-    tr("Daily log files older than this number of days are deleted on startup and on rotation."));
-
-  m_logRetentionForeverCheck = new QCheckBox(tr("Keep forever"), this);
-  m_logRetentionForeverCheck->setToolTip(
-    tr("If checked, never delete old daily log files."));
-
   // 1 行目: ログパネルの表示設定 (パネル表示 / 高さ)。
   QHBoxLayout* logVisibleRow = new QHBoxLayout();
   logVisibleRow->setContentsMargins(0, 0, 0, 0);
@@ -219,6 +209,17 @@ void GeneralTab::setupUi() {
 
   // 3 行目: 保存日数 / 永久に保持。ファイル保存が有効なときだけ意味を持つ
   // 設定なので、「ログをファイルに保存」の下に字下げして配置する。
+  // Tab 順を表示順に合わせるため、ウィジェットもここ (ファイル保存の後) で生成する。
+  m_logRetentionDaysSpin = new QSpinBox(this);
+  m_logRetentionDaysSpin->setRange(1, 36500);
+  m_logRetentionDaysSpin->setSuffix(tr(" days"));
+  m_logRetentionDaysSpin->setToolTip(
+    tr("Daily log files older than this number of days are deleted on startup and on rotation."));
+
+  m_logRetentionForeverCheck = new QCheckBox(tr("Keep forever"), this);
+  m_logRetentionForeverCheck->setToolTip(
+    tr("If checked, never delete old daily log files."));
+
   QHBoxLayout* logRetentionRow = new QHBoxLayout();
   logRetentionRow->setContentsMargins(0, 0, 0, 0);
   logRetentionRow->addSpacing(24);
