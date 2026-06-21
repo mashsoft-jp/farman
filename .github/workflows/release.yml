@@ -135,6 +135,7 @@ jobs:
           sudo apt-get install -y \
             libarchive-dev \
             libuchardet-dev \
+            libheif-dev \
             pkg-config \
             libgl1-mesa-dev \
             libxkbcommon-dev
@@ -155,7 +156,7 @@ jobs:
         env:
           VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
         run: |
-          vcpkg install libarchive:x64-windows uchardet:x64-windows
+          vcpkg install libarchive:x64-windows uchardet:x64-windows "libheif[core,libde265]:x64-windows"
           "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" `
             | Out-File -FilePath $env:GITHUB_ENV -Append
 

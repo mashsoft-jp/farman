@@ -52,6 +52,23 @@ if(NOT UCHARDET_FOUND)
   endif()
 endif()
 
+# libheif — HEIF/HEIC デコード用 (任意)。見つかったプラットフォームでのみ、
+# QImageReader 用の HEIF プラグインを本体へ静的リンクする。macOS は Qt 同梱の
+# qmacheif (Apple ImageIO) が HEIC を読むため、本番ビルドでは libheif を入れず
+# このプラグインはビルドしない (ローカル開発で brew install libheif すると
+# 有効化されコンパイル検証できる)。vcpkg は CONFIG パッケージ、Homebrew /
+# apt は pkg-config を提供する。
+set(FARMAN_HEIF_TARGET "")
+find_package(libheif CONFIG QUIET)
+if(libheif_FOUND AND TARGET libheif::heif)
+  set(FARMAN_HEIF_TARGET libheif::heif)
+elseif(PkgConfig_FOUND)
+  pkg_check_modules(LIBHEIF QUIET IMPORTED_TARGET libheif)
+  if(LIBHEIF_FOUND)
+    set(FARMAN_HEIF_TARGET PkgConfig::LIBHEIF)
+  endif()
+endif()
+
 # macOS .app バンドルに同梱するアイコン。
 # - tools/generate_icon_assets.sh で images/icon.svg から手動で再生成する
 #   (CMake からは自動実行しない)。
@@ -247,6 +264,22 @@ target_link_libraries(farman PRIVATE
   Qt6::PdfWidgets
   LibArchive::LibArchive
 )
+
+# HEIF/HEIC 画像プラグイン (libheif が見つかったときのみ)。静的 Qt プラグイン
+# として本体へリンクし、Q_IMPORT_PLUGIN で取り込む (main.cpp 側、
+# FARMAN_HAVE_HEIF で分岐)。QImageReader のレジストリはプロセス共通なので、
+# 動的ロードされる画像ビュアープラグインからも HEIC が読めるようになる。
+if(FARMAN_HEIF_TARGET)
+  add_library(FarmanHeifPlugin STATIC src/imageio/HeifImagePlugin.cpp)
+  set_target_properties(FarmanHeifPlugin PROPERTIES AUTOMOC ON)
+  target_compile_definitions(FarmanHeifPlugin PRIVATE QT_STATICPLUGIN)
+  target_link_libraries(FarmanHeifPlugin PRIVATE Qt6::Gui ${FARMAN_HEIF_TARGET})
+  target_link_libraries(farman PRIVATE FarmanHeifPlugin)
+  target_compile_definitions(farman PRIVATE FARMAN_HAVE_HEIF)
+  message(STATUS "farman: HEIF/HEIC image plugin enabled (${FARMAN_HEIF_TARGET})")
+else()
+  message(STATUS "farman: libheif not found; HEIF/HEIC plugin disabled (macOS uses qmacheif)")
+endif()
 
 set(FARMAN_PLUGIN_COMMON_SOURCES
   src/viewer/IViewerPlugin.cpp

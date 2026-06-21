@@ -15,6 +15,13 @@
 #include "viewer/ViewerDispatcher.h"
 #include "settings/Settings.h"
 
+#ifdef FARMAN_HAVE_HEIF
+#include <QtPlugin>
+// libheif ベースの HEIF/HEIC 画像プラグイン (src/imageio)。静的リンクなので
+// ここで明示的に取り込むと QImageReader のレジストリに登録される。
+Q_IMPORT_PLUGIN(HeifPlugin)
+#endif
+
 namespace {
 
 // ダイアログのボタン配置を全 OS で統一するためのスタイル。QDialogButtonBox は
