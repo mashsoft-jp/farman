@@ -156,7 +156,9 @@ jobs:
         env:
           VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
         run: |
-          vcpkg install libarchive:x64-windows uchardet:x64-windows "libheif[core,libde265]:x64-windows"
+          # libheif は libde265 (HEVC デコーダ) をコア依存として常に含むので
+          # フィーチャー指定は不要。
+          vcpkg install libarchive:x64-windows uchardet:x64-windows libheif:x64-windows
           "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" `
             | Out-File -FilePath $env:GITHUB_ENV -Append
 
