@@ -59,13 +59,34 @@ endif()
 # 有効化されコンパイル検証できる)。vcpkg は CONFIG パッケージ、Homebrew /
 # apt は pkg-config を提供する。
 set(FARMAN_HEIF_TARGET "")
+# 1) CMake CONFIG パッケージ (vcpkg はこれを提供)。ターゲット名はバージョンで
+#    libheif::heif / heif の両方がありうるので両対応する。
 find_package(libheif CONFIG QUIET)
-if(libheif_FOUND AND TARGET libheif::heif)
-  set(FARMAN_HEIF_TARGET libheif::heif)
-elseif(PkgConfig_FOUND)
+if(libheif_FOUND)
+  if(TARGET libheif::heif)
+    set(FARMAN_HEIF_TARGET libheif::heif)
+  elseif(TARGET heif)
+    set(FARMAN_HEIF_TARGET heif)
+  endif()
+endif()
+# 2) pkg-config (Homebrew / apt が提供)。
+if(NOT FARMAN_HEIF_TARGET AND PkgConfig_FOUND)
   pkg_check_modules(LIBHEIF QUIET IMPORTED_TARGET libheif)
   if(LIBHEIF_FOUND)
     set(FARMAN_HEIF_TARGET PkgConfig::LIBHEIF)
+  endif()
+endif()
+# 3) 最後の手段: ヘッダ + ライブラリを直接探して imported target を作る
+#    (Windows で pkg-config が無く、CONFIG のターゲット名も一致しない場合の保険)。
+if(NOT FARMAN_HEIF_TARGET)
+  find_path(HEIF_INCLUDE_DIR libheif/heif.h)
+  find_library(HEIF_LIBRARY NAMES heif libheif)
+  if(HEIF_INCLUDE_DIR AND HEIF_LIBRARY)
+    add_library(Farman::heif UNKNOWN IMPORTED)
+    set_target_properties(Farman::heif PROPERTIES
+      IMPORTED_LOCATION "${HEIF_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${HEIF_INCLUDE_DIR}")
+    set(FARMAN_HEIF_TARGET Farman::heif)
   endif()
 endif()
 
