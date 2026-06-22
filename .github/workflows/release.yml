@@ -418,10 +418,15 @@ jobs:
           foreach ($root in $candidates) {
             if (-not $root -or -not (Test-Path $root)) { continue }
             Write-Host "Searching VC redist under: $root"
+            # 複数バージョンの redist が同居する場合は *最新バージョン* を選ぶ。
+            # heif.dll など vcpkg の DLL はランナー最新の MSVC toolset でビルド
+            # され、新しい msvcp140.dll を要求する。古い redist をバンドルすると
+            # heif.dll の起動時初期化が msvcp140.dll 内で null アクセス
+            # (0xC0000005) → farman.exe が 0xc0000142 で起動できなくなる。
             $found = Get-ChildItem $root -Recurse -Filter "Microsoft.VC*.CRT" `
                        -Directory -ErrorAction SilentlyContinue |
                      Where-Object { $_.FullName -like "*\x64\*" } |
-                     Sort-Object { $_.FullName.Length } -Descending |
+                     Sort-Object { if ($_.FullName -match '\\(\d+\.\d+\.\d+)\\x64\\') { [version]$Matches[1] } else { [version]'0.0.0' } } -Descending |
                      Select-Object -First 1
             if ($found) { $crtDll = $found.FullName; break }
           }
@@ -431,6 +436,7 @@ jobs:
             $found = Get-ChildItem "C:\Program Files\Microsoft Visual Studio" -Recurse `
                        -Filter "Microsoft.VC*.CRT" -Directory -ErrorAction SilentlyContinue |
                      Where-Object { $_.FullName -like "*\x64\*" } |
+                     Sort-Object { if ($_.FullName -match '\\(\d+\.\d+\.\d+)\\x64\\') { [version]$Matches[1] } else { [version]'0.0.0' } } -Descending |
                      Select-Object -First 1
             if ($found) { $crtDll = $found.FullName }
           }
