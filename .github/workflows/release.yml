@@ -156,9 +156,14 @@ jobs:
         env:
           VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
         run: |
-          # libheif は libde265 (HEVC デコーダ) をコア依存として常に含むので
-          # フィーチャー指定は不要。
-          vcpkg install libarchive:x64-windows uchardet:x64-windows libheif:x64-windows
+          # libheif は libde265 (HEVC デコーダ) をコア依存として常に含む。
+          # farman は HEIC を「読む」だけなのでエンコーダ (x265) は不要。
+          # デフォルトフィーチャーには x265 が含まれ、libx265.dll が
+          # libx265_main10.dll / libx265_main12.dll (マルチビット深度版) に
+          # 依存するが、これらは bin/ に置かれず *.dll コピーから漏れて起動時
+          # 0xc0000142 (DLL 初期化失敗) を起こす。[core] でデフォルトフィーチャー
+          # を無効化し、デコードに必要な libde265 (コア依存) のみに絞る。
+          vcpkg install libarchive:x64-windows uchardet:x64-windows "libheif[core]:x64-windows"
           "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" `
             | Out-File -FilePath $env:GITHUB_ENV -Append
 
