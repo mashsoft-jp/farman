@@ -5,9 +5,11 @@
 #include "viewer/BinaryView.h"
 #include "viewer/CsvView.h"
 #include "viewer/ImageView.h"
+#include "viewer/IViewerPlugin.h"
 #include "viewer/MarkdownView.h"
 #include "viewer/PdfView.h"
 #include "viewer/TextView.h"
+#include "viewer/ViewerDispatcher.h"
 #include <QApplication>
 #include <QEventLoop>
 #include <QFileInfo>
@@ -176,6 +178,34 @@ bool mimeMatches(const QStringList& patterns, const QMimeType& mime) {
   return false;
 }
 
+bool viewerKindFromPluginId(const QString& pluginId, ViewerPanel::ViewerKind& kind) {
+  if (pluginId == QLatin1String("text_viewer")) {
+    kind = ViewerPanel::ViewerKind::Text;
+    return true;
+  }
+  if (pluginId == QLatin1String("image_viewer")) {
+    kind = ViewerPanel::ViewerKind::Image;
+    return true;
+  }
+  if (pluginId == QLatin1String("binary_viewer")) {
+    kind = ViewerPanel::ViewerKind::Binary;
+    return true;
+  }
+  if (pluginId == QLatin1String("markdown_viewer")) {
+    kind = ViewerPanel::ViewerKind::Markdown;
+    return true;
+  }
+  if (pluginId == QLatin1String("pdf_viewer")) {
+    kind = ViewerPanel::ViewerKind::Pdf;
+    return true;
+  }
+  if (pluginId == QLatin1String("csv_viewer")) {
+    kind = ViewerPanel::ViewerKind::Csv;
+    return true;
+  }
+  return false;
+}
+
 } // anonymous namespace
 
 ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
@@ -235,8 +265,26 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
   // 拡張子 / MIME ルーティングは「表示用パス」を尊重 (アーカイブ内エントリの
   // 元拡張子で振り分けたいので)。
   if (kind == ViewerKind::Auto) {
-    kind = resolveAuto(pathForStatus);
+    IViewerPlugin* plugin = ViewerDispatcher::instance().resolvePlugin(pathForStatus);
+    if (plugin) {
+      if (ViewerDispatcher::instance().isExternalPlugin(plugin->pluginId())) {
+        const bool ok = openPluginFile(plugin, filePath, pathForStatus);
+        QApplication::restoreOverrideCursor();
+        return ok;
+      }
+      if (!viewerKindFromPluginId(plugin->pluginId(), kind)) {
+        // 内蔵ビュー (ViewerKind) を持たない同梱公式プラグイン
+        // (media_viewer 等) は外部プラグインと同じ埋め込み経路で表示する。
+        const bool ok = openPluginFile(plugin, filePath, pathForStatus);
+        QApplication::restoreOverrideCursor();
+        return ok;
+      }
+    } else {
+      kind = resolveAuto(pathForStatus);
+    }
   }
+
+  clearPluginView();
 
   bool ok = false;
   switch (kind) {
@@ -251,6 +299,16 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
 
   QApplication::restoreOverrideCursor();
   return ok;
+}
+
+void ViewerPanel::clearPluginView() {
+  if (!m_pluginView) return;
+  if (focusProxy() == m_pluginView) {
+    setFocusProxy(nullptr);
+  }
+  m_stack->removeWidget(m_pluginView);
+  m_pluginView->deleteLater();
+  m_pluginView = nullptr;
 }
 
 void ViewerPanel::showLoadingState(const QString& filePath) {
@@ -472,7 +530,43 @@ bool ViewerPanel::openCsvFile(const QString& filePath,
   return true;
 }
 
+bool ViewerPanel::openPluginFile(IViewerPlugin* plugin,
+                                 const QString& filePath,
+                                 const QString& displayPath) {
+  if (!plugin) return false;
+  clearPluginView();
+
+  QWidget* view = plugin->createViewer(
+    filePath,
+    m_stack,
+    ViewerDispatcher::instance().pluginContext());
+  if (!view) {
+    logViewerLoadResult(QStringLiteral("Plugin:%1").arg(plugin->pluginId()),
+                        displayPath, false, false);
+    return false;
+  }
+
+  // 外部プラグインの createViewer は埋め込み可能な QWidget を返す契約。
+  // 念のためトップレベル指定を外して、ViewerPanel のスタック内で管理する。
+  view->setWindowFlag(Qt::Window, false);
+  view->setAttribute(Qt::WA_DeleteOnClose, false);
+  m_pluginView = view;
+  if (m_stack->indexOf(view) < 0) {
+    m_stack->addWidget(view);
+  }
+  m_stack->setCurrentWidget(view);
+  setFocusProxy(view);
+  view->setFocus(Qt::OtherFocusReason);
+  m_currentFilePath = displayPath;
+  emit fileOpened(displayPath);
+  emit viewerStatusChanged(displayPath, plugin->pluginName());
+  logViewerLoadResult(QStringLiteral("Plugin:%1").arg(plugin->pluginId()),
+                      displayPath, true, false);
+  return true;
+}
+
 void ViewerPanel::clear() {
+  clearPluginView();
   m_textView->clearContent();
   m_imageView->clearContent();
   m_binaryView->clearContent();

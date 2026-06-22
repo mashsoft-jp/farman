@@ -77,7 +77,7 @@
     <!-- Keybindings -->
     <section class="doc-section" id="keybindings">
       <h2>Keybindings (defaults)</h2>
-      <p class="f-item doc-note">All of these can be changed under <strong>Settings → Keybindings</strong> (open Settings with <code>Ctrl+,</code>). On macOS, <code>Ctrl</code> is <code>⌘</code>.</p>
+      <p class="f-item doc-note">All of these can be changed under <strong>Settings → Keybindings</strong> (open Settings with <code>Ctrl+,</code>; <kbd>Tab</kbd> and <kbd>Shift</kbd>+letter are fixed). On macOS, <code>Ctrl</code> is <code>⌘</code>.</p>
 
       <h3 class="f-subhead">Navigation &amp; selection</h3>
       <table class="kb-table">
@@ -131,6 +131,9 @@
           <tr class="f-item"><td><kbd>y</kbd></td><td>Toggle sync browse</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+→</kbd> / <kbd>Ctrl+←</kbd></td><td>Sync this pane's directory to the other side</td></tr>
           <tr class="f-item"><td><kbd>f</kbd></td><td>File search dialog</td></tr>
+          <tr class="f-item"><td><kbd>Ctrl+P</kbd></td><td>Toggle the preview pane</td></tr>
+          <tr class="f-item"><td><kbd>Ctrl+1</kbd>–<kbd>Ctrl+4</kbd></td><td>Switch view mode (list / thumbnails S・M・L)</td></tr>
+          <tr class="f-item"><td><kbd>=</kbd></td><td>Compare directories dialog</td></tr>
         </tbody>
       </table>
 
@@ -144,8 +147,9 @@
           <tr class="f-item"><td><kbd>t</kbd></td><td>Open a terminal (external app integration)</td></tr>
           <tr class="f-item"><td><kbd>e</kbd></td><td>Open in an editor (external app integration)</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+,</kbd></td><td>Settings dialog</td></tr>
-          <tr class="f-item"><td><kbd>?</kbd></td><td>Show the shortcut list</td></tr>
+          <tr class="f-item"><td><kbd>?</kbd></td><td>Show the keybinding list</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+Q</kbd></td><td>Quit</td></tr>
+          <tr class="f-item"><td><kbd>Ctrl+Shift+P</kbd></td><td>Open the plugin settings</td></tr>
         </tbody>
       </table>
     </section>
@@ -178,7 +182,7 @@
 
     <!-- Viewers -->
     <section class="doc-section" id="viewers">
-      <h2>Built-in viewers</h2>
+      <h2>Bundled official viewers</h2>
       <p class="f-item doc-note">Open a viewer with <code>v</code>, or choose one with <code>Ctrl+Enter</code>. Viewers work inline or in a separate window, with full-text search.</p>
       <ul class="doc-list">
         <li class="f-item"><strong>Text</strong>: automatic encoding detection, line numbers, word wrap.</li>
@@ -188,6 +192,8 @@
         <li class="f-item"><strong>PDF</strong>: page navigation / zoom / Fit / full-text search.</li>
         <li class="f-item"><strong>CSV·TSV</strong>: automatic delimiter detection, cell search, lazy loading for huge files.</li>
       </ul>
+      <p class="f-item doc-note">Each viewer's defaults (associated extensions, display options, etc.) can be changed under <strong>Settings → Plugins</strong>: select the viewer and open <strong>“Details”</strong> (default text encoding, image Fit / zoom, PDF view mode, CSV delimiter, media volume / autoplay, and so on).</p>
+      <p class="f-item doc-note"><strong>About extension associations</strong>: when several viewers list the same extension, <strong>the viewer with the higher priority is chosen</strong> (resolved by priority among the extensions each viewer declares). There is no “first-wins” override that pins a specific extension to a specific viewer. If a file does not open in the viewer you want, add the extension to the preferred viewer and remove it from the competing one.</p>
     </section>
 
     <!-- Search & navigation -->

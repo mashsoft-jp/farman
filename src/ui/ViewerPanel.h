@@ -16,6 +16,7 @@ namespace Farman {
 class BinaryView;
 class CsvView;
 class ImageView;
+class IViewerPlugin;
 class MarkdownView;
 class PdfView;
 class TextView;
@@ -76,6 +77,10 @@ private:
   bool openMarkdownFile(const QString& filePath, const QString& displayPath);
   bool openPdfFile(const QString& filePath, const QString& displayPath);
   bool openCsvFile(const QString& filePath, const QString& displayPath);
+  bool openPluginFile(IViewerPlugin* plugin,
+                      const QString& filePath,
+                      const QString& displayPath);
+  void clearPluginView();
   // ロード中表示に切り替え、ファイル名・サイズを書き込んで再描画する。
   // 同期的なロードに入る前に呼ぶと、ユーザーには「読み込み中…」が見える。
   // ここで新しい cancelToken を発行し、Cancel ボタンにフォーカスを当てる
@@ -94,6 +99,7 @@ private:
   MarkdownView*   m_markdownView  = nullptr;
   PdfView*        m_pdfView       = nullptr;
   CsvView*        m_csvView       = nullptr;
+  QWidget*        m_pluginView    = nullptr;
 
   // ロード中に出すプレースホルダ。indeterminate な QProgressBar + Cancel
   // ボタンを持つ。Cancel ボタンには表示と同時にフォーカスを当てるので、

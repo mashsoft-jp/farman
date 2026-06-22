@@ -126,6 +126,9 @@ void Settings::applyDefaults() {
   m_customInitialPath[static_cast<int>(PaneType::Right)].clear();
   m_confirmOnExit = false;
   m_singleInstance = true;
+  m_pluginsDirectory.clear();
+  m_disabledViewerPlugins.clear();
+  m_viewerAssociations.clear();
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
   m_language      = LanguageMode::Auto;
@@ -190,6 +193,16 @@ void Settings::applyDefaults() {
   m_binaryViewerSelectedBg = QColor(0x31, 0x6A, 0xC5);
   m_binaryViewerAddressFg  = QColor(Qt::darkGray);
   m_binaryViewerAddressBg  = QColor(0xF0, 0xF0, 0xF0);
+
+  // ── PDF / CSV / Markdown / メディア ビュアー既定 ──
+  m_pdfViewerContinuous       = true;
+  m_pdfViewerFitMode          = PdfViewerFitMode::ActualSize;
+  m_csvViewerDelimiter        = QStringLiteral("auto");
+  m_csvViewerFirstRowAsHeader = false;
+  m_markdownViewerShowSource  = false;
+  m_mediaViewerVolume         = 80;
+  m_mediaViewerLoop           = false;
+  m_mediaViewerAutoplay       = true;
 
   // ── 履歴・ブックマーク・ファイル操作・検索 ──
   m_persistHistory = false;
@@ -835,6 +848,8 @@ void Settings::addAutoUpdateSkippedVersion(const QString& version) {
 }
 QString Settings::autoUpdateChannel() const { return m_autoUpdateChannel; }
 void Settings::setAutoUpdateChannel(const QString& channel) { m_autoUpdateChannel = channel; }
+QString Settings::whatsNewShownVersion() const { return m_whatsNewShownVersion; }
+void Settings::setWhatsNewShownVersion(const QString& version) { m_whatsNewShownVersion = version; }
 
 QString Settings::pluginsDirectory() const {
   return m_pluginsDirectory;
@@ -842,6 +857,87 @@ QString Settings::pluginsDirectory() const {
 
 void Settings::setPluginsDirectory(const QString& dir) {
   m_pluginsDirectory = dir;
+}
+
+QStringList Settings::disabledViewerPlugins() const {
+  return m_disabledViewerPlugins;
+}
+
+void Settings::setDisabledViewerPlugins(const QStringList& pluginIds) {
+  m_disabledViewerPlugins.clear();
+  for (const QString& id : pluginIds) {
+    const QString normalized = id.trimmed();
+    if (!normalized.isEmpty()
+        && !m_disabledViewerPlugins.contains(normalized, Qt::CaseInsensitive)) {
+      m_disabledViewerPlugins.append(normalized);
+    }
+  }
+  m_disabledViewerPlugins.sort(Qt::CaseInsensitive);
+}
+
+bool Settings::isViewerPluginDisabled(const QString& pluginId) const {
+  return m_disabledViewerPlugins.contains(pluginId.trimmed(), Qt::CaseInsensitive);
+}
+
+void Settings::setViewerPluginDisabled(const QString& pluginId, bool disabled) {
+  const QString normalized = pluginId.trimmed();
+  if (normalized.isEmpty()) return;
+  QStringList ids = m_disabledViewerPlugins;
+  if (disabled) {
+    if (!ids.contains(normalized, Qt::CaseInsensitive)) {
+      ids.append(normalized);
+    }
+  } else {
+    for (int i = ids.size() - 1; i >= 0; --i) {
+      if (ids.at(i).compare(normalized, Qt::CaseInsensitive) == 0) {
+        ids.removeAt(i);
+      }
+    }
+  }
+  setDisabledViewerPlugins(ids);
+}
+
+namespace {
+
+QString normalizeViewerAssociationExtension(QString extension) {
+  extension = extension.trimmed().toLower();
+  while (extension.startsWith(QLatin1Char('.'))) {
+    extension.remove(0, 1);
+  }
+  return extension;
+}
+
+} // namespace
+
+QMap<QString, QString> Settings::viewerAssociations() const {
+  return m_viewerAssociations;
+}
+
+void Settings::setViewerAssociations(const QMap<QString, QString>& associations) {
+  m_viewerAssociations.clear();
+  for (auto it = associations.cbegin(); it != associations.cend(); ++it) {
+    const QString extension = normalizeViewerAssociationExtension(it.key());
+    const QString pluginId = it.value().trimmed();
+    if (!extension.isEmpty() && !pluginId.isEmpty()) {
+      m_viewerAssociations.insert(extension, pluginId);
+    }
+  }
+}
+
+QString Settings::viewerAssociationForExtension(const QString& extension) const {
+  return m_viewerAssociations.value(normalizeViewerAssociationExtension(extension));
+}
+
+void Settings::setViewerAssociationForExtension(const QString& extension,
+                                                const QString& pluginId) {
+  const QString normalized = normalizeViewerAssociationExtension(extension);
+  if (normalized.isEmpty()) return;
+  const QString trimmedPluginId = pluginId.trimmed();
+  if (trimmedPluginId.isEmpty()) {
+    m_viewerAssociations.remove(normalized);
+  } else {
+    m_viewerAssociations.insert(normalized, trimmedPluginId);
+  }
 }
 
 QString Settings::defaultPluginsDirectory() {
@@ -984,6 +1080,36 @@ QString Settings::binaryViewerEncoding() const {
 void Settings::setBinaryViewerEncoding(const QString& encoding) {
   m_binaryViewerEncoding = encoding;
 }
+
+// ── PDF ビュアー既定 ──
+bool Settings::pdfViewerContinuous() const { return m_pdfViewerContinuous; }
+void Settings::setPdfViewerContinuous(bool on) { m_pdfViewerContinuous = on; }
+PdfViewerFitMode Settings::pdfViewerFitMode() const { return m_pdfViewerFitMode; }
+void Settings::setPdfViewerFitMode(PdfViewerFitMode mode) { m_pdfViewerFitMode = mode; }
+
+// ── CSV/TSV ビュアー既定 ──
+QString Settings::csvViewerDelimiter() const { return m_csvViewerDelimiter; }
+void Settings::setCsvViewerDelimiter(const QString& d) { m_csvViewerDelimiter = d; }
+bool Settings::csvViewerFirstRowAsHeader() const { return m_csvViewerFirstRowAsHeader; }
+void Settings::setCsvViewerFirstRowAsHeader(bool on) { m_csvViewerFirstRowAsHeader = on; }
+
+// ── Markdown ビュアー既定 ──
+bool Settings::markdownViewerShowSource() const { return m_markdownViewerShowSource; }
+void Settings::setMarkdownViewerShowSource(bool on) { m_markdownViewerShowSource = on; }
+
+// ── メディアビュアー既定 ──
+QStringList Settings::mediaViewerExtensions() const { return m_mediaViewerExtensions; }
+void Settings::setMediaViewerExtensions(const QStringList& exts) {
+  m_mediaViewerExtensions = exts;
+}
+int Settings::mediaViewerVolume() const { return m_mediaViewerVolume; }
+void Settings::setMediaViewerVolume(int volume) {
+  m_mediaViewerVolume = qBound(0, volume, 100);
+}
+bool Settings::mediaViewerLoop() const { return m_mediaViewerLoop; }
+void Settings::setMediaViewerLoop(bool on) { m_mediaViewerLoop = on; }
+bool Settings::mediaViewerAutoplay() const { return m_mediaViewerAutoplay; }
+void Settings::setMediaViewerAutoplay(bool on) { m_mediaViewerAutoplay = on; }
 
 QFont Settings::binaryViewerFont() const {
   return m_binaryViewerFont;
@@ -1685,6 +1811,22 @@ void Settings::load() {
   m_confirmOnExit = behavior.value("confirmOnExit").toBool(false);
   m_singleInstance = behavior.value("singleInstance").toBool(true);
   m_pluginsDirectory = behavior.value("pluginsDirectory").toString();
+  m_disabledViewerPlugins.clear();
+  {
+    QStringList disabled;
+    const QJsonArray plugins = behavior.value("disabledViewerPlugins").toArray();
+    for (const QJsonValue& value : plugins) {
+      disabled.append(value.toString());
+    }
+    setDisabledViewerPlugins(disabled);
+  }
+  m_viewerAssociations.clear();
+  {
+    const QJsonObject associations = behavior.value("viewerAssociations").toObject();
+    for (auto it = associations.constBegin(); it != associations.constEnd(); ++it) {
+      setViewerAssociationForExtension(it.key(), it.value().toString());
+    }
+  }
   m_syncBrowseShowDisabledDialog = behavior.value("syncBrowseShowDisabledDialog").toBool(true);
   {
     const QString modeStr = behavior.value("viewerMode").toString("inline");
@@ -1720,6 +1862,7 @@ void Settings::load() {
     }
     m_autoUpdateChannel = au.value("channel").toString(QStringLiteral("stable"));
   }
+  m_whatsNewShownVersion = behavior.value("whatsNewShownVersion").toString();
   {
     const QString langStr = behavior.value("language").toString("auto");
     if      (langStr == "en") m_language = LanguageMode::English;
@@ -1809,6 +1952,7 @@ void Settings::load() {
     }
     if (!list.isEmpty()) m_markdownViewerExtensions = list;
   }
+  m_markdownViewerShowSource = markdownViewer.value("showSource").toBool(false);
 
   // PDF ビュアー: バイナリ判定より先に評価される
   QJsonObject pdfViewer = root.value("pdfViewer").toObject();
@@ -1819,6 +1963,13 @@ void Settings::load() {
       if (!s.isEmpty()) list.append(s);
     }
     if (!list.isEmpty()) m_pdfViewerExtensions = list;
+  }
+  m_pdfViewerContinuous = pdfViewer.value("continuous").toBool(true);
+  {
+    const QString fit = pdfViewer.value("fitMode").toString(QStringLiteral("actual"));
+    m_pdfViewerFitMode = (fit == QLatin1String("fitWidth")) ? PdfViewerFitMode::FitWidth
+                       : (fit == QLatin1String("fitPage"))  ? PdfViewerFitMode::FitPage
+                                                            : PdfViewerFitMode::ActualSize;
   }
 
   // CSV / TSV ビュアー: テキスト判定より先に評価される
@@ -1831,6 +1982,8 @@ void Settings::load() {
     }
     if (!list.isEmpty()) m_csvViewerExtensions = list;
   }
+  m_csvViewerDelimiter        = csvViewer.value("delimiter").toString(QStringLiteral("auto"));
+  m_csvViewerFirstRowAsHeader = csvViewer.value("firstRowAsHeader").toBool(false);
   if (textViewer.contains("mimePatterns")) {
     QStringList list;
     for (const QJsonValue& v : textViewer.value("mimePatterns").toArray()) {
@@ -1928,6 +2081,20 @@ void Settings::load() {
   loadBinColor("selectedBg", m_binaryViewerSelectedBg);
   loadBinColor("addressFg",  m_binaryViewerAddressFg);
   loadBinColor("addressBg",  m_binaryViewerAddressBg);
+
+  // メディアビュアー既定 (pdf/csv/markdown の既定は上の各ブロックで読み込み済み)
+  QJsonObject mediaViewer = root.value("mediaViewer").toObject();
+  if (mediaViewer.contains("extensions")) {
+    QStringList list;
+    for (const QJsonValue& v : mediaViewer.value("extensions").toArray()) {
+      const QString s = v.toString().trimmed();
+      if (!s.isEmpty()) list.append(s);
+    }
+    if (!list.isEmpty()) m_mediaViewerExtensions = list;
+  }
+  m_mediaViewerVolume   = qBound(0, mediaViewer.value("volume").toInt(80), 100);
+  m_mediaViewerLoop     = mediaViewer.value("loop").toBool(false);
+  m_mediaViewerAutoplay = mediaViewer.value("autoplay").toBool(true);
 
   // ペイン履歴（ON の時のみ読む。OFF の時は必ず空にする）
   for (int i = 0; i < static_cast<int>(PaneType::Count); ++i) {
@@ -2217,6 +2384,20 @@ void Settings::save() const {
   behavior["confirmOnExit"] = m_confirmOnExit;
   behavior["singleInstance"] = m_singleInstance;
   behavior["pluginsDirectory"] = m_pluginsDirectory;
+  {
+    QJsonArray disabled;
+    for (const QString& pluginId : m_disabledViewerPlugins) {
+      disabled.append(pluginId);
+    }
+    behavior["disabledViewerPlugins"] = disabled;
+  }
+  {
+    QJsonObject associations;
+    for (auto it = m_viewerAssociations.cbegin(); it != m_viewerAssociations.cend(); ++it) {
+      associations[it.key()] = it.value();
+    }
+    behavior["viewerAssociations"] = associations;
+  }
   behavior["syncBrowseShowDisabledDialog"] = m_syncBrowseShowDisabledDialog;
   behavior["viewerMode"] = (m_viewerMode == ViewerMode::External)
                              ? QStringLiteral("external")
@@ -2242,6 +2423,7 @@ void Settings::save() const {
     au["channel"] = m_autoUpdateChannel;
     behavior["autoUpdate"] = au;
   }
+  behavior["whatsNewShownVersion"] = m_whatsNewShownVersion;
   switch (m_language) {
     case LanguageMode::English:  behavior["language"] = "en";   break;
     case LanguageMode::Japanese: behavior["language"] = "ja";   break;
@@ -2291,6 +2473,7 @@ void Settings::save() const {
     QJsonArray arr;
     for (const QString& s : m_markdownViewerExtensions) arr.append(s);
     mdViewer["extensions"] = arr;
+    mdViewer["showSource"] = m_markdownViewerShowSource;
     root["markdownViewer"] = mdViewer;
   }
 
@@ -2300,6 +2483,11 @@ void Settings::save() const {
     QJsonArray arr;
     for (const QString& s : m_pdfViewerExtensions) arr.append(s);
     pdfViewer["extensions"] = arr;
+    pdfViewer["continuous"] = m_pdfViewerContinuous;
+    pdfViewer["fitMode"] =
+      (m_pdfViewerFitMode == PdfViewerFitMode::FitWidth) ? QStringLiteral("fitWidth")
+      : (m_pdfViewerFitMode == PdfViewerFitMode::FitPage) ? QStringLiteral("fitPage")
+                                                          : QStringLiteral("actual");
     root["pdfViewer"] = pdfViewer;
   }
 
@@ -2309,6 +2497,8 @@ void Settings::save() const {
     QJsonArray arr;
     for (const QString& s : m_csvViewerExtensions) arr.append(s);
     csvViewer["extensions"] = arr;
+    csvViewer["delimiter"]        = m_csvViewerDelimiter;
+    csvViewer["firstRowAsHeader"] = m_csvViewerFirstRowAsHeader;
     root["csvViewer"] = csvViewer;
   }
 
@@ -2376,6 +2566,18 @@ void Settings::save() const {
   binaryViewer["addressFg"]  = m_binaryViewerAddressFg.name(QColor::HexArgb);
   binaryViewer["addressBg"]  = m_binaryViewerAddressBg.name(QColor::HexArgb);
   root["binaryViewer"] = binaryViewer;
+
+  // メディアビュアー既定 (pdf/csv/markdown の既定は拡張子保存ブロックに同梱)
+  QJsonObject mediaViewer;
+  {
+    QJsonArray arr;
+    for (const QString& s : m_mediaViewerExtensions) arr.append(s);
+    mediaViewer["extensions"] = arr;
+  }
+  mediaViewer["volume"]   = m_mediaViewerVolume;
+  mediaViewer["loop"]     = m_mediaViewerLoop;
+  mediaViewer["autoplay"] = m_mediaViewerAutoplay;
+  root["mediaViewer"] = mediaViewer;
 
   // ペイン履歴（ON のときだけディスクに出す）
   if (m_persistHistory) {

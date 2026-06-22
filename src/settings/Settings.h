@@ -193,9 +193,21 @@ public:
   // (QStandardPaths::AppDataLocation + "/plugins")。
   QString pluginsDirectory()            const;  // 空のときは defaultPluginsDirectory()
   void    setPluginsDirectory(const QString& dir);
+  QStringList disabledViewerPlugins() const;
+  void setDisabledViewerPlugins(const QStringList& pluginIds);
+  bool isViewerPluginDisabled(const QString& pluginId) const;
+  void setViewerPluginDisabled(const QString& pluginId, bool disabled);
   // 既定のプラグインディレクトリを返す (= 上記の OS 別 path)。
   // pluginsDirectory() が空のとき loadPlugins に使う実体。
   static QString defaultPluginsDirectory();
+
+  // 拡張子ごとの既定ビュアープラグイン。キーは小文字・先頭ドットなし
+  // ("mp4" など)、値は IViewerPlugin::pluginId()。空なら自動選択。
+  QMap<QString, QString> viewerAssociations() const;
+  void setViewerAssociations(const QMap<QString, QString>& associations);
+  QString viewerAssociationForExtension(const QString& extension) const;
+  void setViewerAssociationForExtension(const QString& extension,
+                                        const QString& pluginId);
 
   // ビュアーの表示モード (Inline / External)。Inline はメインウィンドウ内の
   // ViewerPanel を使う現状の挙動、External はファイル毎に独立ウィンドウ。
@@ -252,6 +264,13 @@ public:
   void        addAutoUpdateSkippedVersion(const QString& version);
   QString   autoUpdateChannel()                const;  // 現状 "stable" 固定
   void      setAutoUpdateChannel(const QString& channel);
+
+  // ── What's New ダイアログ ─────────────────────
+  // 最後に「アップデート内容」ダイアログを表示したバージョン。
+  // 起動時に現バージョンと不一致なら 1 回だけ表示して更新する
+  // (空 = 未表示。初回起動でも表示される)。
+  QString whatsNewShownVersion()        const;
+  void    setWhatsNewShownVersion(const QString& version);
 
   // ── 言語設定 ─────────────────────────────
   // UI 言語。変更は次回起動時に反映される (実装上の制限、再起動を促す)。
@@ -372,6 +391,33 @@ public:
   void               setBinaryViewerSelectedBackground(const QColor& c);
   void               setBinaryViewerAddressForeground(const QColor& c);
   void               setBinaryViewerAddressBackground(const QColor& c);
+
+  // ── PDF ビュアー既定 ───────────────────────
+  bool             pdfViewerContinuous()     const;
+  void             setPdfViewerContinuous(bool on);
+  PdfViewerFitMode pdfViewerFitMode()        const;
+  void             setPdfViewerFitMode(PdfViewerFitMode mode);
+
+  // ── CSV/TSV ビュアー既定 ───────────────────
+  // 区切り文字: "auto" / "comma" / "tab" / "semicolon"
+  QString          csvViewerDelimiter()        const;
+  void             setCsvViewerDelimiter(const QString& d);
+  bool             csvViewerFirstRowAsHeader()  const;
+  void             setCsvViewerFirstRowAsHeader(bool on);
+
+  // ── Markdown ビュアー既定 ──────────────────
+  bool             markdownViewerShowSource()   const;
+  void             setMarkdownViewerShowSource(bool on);
+
+  // ── メディアビュアー既定 ───────────────────
+  QStringList      mediaViewerExtensions()      const;
+  void             setMediaViewerExtensions(const QStringList& exts);
+  int              mediaViewerVolume()          const;   // 0..100
+  void             setMediaViewerVolume(int volume);
+  bool             mediaViewerLoop()            const;
+  void             setMediaViewerLoop(bool on);
+  bool             mediaViewerAutoplay()        const;
+  void             setMediaViewerAutoplay(bool on);
 
   // ディレクトリ履歴を終了時に保存し、起動時に復元するか
   bool persistHistory()                 const;
@@ -540,8 +586,14 @@ private:
   QDateTime        m_autoUpdateLastCheckedAt;       // null = 未チェック
   QStringList      m_autoUpdateSkippedVersions;     // ["1.2.3", ...]
   QString          m_autoUpdateChannel = QStringLiteral("stable");
+  // 最後に What's New を表示したバージョン (空 = 未表示)。
+  QString          m_whatsNewShownVersion;
   // ビュアープラグインを置くディレクトリ。空文字 = defaultPluginsDirectory()。
   QString          m_pluginsDirectory;
+  // 起動時に登録しない外部ビュアープラグイン ID。
+  QStringList      m_disabledViewerPlugins;
+  // 拡張子 -> viewer pluginId。空 / 未設定なら priority ベースで自動選択。
+  QMap<QString, QString> m_viewerAssociations;
   // ビュアー表示モード。デフォルトは Inline (ビュアーパネルでの表示)。
   ViewerMode       m_viewerMode      = ViewerMode::Inline;
   // ペインごとの表示モード (List / Thumbnail)。
@@ -637,6 +689,28 @@ private:
   QColor             m_binaryViewerSelectedBg   = QColor(0x31, 0x6A, 0xC5);
   QColor             m_binaryViewerAddressFg    = QColor(Qt::darkGray);
   QColor             m_binaryViewerAddressBg    = QColor(0xF0, 0xF0, 0xF0);
+
+  // PDF viewer
+  bool             m_pdfViewerContinuous = true;
+  PdfViewerFitMode m_pdfViewerFitMode    = PdfViewerFitMode::ActualSize;
+  // CSV/TSV viewer
+  QString          m_csvViewerDelimiter        = QStringLiteral("auto");
+  bool             m_csvViewerFirstRowAsHeader = false;
+  // Markdown viewer
+  bool             m_markdownViewerShowSource  = false;
+  // Media viewer
+  // メディア (動画 + 音声)。プラットフォームのデコーダ依存だが既定一覧を持つ。
+  QStringList      m_mediaViewerExtensions = {
+    // 動画
+    "mp4", "mov", "m4v", "webm", "avi", "mkv",
+    "wmv", "mpg", "mpeg", "m2v", "m2ts", "mts", "ts",
+    // 音声
+    "wav", "mp3", "m4a", "flac", "ogg", "aac", "wma",
+  };
+  int              m_mediaViewerVolume   = 80;
+  bool             m_mediaViewerLoop     = false;
+  bool             m_mediaViewerAutoplay = true;
+
   bool             m_persistHistory  = false;
   QStringList      m_paneHistory[static_cast<int>(PaneType::Count)];
   QString          m_autoRenameTemplate = QStringLiteral(" ({n})");

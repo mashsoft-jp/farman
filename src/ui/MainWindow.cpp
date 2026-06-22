@@ -14,6 +14,7 @@
 #include "../core/UpdateDownloader.h"
 #include "../core/UserCommand.h"
 #include "UpdateAvailableDialog.h"
+#include "WhatsNewDialog.h"
 #include "../core/UserCommandManager.h"
 #include "../core/PlaceholderExpander.h"
 #include "../keybinding/ICommand.h"
@@ -28,14 +29,21 @@
 #include "../viewer/MarkdownViewerWindow.h"
 #include "../viewer/PdfViewerWindow.h"
 #include "../viewer/CsvViewerWindow.h"
+#include "../viewer/ViewerDispatcher.h"
+#include <QAbstractItemView>
 #include <QActionGroup>
 #include <QDesktopServices>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDir>
+#include <QHeaderView>
 #include <QLocale>
 #include <QScreen>
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QStorageInfo>
+#include <QTableWidget>
+#include <QTableWidgetItem>
 #include <QTimer>
 #include <QLabel>
 #include <QFontMetrics>
@@ -149,6 +157,10 @@ MainWindow::MainWindow(QWidget* parent)
   // Settings に保存されているレイアウトを復元 (前回終了時が Preview なら Preview)。
   m_fileManagerPanel->setLayoutMode(Settings::instance().layoutMode());
   m_fileManagerPanel->activePane()->view()->setFocus();
+
+  // アップデート直後 / 初回起動なら What's New を 1 回表示 (singleShot で
+  // ウィンドウ表示後に出す)。
+  maybeShowWhatsNew();
 }
 
 MainWindow::~MainWindow() = default;
@@ -462,17 +474,10 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   // (外部ビュアーウィンドウのタイトルにも反映)
   const QString shownPath = displayPath.isEmpty() ? filePath : displayPath;
   // ビュアー表示モード (Inline / External) によって振り分ける。
-  // External 時は独立 QMainWindow を起こす。Inline 時は従来通り内蔵パネル。
+  // External 時は独立ウィジェットを起こす。Inline 時は従来通り内蔵パネル。
   const ViewerMode mode = Settings::instance().viewerMode();
 
   if (mode == ViewerMode::External) {
-    // 拡張子 / MIME ルーティングは ViewerPanel と共通。Auto を解決して
-    // どの *ViewerWindow を起こすか決める。
-    ViewerPanel::ViewerKind effective = kind;
-    if (effective == ViewerPanel::ViewerKind::Auto) {
-      effective = ViewerPanel::resolveAuto(filePath);
-    }
-
     // External ビュアーは同時に 1 つしか開かない方針。前のウィンドウが
     // まだ生きていれば、ジオメトリを引き継いでから破棄する (= ユーザーが
     // 「別ファイルを開いたら同じ場所・同じサイズで上書き」と感じる挙動)。
@@ -487,7 +492,26 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       delete m_externalViewerWindow;
     }
 
-    QMainWindow* w = nullptr;
+    QWidget* w = nullptr;
+    if (kind == ViewerPanel::ViewerKind::Auto) {
+      // Inline (ViewerPanel::openFile) と同じ判定にするため resolvePlugin()
+      // を使う。ViewerDispatcher::createViewer() は未解決時にバイナリ
+      // ビュアーへフォールバックするため、ここで使うと下の resolveAuto()
+      // (Settings の拡張子 / MIME ルーティング) に到達できず、Inline と
+      // 選択結果がズレる。
+      auto& dispatcher = ViewerDispatcher::instance();
+      if (IViewerPlugin* plugin = dispatcher.resolvePlugin(filePath)) {
+        w = plugin->createViewer(filePath, this, dispatcher.pluginContext());
+      }
+    }
+
+    // 明示指定されたビュアーは従来通り直接開く。Auto の場合だけ
+    // ViewerDispatcher を通し、外部プラグインとユーザー関連付けを反映する。
+    ViewerPanel::ViewerKind effective = kind;
+    if (!w && effective == ViewerPanel::ViewerKind::Auto) {
+      effective = ViewerPanel::resolveAuto(filePath);
+    }
+
     switch (effective) {
       case ViewerPanel::ViewerKind::Text:
         w = new TextViewerWindow(filePath, shownPath, this);
@@ -543,13 +567,20 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   // 並んでいる) ので、表示領域を画面いっぱい使えるよう一時的に非表示にする。
   // ファイラに戻る showFileManager() で Settings::showToolbar() に従って復元。
   if (m_toolbar) m_toolbar->setVisible(false);
-  m_viewerPanel->setFocus();
   updateStatusBar();
 
   if (!m_viewerPanel->openFile(filePath, kind, displayPath)) {
     // 失敗時はファイルマネージャパネルへ戻す
     showFileManager();
+    return;
   }
+
+  // フォーカスは openFile の後に当てる。openFile の中で初めて該当ビューが
+  // current になり setFocusProxy(該当ビュー) が張られるため、先に setFocus する
+  // と focusProxy がまだ前回開いた別ビューを指しており、初回表示のビュー本体に
+  // 焦点が渡らず Qt がツールバー先頭フィールド (PDF=ページ数 / Text=エンコー
+  // ディング等) を選んでしまう。これが「ビュアー種別ごとに初回だけ」起きていた。
+  m_viewerPanel->setFocus();
 }
 
 bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
@@ -1018,6 +1049,15 @@ void MainWindow::registerCommands() {
       menu.addAction(tr("Image Viewer"), this, [this, path]() {
         showViewerWith(path, ViewerPanel::ViewerKind::Image);
       });
+      menu.addAction(tr("Markdown Viewer"), this, [this, path]() {
+        showViewerWith(path, ViewerPanel::ViewerKind::Markdown);
+      });
+      menu.addAction(tr("PDF Viewer"), this, [this, path]() {
+        showViewerWith(path, ViewerPanel::ViewerKind::Pdf);
+      });
+      menu.addAction(tr("CSV/TSV Viewer"), this, [this, path]() {
+        showViewerWith(path, ViewerPanel::ViewerKind::Csv);
+      });
       menu.addAction(tr("Binary Viewer"), this, [this, path]() {
         showViewerWith(path, ViewerPanel::ViewerKind::Binary);
       });
@@ -1249,13 +1289,30 @@ void MainWindow::registerCommands() {
        "matching file in the other pane.")
   ));
 
-  // ショートカット一覧の表示トグル (`?` キー)
+  // キーバインド一覧の表示トグル (`?` キー)
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "help.shortcuts",
-    tr("Keyboard Shortcuts"),
+    tr("Keybinding List"),
     [this]() { toggleShortcutList(); },
     "help",
-    tr("Show or hide the keyboard shortcuts reference window")
+    tr("Show or hide the keybinding list window")
+  ));
+
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "help.plugins",
+    tr("Plugins..."),
+    [this]() { showPluginsDialog(); },
+    "help",
+    tr("Open plugin settings: load status, enable/disable, directory, and "
+       "viewer associations.")
+  ));
+
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "help.whats_new",
+    tr("What's New..."),
+    [this]() { showWhatsNewDialog(); },
+    "help",
+    tr("Show what changed in this version of farman.")
   ));
 
   // Bookmark commands
@@ -1539,9 +1596,12 @@ void MainWindow::createMenus() {
 
   // Help
   QMenu* helpMenu = bar->addMenu(tr("&Help"));
-  // ショートカット一覧 (`?` キー)
-  addCmd(helpMenu, "help.shortcuts", tr("Keyboard Shortcuts"), /*global=*/true);
+  // キーバインド一覧 (`?` キー)
+  addCmd(helpMenu, "help.shortcuts", tr("Keybinding List"), /*global=*/true);
+  addCmd(helpMenu, "help.plugins", tr("Plugins..."), /*global=*/true);
   helpMenu->addSeparator();
+  // アップデート内容の再表示 (起動時の自動表示と同じダイアログ)。
+  addCmd(helpMenu, "help.whats_new", tr("What's New..."), /*global=*/true);
   // 手動アップデートチェック (macOS の慣習で menuRole = ApplicationSpecific
   // を当てると標準で Help メニューに残る。Help → "Check for Updates..." は
   // Sparkle 系アプリの慣習で違和感ない位置)。
@@ -1769,7 +1829,8 @@ void MainWindow::createMainToolBar() {
   // 操作 (Single Pane / Sync Browse / Compare / Log etc.) に限定する。
 
   m_toolbar->addSeparator();
-  addBtn("help.shortcuts",          tr("Shortcuts"),    QStringLiteral("shortcuts.svg"));
+  addBtn("help.shortcuts",          tr("Keybindings"),  QStringLiteral("shortcuts.svg"));
+  addBtn("help.plugins",            tr("Plugins"),      QStringLiteral("plugins.svg"));
   addBtn("app.settings",            tr("Settings"),     QStringLiteral("settings.svg"));
 
   // 右端に「ツールバーを閉じる (×)」ボタン。残りスペースを expanding な
@@ -1837,6 +1898,13 @@ void MainWindow::showAboutDialog() {
   }
 }
 
+void MainWindow::showPluginsDialog() {
+  // プラグイン関連 (ディレクトリ / ロード状況 / 有効・無効 / 拡張子の紐付け)
+  // は Settings → Plugins ページに集約した。Help → Plugins... やツールバーの
+  // Plugins ボタンからは、そのページを直接開く。
+  showSettingsDialog(SettingsDialog::Page::Plugins);
+}
+
 void MainWindow::showThirdPartyLicenses() {
   QFile file(QStringLiteral(":/licenses/third-party.txt"));
   QString text;
@@ -1895,6 +1963,31 @@ void MainWindow::maybeCheckForUpdatesOnStartup() {
     m_updateCheckIsManual = false;
     m_updateChecker->checkLatest();
   });
+}
+
+void MainWindow::maybeShowWhatsNew() {
+  const QString current = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
+  if (Settings::instance().whatsNewShownVersion() == current) return;
+
+  // コンストラクタから呼ばれるので、ウィンドウが表示されてイベントループが
+  // 回り始めてからダイアログを出す。自動アップデートチェック (1500ms 遅延)
+  // より先に表示される。
+  QTimer::singleShot(0, this, [this, current]() {
+    Logger::instance().info(
+      tr("Showing What's New for %1").arg(current));
+    showWhatsNewDialog();
+    // リソースが読めなかった場合も記録して、起動のたびに再試行しない。
+    auto& s = Settings::instance();
+    s.setWhatsNewShownVersion(current);
+    s.save();
+  });
+}
+
+void MainWindow::showWhatsNewDialog() {
+  const QString notes = WhatsNewDialog::loadBundledNotes();
+  if (notes.isEmpty()) return;  // 同梱リソース欠落時は何もしない
+  WhatsNewDialog dlg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)), notes, this);
+  dlg.exec();
 }
 
 void MainWindow::onUpdateCheckFinished(bool ok, const ReleaseInfo& info,
@@ -2065,7 +2158,7 @@ void MainWindow::toggleShortcutList() {
   m_shortcutListDialog->activateWindow();
 }
 
-void MainWindow::showSettingsDialog() {
+void MainWindow::showSettingsDialog(SettingsDialog::Page page) {
   SettingsDialog* dialog = new SettingsDialog(
     m_fileManagerPanel->leftPath(),
     m_fileManagerPanel->rightPath(),
@@ -2073,6 +2166,7 @@ void MainWindow::showSettingsDialog() {
     this
   );
   connect(dialog, &SettingsDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
+  dialog->setCurrentPage(page);
   dialog->exec();
   delete dialog;
 }
@@ -2095,8 +2189,11 @@ void MainWindow::onSettingsChanged() {
 void MainWindow::closeEvent(QCloseEvent* event) {
   auto& settings = Settings::instance();
 
-  // Show confirmation dialog if enabled
-  if (settings.confirmOnExit()) {
+  // Show confirmation dialog if enabled.
+  // OS のシャットダウン / 再起動 / ログアウトなどセッションマネージャ経由の
+  // 終了要求では確認せずに終了する (ダイアログ待ちで OS の終了を
+  // ブロックしないため)。状態の保存処理は通常どおり下で実行される。
+  if (settings.confirmOnExit() && !qApp->isSavingSession()) {
     if (!confirm(this, tr("Confirm Exit"),
                  tr("Are you sure you want to exit farman?"))) {
       event->ignore();

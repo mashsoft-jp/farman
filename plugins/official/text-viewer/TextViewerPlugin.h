@@ -1,21 +1,28 @@
 #pragma once
 
-#include "IViewerPlugin.h"
+#include "viewer/IViewerPlugin.h"
+#include <QObject>
 
 namespace Farman {
 
-class TextViewerPlugin : public IViewerPlugin {
+class TextViewerPlugin : public QObject, public IViewerPlugin {
+  Q_OBJECT
+  Q_PLUGIN_METADATA(IID FarmanIViewerPlugin_iid)
+  Q_INTERFACES(Farman::IViewerPlugin)
+
 public:
   TextViewerPlugin() = default;
   ~TextViewerPlugin() override = default;
 
   QString pluginId() const override { return "text_viewer"; }
   QString pluginName() const override { return "Text Viewer"; }
-  int priority() const override { return 100; }
+  QString author() const override { return QStringLiteral("Mashsoft Inc."); }
+  QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
+  int priority() const override { return 99998; }
 
   QStringList supportedExtensions() const override {
     return {
-      "txt", "log", "md", "markdown",
+      "txt", "log",
       "cpp", "h", "hpp", "c", "cc", "cxx",
       "py", "js", "ts", "java", "cs",
       "html", "htm", "css", "json", "xml",
@@ -38,6 +45,13 @@ public:
       "application/xml"
     };
   }
+
+  bool initialize(const PluginContext& ctx) override;
+  void appearanceChanged(const PluginAppearance& appearance) override;
+
+  bool hasSettings() const override { return true; }
+  IPluginSettingsPage* createSettingsPage(QWidget* parent) override;
+  bool managesOwnExtensions() const override { return true; }
 
   QWidget* createViewer(const QString&       filePath,
                         QWidget*             parent,

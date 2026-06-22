@@ -111,6 +111,10 @@ src/
 リリースする手順 (常にこの順序):
 1. 個別作業ブランチ (`feature/...` / `fix/...`) で実装・コミットし、対象の
    `release/vX.Y.Z` に取り込む。CMakeLists.txt の VERSION も bump 済にしておく。
+   `resources/whatsnew/whatsnew_{ja,en}.md` (アップデート内容ダイアログの文言)
+   もこのリリースの内容に更新する。見出しのバージョンが VERSION と一致しないと
+   release.yml の Pre-release checks (`tools/check_whatsnew.sh`) がビルド前に
+   fail する。
 2. **`vX.Y.Z-test` タグを `release/vX.Y.Z` の先端に直接打って push**。
    - main にはまだマージしない。テストで問題が見つかって release ブランチに修正を入れる場合、main を巻き戻す必要がない。
    - `git tag -a vX.Y.Z-test -m "..."; git push origin release/vX.Y.Z vX.Y.Z-test`

@@ -31,6 +31,9 @@ private:
   QCheckBox*  m_sortDotFirstCheck;
   QCheckBox*  m_sortCaseSensitiveCheck;
 
+  // Viewer display mode (Inline / External) — 旧 Viewers タブから移設
+  QComboBox*  m_viewerModeCombo = nullptr;
+
   // Display settings
   QCheckBox*  m_showHiddenCheck;
   QCheckBox*  m_cursorLoopCheck;
@@ -43,9 +46,6 @@ private:
   QCheckBox*  m_defaultDeleteToTrashCheck;
   QCheckBox*  m_progressAutoCloseCheck = nullptr;
   QLineEdit*  m_searchExcludeDirsEdit;
-
-  // Viewer display mode (Inline / External) — 旧 ViewersTab から移動
-  QComboBox*  m_viewerModeCombo = nullptr;
 
   // List display formats (per dual / single pane)
   QComboBox*  m_fileSizeFormatDualCombo        = nullptr;

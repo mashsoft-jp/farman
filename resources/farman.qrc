@@ -45,12 +45,18 @@
     <file alias="view-file.svg">icons/toolbar/view-file.svg</file>
     <file alias="external-viewer.svg">icons/toolbar/external-viewer.svg</file>
     <file alias="shortcuts.svg">icons/toolbar/shortcuts.svg</file>
+    <file alias="plugins.svg">icons/toolbar/plugins.svg</file>
     <file alias="terminal.svg">icons/toolbar/terminal.svg</file>
     <file alias="editor.svg">icons/toolbar/editor.svg</file>
     <file alias="fit-to-window.svg">icons/toolbar/fit-to-window.svg</file>
     <file alias="fit-window-to-image.svg">icons/toolbar/fit-window-to-image.svg</file>
     <file alias="play.svg">icons/toolbar/play.svg</file>
     <file alias="pause.svg">icons/toolbar/pause.svg</file>
+    <file alias="stop.svg">icons/toolbar/stop.svg</file>
+    <file alias="loop.svg">icons/toolbar/loop.svg</file>
+    <file alias="volume.svg">icons/toolbar/volume.svg</file>
+    <file alias="volume-muted.svg">icons/toolbar/volume-muted.svg</file>
+    <file alias="fullscreen.svg">icons/toolbar/fullscreen.svg</file>
     <file alias="transparency.svg">icons/toolbar/transparency.svg</file>
     <file alias="rotate-cw.svg">icons/toolbar/rotate-cw.svg</file>
     <file alias="line-numbers.svg">icons/toolbar/line-numbers.svg</file>
@@ -88,6 +94,16 @@
   -->
   <qresource prefix="/licenses">
     <file alias="third-party.txt">licenses/THIRD-PARTY-LICENSES.txt</file>
+  </qresource>
+  <!--
+    アップデート内容 (What's New) ダイアログの本文 (言語別 Markdown)。
+    起動時にバージョンが変わっていたら WhatsNewDialog が言語設定に応じて
+    ":/whatsnew/whatsnew_<lang>.md" を読み込んで表示する (en がフォールバック)。
+    リリース時は CHANGELOG.md の要約をこの 2 ファイルに反映すること。
+  -->
+  <qresource prefix="/whatsnew">
+    <file alias="whatsnew_en.md">whatsnew/whatsnew_en.md</file>
+    <file alias="whatsnew_ja.md">whatsnew/whatsnew_ja.md</file>
   </qresource>
   <!-- 同梱の User Command プリセットは未提供 (Import で外部 JSON を取り込む
        経路は ExternalAppsTab に有り)。将来必要になったら

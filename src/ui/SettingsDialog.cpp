@@ -2,10 +2,12 @@
 #include "KeybindingTab.h"
 #include "AppearanceTab.h"
 #include "BehaviorTab.h"
+#include "PluginsTab.h"
 #include "GeneralTab.h"
 #include "ExternalAppsTab.h"
 #include "settings/Settings.h"
 #include "keybinding/KeyBindingManager.h"
+#include "viewer/ViewerDispatcher.h"
 #include "utils/Dialogs.h"
 #include <QApplication>
 #include <QCheckBox>
@@ -29,6 +31,35 @@
 
 namespace Farman {
 
+namespace {
+
+// farman を再起動する: 新プロセスを起動してから旧プロセスを即終了する。
+// QApplication::quit() はモーダルダイアログの内側から呼ぶと外側の
+// event loop が終了せず、旧プロセスが残ったまま新プロセスが立ち上がる
+// ことがあるため、Settings の save() 後に Qt のクリーンアップを
+// スキップして即終了する。
+[[noreturn]] void restartFarman() {
+#ifdef Q_OS_MACOS
+  // applicationFilePath() は <bundle>.app/Contents/MacOS/<exe> を返す。
+  // 裸の exe を直接起動すると LaunchServices が別アプリ扱いし、Dock に
+  // も別エントリで現れるので .app の根を open(1) -n で起動する。
+  QString bundlePath = QApplication::applicationFilePath();
+  const int idx = bundlePath.indexOf(QStringLiteral("/Contents/MacOS/"));
+  if (idx > 0) bundlePath.truncate(idx);
+  QProcess::startDetached(QStringLiteral("/usr/bin/open"),
+                          QStringList{QStringLiteral("-n"), bundlePath});
+#else
+  QProcess::startDetached(QApplication::applicationFilePath(), QStringList());
+#endif
+  // プラグイン契約 (アンロード前に shutdown() を 1 回) をこの経路でも守る。
+  // _Exit はデストラクタを走らせないため、アンロード済みコードに触れる
+  // 後続処理は無い。
+  ViewerDispatcher::instance().shutdownPlugins();
+  std::_Exit(0);
+}
+
+} // namespace
+
 SettingsDialog::SettingsDialog(const QString& leftCurrentPath,
                                const QString& rightCurrentPath,
                                const QSize&   currentWindowSize,
@@ -40,6 +71,7 @@ SettingsDialog::SettingsDialog(const QString& leftCurrentPath,
   , m_keybindingTab(nullptr)
   , m_appearanceTab(nullptr)
   , m_behaviorTab(nullptr)
+  , m_pluginsTab(nullptr)
   , m_externalAppsTab(nullptr)
   , m_buttonBox(nullptr)
   , m_leftCurrentPath(leftCurrentPath)
@@ -84,12 +116,10 @@ void SettingsDialog::setupUi() {
   contentLayout->addWidget(m_stackedWidget, /*stretch*/ 1);
 
   // ── 各ページ生成 ──
-  // 旧 ViewersTab はビュアー設定を AppearanceTab のサブタブ
-  // (Main/Text/Binary/Image) へ統合した結果、廃止。Viewer Display Mode
-  // (Inline/External) は BehaviorTab へ移動した。
   m_keybindingTab   = new KeybindingTab(this);
   m_appearanceTab   = new AppearanceTab(this);
   m_behaviorTab     = new BehaviorTab(this);
+  m_pluginsTab      = new PluginsTab(this);
   m_generalTab      = new GeneralTab(m_leftCurrentPath, m_rightCurrentPath,
                                      m_currentWindowSize, m_currentWindowPosition,
                                      this);
@@ -109,11 +139,13 @@ void SettingsDialog::setupUi() {
     scroll->setWidget(page);
     m_stackedWidget->addWidget(scroll);
   };
+  // 順序は Page enum と 1:1 (setCurrentPage が enum 値を行番号として使う)。
   addPage(m_generalTab,      tr("1. General"));
   addPage(m_behaviorTab,     tr("2. Behavior"));
   addPage(m_appearanceTab,   tr("3. Appearance"));
-  addPage(m_externalAppsTab, tr("4. External Apps"));
-  addPage(m_keybindingTab,   tr("5. Keybindings"));
+  addPage(m_pluginsTab,      tr("4. Plugins"));
+  addPage(m_externalAppsTab, tr("5. External Apps"));
+  addPage(m_keybindingTab,   tr("6. Keybindings"));
 
   m_sideMenu->setCurrentRow(0);
   connect(m_sideMenu, &QListWidget::currentRowChanged,
@@ -126,7 +158,7 @@ void SettingsDialog::setupUi() {
   // StrongFocus を設定する。Tab キーで全項目を辿れるようにするのが目的。
   const QList<QWidget*> tabRoots = {
     m_generalTab, m_behaviorTab, m_appearanceTab,
-    m_externalAppsTab, m_keybindingTab
+    m_pluginsTab, m_externalAppsTab, m_keybindingTab
   };
   for (QWidget* root : tabRoots) {
     const auto widgets = root->findChildren<QWidget*>();
@@ -135,6 +167,21 @@ void SettingsDialog::setupUi() {
           qobject_cast<QSpinBox*>(w)    || qobject_cast<QLineEdit*>(w) ||
           qobject_cast<QPushButton*>(w) || qobject_cast<QToolButton*>(w)) {
         w->setFocusPolicy(Qt::StrongFocus);
+      }
+      // macOS では QToolButton にネイティブのフォーカスリングが描かれず、
+      // Tab で到達しても視認できない。独自スタイルを持たないものに限り、
+      // ボタン風の通常時スタイル + フォーカス時のハイライト枠を一律に当てる
+      // (ExternalAppsTab の browse ボタンと同じ手法)。
+      if (auto* toolBtn = qobject_cast<QToolButton*>(w)) {
+        if (toolBtn->styleSheet().isEmpty()) {
+          toolBtn->setStyleSheet(QStringLiteral(
+            "QToolButton { padding: 2px 6px; border: 1px solid palette(mid); "
+                          "border-radius: 4px; "
+                          "background-color: palette(button); }"
+            "QToolButton:pressed { background-color: palette(midlight); }"
+            "QToolButton:focus { border: 2px solid palette(highlight); "
+                                "padding: 1px 5px; }"));
+        }
       }
     }
   }
@@ -201,6 +248,10 @@ void SettingsDialog::setupUi() {
   connect(m_resetShortcut, &QShortcut::activated, this, &SettingsDialog::onResetToDefaults);
 }
 
+void SettingsDialog::setCurrentPage(Page page) {
+  m_sideMenu->setCurrentRow(static_cast<int>(page));
+}
+
 void SettingsDialog::onOk() {
   onApply();
   accept();
@@ -211,6 +262,7 @@ void SettingsDialog::onApply() {
   m_keybindingTab->save();
   m_appearanceTab->save();
   m_behaviorTab->save();
+  m_pluginsTab->save();
   m_generalTab->save();
   m_externalAppsTab->save();
 
@@ -223,32 +275,27 @@ void SettingsDialog::onApply() {
   // Notify that settings have changed
   emit settingsChanged();
 
-  // 言語が変わっていたら、現プロセスでは適切に切り替えられないので
-  // 再起動を促す。Yes なら新プロセスを起動してから旧プロセスを即終了。
+  // プラグインの有効/無効・ディレクトリは次回起動から反映されるため、
+  // 再起動するか確認し、Yes なら即再起動する。
   // Y/N の単押し対応のため独自の confirm() ヘルパを使う。
+  if (m_pluginsTab->restartRequiredOnSave()) {
+    if (confirm(this,
+                tr("Plugins"),
+                tr("Plugin changes will take effect after restarting farman.\n"
+                   "Restart farman now?"),
+                /*defaultYes=*/true)) {
+      restartFarman();
+    }
+  }
+
+  // 言語が変わっていたら、現プロセスでは適切に切り替えられないので
+  // 再起動を促す。
   if (m_generalTab->languageChangedOnSave()) {
     if (confirm(this,
                 tr("Language Changed"),
                 tr("Restart farman now to apply the new language?"),
                 /*defaultYes=*/true)) {
-#ifdef Q_OS_MACOS
-      // applicationFilePath() は <bundle>.app/Contents/MacOS/<exe> を返す。
-      // 裸の exe を直接起動すると LaunchServices が別アプリ扱いし、Dock に
-      // も別エントリで現れるので .app の根を open(1) -n で起動する。
-      QString bundlePath = QApplication::applicationFilePath();
-      const int idx = bundlePath.indexOf(QStringLiteral("/Contents/MacOS/"));
-      if (idx > 0) bundlePath.truncate(idx);
-      QProcess::startDetached(QStringLiteral("/usr/bin/open"),
-                              QStringList{QStringLiteral("-n"), bundlePath});
-#else
-      QProcess::startDetached(QApplication::applicationFilePath(), QStringList());
-#endif
-      // 新プロセスを起動した後、旧プロセスを「確実に」終了させる。
-      // QApplication::quit() はモーダルダイアログの内側から呼ぶと外側の
-      // event loop が終了せず、旧プロセスが残ったまま新プロセスが立ち上がる
-      // ことがある。Settings は既に save() 済みなので、Qt のクリーンアップを
-      // スキップして即終了する。
-      std::_Exit(0);
+      restartFarman();
     }
   }
 }

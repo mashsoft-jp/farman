@@ -197,16 +197,14 @@ private:
   // テーマ依存フィールド (font/colors) は loadFromScheme/saveToScheme で読み書き。
   // テーマ非依存フィールド (拡張子/MIME/エンコーディング/zoom 等) は loadSettings
   // と save で直接 Settings に対し読み書きする。
-  // Viewer Display Mode (Inline / External) は Behavior タブへ移動した。
+  // Viewer Display Mode (Inline / External) は Viewer Associations ページへ移動した。
 
   // Text viewer
   QLineEdit*   m_textExtensionsEdit       = nullptr;
   QLineEdit*   m_textMimePatternsEdit     = nullptr;
   QPushButton* m_textFontButton           = nullptr;
   QFont        m_textSelectedFont;
-  QComboBox*   m_textEncodingCombo        = nullptr;
-  QCheckBox*   m_textShowLineNumbersCheck = nullptr;
-  QCheckBox*   m_textWordWrapCheck        = nullptr;
+  // エンコーディング / 行番号 / 折り返しはテキストビュアープラグインの設定へ移設済み。
   QPushButton* m_textNormalFgButton       = nullptr;
   QPushButton* m_textNormalBgButton       = nullptr;
   QPushButton* m_textSelectedFgButton     = nullptr;
@@ -223,9 +221,7 @@ private:
   // Image viewer
   QLineEdit*    m_imageExtensionsEdit           = nullptr;
   QLineEdit*    m_imageMimePatternsEdit         = nullptr;
-  QComboBox*    m_imageZoomCombo                = nullptr;
-  QCheckBox*    m_imageFitToWindowCheck         = nullptr;
-  QCheckBox*    m_imageAnimationCheck           = nullptr;
+  // ズーム / フィット / アニメは画像ビュアープラグインの設定へ移設済み。
   QRadioButton* m_imageTransparencyCheckerRadio = nullptr;
   QRadioButton* m_imageTransparencySolidRadio   = nullptr;
   QPushButton*  m_imageCheckerColor1Button      = nullptr;
@@ -236,9 +232,7 @@ private:
   QColor        m_imageSolidColorValue;
 
   // Binary viewer
-  QComboBox*   m_binaryUnitCombo        = nullptr;
-  QComboBox*   m_binaryEndianCombo      = nullptr;
-  QComboBox*   m_binaryEncodingCombo    = nullptr;
+  // 単位 / エンディアン / エンコーディングはバイナリビュアープラグインの設定へ移設済み。
   QPushButton* m_binaryFontButton       = nullptr;
   QFont        m_binarySelectedFont;
   QPushButton* m_binaryNormalFgButton   = nullptr;

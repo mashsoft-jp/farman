@@ -101,6 +101,45 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ================================================================================
+ libheif  (Windows / Linux builds only)
+ https://github.com/strukturag/libheif
+ License: GNU Lesser General Public License version 3 (LGPL v3)
+================================================================================
+
+The Windows and Linux builds bundle libheif to read HEIF / HEIC images.
+(The macOS build instead uses the system HEIF decoder via Qt's qmacheif
+plugin and does not include libheif.)
+
+libheif is used under the terms of the GNU Lesser General Public License
+version 3 (LGPLv3). It is linked dynamically as a separate shared library;
+you are free to obtain the corresponding sources and to relink this
+application against a modified version.
+
+  - libheif source code : https://github.com/strukturag/libheif
+  - LGPL v3 full text    : https://www.gnu.org/licenses/lgpl-3.0.html
+
+Copyright (c) Dirk Farin and the libheif contributors.
+
+
+================================================================================
+ libde265  (Windows / Linux builds only)
+ https://github.com/strukturag/libde265
+ License: GNU Lesser General Public License version 3 (LGPL v3)
+================================================================================
+
+libheif decodes the HEVC-coded image data in HEIF / HEIC files using
+libde265, which is bundled with the Windows and Linux builds under the
+terms of the GNU Lesser General Public License version 3 (LGPLv3). It is
+linked dynamically as a separate shared library and may be replaced with a
+modified version.
+
+  - libde265 source code : https://github.com/strukturag/libde265
+  - LGPL v3 full text     : https://www.gnu.org/licenses/lgpl-3.0.html
+
+Copyright (c) Struktur AG and the libde265 contributors.
+
+
+================================================================================
  uchardet
  https://www.freedesktop.org/wiki/Software/uchardet/
  License: Mozilla Public License 1.1 (MPL 1.1)

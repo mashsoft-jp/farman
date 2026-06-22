@@ -1,25 +1,38 @@
 #pragma once
 
-#include "IViewerPlugin.h"
+#include "viewer/IViewerPlugin.h"
+#include <QObject>
 
 namespace Farman {
 
 // 他のビュアーがどれもマッチしないファイルを開くためのフォールバックビュアー。
 // 自身は拡張子・MIME のいずれにもマッチしない (canHandle 常に false) ので、
 // `ViewerDispatcher::resolvePlugin` 内では選ばれず、フォールバック経路でのみ使われる。
-class BinaryViewerPlugin : public IViewerPlugin {
+class BinaryViewerPlugin : public QObject, public IViewerPlugin {
+  Q_OBJECT
+  Q_PLUGIN_METADATA(IID FarmanIViewerPlugin_iid)
+  Q_INTERFACES(Farman::IViewerPlugin)
+
 public:
   BinaryViewerPlugin() = default;
   ~BinaryViewerPlugin() override = default;
 
   QString pluginId()   const override { return QStringLiteral("binary_viewer"); }
   QString pluginName() const override { return QStringLiteral("Binary Viewer"); }
-  int     priority()   const override { return -1; }
+  QString author() const override { return QStringLiteral("Mashsoft Inc."); }
+  QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
+  int     priority()   const override { return 99999; }
 
   QStringList supportedExtensions() const override { return {}; }
   QStringList supportedMimeTypes()  const override { return {}; }
 
   bool canHandle(const QString& /*filePath*/) const override { return false; }
+
+  bool initialize(const PluginContext& ctx) override;
+  void appearanceChanged(const PluginAppearance& appearance) override;
+
+  bool hasSettings() const override { return true; }
+  IPluginSettingsPage* createSettingsPage(QWidget* parent) override;
 
   QWidget* createViewer(const QString&       filePath,
                         QWidget*             parent,

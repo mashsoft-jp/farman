@@ -171,6 +171,7 @@ QList<QPair<QKeySequence, QString>> defaultBindingList() {
     { QKeySequence(Qt::Key_Question),                  "help.shortcuts" },
     { QKeySequence(Qt::SHIFT | Qt::Key_Question),      "help.shortcuts" },
     { QKeySequence(Qt::SHIFT | Qt::Key_Slash),         "help.shortcuts" },
+    { QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_P),  "help.plugins"   },
   };
 }
 
@@ -244,6 +245,8 @@ void KeyBindingManager::loadFromSettings() {
   // ユーザーが Ctrl+G を view.toggle_thumbnails に手動で残していた場合は維持。
   // version < 18: pane.toggle_preview (Ctrl+P) を新規追加。下の merge ロジックで
   // Ctrl+P が空いていれば自動補完される。既存バインドは保持。
+  // version < 19: help.plugins (Ctrl+Shift+P) を新規追加。Help → Plugins...
+  // と同じプラグイン一覧 / ロードエラー診断をキーボードから開けるようにする。
   if (version < 13) {
     qDebug() << "KeyBindingManager: migrating bindings from version" << version;
     loadDefaults();
@@ -316,7 +319,7 @@ void KeyBindingManager::saveToSettings() const {
 
   QJsonObject root;
   root["bindings"] = bindings;
-  root["version"] = 18;
+  root["version"] = 19;
 
   QJsonDocument doc(root);
   QString jsonData = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));

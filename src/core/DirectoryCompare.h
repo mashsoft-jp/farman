@@ -21,17 +21,15 @@ enum class DiffStatus {
 // 比較粒度。
 //   - NameOnly:  ファイル名一致のみで判定 (size/mtime は見ない)
 //   - SizeMtime: 名前 + size + mtime
-//   - Hash:      名前 + SHA-256 (重い。Phase B で実装予定)
 enum class CompareGranularity {
   NameOnly,
   SizeMtime,
-  Hash,
 };
 
 // 比較オプション。
 struct CompareOptions {
   CompareGranularity granularity = CompareGranularity::SizeMtime;
-  bool               recursive   = false;  // Phase B 以降。Phase A は false 固定
+  bool               recursive   = false;
 };
 
 // 各ペイン用の「name → DiffStatus」マップ。

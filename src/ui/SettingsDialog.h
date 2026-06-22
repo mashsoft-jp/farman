@@ -12,6 +12,7 @@ namespace Farman {
 class KeybindingTab;
 class AppearanceTab;
 class BehaviorTab;
+class PluginsTab;
 class GeneralTab;
 class ExternalAppsTab;
 
@@ -19,12 +20,25 @@ class SettingsDialog : public QDialog {
   Q_OBJECT
 
 public:
+  // サイドメニューのカテゴリ。addPage の呼び出し順と 1:1 で対応させること。
+  enum class Page {
+    General = 0,
+    Behavior,
+    Appearance,
+    Plugins,
+    ExternalApps,
+    Keybindings,
+  };
+
   SettingsDialog(const QString& leftCurrentPath,
                  const QString& rightCurrentPath,
                  const QSize&   currentWindowSize,
                  const QPoint&  currentWindowPosition,
                  QWidget* parent = nullptr);
   ~SettingsDialog() override = default;
+
+  // 指定カテゴリを選択した状態で開く (Help → Plugins... などの直接導線用)。
+  void setCurrentPage(Page page);
 
 protected:
   void keyPressEvent(QKeyEvent* event) override;
@@ -56,6 +70,7 @@ private:
   KeybindingTab*    m_keybindingTab;
   AppearanceTab*    m_appearanceTab;
   BehaviorTab*      m_behaviorTab;
+  PluginsTab*       m_pluginsTab;
   GeneralTab*       m_generalTab;
   ExternalAppsTab*  m_externalAppsTab;
   QDialogButtonBox* m_buttonBox;

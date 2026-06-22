@@ -114,7 +114,7 @@ void AppearanceTab::setupUi() {
   // と紐付き、Mode ラジオ切替えで一斉に Light/Dark を行き来する。テーマ非依存
   // フィールド (ビュアーの拡張子/MIME/エンコーディング/zoom 等) は各ビュアー
   // サブタブの中に置く (旧 ViewersTab から統合)。
-  // Viewer Display Mode (Inline/External) は Behavior タブへ移動済み。
+  // Viewer Display Mode (Inline/External) は Viewer Associations ページへ移動済み。
   m_subTabs = new QTabWidget(this);
   m_subTabs->addTab(buildMainPage(),         tr("Main"));
   m_subTabs->addTab(buildTextViewerPage(),   tr("Text Viewer"));
@@ -490,24 +490,9 @@ QWidget* AppearanceTab::buildTextViewerPage() {
   });
   addPair(tr("Font:"), m_textFontButton);
 
-  m_textEncodingCombo = new QComboBox(page);
-  m_textEncodingCombo->setEditable(true);
-  m_textEncodingCombo->addItem(QStringLiteral("Auto"));
-  m_textEncodingCombo->addItem(QStringLiteral("UTF-8"));
-  m_textEncodingCombo->addItem(QStringLiteral("UTF-16LE"));
-  m_textEncodingCombo->addItem(QStringLiteral("UTF-16BE"));
-  m_textEncodingCombo->addItem(QStringLiteral("Shift_JIS"));
-  m_textEncodingCombo->addItem(QStringLiteral("EUC-JP"));
-  m_textEncodingCombo->addItem(QStringLiteral("ISO-8859-1"));
-  m_textEncodingCombo->setToolTip(
-    tr("Default encoding for opening text files. 'Auto' detects the encoding "
-       "from the file content."));
-  addPair(tr("Encoding:"), m_textEncodingCombo);
-
-  m_textShowLineNumbersCheck = new QCheckBox(tr("Show line numbers"), page);
-  row->addWidget(m_textShowLineNumbersCheck);
-  m_textWordWrapCheck = new QCheckBox(tr("Word wrap"), page);
-  row->addWidget(m_textWordWrapCheck);
+  // エンコーディング / 行番号表示 / 折り返しは、テーマ非依存の表示設定として
+  // テキストビュアープラグインの設定 (Settings → Plugins → 詳細 → 設定...) へ
+  // 移設した。ここ (外観) にはテーマと一体のフォント / 色のみ残す。
   row->addStretch();
   outer->addLayout(row);
 
@@ -545,11 +530,12 @@ QWidget* AppearanceTab::buildBinaryViewerPage() {
   QWidget* page = new QWidget(this);
   QVBoxLayout* outer = new QVBoxLayout(page);
 
-  // ── 上段: Font / Unit / Endian ──
-  QHBoxLayout* topRow    = new QHBoxLayout();
-  QHBoxLayout* bottomRow = new QHBoxLayout();
+  // ── 上段: Font ──
+  // 表示単位 / エンディアン / 文字列エンコーディングは、テーマ非依存の表示
+  // 設定としてバイナリビュアープラグインの設定 (Settings → Plugins → 詳細 →
+  // 設定...) へ移設した。ここ (外観) にはテーマと一体のフォント / 色のみ残す。
+  QHBoxLayout* topRow = new QHBoxLayout();
   topRow->setSpacing(12);
-  bottomRow->setSpacing(12);
   auto addPair = [page](QHBoxLayout* row, const QString& labelText, QWidget* w) {
     row->addWidget(new QLabel(labelText, page));
     row->addWidget(w);
@@ -569,41 +555,8 @@ QWidget* AppearanceTab::buildBinaryViewerPage() {
     }
   });
   addPair(topRow, tr("Font:"), m_binaryFontButton);
-
-  m_binaryUnitCombo = new QComboBox(page);
-  m_binaryUnitCombo->addItem(tr("1 Byte"), 1);
-  m_binaryUnitCombo->addItem(tr("2 Byte"), 2);
-  m_binaryUnitCombo->addItem(tr("4 Byte"), 4);
-  m_binaryUnitCombo->addItem(tr("8 Byte"), 8);
-  m_binaryUnitCombo->setToolTip(
-    tr("Number of bytes per hex column (each line still shows 16 bytes)"));
-  addPair(topRow, tr("Unit:"), m_binaryUnitCombo);
-
-  m_binaryEndianCombo = new QComboBox(page);
-  m_binaryEndianCombo->addItem(tr("Little Endian"),
-                               static_cast<int>(BinaryViewerEndian::Little));
-  m_binaryEndianCombo->addItem(tr("Big Endian"),
-                               static_cast<int>(BinaryViewerEndian::Big));
-  m_binaryEndianCombo->setToolTip(
-    tr("Byte order applied when the unit is larger than 1 byte"));
-  addPair(topRow, tr("Endian:"), m_binaryEndianCombo);
-
-  m_binaryEncodingCombo = new QComboBox(page);
-  m_binaryEncodingCombo->setEditable(true);
-  m_binaryEncodingCombo->addItem(QStringLiteral("UTF-8"));
-  m_binaryEncodingCombo->addItem(QStringLiteral("UTF-16LE"));
-  m_binaryEncodingCombo->addItem(QStringLiteral("UTF-16BE"));
-  m_binaryEncodingCombo->addItem(QStringLiteral("Shift_JIS"));
-  m_binaryEncodingCombo->addItem(QStringLiteral("EUC-JP"));
-  m_binaryEncodingCombo->addItem(QStringLiteral("ISO-8859-1"));
-  m_binaryEncodingCombo->setToolTip(
-    tr("Text encoding for the string column on the right"));
   topRow->addStretch();
   outer->addLayout(topRow);
-
-  addPair(bottomRow, tr("String Encoding:"), m_binaryEncodingCombo);
-  bottomRow->addStretch();
-  outer->addLayout(bottomRow);
 
   // ── カラー (Normal / Selected / Address) ──
   QGridLayout* colors = new QGridLayout();
@@ -660,27 +613,9 @@ QWidget* AppearanceTab::buildImageViewerPage() {
     outer->addLayout(assoc);
   }
 
-  // ── 上段: Zoom / Fit / Animation ──
-  QHBoxLayout* topRow = new QHBoxLayout();
-  topRow->setSpacing(12);
-  topRow->addWidget(new QLabel(tr("Zoom:"), page));
-  m_imageZoomCombo = new QComboBox(page);
-  m_imageZoomCombo->setEditable(true);
-  for (int p : { 25, 50, 75, 100, 200 }) {
-    m_imageZoomCombo->addItem(QString::number(p) + QLatin1Char('%'), p);
-  }
-  m_imageZoomCombo->setToolTip(tr("Default zoom factor (used when 'Fit to window' is off)"));
-  topRow->addWidget(m_imageZoomCombo);
-
-  m_imageFitToWindowCheck = new QCheckBox(tr("Fit image to window"), page);
-  m_imageFitToWindowCheck->setToolTip(
-    tr("Scale the image to fit within the viewer; zoom factor is ignored while this is on."));
-  topRow->addWidget(m_imageFitToWindowCheck);
-
-  m_imageAnimationCheck = new QCheckBox(tr("Play animation (GIF / WebP)"), page);
-  topRow->addWidget(m_imageAnimationCheck);
-  topRow->addStretch();
-  outer->addLayout(topRow);
+  // 既定ズーム / ウィンドウに合わせる / アニメ再生は、テーマ非依存の表示設定
+  // として画像ビュアープラグインの設定 (Settings → Plugins → 詳細 → 設定...)
+  // へ移設した。ここ (外観) にはテーマと一体の色設定 (透過) のみ残す。
 
   // ── Transparency セクション ──
   QGroupBox* transparencyGroup = new QGroupBox(tr("Transparency"), page);
@@ -769,36 +704,17 @@ void AppearanceTab::loadSettings() {
   // Text viewer
   m_textExtensionsEdit->setText(settings.textViewerExtensions().join(QLatin1Char(' ')));
   m_textMimePatternsEdit->setText(settings.textViewerMimePatterns().join(QLatin1Char(' ')));
-  m_textEncodingCombo->setCurrentText(settings.textViewerEncoding());
-  m_textShowLineNumbersCheck->setChecked(settings.textViewerShowLineNumbers());
-  m_textWordWrapCheck->setChecked(settings.textViewerWordWrap());
+  // エンコーディング / 行番号 / 折り返しはプラグイン設定へ移設したので扱わない。
   // Image viewer
   m_imageExtensionsEdit->setText(settings.imageViewerExtensions().join(QLatin1Char(' ')));
   m_imageMimePatternsEdit->setText(settings.imageViewerMimePatterns().join(QLatin1Char(' ')));
-  m_imageZoomCombo->setCurrentText(QString::number(settings.imageViewerZoomPercent()) + QLatin1Char('%'));
-  m_imageFitToWindowCheck->setChecked(settings.imageViewerFitToWindow());
-  m_imageAnimationCheck->setChecked(settings.imageViewerAnimation());
+  // ズーム / フィット / アニメはプラグイン設定へ移設したのでここでは扱わない。
   if (settings.imageViewerTransparencyMode() == ImageTransparencyMode::SolidColor) {
     m_imageTransparencySolidRadio->setChecked(true);
   } else {
     m_imageTransparencyCheckerRadio->setChecked(true);
   }
-  // Binary viewer
-  const int unitBytes = binaryViewerUnitToBytes(settings.binaryViewerUnit());
-  for (int i = 0; i < m_binaryUnitCombo->count(); ++i) {
-    if (m_binaryUnitCombo->itemData(i).toInt() == unitBytes) {
-      m_binaryUnitCombo->setCurrentIndex(i);
-      break;
-    }
-  }
-  for (int i = 0; i < m_binaryEndianCombo->count(); ++i) {
-    if (m_binaryEndianCombo->itemData(i).toInt()
-        == static_cast<int>(settings.binaryViewerEndian())) {
-      m_binaryEndianCombo->setCurrentIndex(i);
-      break;
-    }
-  }
-  m_binaryEncodingCombo->setCurrentText(settings.binaryViewerEncoding());
+  // Binary viewer: 単位 / エンディアン / エンコーディングはプラグイン設定へ移設。
 
   // ── Image Viewer checker 2 色 (theme-independent) ──
   // 「透明部分のインジケータ」として全テーマで共通の見た目を保つため、
@@ -1305,34 +1221,19 @@ void AppearanceTab::save() {
   // Text viewer
   settings.setTextViewerExtensions(splitList(m_textExtensionsEdit->text()));
   settings.setTextViewerMimePatterns(splitList(m_textMimePatternsEdit->text()));
-  settings.setTextViewerEncoding(m_textEncodingCombo->currentText().trimmed());
-  settings.setTextViewerShowLineNumbers(m_textShowLineNumbersCheck->isChecked());
-  settings.setTextViewerWordWrap(m_textWordWrapCheck->isChecked());
+  // エンコーディング / 行番号 / 折り返しはプラグイン設定へ移設したので保存しない。
   // Image viewer
   settings.setImageViewerExtensions(splitList(m_imageExtensionsEdit->text()));
   settings.setImageViewerMimePatterns(splitList(m_imageMimePatternsEdit->text()));
-  {
-    QString s = m_imageZoomCombo->currentText().trimmed();
-    if (s.endsWith(QLatin1Char('%'))) s.chop(1);
-    bool ok = false;
-    int v = s.toInt(&ok);
-    if (ok) settings.setImageViewerZoomPercent(v);
-  }
+  // ズーム / フィット / アニメはプラグイン設定へ移設したのでここでは保存しない。
   // Image viewer checker colors (theme-independent)
   settings.setImageViewerCheckerColor1(m_imageCheckerColor1Value);
   settings.setImageViewerCheckerColor2(m_imageCheckerColor2Value);
-  settings.setImageViewerFitToWindow(m_imageFitToWindowCheck->isChecked());
-  settings.setImageViewerAnimation(m_imageAnimationCheck->isChecked());
   settings.setImageViewerTransparencyMode(
     m_imageTransparencySolidRadio->isChecked()
       ? ImageTransparencyMode::SolidColor
       : ImageTransparencyMode::Checker);
-  // Binary viewer
-  settings.setBinaryViewerUnit(
-    bytesToBinaryViewerUnit(m_binaryUnitCombo->currentData().toInt()));
-  settings.setBinaryViewerEndian(
-    static_cast<BinaryViewerEndian>(m_binaryEndianCombo->currentData().toInt()));
-  settings.setBinaryViewerEncoding(m_binaryEncodingCombo->currentText().trimmed());
+  // Binary viewer: 単位 / エンディアン / エンコーディングはプラグイン設定へ移設。
 }
 
 bool AppearanceTab::eventFilter(QObject* watched, QEvent* event) {

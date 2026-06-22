@@ -231,6 +231,13 @@ enum class BinaryViewerEndian {
   Big
 };
 
+// PDF ビュアーの既定表示の合わせ方。
+enum class PdfViewerFitMode {
+  ActualSize,  // 等倍 (ズーム指定)
+  FitWidth,    // ウィンドウ幅に合わせる
+  FitPage      // ページ全体を表示
+};
+
 // ファイル一覧でのカラーリング対象カテゴリ
 enum class FileCategory {
   Normal    = 0,  // 通常ファイル

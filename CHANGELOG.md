@@ -55,6 +55,9 @@ All notable changes to **farman** are documented in this file.
     LRU キャッシュで、12 MB / 20 万行クラスでも初回表示が即時)。
     Inline / External 両対応)
   - 任意ビュアーで開く (Ctrl+Enter) / OS 既定アプリで実行 (Shift+Enter)
+  - **外部ビュアープラグイン**: 起動時にユーザー指定ディレクトリから
+    `IViewerPlugin` (`.dylib` / `.so` / `.dll`) をロード。Settings で
+    ディレクトリ指定、Help → Plugins... でロード結果を確認可能
   - **ビュアー読込のキャンセル + 結果ロギング**: Inline / External どちらの
     モードでも、ロード中に Esc 押下や別ファイル遷移でキャンセル可能
     (Cancel ボタン付きのモードレス進捗表示)。完了 / 失敗 / キャンセルは

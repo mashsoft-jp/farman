@@ -829,10 +829,11 @@ General / Behavior / Appearance / Viewers の後ろ、Keybindings の前)。
   - Test launch ボタン (現在のアクティブペインのコンテキストで実起動)
 - **Text Editor** (組み込み専用 UI)
   - 同上
-- **ユーザー定義コマンド** *（フェーズ 2 で UI 追加予定）*
-  - 内部モデルは既に `UserCommand` で統一済み。`builtin=false` のエントリを
-    設定の「外部アプリ」から追加 / 編集 / 削除 / 並び替えする UI を後続で被せる。
-  - 現状は手で `settings.json` に書けば動作する (Tools メニューに出る)。
+- **ユーザー定義コマンド**
+  - 内部モデルは `UserCommand` で統一済み。`builtin=false` のエントリを
+    設定の「外部アプリ」から追加 / 編集 / 削除 / 並び替えできる。
+  - `showInToolsMenu=true` のエントリは Tools メニューに表示され、設定の
+    「キーバインド」から任意のキーを割り当てられる。
 
 ### インストール済アプリのプリセット検出
 
@@ -1064,7 +1065,7 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
 `highlightBlock` が同期実行され、`setPlainText` が長時間ブロック
 してしまう。
 
-### 組み込みビュアー
+### 同梱公式ビュアープラグイン
 
 #### テキストビュアー
 
@@ -1190,7 +1191,8 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   ロードを無効化してしまうため、`QHeaderView::setResizeContentsPrecision(100)`
   でサンプル数を上限 100 行に抑えている。
 - External モード時は `CsvViewerWindow` (独立 `QMainWindow`) として開く。
-- 並べ替え (列ヘッダクリック) は Phase 2 以降。
+- 列ソート (列ヘッダクリックで昇順/降順切替) は **不採用** (2026-05-27)。
+  CSV ビュアー側で並べ替えが必要なケースは表計算ソフトで開く想定。
 - ステータスバー (statusInfo): `CSV · <行数> 行 · <列数> 列 · <エンコーディング>
   · <ファイルサイズ>`。
 
@@ -1234,6 +1236,36 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
   あればそれを使う。プレビューモードではサイズ上限を超えると先頭 N バイトに
   truncate して表示する (テキスト / バイナリと同じ作法)。
 - ステータスバー (statusInfo): `<行数> 行 · <エンコーディング> · <ファイルサイズ>`。
+
+#### 動画 / 音声ビュアー
+
+- 同梱公式プラグイン `media_viewer` (Qt Multimedia ベース)。コーデック対応は
+  プラットフォームのバックエンドに依存する (macOS: AVFoundation /
+  Windows: Media Foundation / Linux: GStreamer。Qt 6.5+ のバイナリ配布では
+  同梱 FFmpeg バックエンドが既定)。
+- 対象拡張子 (既定。Settings → Plugins のプラグイン詳細ダイアログで変更可):
+  - 動画: `.mp4` `.mov` `.m4v` `.webm` `.avi` `.mkv`
+  - 音声: `.wav` `.mp3` `.m4a` `.flac` `.ogg` `.aac`
+- 機能: 再生 / 一時停止 (Space) / 停止 / シーク (スライダ + ←/→ = 5 秒、
+  Shift+←/→ = 30 秒) / 音量 (↑/↓ + スライダ) / ミュート (M) /
+  ループ再生切替 (L) / 再生速度 (0.5x / 1.0x / 1.5x / 2.0x)。
+- 動画はアスペクト比保持で表示領域にフィット。`F` またはダブルクリックで
+  フルスクリーン切替 (Esc で解除)。
+- 音声のみのファイルはコンパクト UI: 埋め込みカバーアート (あれば) +
+  タイトル / アーティスト — アルバムをメタデータから表示。
+- ファイルを開くと自動再生する。`QMediaPlayer::setSource` はメタデータのみ
+  先読みし、本体ストリームは再生開始時にロードされる (大きいファイルでも
+  起動が重くならない)。
+- ロードは QMediaPlayer 自身が非同期に行うため、他ビュアーの
+  prepareLoad / CancellableLoadPage パターンは使わない。ロード結末
+  (Loaded / Invalid) は他ビュアーと同じ `logViewerLoadResult` でログする。
+- 内蔵 `ViewerKind` は持たない唯一の同梱公式プラグイン。Inline モードでは
+  `ViewerPanel::openFile` が外部プラグインと同じ埋め込み経路
+  (`openPluginFile`) で表示する。このため `media_viewer` のロードに失敗した
+  環境では従来どおり Binary ビュアーにフォールバックする。
+- 実装: `plugins/official/media-viewer/` + `src/viewer/MediaView.{h,cpp}` /
+  `MediaViewerWindow.{h,cpp}`。Qt6::Multimedia / Qt6::MultimediaWidgets は
+  この plugin ターゲットだけがリンクする (farman 本体には増やさない)。
 
 ### 表示モードの切替
 
@@ -1293,9 +1325,10 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 切替経路:
 
-- **Settings → Viewers カテゴリ → Viewer Display グループ → Display mode**
+- **Settings → Behavior カテゴリ → Viewer Display グループ → Display mode**
   (永続設定。`settings.json` の `behavior.viewerMode` に `inline` /
-  `external` で保存)。
+  `external` で保存)。表示モードのみだった旧「Viewers」カテゴリは廃止し、
+  この設定は Behavior カテゴリへ移設した (拡張子の対応付け等は Plugins カテゴリ)。
 - **View メニュー → External Viewer Window** (チェック付きトグル項目)。
   選択する都度 Settings に書き込み、即時反映される。`Settings::save()` まで
   含めて完結するので、再起動後も状態が残る。
@@ -1332,26 +1365,11 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
     数式 (KaTeX) / Mermaid 図 / 目次サイドバー。いずれも外部 JS エンジン
     (`QWebEngineView`) もしくは独自パーサを要し、現時点では導入コストに見合う
     ニーズが無いため見送り。
-- **動画 / 音声ビュアー** *(後日 or プラグインビュアー対応)*
-  - 本体取り込みは依存ライブラリ + OS 毎コーデック検証が大きい (Qt
-    Multimedia の native backend は macOS / Windows / Linux で挙動が
-    違う) ので、**v1.0 では未対応**。プラグインシステムを正式公開した
-    段階で外部プラグイン候補に回す方が現実的。
-  - 対象 (動画): `.mp4` `.mov` `.m4v` `.webm` `.avi` `.mkv` 他
-  - 対象 (音声): `.wav` `.mp3` `.m4a` `.flac` `.ogg` `.aac` 他
-  - 候補ライブラリ: Qt Multimedia (`QMediaPlayer` + 動画用 `QVideoWidget`、
-    音声単体用 `QAudioOutput`) が第一候補。コーデック対応はプラットフォーム
-    のネイティブバックエンド (macOS: AVFoundation / Windows: Media
-    Foundation / Linux: GStreamer) に依存する。
-  - 必要機能: 再生 / 一時停止 / 停止 / シーク (スライダ + ←/→ で
-    数秒単位、Shift+←/→ で大きく) / 音量 / ミュート / ループ再生切替 /
-    再生速度 (0.5x / 1.0x / 1.5x / 2.0x)。
-  - 動画ビュアーはアスペクト比保持で表示領域にフィットさせる。フルスクリーン
-    切替も対応したい (ビュアー側で `Qt::Key_F` などにバインド)。
-  - 音声単体ファイルは波形プレビューや再生位置だけのコンパクト UI で良い。
-    将来的に簡易な波形描画 (peaks) を入れる余地は残す。
-  - ファイルが大きいことが多いので、起動時はメタデータだけ読んで本体ストリーム
-    は再生開始時にロードする (`QMediaPlayer::setSource`)。
+- **動画 / 音声ビュアー** — **実装済 (v0.9.6)**
+  - 同梱公式プラグイン `media_viewer` として実装 (上記
+    `#### 動画 / 音声ビュアー` 参照)。Qt Multimedia (`QMediaPlayer` +
+    動画用 `QVideoWidget`、音声用 `QAudioOutput`)。
+  - 残件: 簡易な波形描画 (peaks)。ニーズが出たら検討。
 - **CSV ビュアー (拡張)** — 完了扱い
   - Phase 1 (表形式表示 / 区切り自動判定 + 手動切替 / ヘッダ行扱いトグル /
     エンコーディング選択 / RFC 4180 quoted-field パース) と Phase 2
@@ -1399,45 +1417,119 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 ### プラグインシステム
 
-**v1.0 ステータス**: 内部アーキテクチャとしての基盤コードはツリーに残して
-あるが、**外部公開はしない**。理由: 仕様 / ABI を実利用で検証できていない
-段階で API を見せると、後方互換維持で身動きが取れなくなる。組み込み 3 ビュアー
-(Text / Image / Binary) は `IViewerPlugin` 実装として登録されており、内部的
-には既に「プラグイン化済み」だが、ユーザー視点では単一バイナリのアプリ。
+**v0.9.6 ステータス**: 外部 **ビュアープラグイン** の最小公開を開始する。
+同梱公式ビュアープラグイン (Text / Image / Markdown / PDF / CSV・TSV /
+Binary / Media) は `IViewerPlugin` 実装として登録されており、同じ `ViewerDispatcher`
+で外部 .dylib / .dll / .so も扱う。同梱公式ビュアープラグインも
+`plugins/official/` のソースから dynamic plugin としてビルドし、配布物では
+アプリ同梱の `plugins/viewers` 相当ディレクトリに配置してロードする。
 
-**ユーザー向けに非公開な要素 (v1.0 で意図的に隠している)**
+**ユーザー向けに公開する要素**
 
-- `main.cpp` の `ViewerDispatcher::loadPlugins(QDir)` 呼び出し (起動時に
-  外部 .dylib / .dll / .so を読まない)
-- Help → Plugins... メニューと診断ダイアログ (削除済み)
-- Settings → `behavior.pluginsDirectory` の編集 UI (そもそも未提供)
+- 起動時に `ViewerDispatcher::registerBundledPlugins()` でアプリ同梱の
+  dynamic plugin を読み込み、その後 `ViewerDispatcher::loadPlugins(QDir)` で
+  ユーザー指定ディレクトリから外部 .dylib / .dll / .so を読み込む。
+- プラグイン関連の設定と診断情報は **Settings → Plugins** ページに集約する
+  (ディレクトリ / 一覧・ロード状況 / 有効・無効 / ビュアーの拡張子紐付け)。
+  Help → Plugins...、メインツールバーの Plugins ボタン、`help.plugins`
+  コマンド (既定: Ctrl+Shift+P) はいずれもこのページを直接開く。
+- Plugins Directory: プラグインディレクトリを指定できる。空欄なら
+  `Settings::defaultPluginsDirectory()` を使う。
+- Installed Plugins: 種別ごとのタブ (現状は Viewer のみ) に分けて、同梱公式 /
+  外部プラグインを一覧表示する。一覧の列は有効 / 状態 / 名前 / 拡張子に絞り
+  (いずれも表示のみ)、エラーがあるプラグインは名前の前に警告アイコンを出す。
+  区分 (同梱 / 外部)・ID・パス・エラー全文は各行の「詳細...」ボタンで開く
+  ダイアログで確認する。詳細は一覧の Enter / Space でも開ける。一覧内の
+  行移動は ↑/↓ のみで、Tab は設定ダイアログの OK ボタンへ抜ける。
+  将来 Content / FS / Archive 等の種別が増えてもタブを増やすだけで拡張できる。
+- プラグインの有効 / 無効は詳細ダイアログで切り替えられる (一覧の
+  「有効」列は表示のみ)。
+  無効化されたプラグインは次回起動時に登録せず、ロード後すぐアンロードする。
+  テキスト / 画像 / バイナリ / メディア (動画・音声) の 4 つは、アプリ本体の
+  フォールバック経路を兼ねる固定 (コア) ビュアープラグインとして既定で有効、
+  かつ無効化できない (`ViewerDispatcher::isCoreViewerPlugin`)。それ以外の
+  同梱プラグイン (PDF / CSV / Markdown) は既定で有効だが、外部プラグインと
+  同様にユーザーが有効 / 無効を切り替えられる。
+- ビュアープラグインごとの拡張子の割り当て (関連付け) は、詳細ダイアログの
+  Extensions 欄で確認・編集できる。例: `video_viewer` に `mp4, mkv` を指定する。
+  値がプラグイン既定の拡張子と一致している間は既定に追従し、編集して
+  異なる値にしたものだけを設定として保存する。
+  無効化された外部プラグインの関連付けも編集可能なまま残し、一覧に
+  存在しないプラグインへの関連付けは設定にそのまま保持する。これにより
+  再有効化 / 再インストール時に以前の割り当てを復元できる。
+- 拡張子のユーザー既定がある場合はそれを最優先する。未設定、または指定した
+  pluginId がロードされていない場合は、従来どおり各 `IViewerPlugin` が
+  `supportedExtensions()` / `supportedMimeTypes()` / `canHandle(filePath)` /
+  `priority()` で宣言した自動選択にフォールバックする。複数プラグインが
+  対応する場合は `priority()` の数値が小さいもの (0 が最優先) を使い、
+  同点なら先に登録されたものを使う。
+- `priority()` の値域: ユーザー作成の外部プラグインは 0〜9999 を指定する。
+  範囲外 (負の値または 10000 以上) はロード時にエラーとして拒否され使用不可。
+  10000 以上は同梱公式プラグイン用の予約域で、PDF / CSV / Markdown は 10000、
+  コアビュアーはメディア 99996 / 画像 99997 / テキスト 99998 /
+  バイナリ 99999 (最後のフォールバック) とする。
+  Settings → Plugins の一覧は優先度の昇順 (0 が一番上) に並ぶ。
+- 制作者情報: 外部プラグインは `author()` (制作者名 / 組織名) の提供を必須と
+  する。空の場合はロード時にエラーとして拒否され使用不可。`authorUrl()` は
+  任意で、指定すると詳細ダイアログにクリック可能なリンクとして表示される。
+  これらは Settings → Plugins のプラグイン詳細ダイアログで確認できる。
+- 外部ビュアープラグインは Inline / External のどちらの表示モードでも有効。
+  Inline では `ViewerPanel` 内に返却 QWidget を埋め込み、External では同じ
+  QWidget をトップレベル化して表示する。`IViewerPlugin::createViewer()` は
+  QWidget を生成して返すだけにし、プラグイン側では `show()` しない。
+- 外部プラグインには `PluginContext::appearance` で現在の Appearance
+  スナップショットを渡す。含める値は Light/Dark、UI フォント、背景色、
+  パネル背景色、通常テキスト色、抑制テキスト色、アクセント色、選択背景色、
+  選択テキスト色とする。`Settings*` や `QApplication*` は渡さない。
+- Appearance 変更時は `IViewerPlugin::appearanceChanged(PluginAppearance)` を
+  呼ぶ。Settings ダイアログでの変更だけでなく、Theme = Auto 時に OS 側の
+  Light/Dark が自動切替された場合も同じ通知経路で追随する。
 
-**残してある基盤コード**
+**基盤 API**
 
 - インターフェース: `IViewerPlugin` ([src/viewer/IViewerPlugin.h](src/viewer/IViewerPlugin.h))
-  - `pluginId()` / `pluginName()` / `supportedExtensions()` /
-    `supportedMimeTypes()` / `canHandle(filePath)` /
+  - `pluginId()` / `pluginName()` / `author()` / `authorUrl()` /
+    `supportedExtensions()` / `supportedMimeTypes()` / `canHandle(filePath)` /
     `createViewer(filePath, parent, ctx)` / `priority()` /
-    `initialize(ctx)` / `shutdown()` / `capabilities()`
-- `PluginContext` 構造体 (将来 logger / settings / mainWindow 等を「引数追加
-  = ABI 破壊」抜きで足せるよう用意)
-- `ViewerDispatcher::registerBuiltins()` / `loadPlugins(QDir)` /
+    `initialize(ctx)` / `shutdown()` / `appearanceChanged(appearance)` /
+    `capabilities()` / `hasSettings()` / `createSettingsPage(parent)`
+- 設定 UI: プラグインは `hasSettings()` を true にし、`createSettingsPage()` で
+  `IPluginSettingsPage` ([src/viewer/IPluginSettingsPage.h](src/viewer/IPluginSettingsPage.h))
+  派生のページを返すと、Settings → Plugins → 詳細ダイアログ内に「設定」グループ
+  として直接埋め込まれる (別ウィンドウにはしない)。詳細ダイアログの OK 確定時に
+  farman が `page->save()` を呼び、続けて `Settings::load()` で再読込して開いて
+  いるビュアーへ反映する。設定ページがある場合は「既定に戻す」ボタンも出る。
+  公式・外部プラグイン共通の仕組み。
+- `PluginContext` 構造体 (farmanVersion と Appearance スナップショットを保持。
+  将来 logger / settings / mainWindow 等を「引数追加 = ABI 破壊」抜きで
+  足せるよう用意)
+- `ViewerDispatcher::registerBundledPlugins()` / `loadPlugins(QDir)` /
   `pluginRecords()`
 - `Settings::pluginsDirectory()` / `defaultPluginsDirectory()` アクセサ
   (JSON キー `behavior.pluginsDirectory` の serialize / deserialize も含む)
 
-**v1.0 後にやること (バックログ)**
+**制約**
 
-1. サンプル外部プラグインを社内で 1〜2 件試作し、API の使いにくさ / 抜けを洗う
-2. 必要なら `IViewerPlugin` を破壊的に改訂 (この段階ならまだ自由が効く)
-3. Help → Plugins... メニュー復活 + プラグインディレクトリの設定 UI 追加
-4. サンプル `.dylib` の配布 / リファレンス文書化
+- v0.9.x では API / ABI の長期互換を保証しない。`IViewerPlugin` の IID は
+  `com.farman.IViewerPlugin/4.0` (`FarmanIViewerPlugin_iid` マクロ)。仮想関数の
+  追加など ABI 互換が壊れる変更時は必ずバージョンを上げ、旧 IID のプラグインは
+  qobject_cast 失敗 (ロードエラー) として安全に拒否する。正式な互換ポリシーは
+  サンプル外部プラグインを試作してから確定する。
+- 外部公開の対象は **ビュアープラグインのみ**。仮想 FS / アーカイブ形式 /
+  追加列などは別 IID の将来拡張とする。
+
+**後続バックログ**
+
+1. リポジトリ同梱のサンプル外部プラグインを 1〜2 件試作 (`IViewerPlugin`
+   実装、CMake から別ターゲットで `.dylib` / `.so` / `.dll` 生成)。
+2. プラグイン作者向けのリファレンス文書 + テンプレートとしてサンプルを公開。
+3. 必要なら `IViewerPlugin` を破壊的に改訂し、IID を上げて段階移行する。
 
 **拡張余地** (将来): WDX 風 (列追加) / WFX 風 (仮想 FS) / WCX 風 (アーカイブ
 フォーマット) は別 IID の `IContentPlugin` / `IFsPlugin` / `IArchivePlugin` を
-新設する形で、`IViewerPlugin` には触れずに対応可能。「追加ビュアー」を組み込み
-で実装するかプラグインとして外出しにするかは、ライブラリ依存の重さで判断する
-(PDF は組み込み寄り、Office は外部依存が大きいのでプラグイン寄りが妥当)。
+新設する形で、`IViewerPlugin` には触れずに対応可能。「追加ビュアー」を同梱公式
+で実装するか外部プラグインとして外出しにするかは、ライブラリ依存の重さで判断する
+(PDF は同梱公式寄り、Office は外部依存が大きいので外部プラグイン寄りが妥当)。
 
 ---
 
@@ -1590,7 +1682,7 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
   - 比較対象は左右ペインそれぞれのカレントディレクトリ。
 - 比較結果は両ペインのファイルリスト上に**着色**で重ねて表示する。
   - 反対側に存在しない（追加された）アイテム
-  - 両側にあるが内容が違うアイテム（サイズ／更新日時／オプションでハッシュ）
+  - 両側にあるがサイズまたは更新日時が違うアイテム
   - 両側で同一のアイテム
 - 比較モード中はソートやフィルタの状態に追従する。
 
@@ -1598,7 +1690,7 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
 
 - ファイル名のみ（軽量、最初に通る）
 - サイズ＋更新日時（既定）
-- 内容ハッシュ（明示的に有効化したときのみ。大きいツリーでは時間が掛かるため）
+- サブディレクトリの再帰比較（明示的に有効化したときのみ）
 
 ### 同期操作 *（差分が出ているときに発火）*
 
@@ -1614,7 +1706,7 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
 
 ### 性能上の注意
 
-- 大量ファイル時はバックグラウンドワーカーで比較を行い、進捗を表示する。
+- 大量ファイル時もバックグラウンドワーカーで比較を行い、UI をブロックしない。
 - サブディレクトリの再帰比較は明示的なオプションとして提供（既定は浅い比較）。
 
 ---
@@ -1897,10 +1989,13 @@ List Display へ移動済み。ビュアー固有の設定は Viewers カテゴ�
   - 各状態に Foreground / Background / Bold を指定可能
   - 「Use custom colors for inactive pane」ON で非アクティブパネル用の色も別途設定可能
 
-#### 4. Viewers カテゴリ
+#### 4. Viewers カテゴリ (廃止)
 
-3 ビュアー (Text Viewer / Image Viewer / Binary Viewer) の設定を `QToolBox` による
-**排他アコーディオン**で配置する (一度に 1 セクションだけ展開、ヘッダークリックで切替)。
+独立した「Viewers」カテゴリは廃止した。表示モード (Inline / External) は
+**Behavior カテゴリ → Viewer Display** に移し、拡張子の対応付けは **Plugins**
+カテゴリへ集約済み。以下は各ビュアー設定項目の仕様 (配置先タブは上記に移行)。
+
+3 ビュアー (Text Viewer / Image Viewer / Binary Viewer) の設定項目:
 各ビュアーの主要項目は横並び (左寄せ) で配置する。
 
 ##### テキストビューア
@@ -2338,7 +2433,7 @@ Last checked: 2026-05-10 09:42
 
 ### コンテンツ
 - ヒーロー (キャッチ + OS 判定ダウンロードボタン)、主な機能グリッド、
-  スクリーンショット (「ファイル操作・表示モード」「組み込みビュアー」の 2 群)、
+  スクリーンショット (「ファイル操作・表示モード」「同梱公式ビュアー」の 2 群)、
   OS 別ダウンロード、免責事項 (現状有姿の法律用語は避け「データはバックアップを /
   作者は責任を負わない」を平易に明記)。
 - **Windows ダウンロードカードに SmartScreen 注記** (未署名のため「詳細情報 →
@@ -2417,15 +2512,9 @@ Last checked: 2026-05-10 09:42
 
 ### 機能拡張系
 
-- **プラグインの正式公開 (v1.0 以降)** — 現状プラグイン機構は内部実装として
-  だけ存在し、外部公開していない (SPEC.md "プラグインシステム" 節参照)。
-  v1.0 リリース後に下記の順で公開検討する:
-  1. リポジトリ同梱のサンプル外部プラグインを 1〜2 件試作 (`IViewerPlugin`
-     実装、CMake から別ターゲットで `.dylib` / `.so` / `.dll` 生成)。API の
-     使いにくさ・抜けをまずこれで洗う。
-  2. 必要なら `IViewerPlugin` を破壊的に改訂 (この段階ならまだ自由が効く)。
-  3. Help → Plugins... メニュー復活 + プラグインディレクトリの設定 UI 追加。
-  4. プラグイン作者向けのリファレンス文書 + テンプレートとしてサンプルを公開。
+- **プラグイン正式公開の拡充** — v0.9.6 で外部ビュアープラグインのロードと
+  診断 UI まで前倒し導入。残件はサンプル外部プラグイン、作者向けリファレンス、
+  テンプレート整備。
 
 - **アーカイブ作成オプション** — `CreateArchiveDialog` に作成オプションを実装済み。
   読み取り側の password 対応 (`ArchiveContext::password`) と対称:

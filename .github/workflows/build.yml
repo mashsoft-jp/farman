@@ -106,7 +106,9 @@ jobs:
           #   開発機 (Homebrew Qt の全部入り) との挙動差が出る。
           # qtpdf: Qt PDF / Qt PdfWidgets (PDF ビュアー)。PDFium ベースで
           #   essential 外なので明示。
-          modules: 'qt5compat qtimageformats qtpdf'
+          # qtmultimedia: Qt Multimedia / MultimediaWidgets (動画・音声
+          #   ビュアープラグイン MediaViewerPlugin)。essential 外なので明示。
+          modules: 'qt5compat qtimageformats qtpdf qtmultimedia'
           cache: true
 
       # ──────── 依存ライブラリ ────────
@@ -194,7 +196,11 @@ jobs:
           #    -libpath=/opt/homebrew/lib: Qt の WebP プラグインが依存する
           #    libwebp.7.dylib / libsharpyuv.0.dylib は Homebrew 配下にあり、
           #    指定しないと "could not be resolved" 警告が大量に出る。
-          macdeployqt build/farman.app -libpath=/opt/homebrew/lib
+          plugin_exec_args=()
+          for plugin in build/farman.app/Contents/PlugIns/viewers/*.dylib; do
+            plugin_exec_args+=( "-executable=$plugin" )
+          done
+          macdeployqt build/farman.app -libpath=/opt/homebrew/lib "${plugin_exec_args[@]}"
 
           # 2. .app 全体を ad-hoc 署名で再署名する。Apple Developer ID は使えない
           #    が、署名の整合性が取れていれば Gatekeeper は「未署名アプリ」として
@@ -230,6 +236,15 @@ jobs:
         run: |
           # windeployqt で Qt DLL をフラットにコピー
           windeployqt --release --no-translations build/Release/farman.exe
+
+          # 同梱公式ビュアープラグインの Qt 依存も deploy する。farman.exe 自体が
+          # リンクしない Qt モジュール (例: MediaViewerPlugin の Qt6Multimedia +
+          # ffmpeg バックエンド) は exe への windeployqt では取り込まれないため、
+          # 各プラグイン DLL を --dir で exe と同じディレクトリへ deploy する
+          # (release.yml と同じ処置)。
+          Get-ChildItem build/Release/plugins/viewers/*.dll | ForEach-Object {
+            windeployqt --release --no-translations --dir build/Release $_.FullName
+          }
 
           # vcpkg 経由で入れた libarchive / uchardet とその依存 DLL を
           # コピー。include 関係 / debug 用 .pdb は不要なので .dll だけ。
@@ -283,6 +298,18 @@ jobs:
           # 由来のキャピタライズされた名前になり、後段の mv が linuxdeploy*.AppImage
           # まで巻き込んで複数ソース扱いになってしまう。
           export OUTPUT=farman-x86_64.AppImage
+
+          # 同梱公式ビュアープラグイン。farman は実行ファイル横の
+          # ../plugins/viewers を探索するため、AppDir/usr/plugins/viewers に
+          # 先置きして AppImage へ取り込む。
+          mkdir -p AppDir/usr/plugins/viewers
+          cp build/plugins/viewers/* AppDir/usr/plugins/viewers/
+
+          # Qt Multimedia の ffmpeg バックエンドプラグイン (plugins/multimedia/)。
+          # farman 本体は Qt6Multimedia をリンクしないため linuxdeploy-plugin-qt の
+          # 自動検出に乗らない。EXTRA_QT_PLUGINS で明示的に取り込む
+          # (MediaViewerPlugin.so の動画 / 音声再生に必要。release.yml と同じ処置)。
+          export EXTRA_QT_PLUGINS="multimedia"
 
           ./linuxdeploy-x86_64.AppImage \
             --appdir AppDir \

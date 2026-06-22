@@ -63,7 +63,7 @@ src/
 │   ├── MoveOperation.{h,cpp}        # 移動
 │   └── DeleteOperation.{h,cpp}      # 削除
 ├── viewer/                  # ビュアー (実体は src/viewer/)
-│   ├── IViewerPlugin.h              # プラグイン IF (内部基盤、外部公開は未)
+│   ├── IViewerPlugin.h              # 外部ビュアープラグイン IF
 │   ├── ViewerDispatcher.{h,cpp}     # ビュアー振り分け
 │   ├── TextView.{h,cpp}             # テキストビュアー
 │   ├── TextViewerWindow.{h,cpp}     # 同・独立ウィンドウ (External モード)
@@ -256,8 +256,8 @@ public:
 };
 
 // Qt プラグインマクロ
-#define IViewerPlugin_iid "com.farman.IViewerPlugin/1.0"
-Q_DECLARE_INTERFACE(IViewerPlugin, IViewerPlugin_iid)
+#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/4.0"
+Q_DECLARE_INTERFACE(IViewerPlugin, FarmanIViewerPlugin_iid)
 ```
 
 #### ViewerManager
@@ -430,11 +430,15 @@ class PdfViewerPlugin : public QObject, public IViewerPlugin {
   Q_INTERFACES(IViewerPlugin)
 
 public:
-  QString name() const override { return "PDF Viewer"; }
+  QString pluginId() const override { return "pdf_viewer"; }
+  QString pluginName() const override { return "PDF Viewer"; }
   QStringList supportedExtensions() const override { return {"pdf"}; }
+  QStringList supportedMimeTypes() const override { return {"application/pdf"}; }
 
   QWidget* createViewer(const QString &filePath,
-                        QWidget *parent) override {
+                        QWidget *parent,
+                        const PluginContext &ctx) override {
+    Q_UNUSED(ctx);
     return new PdfViewerWidget(filePath, parent);
   }
 };
@@ -442,9 +446,12 @@ public:
 
 ### プラグインディレクトリ
 
-- macOS: `farman.app/Contents/PlugIns/`
-- Windows: `<exe_dir>/plugins/`
-- Linux: `<exe_dir>/plugins/` または `~/.local/share/farman/plugins/`
+- 既定: `QStandardPaths::AppDataLocation + "/plugins"`
+  - macOS: `~/Library/Application Support/Farman/farman/plugins`
+  - Linux: `~/.local/share/Farman/farman/plugins`
+  - Windows: `%APPDATA%/Farman/farman/plugins`
+- Settings → General → Viewer Plugins で任意ディレクトリに変更可能。
+- Help → Plugins... でロード結果とエラー理由を確認できる。
 
 ---
 

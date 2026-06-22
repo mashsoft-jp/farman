@@ -43,8 +43,31 @@ env:
   BUILD_TYPE: Release
 
 jobs:
+  # ──────── リリース前チェック ────────
+  # What's New (resources/whatsnew/*.md) がこのリリースのバージョン向けに
+  # 更新済みかを検証する。見出しのバージョン不一致 = 更新し忘れとみなし、
+  # 3 OS のビルドを始める前に fail させる。ローカルでも
+  # `tools/check_whatsnew.sh` で同じチェックを実行できる。
+  check:
+    name: Pre-release checks
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check What's New is updated for this release
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          tools/check_whatsnew.sh "${tag}"
+
   build:
     name: ${{ matrix.name }}
+    needs: check
     runs-on: ${{ matrix.os }}
     strategy:
       # 1 OS が落ちても他 OS の成果物は確保したい (片肺リリース判定は
@@ -95,7 +118,9 @@ jobs:
           #   開発機 (Homebrew Qt の全部入り) との挙動差が出る。
           # qtpdf: Qt PDF / Qt PdfWidgets (PDF ビュアー)。PDFium ベースで
           #   essential 外なので明示。
-          modules: 'qt5compat qtimageformats qtpdf'
+          # qtmultimedia: Qt Multimedia / MultimediaWidgets (動画・音声
+          #   ビュアープラグイン MediaViewerPlugin)。essential 外なので明示。
+          modules: 'qt5compat qtimageformats qtpdf qtmultimedia'
           cache: true
 
       # ──────── 依存ライブラリ ────────
@@ -110,6 +135,7 @@ jobs:
           sudo apt-get install -y \
             libarchive-dev \
             libuchardet-dev \
+            libheif-dev \
             pkg-config \
             libgl1-mesa-dev \
             libxkbcommon-dev
@@ -130,7 +156,18 @@ jobs:
         env:
           VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
         run: |
-          vcpkg install libarchive:x64-windows uchardet:x64-windows
+          # libheif は libde265 (HEVC デコーダ) をコア依存として常に含む。
+          # farman は HEIC を「読む」だけなのでエンコーダ (x265) は不要なので
+          # [core] でデフォルトフィーチャー (x265) を無効化する。
+          #
+          # libheif は動的リンク (LGPL 準拠) のまま、プラグインローディングを
+          # 無効化したカスタムトリプレット x64-windows-heif でビルドする。動的
+          # heif.dll の既定ビルドはプラグイン機構の起動時初期化に失敗して
+          # GetLastError=1114 (ERROR_DLL_INIT_FAILED) → farman.exe が 0xc0000142
+          # で起動できなかったため (詳細は ci/vcpkg-triplets/x64-windows-heif.cmake)。
+          vcpkg install libarchive:x64-windows uchardet:x64-windows `
+            "libheif[core]:x64-windows-heif" `
+            --overlay-triplets="$((Get-Location).Path)/ci/vcpkg-triplets"
           "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" `
             | Out-File -FilePath $env:GITHUB_ENV -Append
 
@@ -168,9 +205,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          # libheif は x64-windows-heif トリプレットで入れているので、その
+          # installed ディレクトリを CMAKE_PREFIX_PATH に足して find_package が
+          # 見つけられるようにする (libarchive / uchardet は toolchain が
+          # x64-windows から解決する)。
           cmake -B build `
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DCMAKE_PREFIX_PATH="$env:VCPKG_ROOT/installed/x64-windows-heif" `
             -DFARMAN_VERSION_SUFFIX="$env:FARMAN_VERSION_SUFFIX"
 
       - name: Build (Linux)
@@ -254,7 +296,11 @@ jobs:
         run: |
           # macdeployqt で Qt frameworks を .app に埋める
           # (-libpath: Homebrew の libwebp / libsharpyuv を解決させる)
-          macdeployqt build/farman.app -libpath=/opt/homebrew/lib
+          plugin_exec_args=()
+          for plugin in build/farman.app/Contents/PlugIns/viewers/*.dylib; do
+            plugin_exec_args+=( "-executable=$plugin" )
+          done
+          macdeployqt build/farman.app -libpath=/opt/homebrew/lib "${plugin_exec_args[@]}"
 
           if [ "$SIGN_AVAILABLE" = "true" ]; then
             # 正式署名: Hardened Runtime (notarization 必須) + timestamp
@@ -329,7 +375,23 @@ jobs:
         run: |
           # 1. windeployqt + vcpkg DLL コピーで Release ディレクトリを self-contained 化
           windeployqt --release --no-translations build/Release/farman.exe
+
+          # 同梱公式ビュアープラグインの Qt 依存も deploy する。farman.exe 自体が
+          # リンクしない Qt モジュール (例: MediaViewerPlugin の Qt6Multimedia +
+          # ffmpeg バックエンド) は exe への windeployqt では取り込まれないため、
+          # 各プラグイン DLL を --dir で exe と同じディレクトリへ deploy する
+          # (プラグインは farman.exe のプロセスにロードされるので、依存 DLL は
+          # exe ディレクトリから解決される)。
+          Get-ChildItem build/Release/plugins/viewers/*.dll | ForEach-Object {
+            windeployqt --release --no-translations --dir build/Release $_.FullName
+          }
+
           Copy-Item "$env:VCPKG_ROOT/installed/x64-windows/bin/*.dll" `
+            -Destination build/Release/
+
+          # libheif は別トリプレット (x64-windows-heif) なので bin が別ディレクトリ。
+          # heif.dll / libde265.dll をそこからコピーする。
+          Copy-Item "$env:VCPKG_ROOT/installed/x64-windows-heif/bin/*.dll" `
             -Destination build/Release/
 
           # 1b. Visual C++ Runtime (MSVCP140 / VCRUNTIME140 / VCRUNTIME140_1) を
@@ -356,10 +418,15 @@ jobs:
           foreach ($root in $candidates) {
             if (-not $root -or -not (Test-Path $root)) { continue }
             Write-Host "Searching VC redist under: $root"
+            # 複数バージョンの redist が同居する場合は *最新バージョン* を選ぶ。
+            # heif.dll など vcpkg の DLL はランナー最新の MSVC toolset でビルド
+            # され、新しい msvcp140.dll を要求する。古い redist をバンドルすると
+            # heif.dll の起動時初期化が msvcp140.dll 内で null アクセス
+            # (0xC0000005) → farman.exe が 0xc0000142 で起動できなくなる。
             $found = Get-ChildItem $root -Recurse -Filter "Microsoft.VC*.CRT" `
                        -Directory -ErrorAction SilentlyContinue |
                      Where-Object { $_.FullName -like "*\x64\*" } |
-                     Sort-Object { $_.FullName.Length } -Descending |
+                     Sort-Object { if ($_.FullName -match '\\(\d+\.\d+\.\d+)\\x64\\') { [version]$Matches[1] } else { [version]'0.0.0' } } -Descending |
                      Select-Object -First 1
             if ($found) { $crtDll = $found.FullName; break }
           }
@@ -369,6 +436,7 @@ jobs:
             $found = Get-ChildItem "C:\Program Files\Microsoft Visual Studio" -Recurse `
                        -Filter "Microsoft.VC*.CRT" -Directory -ErrorAction SilentlyContinue |
                      Where-Object { $_.FullName -like "*\x64\*" } |
+                     Sort-Object { if ($_.FullName -match '\\(\d+\.\d+\.\d+)\\x64\\') { [version]$Matches[1] } else { [version]'0.0.0' } } -Descending |
                      Select-Object -First 1
             if ($found) { $crtDll = $found.FullName }
           }
@@ -427,6 +495,45 @@ jobs:
 
           Get-ChildItem windows-dist
 
+      # self-contained 化した build/Release で farman.exe を実際に起動し、全
+      # import DLL がロードできることを検証する (起動時 DLL 初期化失敗
+      # = 0xc0000142 のリグレッション検出)。--version は QApplication 生成
+      # (= 全 DLL ロード) 直後に early exit するので、GUI を出さずに起動可否
+      # だけを確認できる。
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Push-Location build/Release
+          $p = Start-Process -FilePath .\farman.exe -ArgumentList '--version' `
+            -NoNewWindow -PassThru -Wait
+          $code = $p.ExitCode
+          Write-Host ("farman.exe --version exit code: 0x{0:X8} ({1})" -f $code, $code)
+          if ($code -ne 0) {
+            # どの依存 DLL が・なぜ失敗するかを LoadLibrary で個別診断する。
+            # LoadLibrary のエラー: 126=ERROR_MOD_NOT_FOUND (依存欠落),
+            # 193=ERROR_BAD_EXE_FORMAT (不正イメージ),
+            # 1114=ERROR_DLL_INIT_FAILED (DllMain 初期化失敗)。
+            $sig = '[DllImport("kernel32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern IntPtr LoadLibraryEx(string path, IntPtr h, uint flags); [DllImport("kernel32.dll")] public static extern uint GetLastError();'
+            $k = Add-Type -MemberDefinition $sig -Name NativeLoad -PassThru
+            # LOAD_WITH_ALTERED_SEARCH_PATH = 0x8 (DLL のディレクトリを依存検索に含める)
+            foreach ($dll in @('heif.dll','libde265.dll','archive.dll','uchardet.dll')) {
+              if (-not (Test-Path $dll)) { Write-Host "$dll : NOT PRESENT in package"; continue }
+              $full = (Resolve-Path $dll).Path
+              $h = $k::LoadLibraryEx($full, [IntPtr]::Zero, 0x8)
+              if ($h -eq [IntPtr]::Zero) {
+                Write-Host ("{0} : LoadLibrary FAILED, GetLastError={1}" -f $dll, $k::GetLastError())
+              } else {
+                Write-Host "$dll : loaded OK"
+              }
+            }
+            Pop-Location
+            Write-Error "farman.exe failed to start (exit 0x$('{0:X8}' -f $code)); see LoadLibrary diagnostics above."
+            exit 1
+          }
+          Pop-Location
+          Write-Host "Smoke test passed: farman.exe starts and loads all DLLs."
+
       - name: Deploy (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -445,12 +552,30 @@ jobs:
           cp LICENSE                                 AppDir/usr/share/doc/farman/copyright
           cp resources/licenses/THIRD-PARTY-LICENSES.txt AppDir/usr/share/doc/farman/THIRD-PARTY-LICENSES.txt
 
+          # 同梱公式ビュアープラグイン。farman は実行ファイル横の
+          # ../plugins/viewers を探索するため、AppDir/usr/plugins/viewers に
+          # 先置きして AppImage / .deb の両方へ取り込む。
+          mkdir -p AppDir/usr/plugins/viewers
+          cp build/plugins/viewers/* AppDir/usr/plugins/viewers/
+
+          # Qt Multimedia の ffmpeg バックエンドプラグイン (plugins/multimedia/)。
+          # farman 本体は Qt6Multimedia をリンクしないため linuxdeploy-plugin-qt の
+          # 自動検出に乗らない。EXTRA_QT_PLUGINS で明示的に取り込む
+          # (MediaViewerPlugin.so の動画 / 音声再生に必要)。
+          export EXTRA_QT_PLUGINS="multimedia"
+
+          # MediaViewerPlugin.so は QPluginLoader で動的ロードされるため
+          # linuxdeploy の依存スキャン (本体 exe + EXTRA_QT_PLUGINS) に乗らず、
+          # それだけが必要とする libQt6MultimediaWidgets が取りこぼされていた
+          # (結果 Linux でメディアプラグインがロード失敗し mp3/mp4 が再生不可)。
+          # --deploy-deps-only でプラグイン本体はコピーせず依存だけ取り込ませる。
           export OUTPUT=farman-x86_64.AppImage
           ./linuxdeploy-x86_64.AppImage \
             --appdir AppDir \
             -e build/farman \
             -i farman.png \
             -d linux/farman.desktop \
+            --deploy-deps-only AppDir/usr/plugins/viewers/MediaViewerPlugin.so \
             --plugin qt \
             --output appimage
           ls -la farman-x86_64.AppImage

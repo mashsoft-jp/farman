@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(farman VERSION 0.9.5 LANGUAGES CXX)
+project(farman VERSION 0.9.6 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,7 +15,7 @@ set(CMAKE_AUTOUIC ON)
 # (Qt 側はその結果を見て該当機能を無効化するだけで実害はない)。
 set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets Multimedia MultimediaWidgets LinguistTools)
 
 # Homebrew の libarchive は keg-only なので明示的にパスを通す。
 # Apple Silicon は /opt/homebrew、Intel Mac は /usr/local が Homebrew prefix。
@@ -52,6 +52,44 @@ if(NOT UCHARDET_FOUND)
   endif()
 endif()
 
+# libheif — HEIF/HEIC デコード用 (任意)。見つかったプラットフォームでのみ、
+# QImageReader 用の HEIF プラグインを本体へ静的リンクする。macOS は Qt 同梱の
+# qmacheif (Apple ImageIO) が HEIC を読むため、本番ビルドでは libheif を入れず
+# このプラグインはビルドしない (ローカル開発で brew install libheif すると
+# 有効化されコンパイル検証できる)。vcpkg は CONFIG パッケージ、Homebrew /
+# apt は pkg-config を提供する。
+set(FARMAN_HEIF_TARGET "")
+# 1) CMake CONFIG パッケージ (vcpkg はこれを提供)。ターゲット名はバージョンで
+#    libheif::heif / heif の両方がありうるので両対応する。
+find_package(libheif CONFIG QUIET)
+if(libheif_FOUND)
+  if(TARGET libheif::heif)
+    set(FARMAN_HEIF_TARGET libheif::heif)
+  elseif(TARGET heif)
+    set(FARMAN_HEIF_TARGET heif)
+  endif()
+endif()
+# 2) pkg-config (Homebrew / apt が提供)。
+if(NOT FARMAN_HEIF_TARGET AND PkgConfig_FOUND)
+  pkg_check_modules(LIBHEIF QUIET IMPORTED_TARGET libheif)
+  if(LIBHEIF_FOUND)
+    set(FARMAN_HEIF_TARGET PkgConfig::LIBHEIF)
+  endif()
+endif()
+# 3) 最後の手段: ヘッダ + ライブラリを直接探して imported target を作る
+#    (Windows で pkg-config が無く、CONFIG のターゲット名も一致しない場合の保険)。
+if(NOT FARMAN_HEIF_TARGET)
+  find_path(HEIF_INCLUDE_DIR libheif/heif.h)
+  find_library(HEIF_LIBRARY NAMES heif libheif)
+  if(HEIF_INCLUDE_DIR AND HEIF_LIBRARY)
+    add_library(Farman::heif UNKNOWN IMPORTED)
+    set_target_properties(Farman::heif PROPERTIES
+      IMPORTED_LOCATION "${HEIF_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${HEIF_INCLUDE_DIR}")
+    set(FARMAN_HEIF_TARGET Farman::heif)
+  endif()
+endif()
+
 # macOS .app バンドルに同梱するアイコン。
 # - tools/generate_icon_assets.sh で images/icon.svg から手動で再生成する
 #   (CMake からは自動実行しない)。
@@ -80,7 +118,9 @@ qt_add_executable(farman
   src/ui/ProgressDialog.cpp
   src/ui/SettingsDialog.cpp
   src/ui/ShortcutListDialog.cpp
+  src/ui/PluginsTab.cpp
   src/ui/UpdateAvailableDialog.cpp
+  src/ui/WhatsNewDialog.cpp
   src/ui/KeybindingTab.cpp
   src/ui/AppearanceTab.cpp
   src/ui/BehaviorTab.cpp
@@ -133,6 +173,7 @@ qt_add_executable(farman
   src/core/workers/ArchiveExtractEntriesWorker.cpp
   src/core/workers/DirectoryCompareWorker.cpp
   src/model/FileListModel.cpp
+  src/viewer/IViewerPlugin.cpp
   src/viewer/ViewerDispatcher.cpp
   src/viewer/TextView.cpp
   src/viewer/MarkdownView.cpp
@@ -147,9 +188,6 @@ qt_add_executable(farman
   src/viewer/CsvView.cpp
   src/viewer/CsvViewerWindow.cpp
   src/viewer/PsdReader.cpp
-  src/viewer/TextViewerPlugin.cpp
-  src/viewer/ImageViewerPlugin.cpp
-  src/viewer/BinaryViewerPlugin.cpp
   src/keybinding/ICommand.cpp
   src/keybinding/CommandRegistry.cpp
   src/keybinding/CommandLayout.cpp
@@ -246,6 +284,151 @@ target_link_libraries(farman PRIVATE
   Qt6::Pdf
   Qt6::PdfWidgets
   LibArchive::LibArchive
+)
+
+# HEIF/HEIC 画像プラグイン (libheif が見つかったときのみ)。静的 Qt プラグイン
+# として本体へリンクし、Q_IMPORT_PLUGIN で取り込む (main.cpp 側、
+# FARMAN_HAVE_HEIF で分岐)。QImageReader のレジストリはプロセス共通なので、
+# 動的ロードされる画像ビュアープラグインからも HEIC が読めるようになる。
+if(FARMAN_HEIF_TARGET)
+  add_library(FarmanHeifPlugin STATIC src/imageio/HeifImagePlugin.cpp)
+  set_target_properties(FarmanHeifPlugin PROPERTIES AUTOMOC ON)
+  target_compile_definitions(FarmanHeifPlugin PRIVATE QT_STATICPLUGIN)
+  target_link_libraries(FarmanHeifPlugin PRIVATE Qt6::Gui ${FARMAN_HEIF_TARGET})
+  target_link_libraries(farman PRIVATE FarmanHeifPlugin)
+  target_compile_definitions(farman PRIVATE FARMAN_HAVE_HEIF)
+  message(STATUS "farman: HEIF/HEIC image plugin enabled (${FARMAN_HEIF_TARGET})")
+else()
+  message(STATUS "farman: libheif not found; HEIF/HEIC plugin disabled (macOS uses qmacheif)")
+endif()
+
+set(FARMAN_PLUGIN_COMMON_SOURCES
+  src/viewer/IViewerPlugin.cpp
+  src/settings/Settings.cpp
+  src/settings/ColorScheme.cpp
+  src/core/UserCommand.cpp
+  src/core/Logger.cpp
+  src/utils/CancellableLoadPage.cpp
+  src/utils/EnterClickFilter.cpp
+)
+
+function(add_farman_official_viewer_plugin target plugin_dir)
+  qt_add_plugin(${target}
+    CLASS_NAME ${target}
+    ${ARGN}
+  )
+  set_target_properties(${target} PROPERTIES
+    PREFIX ""
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins/viewers"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins/viewers"
+  )
+  if(WIN32)
+    set_target_properties(${target} PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/plugins/viewers"
+      RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/plugins/viewers"
+    )
+  elseif(APPLE)
+    set_target_properties(${target} PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/farman.app/Contents/PlugIns/viewers"
+    )
+  endif()
+  target_include_directories(${target} PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/${plugin_dir}
+  )
+  target_compile_definitions(${target} PRIVATE
+    FARMAN_VERSION=${FARMAN_VERSION_STRING}
+  )
+  target_link_libraries(${target} PRIVATE
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Core5Compat
+    Qt6::Concurrent
+    Qt6::Network
+    Qt6::Svg
+    Qt6::Pdf
+    Qt6::PdfWidgets
+    LibArchive::LibArchive
+  )
+  if(TARGET PkgConfig::UCHARDET)
+    target_link_libraries(${target} PRIVATE PkgConfig::UCHARDET)
+  else()
+    target_include_directories(${target} PRIVATE ${UCHARDET_INCLUDE_DIR})
+    target_link_libraries(${target} PRIVATE ${UCHARDET_LIBRARY})
+  endif()
+endfunction()
+
+add_farman_official_viewer_plugin(TextViewerPlugin plugins/official/text-viewer
+  plugins/official/text-viewer/TextViewerPlugin.cpp
+  plugins/official/text-viewer/TextViewerSettingsPage.cpp
+  src/viewer/TextView.cpp
+  src/viewer/TextViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(MarkdownViewerPlugin plugins/official/markdown-viewer
+  plugins/official/markdown-viewer/MarkdownViewerPlugin.cpp
+  plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp
+  src/viewer/MarkdownView.cpp
+  src/viewer/MarkdownViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(ImageViewerPlugin plugins/official/image-viewer
+  plugins/official/image-viewer/ImageViewerPlugin.cpp
+  plugins/official/image-viewer/ImageViewerSettingsPage.cpp
+  src/viewer/ImageView.cpp
+  src/viewer/ImageViewerWindow.cpp
+  src/viewer/PsdReader.cpp
+  src/utils/ExifReader.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(PdfViewerPlugin plugins/official/pdf-viewer
+  plugins/official/pdf-viewer/PdfViewerPlugin.cpp
+  plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp
+  src/viewer/PdfView.cpp
+  src/viewer/PdfViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(CsvViewerPlugin plugins/official/csv-viewer
+  plugins/official/csv-viewer/CsvViewerPlugin.cpp
+  plugins/official/csv-viewer/CsvViewerSettingsPage.cpp
+  src/viewer/CsvView.cpp
+  src/viewer/CsvViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(BinaryViewerPlugin plugins/official/binary-viewer
+  plugins/official/binary-viewer/BinaryViewerPlugin.cpp
+  plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp
+  src/viewer/BinaryView.cpp
+  src/viewer/BinaryViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+
+add_farman_official_viewer_plugin(MediaViewerPlugin plugins/official/media-viewer
+  plugins/official/media-viewer/MediaViewerPlugin.cpp
+  plugins/official/media-viewer/MediaViewerSettingsPage.cpp
+  src/viewer/MediaView.cpp
+  src/viewer/MediaViewerWindow.cpp
+  ${FARMAN_PLUGIN_COMMON_SOURCES}
+)
+# Qt Multimedia はこのプラグインだけが使う (farman 本体にはリンクしない)。
+target_link_libraries(MediaViewerPlugin PRIVATE
+  Qt6::Multimedia
+  Qt6::MultimediaWidgets
+)
+
+add_dependencies(farman
+  TextViewerPlugin
+  MarkdownViewerPlugin
+  ImageViewerPlugin
+  PdfViewerPlugin
+  CsvViewerPlugin
+  BinaryViewerPlugin
+  MediaViewerPlugin
 )
 
 # uchardet をリンク (pkg-config が見つけたら IMPORTED ターゲット、

@@ -1,11 +1,13 @@
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QDialogButtonBox>
 #include <QDir>
 #include <QIcon>
 #include <QLibraryInfo>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QLocale>
+#include <QProxyStyle>
 #include <QStandardPaths>
 #include <QStyleHints>
 #include <QTranslator>
@@ -13,7 +15,53 @@
 #include "viewer/ViewerDispatcher.h"
 #include "settings/Settings.h"
 
+#ifdef FARMAN_HAVE_HEIF
+#include <QtPlugin>
+// libheif ベースの HEIF/HEIC 画像プラグイン (src/imageio)。静的リンクなので
+// ここで明示的に取り込むと QImageReader のレジストリに登録される。
+Q_IMPORT_PLUGIN(HeifPlugin)
+#endif
+
 namespace {
+
+// ダイアログのボタン配置を全 OS で統一するためのスタイル。QDialogButtonBox は
+// 既定で OS ネイティブのボタン順 (Windows は OK が左、macOS は OK が右) に従う
+// が、farman では「OK を右端」(macOS / GNOME 風、既存の Tab 順 Cancel→Apply→OK
+// とも一致) に固定する。
+class FarmanProxyStyle : public QProxyStyle {
+public:
+  using QProxyStyle::QProxyStyle;
+  int styleHint(StyleHint hint, const QStyleOption* option = nullptr,
+                const QWidget* widget = nullptr,
+                QStyleHintReturn* returnData = nullptr) const override {
+    if (hint == QStyle::SH_DialogButtonLayout) {
+      return QDialogButtonBox::MacLayout;
+    }
+    return QProxyStyle::styleHint(hint, option, widget, returnData);
+  }
+};
+
+// Qt 標準ボタン (OK / Cancel / Apply など) の文言は本来 Qt 同梱の翻訳
+// (qt_<lang>.qm) が供給するが、Windows 配布は windeployqt --no-translations の
+// ため未同梱で英語のままになる。farman 自前のカタログ (リソース埋め込みで全 OS
+// ロードされる) に QPlatformTheme 文脈の訳を持たせ、どの OS でも同じ表記になる
+// ようにする。ここでの QT_TRANSLATE_NOOP は lupdate にソース文字列を拾わせる
+// ためだけのもので、実際の変換は QDialogButtonBox 側の translate() が行う。
+[[maybe_unused]] static const char* const kStandardButtonTexts[] = {
+  QT_TRANSLATE_NOOP("QPlatformTheme", "OK"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Cancel"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Apply"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Close"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Reset"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Restore Defaults"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Save"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Discard"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Open"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Help"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "&Yes"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "&No"),
+};
+
 // 二重起動検出用のサーバー名。HOME や AppConfigLocation のハッシュを混ぜて
 // 同一ユーザーの異なるセッション (例: SSH 経由の別ホスト) で衝突しないように
 // する。マルチユーザー環境でも同じ socket 名を取り合わないように、
@@ -32,6 +80,10 @@ int main(int argc, char *argv[]) {
   app.setOrganizationName("Farman");
   app.setApplicationName("farman");
   app.setApplicationVersion(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)));
+
+  // ダイアログのボタン配置を全 OS で統一する (OK を右端)。既定のスタイルを
+  // ラップするので、ボタン順以外のネイティブな見た目はそのまま維持される。
+  app.setStyle(new FarmanProxyStyle);
 
   // --version / --help を処理して即終了する (GUI を立ち上げない)。
   // process() は該当オプションが付いていたら stdout に出力して exit() する。
@@ -114,41 +166,65 @@ int main(int argc, char *argv[]) {
     app.installTranslator(&appTranslator);
   }
 
-  // ビュアー基盤を初期化 (組み込み 3 種のみ)。
-  // 外部プラグイン (.dylib / .dll / .so) のロードは v1.0 では意図的に
-  // 無効化している — IViewerPlugin / ViewerDispatcher / Settings の
-  // pluginsDirectory アクセサ等の基盤コードは将来の正式サポートに備えて
-  // ツリーに残しているが、UI (Help → Plugins... メニューや一覧ダイアログ)
-  // と起動時の loadPlugins() 呼び出しは外している。再有効化はこのブロックを
-  // 復元しメニュー登録を戻すだけで済む。
+  // ビュアー基盤を初期化。同梱公式ビュアープラグイン登録後にユーザー指定ディレクトリ
+  // から外部 IViewerPlugin (.dylib / .dll / .so) を読み込む。
   Farman::PluginContext pluginCtx;
   pluginCtx.farmanVersion = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
+  pluginCtx.appearance = Farman::ViewerDispatcher::currentAppearance();
   Farman::ViewerDispatcher::instance().setContext(pluginCtx);
-  Farman::ViewerDispatcher::instance().registerBuiltins();
+  Farman::ViewerDispatcher::instance().registerBundledPlugins();
+  const QString pluginsDir = Farman::Settings::instance().pluginsDirectory();
+  Farman::ViewerDispatcher::instance().loadPlugins(
+    QDir(pluginsDir.isEmpty()
+           ? Farman::Settings::defaultPluginsDirectory()
+           : pluginsDir));
 
-  Farman::MainWindow window;
-  window.show();
+  QObject::connect(&Farman::Settings::instance(), &Farman::Settings::settingsChanged,
+                   &app, [] {
+    Farman::ViewerDispatcher::instance().notifyAppearanceChanged(
+      Farman::ViewerDispatcher::currentAppearance());
+  });
 
-  // 後続インスタンスからの activate 要求でこのウィンドウを前面に出す。
-  if (singleInstanceServer) {
-    QObject::connect(singleInstanceServer, &QLocalServer::newConnection,
-      [&window]() {
-        QLocalSocket* client = singleInstanceServer->nextPendingConnection();
-        if (!client) return;
-        QObject::connect(client, &QLocalSocket::readyRead, &window,
-          [client, &window]() {
-            const QByteArray msg = client->readAll();
-            if (msg.contains("activate")) {
-              if (window.isMinimized()) window.showNormal();
-              window.show();
-              window.raise();
-              window.activateWindow();
-            }
-          });
-        QObject::connect(client, &QLocalSocket::disconnected,
-                         client, &QObject::deleteLater);
-      });
+  int exitCode = 0;
+  {
+    // MainWindow はこのスコープで破棄する。プラグイン生成の QWidget
+    // (Inline ビュー / External ウィンドウ) は MainWindow 配下にあるため、
+    // shutdownPlugins() による dylib アンロードより先に破棄されている
+    // 必要がある (アンロード後に vtable / デストラクタへ飛ぶと UB)。
+    Farman::MainWindow window;
+    window.show();
+
+    // 後続インスタンスからの activate 要求でこのウィンドウを前面に出す。
+    if (singleInstanceServer) {
+      QObject::connect(singleInstanceServer, &QLocalServer::newConnection,
+        [&window]() {
+          QLocalSocket* client = singleInstanceServer->nextPendingConnection();
+          if (!client) return;
+          QObject::connect(client, &QLocalSocket::readyRead, &window,
+            [client, &window]() {
+              const QByteArray msg = client->readAll();
+              if (msg.contains("activate")) {
+                if (window.isMinimized()) window.showNormal();
+                window.show();
+                window.raise();
+                window.activateWindow();
+              }
+            });
+          QObject::connect(client, &QLocalSocket::disconnected,
+                           client, &QObject::deleteLater);
+        });
+    }
+
+    exitCode = app.exec();
+
+    // deleteLater() 済みのプラグインビューなど、保留中の破棄イベントを
+    // MainWindow 破棄前に流しておく。
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
   }
 
-  return app.exec();
+  // プラグイン契約: アンロード前に shutdown() を 1 回呼ぶ。MainWindow の
+  // 破棄後・QApplication の生存中というこの位置が安全なタイミング。
+  Farman::ViewerDispatcher::instance().shutdownPlugins();
+
+  return exitCode;
 }

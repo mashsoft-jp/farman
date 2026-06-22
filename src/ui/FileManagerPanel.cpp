@@ -1,5 +1,6 @@
 #include "FileManagerPanel.h"
 #include "FileListPane.h"
+#include "FileListThumbnailView.h"
 #include "LogPane.h"
 #include "PreviewPane.h"
 #include "PreviewController.h"
@@ -39,6 +40,8 @@
 #include <QLocale>
 #include <QSet>
 #include <QSplitter>
+#include <QSplitterHandle>
+#include <QTimer>
 #include <QTemporaryDir>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -150,6 +153,24 @@ void FileManagerPanel::setupUi() {
   // Splitterのサイズを均等に (Preview ペインは 3 番目のスロットだが
   // hide 中なので幅 0 扱いになる)。
   m_splitter->setSizes(QList<int>() << 600 << 600 << 600);
+
+  // リサイズ時に各ペインが等しく伸縮するよう stretch を揃える。これをしないと
+  // QTableView (Expanding) のファイルペインが拡大分の余白を総取りし、起動時の
+  // 復元など「小さい幅で 50/50 を設定 → ウィンドウ拡大」の流れでプレビューが
+  // 極端に狭くなる (Linux で顕著)。
+  m_splitter->setStretchFactor(0, 1);  // 左ペイン
+  m_splitter->setStretchFactor(1, 1);  // 右ペイン
+  m_splitter->setStretchFactor(2, 1);  // プレビューペイン
+
+  // スプリッタの Resize を捕まえて分割比を適用し直す (起動時に小さい幅で
+  // 設定された比率を、最終サイズに広がってから正す)。下の eventFilter 参照。
+  m_splitter->installEventFilter(this);
+  // ユーザーが区切りをドラッグしたら比率を覚える。
+  connect(m_splitter, &QSplitter::splitterMoved, this,
+          [this](int, int) { updateFractionFromSizes(); });
+  // 区切りのダブルクリックで 50/50 に戻す (handle に eventFilter を仕掛ける)。
+  if (auto* h = m_splitter->handle(1)) h->installEventFilter(this);
+  if (auto* h = m_splitter->handle(2)) h->installEventFilter(this);
 
   // 非アクティブペインのビューをマウスクリックされたら、そのペインを
   // アクティブに切り替える。QTableView はマウスイベントを viewport に
@@ -647,6 +668,23 @@ void FileManagerPanel::syncOtherToActive() {
 }
 
 bool FileManagerPanel::eventFilter(QObject* watched, QEvent* event) {
+  // 区切り (QSplitterHandle) のダブルクリックで 50/50 に戻す。
+  if (event->type() == QEvent::MouseButtonDblClick
+      && qobject_cast<QSplitterHandle*>(watched)) {
+    m_leftPaneFraction = 0.5;
+    applyFraction();
+    return true;
+  }
+
+  // スプリッタがリサイズされたら分割比を適用し直す。Resize ハンドラより後の
+  // QSplitter 自身の再配分で上書きされないよう、次のイベントループに遅延させる。
+  // 起動時は Preview 復元がウィンドウ最終サイズより前に走り、その時点では幅 0 で
+  // applyFraction が効かないが、ここでの遅延適用が最終サイズで確実に効く。
+  if (watched == m_splitter && event->type() == QEvent::Resize) {
+    scheduleApplyFraction();
+    return QWidget::eventFilter(watched, event);
+  }
+
   if (event->type() == QEvent::MouseButtonPress) {
     // クリックされた viewport がどちらのペインかを判定して、非アクティブ側
     // だった場合はそのペインをアクティブに切り替える。実際のクリック
@@ -692,43 +730,64 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
     }
   }
 
+  // ここから先は矢印 / 文字キーなどカーソル操作。List / Thumbnail 両対応。
+  // 両ビューは selectionModel を共有するので、active view に setCurrentIndex
+  // すれば非 active 側も同期する (scrollTo は active 側でのみ走る)。
+  FileListPane* pane = activePane();
+  if (!pane) return false;
+  FileListModel* model = pane->model();
+  QAbstractItemView* av = pane->activeView();
+  if (!av) av = pane->view();
+  // サムネイル (グリッド) 表示では左右=横移動 / 上下=縦移動にする。列数を実
+  // レイアウトから取得し、端 (左右端の列 / 上下端の行) を越える方向キーのとき
+  // だけ従来のペイン移動・親移動にフォールバックする。
+  auto* thumbView = qobject_cast<FileListThumbnailView*>(av);
+  const bool grid = (thumbView != nullptr);
+  const int cols  = grid ? thumbView->gridColumnCount() : 1;
+
   // 左キーの処理
   if (event->key() == Qt::Key_Left) {
-    if (!isDualPaneMode()) {
-      // シングル / プレビュー: 親ディレクトリに移動
-      handleBackspaceKey();
+    const QModelIndex cur = av->currentIndex();
+    // グリッドで左端列より右にいるなら横移動。
+    if (grid && cur.isValid() && (cur.row() % cols) > 0) {
+      av->setCurrentIndex(model->index(cur.row() - 1, 0));
       return true;
-    } else {
-      // 2ペインモード
-      if (m_activePane == PaneType::Left) {
-        // 左ペインで←キー: 親ディレクトリに移動
-        handleBackspaceKey();
-        return true;
-      } else {
-        // 右ペインで←キー: 左ペインに切り替え
-        setActivePane(PaneType::Left);
-        return true;
-      }
     }
+    // 左端列 (または List 表示) → 従来動作。
+    //   シングル / プレビュー、または左ペイン: 親ディレクトリへ
+    //   右ペイン: 左ペインへ切り替え
+    if (!isDualPaneMode() || m_activePane == PaneType::Left) {
+      handleBackspaceKey();
+    } else {
+      setActivePane(PaneType::Left);
+    }
+    return true;
   }
 
   // 右キーの処理
   if (event->key() == Qt::Key_Right) {
-    if (!isDualPaneMode()) {
-      // シングル / プレビュー: 何もしない (相方ペインが居ない / ビュアー)
-      return true;
-    } else {
-      // 2ペインモード
-      if (m_activePane == PaneType::Right) {
-        // 右ペインで→キー: 親ディレクトリに移動
-        handleBackspaceKey();
-        return true;
-      } else {
-        // 左ペインで→キー: 右ペインに切り替え
-        setActivePane(PaneType::Right);
+    const QModelIndex cur = av->currentIndex();
+    // グリッドで右端列より左、かつ最終要素でないなら横移動。
+    if (grid && cur.isValid()) {
+      const int r = cur.row();
+      const int count = model->rowCount();
+      if ((r % cols) < cols - 1 && r < count - 1) {
+        av->setCurrentIndex(model->index(r + 1, 0));
         return true;
       }
     }
+    // 右端列 / 最終要素 (または List 表示) → 従来動作。
+    //   シングル / プレビュー: 相方ペインが居ないので何もしない
+    //   右ペイン: 親ディレクトリへ / 左ペイン: 右ペインへ切り替え
+    if (!isDualPaneMode()) {
+      return true;
+    }
+    if (m_activePane == PaneType::Right) {
+      handleBackspaceKey();
+    } else {
+      setActivePane(PaneType::Right);
+    }
+    return true;
   }
 
   // Ctrl+A (Windows/Linux) or Cmd+A (Mac) for select all
@@ -738,24 +797,19 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
     return true;
   }
 
-  FileListPane* pane = activePane();
-  FileListModel* model = pane->model();
-  // List / Thumbnail の両モードで動くよう active な view を経由する。
-  // 両ビューは selectionModel を共有しているので、片方 setCurrentIndex すれば
-  // もう一方も同期する。scrollTo は active 側でしか走らないため active を使う。
-  QAbstractItemView* av = pane->activeView();
-  if (!av) av = pane->view();
-
   switch (event->key()) {
     case Qt::Key_Up: {
       QModelIndex current = av->currentIndex();
       if (!current.isValid()) {
         return true;
       }
-      int rows = model->rowCount();
-      if (current.row() > 0) {
-        av->setCurrentIndex(model->index(current.row() - 1, 0));
-      } else if (Settings::instance().cursorLoop() && rows > 0) {
+      const int rows = model->rowCount();
+      // グリッドでは 1 行 (= cols 個) 上へ。List では 1 個上へ。
+      const int step = grid ? cols : 1;
+      if (current.row() - step >= 0) {
+        av->setCurrentIndex(model->index(current.row() - step, 0));
+      } else if (!grid && Settings::instance().cursorLoop() && rows > 0) {
+        // List の最上段ループのみ維持 (グリッドの縦ループは直感的でないので無効)。
         av->setCurrentIndex(model->index(rows - 1, 0));
       }
       return true;
@@ -766,10 +820,11 @@ bool FileManagerPanel::handleKeyEvent(QKeyEvent* event) {
       if (!current.isValid()) {
         return true;
       }
-      int rows = model->rowCount();
-      if (current.row() < rows - 1) {
-        av->setCurrentIndex(model->index(current.row() + 1, 0));
-      } else if (Settings::instance().cursorLoop() && rows > 0) {
+      const int rows = model->rowCount();
+      const int step = grid ? cols : 1;
+      if (current.row() + step < rows) {
+        av->setCurrentIndex(model->index(current.row() + step, 0));
+      } else if (!grid && Settings::instance().cursorLoop() && rows > 0) {
         av->setCurrentIndex(model->index(0, 0));
       }
       return true;
@@ -1226,6 +1281,46 @@ void FileManagerPanel::setSinglePaneMode(bool single) {
   setLayoutMode(single ? LayoutMode::Single : LayoutMode::Dual);
 }
 
+void FileManagerPanel::updateFractionFromSizes() {
+  if (!m_splitter) return;
+  // 表示中の右スロット (Dual=右ペイン / Preview=プレビュー) を可視状態で判定する。
+  // setLayoutMode の保存タイミングでは m_layoutMode は既に新モードだが表示は
+  // まだ旧モードなので、m_layoutMode ではなく isVisible() で見るのが正しい。
+  const QList<int> sizes = m_splitter->sizes();
+  const int left = sizes.value(0);
+  int right = 0;
+  if (m_previewPane && m_previewPane->isVisible())      right = sizes.value(2);
+  else if (m_rightPane && m_rightPane->isVisible())     right = sizes.value(1);
+  else return;  // Single (片側のみ表示): 比率は更新しない
+  const int visible = left + right;
+  if (visible > 0) {
+    m_leftPaneFraction = qBound(0.1, static_cast<double>(left) / visible, 0.9);
+  }
+}
+
+void FileManagerPanel::applyFraction() {
+  if (!m_splitter || m_layoutMode == LayoutMode::Single) return;
+  const int total = m_splitter->width();
+  if (total <= 0) return;  // 未レイアウト時は適用しない (Resize で再適用される)
+  const int leftW = qRound(total * m_leftPaneFraction);
+  QList<int> sizes;
+  if (m_layoutMode == LayoutMode::Dual) {
+    sizes = QList<int>() << leftW << (total - leftW) << 0;   // 左 | 右 | (preview)
+  } else {  // Preview
+    sizes = QList<int>() << leftW << 0 << (total - leftW);   // 左 | (right) | preview
+  }
+  m_splitter->setSizes(sizes);
+}
+
+void FileManagerPanel::scheduleApplyFraction() {
+  if (m_applyFractionScheduled) return;
+  m_applyFractionScheduled = true;
+  QTimer::singleShot(0, this, [this]() {
+    m_applyFractionScheduled = false;
+    applyFraction();
+  });
+}
+
 void FileManagerPanel::setLayoutMode(LayoutMode mode) {
   const LayoutMode prev = m_layoutMode;
   if (prev == mode) return;
@@ -1244,13 +1339,11 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
     stopDirectoryCompare();
   }
 
-  // ── Splitter サイズ記憶 (Dual / Preview を独立に保存) ──
-  // 切替前のサイズをモード別キャッシュに退避してから、切替先のキャッシュを
-  // 復元する。Single は片側が非表示なので Splitter サイズ記憶は不要。
-  if (m_splitter) {
-    const QList<int> sizes = m_splitter->sizes();
-    if (prev == LayoutMode::Dual)         m_savedSplitterSizesDual    = sizes;
-    else if (prev == LayoutMode::Preview) m_savedSplitterSizesPreview = sizes;
+  // 分割比 (m_leftPaneFraction) は Dual / Preview で共有する。切替前に現在の
+  // サイズから比率を覚えておき、切替後に同じ比率を適用することで、Preview ↔
+  // Dual を行き来しても左右 (左 / プレビュー) の比率が維持される。
+  if (m_splitter && prev != LayoutMode::Single) {
+    updateFractionFromSizes();
   }
 
   // ── ウィジェットの可視性 ──
@@ -1284,16 +1377,13 @@ void FileManagerPanel::setLayoutMode(LayoutMode mode) {
       break;
   }
 
-  // 切替先のキャッシュサイズを適用 (空のときは未介入、Splitter 自身の
-  // 自動レイアウトに任せる)。
-  if (m_splitter) {
-    if (mode == LayoutMode::Dual && !m_savedSplitterSizesDual.isEmpty()) {
-      m_splitter->setSizes(m_savedSplitterSizesDual);
-    } else if (mode == LayoutMode::Preview
-               && !m_savedSplitterSizesPreview.isEmpty()) {
-      m_splitter->setSizes(m_savedSplitterSizesPreview);
-    }
-  }
+  // 切替先のサイズを適用。保持している分割比 (m_leftPaneFraction) を現在の幅に
+  // 当てはめる。これで PreviewPane が 0 幅のまま (特に Linux/X11) や全幅になる
+  // 不具合を防ぎ、Dual ↔ Preview で比率も維持される。起動時の Preview 復元では
+  // この時点でまだ幅 0 のことがあるが、その場合は applyFraction が何もせず、
+  // スプリッタが最終サイズに広がった Resize (scheduleApplyFraction) で確実に
+  // 適用される。
+  applyFraction();
 
   // 列表示・size/mtime のフォーマットは「ペインが全幅かどうか」で決まる。
   // Single だけが全幅 (= 広い表示)。Dual / Preview はどちらも半幅 (= 狭い)。
@@ -2628,8 +2718,7 @@ void FileManagerPanel::renameItem() {
 
 // ── ディレクトリ比較 ────────────────────────────────────────────
 // 左右ペインのカレントを突き合わせ、結果オーバーレイを各 model に流し込んで
-// 着色表示する。Phase A スコープ: NameOnly / SizeMtime のみ、非再帰、表示のみ。
-// 同期操作 (差分コピー等) は Phase C で別途追加予定。
+// 着色表示する。NameOnly / SizeMtime 粒度と再帰比較に対応する。
 void FileManagerPanel::startDirectoryCompare() {
   // アーカイブモード中は対象にできない (libarchive エントリは QDir で読めない)
   if (m_leftPane->model()->isInArchiveMode() ||
@@ -2661,8 +2750,8 @@ void FileManagerPanel::startDirectoryCompare() {
   if (dlg.exec() != QDialog::Accepted) return;
   m_compareOptions = dlg.options();
 
-  // 比較は QDir 列挙ベースで NameOnly/SizeMtime なら瞬時。Hash 粒度や再帰
-  // (Phase B 以降) を入れたタイミングで進捗ダイアログを足す予定。今は同期実行。
+  // 比較は QDir 列挙ベースで、NameOnly/SizeMtime なら軽量。再帰 ON 時も
+  // 同名ディレクトリの Same/Differ 集約だけを行うため、進捗ダイアログは出さない。
   auto* worker = new DirectoryCompareWorker(leftPath, rightPath, m_compareOptions, this);
   connect(worker, &WorkerBase::finished, this,
     [this, worker, leftPath, rightPath](bool ok) {
