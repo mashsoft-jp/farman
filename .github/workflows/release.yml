@@ -157,13 +157,17 @@ jobs:
           VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
         run: |
           # libheif は libde265 (HEVC デコーダ) をコア依存として常に含む。
-          # farman は HEIC を「読む」だけなのでエンコーダ (x265) は不要。
-          # デフォルトフィーチャーには x265 が含まれ、libx265.dll が
-          # libx265_main10.dll / libx265_main12.dll (マルチビット深度版) に
-          # 依存するが、これらは bin/ に置かれず *.dll コピーから漏れて起動時
-          # 0xc0000142 (DLL 初期化失敗) を起こす。[core] でデフォルトフィーチャー
-          # を無効化し、デコードに必要な libde265 (コア依存) のみに絞る。
-          vcpkg install libarchive:x64-windows uchardet:x64-windows "libheif[core]:x64-windows"
+          # farman は HEIC を「読む」だけなのでエンコーダ (x265) は不要なので
+          # [core] でデフォルトフィーチャー (x265) を無効化する。
+          #
+          # libheif は動的リンク (LGPL 準拠) のまま、プラグインローディングを
+          # 無効化したカスタムトリプレット x64-windows-heif でビルドする。動的
+          # heif.dll の既定ビルドはプラグイン機構の起動時初期化に失敗して
+          # GetLastError=1114 (ERROR_DLL_INIT_FAILED) → farman.exe が 0xc0000142
+          # で起動できなかったため (詳細は ci/vcpkg-triplets/x64-windows-heif.cmake)。
+          vcpkg install libarchive:x64-windows uchardet:x64-windows `
+            "libheif[core]:x64-windows-heif" `
+            --overlay-triplets="$((Get-Location).Path)/ci/vcpkg-triplets"
           "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" `
             | Out-File -FilePath $env:GITHUB_ENV -Append
 
@@ -201,9 +205,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          # libheif は x64-windows-heif トリプレットで入れているので、その
+          # installed ディレクトリを CMAKE_PREFIX_PATH に足して find_package が
+          # 見つけられるようにする (libarchive / uchardet は toolchain が
+          # x64-windows から解決する)。
           cmake -B build `
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DCMAKE_PREFIX_PATH="$env:VCPKG_ROOT/installed/x64-windows-heif" `
             -DFARMAN_VERSION_SUFFIX="$env:FARMAN_VERSION_SUFFIX"
 
       - name: Build (Linux)
@@ -378,6 +387,11 @@ jobs:
           }
 
           Copy-Item "$env:VCPKG_ROOT/installed/x64-windows/bin/*.dll" `
+            -Destination build/Release/
+
+          # libheif は別トリプレット (x64-windows-heif) なので bin が別ディレクトリ。
+          # heif.dll / libde265.dll をそこからコピーする。
+          Copy-Item "$env:VCPKG_ROOT/installed/x64-windows-heif/bin/*.dll" `
             -Destination build/Release/
 
           # 1b. Visual C++ Runtime (MSVCP140 / VCRUNTIME140 / VCRUNTIME140_1) を
