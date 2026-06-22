@@ -487,13 +487,31 @@ jobs:
           Push-Location build/Release
           $p = Start-Process -FilePath .\farman.exe -ArgumentList '--version' `
             -NoNewWindow -PassThru -Wait
-          Pop-Location
           $code = $p.ExitCode
           Write-Host ("farman.exe --version exit code: 0x{0:X8} ({1})" -f $code, $code)
           if ($code -ne 0) {
-            Write-Error "farman.exe failed to start (exit 0x$('{0:X8}' -f $code)); likely a missing or broken dependency DLL."
+            # どの依存 DLL が・なぜ失敗するかを LoadLibrary で個別診断する。
+            # LoadLibrary のエラー: 126=ERROR_MOD_NOT_FOUND (依存欠落),
+            # 193=ERROR_BAD_EXE_FORMAT (不正イメージ),
+            # 1114=ERROR_DLL_INIT_FAILED (DllMain 初期化失敗)。
+            $sig = '[DllImport("kernel32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern IntPtr LoadLibraryEx(string path, IntPtr h, uint flags); [DllImport("kernel32.dll")] public static extern uint GetLastError();'
+            $k = Add-Type -MemberDefinition $sig -Name NativeLoad -PassThru
+            # LOAD_WITH_ALTERED_SEARCH_PATH = 0x8 (DLL のディレクトリを依存検索に含める)
+            foreach ($dll in @('heif.dll','libde265.dll','archive.dll','uchardet.dll')) {
+              if (-not (Test-Path $dll)) { Write-Host "$dll : NOT PRESENT in package"; continue }
+              $full = (Resolve-Path $dll).Path
+              $h = $k::LoadLibraryEx($full, [IntPtr]::Zero, 0x8)
+              if ($h -eq [IntPtr]::Zero) {
+                Write-Host ("{0} : LoadLibrary FAILED, GetLastError={1}" -f $dll, $k::GetLastError())
+              } else {
+                Write-Host "$dll : loaded OK"
+              }
+            }
+            Pop-Location
+            Write-Error "farman.exe failed to start (exit 0x$('{0:X8}' -f $code)); see LoadLibrary diagnostics above."
             exit 1
           }
+          Pop-Location
           Write-Host "Smoke test passed: farman.exe starts and loads all DLLs."
 
       - name: Deploy (Linux)
