@@ -475,6 +475,27 @@ jobs:
 
           Get-ChildItem windows-dist
 
+      # self-contained 化した build/Release で farman.exe を実際に起動し、全
+      # import DLL がロードできることを検証する (起動時 DLL 初期化失敗
+      # = 0xc0000142 のリグレッション検出)。--version は QApplication 生成
+      # (= 全 DLL ロード) 直後に early exit するので、GUI を出さずに起動可否
+      # だけを確認できる。
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Push-Location build/Release
+          $p = Start-Process -FilePath .\farman.exe -ArgumentList '--version' `
+            -NoNewWindow -PassThru -Wait
+          Pop-Location
+          $code = $p.ExitCode
+          Write-Host ("farman.exe --version exit code: 0x{0:X8} ({1})" -f $code, $code)
+          if ($code -ne 0) {
+            Write-Error "farman.exe failed to start (exit 0x$('{0:X8}' -f $code)); likely a missing or broken dependency DLL."
+            exit 1
+          }
+          Write-Host "Smoke test passed: farman.exe starts and loads all DLLs."
+
       - name: Deploy (Linux)
         if: runner.os == 'Linux'
         run: |
