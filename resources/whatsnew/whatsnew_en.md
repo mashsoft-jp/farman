@@ -30,6 +30,12 @@ the default text encoding, image Fit / zoom, PDF view mode, CSV
 delimiter, media volume / autoplay, and more. When several viewers
 list the same extension, the one with the higher priority is used.
 
+### HEIC / HEIF Image Support
+
+HEIC / HEIF images (e.g. photos taken on an iPhone) can now be shown in
+the image viewer. macOS uses the system decoder; Windows and Linux use a
+bundled libheif.
+
 ### What's New Dialog
 
 After an update, farman shows this dialog once on first launch.
@@ -37,5 +43,6 @@ You can reopen it any time via Help → What's New...
 
 ### Other Changes
 
+- Broadened the media viewer's supported formats (WMV / MPEG-1·2 / M2TS / WMA, etc.)
 - Removed the SHA-256 hash option from directory compare in favor of the fast default comparison
 - Stability improvements and bug fixes
