@@ -34,7 +34,7 @@ QList<QPair<QString, QString>> buildDetectedLocations() {
     }
   };
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN)
   // Windows: ローカル / マップ済みネットワークドライブを列挙する。
   // QDir::drives() は接続済みのドライブ (C:/, D:/, マップ済みの Z:/ など) を
   // 返す。未マップの UNC パス (\\server\share) は含まれないので、それは手動
@@ -49,6 +49,29 @@ QList<QPair<QString, QString>> buildDetectedLocations() {
                              ? letter
                              : QStringLiteral("%1 (%2)").arg(label, letter);
     list.append({name, root});
+  }
+#elif defined(Q_OS_LINUX)
+  // Linux: マウント済みのネットワーク / 外部ドライブを列挙する。
+  // mountedVolumes() はルートやシステム FS (proc, sysfs, tmpfs, cgroup 等) も
+  // 含むので、ネットワーク FS (nfs/cifs/smb/sshfs/gvfs) と、外部マウントの
+  // 慣習的な位置 (/media, /mnt, /run/media) のものだけを拾う。表示名は
+  // ボリューム名があればそれ、無ければマウントパスとする。
+  for (const QStorageInfo& vol : QStorageInfo::mountedVolumes()) {
+    if (!vol.isValid() || !vol.isReady()) continue;
+    const QString root = vol.rootPath();
+    const QString fs   = QString::fromLatin1(vol.fileSystemType()).toLower();
+    const bool isNetwork = fs.startsWith(QStringLiteral("nfs"))
+                        || fs.startsWith(QStringLiteral("cifs"))
+                        || fs.startsWith(QStringLiteral("smb"))
+                        || fs.contains(QStringLiteral("sshfs"))
+                        || fs.contains(QStringLiteral("gvfs"));
+    const bool isExternal = root.startsWith(QStringLiteral("/media/"))
+                         || root.startsWith(QStringLiteral("/mnt/"))
+                         || root.startsWith(QStringLiteral("/run/media/"));
+    if (!isNetwork && !isExternal) continue;
+    QString name = vol.displayName().trimmed();
+    if (name.isEmpty() || name == root) name = root;
+    addIfExists(name, root);
   }
 #endif
 
