@@ -899,6 +899,12 @@ void Settings::setViewerPluginDisabled(const QString& pluginId, bool disabled) {
 
 namespace {
 
+// メディアビュアーの既定対応拡張子のリビジョン。新しい既定拡張子を追加する
+// たびに増やす。既存ユーザーの settings.json に保存済みの拡張子リストへ、まだ
+// 適用されていないリビジョンで新規追加された拡張子だけをマージするのに使う
+// (ユーザーが明示的に削除した拡張子は復活させない。詳細は load() を参照)。
+constexpr int kMediaExtensionsRevision = 2;
+
 QString normalizeViewerAssociationExtension(QString extension) {
   extension = extension.trimmed().toLower();
   while (extension.startsWith(QLatin1Char('.'))) {
@@ -2090,7 +2096,25 @@ void Settings::load() {
       const QString s = v.toString().trimmed();
       if (!s.isEmpty()) list.append(s);
     }
-    if (!list.isEmpty()) m_mediaViewerExtensions = list;
+    if (!list.isEmpty()) {
+      m_mediaViewerExtensions = list;
+      // 既存ユーザーが保存した拡張子リストに、まだ適用されていないリビジョンで
+      // 新規追加された既定拡張子だけをマージする。extensionsRevision を持たない
+      // 設定 (0.9.6 より前) は revision 1 とみなす。ユーザーが意図的に削除した
+      // 拡張子は復活させない (追加分だけを足す)。
+      static const QMap<int, QStringList> kMediaExtAddedInRevision = {
+        // revision 2 (farman 0.9.6): WMV / MPEG / M2TS 系の動画と WMA 音声を追加
+        {2, {"wmv", "mpg", "mpeg", "m2v", "m2ts", "mts", "ts", "wma"}},
+      };
+      const int savedRev = mediaViewer.value("extensionsRevision").toInt(1);
+      for (int r = savedRev + 1; r <= kMediaExtensionsRevision; ++r) {
+        for (const QString& ext : kMediaExtAddedInRevision.value(r)) {
+          if (!m_mediaViewerExtensions.contains(ext, Qt::CaseInsensitive)) {
+            m_mediaViewerExtensions.append(ext);
+          }
+        }
+      }
+    }
   }
   m_mediaViewerVolume   = qBound(0, mediaViewer.value("volume").toInt(80), 100);
   m_mediaViewerLoop     = mediaViewer.value("loop").toBool(false);
@@ -2574,6 +2598,8 @@ void Settings::save() const {
     for (const QString& s : m_mediaViewerExtensions) arr.append(s);
     mediaViewer["extensions"] = arr;
   }
+  // 適用済みの既定拡張子リビジョンを記録する (次回 load 時の差分マージ用)。
+  mediaViewer["extensionsRevision"] = kMediaExtensionsRevision;
   mediaViewer["volume"]   = m_mediaViewerVolume;
   mediaViewer["loop"]     = m_mediaViewerLoop;
   mediaViewer["autoplay"] = m_mediaViewerAutoplay;
