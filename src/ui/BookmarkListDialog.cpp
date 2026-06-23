@@ -14,6 +14,7 @@
 #include <QAbstractItemView>
 #include <QDir>
 #include <QFileInfo>
+#include <QStorageInfo>
 #include <QFont>
 #include <QBrush>
 #include <QColor>
@@ -32,6 +33,24 @@ QList<QPair<QString, QString>> buildDetectedLocations() {
       list.append({name, path});
     }
   };
+
+#ifdef Q_OS_WIN
+  // Windows: ローカル / マップ済みネットワークドライブを列挙する。
+  // QDir::drives() は接続済みのドライブ (C:/, D:/, マップ済みの Z:/ など) を
+  // 返す。未マップの UNC パス (\\server\share) は含まれないので、それは手動
+  // 登録 (b キー / パス入力) になる。表示名はボリュームラベルがあれば
+  // 「ラベル (C:)」、無ければドライブレターのみとする。
+  for (const QFileInfo& drive : QDir::drives()) {
+    const QString root = drive.absoluteFilePath();  // 例: "C:/"
+    if (root.isEmpty() || !QDir(root).exists()) continue;
+    const QString letter = root.left(2);            // 例: "C:"
+    const QString label  = QStorageInfo(root).displayName().trimmed();
+    const QString name   = (label.isEmpty() || label == root || label == letter)
+                             ? letter
+                             : QStringLiteral("%1 (%2)").arg(label, letter);
+    list.append({name, root});
+  }
+#endif
 
   // /Volumes/* (外部ディスク、ネットワークマウント、一部クラウド)
   QDir volumes(QStringLiteral("/Volumes"));
