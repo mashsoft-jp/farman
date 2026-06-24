@@ -184,14 +184,19 @@
     <section class="doc-section" id="viewers">
       <h2>Bundled official viewers</h2>
       <p class="f-item doc-note">Open a viewer with <code>v</code>, or choose one with <code>Ctrl+Enter</code>. Viewers work inline or in a separate window, with full-text search.</p>
-      <ul class="doc-list">
-        <li class="f-item"><strong>Text</strong>: automatic encoding detection, line numbers, word wrap.</li>
-        <li class="f-item"><strong>Image</strong>: zoom / Fit / transparency checker / GIF·WebP animation / 90° rotation / Info (Exif, ICC profile, DPI) / BMP / PSD composite preview.</li>
-        <li class="f-item"><strong>Binary</strong>: hex dump with colored address / text columns.</li>
-        <li class="f-item"><strong>Markdown</strong>: tables and task lists, full-text search.</li>
-        <li class="f-item"><strong>PDF</strong>: page navigation / zoom / Fit / full-text search.</li>
-        <li class="f-item"><strong>CSV·TSV</strong>: automatic delimiter detection, cell search, lazy loading for huge files.</li>
-      </ul>
+      <table class="kb-table">
+        <thead><tr><th>Viewer</th><th>Supported formats (extensions)</th><th>Main features</th></tr></thead>
+        <tbody>
+          <tr class="f-item"><td><strong>Text</strong></td><td>txt, log, c / cpp / h, py, js, ts, java, json, xml, yml, ini, sh / bash / fish, etc.</td><td>automatic encoding detection, line numbers, word wrap, full-text search</td></tr>
+          <tr class="f-item"><td><strong>Image</strong></td><td>png, jpg, jpeg, gif, bmp, svg, webp, ico, tiff, tif, psd, heic, heif</td><td>zoom / Fit, transparency checker, GIF·WebP animation, 90° rotation, Info (Exif, ICC profile, DPI), PSD composite preview</td></tr>
+          <tr class="f-item"><td><strong>Video / Audio</strong></td><td>video: mp4, mov, webm, mkv, avi, wmv, mpeg, m2ts, ts, etc. / audio: mp3, flac, wav, aac, ogg, wma, etc.</td><td>playback, seek (click the bar to jump there), volume, loop, fullscreen, Info (metadata)</td></tr>
+          <tr class="f-item"><td><strong>Markdown</strong></td><td>md, markdown, mdown, mkd</td><td>rendered preview / raw-source toggle, tables and task lists, full-text search</td></tr>
+          <tr class="f-item"><td><strong>PDF</strong></td><td>pdf</td><td>page navigation, zoom / Fit, full-text search</td></tr>
+          <tr class="f-item"><td><strong>CSV·TSV</strong></td><td>csv, tsv</td><td>automatic delimiter detection, cell search, first row as header, lazy loading for huge files</td></tr>
+          <tr class="f-item"><td><strong>Binary</strong></td><td>any file not matched by the viewers above</td><td>hex dump with colored address / text columns</td></tr>
+        </tbody>
+      </table>
+      <p class="f-item doc-note">HEIC / HEIF images are decoded by the system decoder on macOS, and by a bundled libheif on Windows and Linux.</p>
       <p class="f-item doc-note">Each viewer's defaults (associated extensions, display options, etc.) can be changed under <strong>Settings → Plugins</strong>: select the viewer and open <strong>“Details”</strong> (default text encoding, image Fit / zoom, PDF view mode, CSV delimiter, media volume / autoplay, and so on).</p>
       <p class="f-item doc-note"><strong>About extension associations</strong>: when several viewers list the same extension, <strong>the viewer with the higher priority is chosen</strong> (resolved by priority among the extensions each viewer declares). There is no “first-wins” override that pins a specific extension to a specific viewer. If a file does not open in the viewer you want, add the extension to the preferred viewer and remove it from the competing one.</p>
     </section>
@@ -202,7 +207,7 @@
       <ul class="doc-list">
         <li class="f-item"><strong>File search</strong> (<code>f</code>): recursive search in the background; jump straight to a result.</li>
         <li class="f-item"><strong>Quick Filter</strong> (<code>/</code>): quickly narrows the current directory by what you type.</li>
-        <li class="f-item"><strong>Bookmarks</strong>: <code>b</code> to add / remove the current location, <code>Ctrl+B</code> for the list.</li>
+        <li class="f-item"><strong>Bookmarks</strong>: <code>b</code> to add / remove the current location, <code>Ctrl+B</code> for the list. Besides your saved favorites, the list also shows auto-detected mounted drives (external disks and network drives).</li>
         <li class="f-item"><strong>Directory history</strong> (<code>h</code>): jump to a previously visited directory.</li>
         <li class="f-item"><strong>Address bar</strong>: type a path to navigate (with path completion).</li>
       </ul>
@@ -225,9 +230,10 @@
     <!-- Settings -->
     <section class="doc-section" id="settings">
       <h2>Settings</h2>
-      <p class="f-item doc-note">Open Settings with <code>Ctrl+,</code>. Switch settings using the categories on the left (<strong>General / Behavior / Appearance / External Apps / Keybindings</strong>).</p>
+      <p class="f-item doc-note">Open Settings with <code>Ctrl+,</code>. Switch settings using the categories on the left (<strong>General / Behavior / Appearance / Plugins / External Apps / Keybindings</strong>).</p>
       <ul class="doc-list">
         <li class="f-item"><strong>Appearance</strong>: theme, address bar, cursor, per-category file colors, row height, and more.</li>
+        <li class="f-item"><strong>Plugins</strong>: lists the installed viewer plugins in per-type tabs. From each row's "Details..." you can review and change its category, plugin ID, path, enabled state, priority, associated extensions, and each viewer's defaults. User-built external viewer plugins (.dylib / .so / .dll) can also be loaded from a chosen plugins directory.</li>
         <li class="f-item"><strong>Keybindings</strong>: every shortcut is customizable. Reset to defaults, choose presets (e.g. Total Commander style), or clear an assignment.</li>
         <li class="f-item"><strong>External Apps</strong>: register launch commands for a terminal (<code>t</code>), editor (<code>e</code>), and so on. Placeholders pass the current path or selected files.</li>
         <li class="f-item"><strong>Language</strong>: Japanese / English (Auto follows the OS setting).</li>
@@ -245,6 +251,7 @@
         <li class="f-item"><strong>Windows</strong>: installer <code>.exe</code> or portable <code>.zip</code> (x64). Code signing is not yet in place.</li>
         <li class="f-item"><strong>Linux</strong>: <code>.AppImage</code> or <code>.deb</code> (x86_64).</li>
         <li class="f-item"><strong>Auto-update</strong>: checks for a new version on startup and updates in one click — download, verify (SHA256), install.</li>
+        <li class="f-item"><strong>What's New dialog</strong>: shows the changes once on first launch after an update. Reopen any time via Help → What's New...</li>
       </ul>
     </section>
 

@@ -184,14 +184,19 @@
     <section class="doc-section" id="viewers">
       <h2>同梱公式ビュアー</h2>
       <p class="f-item doc-note"><code>v</code> でビュアー起動、<code>Ctrl+Enter</code> でビュアーを選択。インライン表示 / 別ウィンドウのどちらにも対応し、全文検索が使えます。</p>
-      <ul class="doc-list">
-        <li class="f-item"><strong>テキスト</strong>: 文字エンコード自動判定、行番号、ワードラップ。</li>
-        <li class="f-item"><strong>画像</strong>: ズーム / Fit / 透明背景チェッカー / GIF・WebP アニメ / 90° 回転 / Info（Exif・ICC・DPI）/ BMP / PSD 合成プレビュー。</li>
-        <li class="f-item"><strong>バイナリ</strong>: 16 進ダンプ（アドレス列・文字列列のカラーリング）。</li>
-        <li class="f-item"><strong>Markdown</strong>: 表・タスクリストに対応、全文検索。</li>
-        <li class="f-item"><strong>PDF</strong>: ページ送り / ズーム / Fit / 全文検索。</li>
-        <li class="f-item"><strong>CSV・TSV</strong>: 区切り自動判定、セル検索、巨大ファイルの遅延ロード。</li>
-      </ul>
+      <table class="kb-table">
+        <thead><tr><th>ビュアー</th><th>対応形式（拡張子）</th><th>主な機能</th></tr></thead>
+        <tbody>
+          <tr class="f-item"><td><strong>テキスト</strong></td><td>txt, log, c / cpp / h, py, js, ts, java, json, xml, yml, ini, sh / bash / fish など</td><td>文字エンコード自動判定、行番号、ワードラップ、全文検索</td></tr>
+          <tr class="f-item"><td><strong>画像</strong></td><td>png, jpg, jpeg, gif, bmp, svg, webp, ico, tiff, tif, psd, heic, heif</td><td>ズーム / Fit、透明背景チェッカー、GIF・WebP アニメ、90° 回転、Info（Exif・ICC・DPI）、PSD 合成プレビュー</td></tr>
+          <tr class="f-item"><td><strong>動画 / 音声</strong></td><td>動画: mp4, mov, webm, mkv, avi, wmv, mpeg, m2ts, ts など／音声: mp3, flac, wav, aac, ogg, wma など</td><td>再生、シーク（バーのクリックでその位置へ即移動）、音量、ループ、フルスクリーン、Info（メタデータ）</td></tr>
+          <tr class="f-item"><td><strong>Markdown</strong></td><td>md, markdown, mdown, mkd</td><td>整形プレビュー / ソース表示の切替、表・タスクリスト、全文検索</td></tr>
+          <tr class="f-item"><td><strong>PDF</strong></td><td>pdf</td><td>ページ送り、ズーム / Fit、全文検索</td></tr>
+          <tr class="f-item"><td><strong>CSV・TSV</strong></td><td>csv, tsv</td><td>区切り自動判定、セル検索、先頭行をヘッダ扱い、巨大ファイルの遅延ロード</td></tr>
+          <tr class="f-item"><td><strong>バイナリ</strong></td><td>上記いずれにも該当しない任意のファイル</td><td>16 進ダンプ（アドレス列・文字列列のカラーリング）</td></tr>
+        </tbody>
+      </table>
+      <p class="f-item doc-note">HEIC / HEIF 画像は、macOS は OS 標準デコーダ、Windows・Linux は同梱の libheif で表示します。</p>
       <p class="f-item doc-note">各ビュアーの既定設定（対象拡張子、表示方法など）は <strong>設定 → プラグイン</strong> で対象のビュアーを選び <strong>「詳細」</strong> を開いて変更できます（テキストの既定エンコード、画像の Fit / ズーム、PDF の表示方法、CSV の区切り、メディアの音量・自動再生 など）。</p>
       <p class="f-item doc-note"><strong>拡張子の対応付けについて</strong>: 同じ拡張子を複数のビュアーが対象にしている場合、<strong>優先度の高いビュアーが選ばれます</strong>（各ビュアーが宣言する対応拡張子の中から優先度で解決）。特定の拡張子を必ず特定のビュアーに固定する「先勝ち」の上書き指定はありません。狙いどおりに開かない場合は、優先したいビュアー側に拡張子を追加し、競合する側からは外してください。</p>
     </section>
@@ -202,7 +207,7 @@
       <ul class="doc-list">
         <li class="f-item"><strong>ファイル検索</strong>（<code>f</code>）: バックグラウンドで再帰検索し、結果から直接ジャンプできます。</li>
         <li class="f-item"><strong>即時フィルタ</strong>（<code>/</code>）: 現在のディレクトリの表示を、入力した文字で素早く絞り込みます。</li>
-        <li class="f-item"><strong>ブックマーク</strong>: <code>b</code> で現在地を登録 / 解除、<code>Ctrl+B</code> で一覧。</li>
+        <li class="f-item"><strong>ブックマーク</strong>: <code>b</code> で現在地を登録 / 解除、<code>Ctrl+B</code> で一覧。一覧には、登録したお気に入りに加え、マウント済みのドライブ（外部ディスク・ネットワークドライブ）が自動検出されて表示されます。</li>
         <li class="f-item"><strong>ディレクトリ履歴</strong>（<code>h</code>）: これまで開いたディレクトリの履歴から移動。</li>
         <li class="f-item"><strong>アドレスバー</strong>: パスを直接入力して移動（パス補完あり）。</li>
       </ul>
@@ -225,9 +230,10 @@
     <!-- 設定 -->
     <section class="doc-section" id="settings">
       <h2>設定</h2>
-      <p class="f-item doc-note"><code>Ctrl+,</code> で設定ダイアログを開きます。左側のカテゴリ（<strong>全般 / 動作 / 外観 / 外部アプリ / キーバインド</strong>）で各設定を切り替えます。</p>
+      <p class="f-item doc-note"><code>Ctrl+,</code> で設定ダイアログを開きます。左側のカテゴリ（<strong>全般 / 動作 / 外観 / プラグイン / 外部アプリ / キーバインド</strong>）で各設定を切り替えます。</p>
       <ul class="doc-list">
         <li class="f-item"><strong>外観</strong>: テーマ、アドレスバー、カーソル、カテゴリ別ファイル色、行高など。</li>
+        <li class="f-item"><strong>プラグイン</strong>: インストール済みのビュアープラグインを種別タブで一覧表示します。各行の「詳細...」から、区分・プラグイン ID・パス・有効 / 無効・優先度・対象拡張子・各ビュアーの既定設定を確認・変更できます。ユーザー作成の外部ビュアープラグイン（.dylib / .so / .dll）も、指定したプラグインディレクトリから読み込めます。</li>
         <li class="f-item"><strong>キーバインド</strong>: すべてのショートカットを変更可能。デフォルトに戻す、Total Commander 風などのプリセット選択、割り当て解除もできます。</li>
         <li class="f-item"><strong>外部アプリ</strong>: ターミナル（<code>t</code>）・エディタ（<code>e</code>）などの起動コマンドを登録。プレースホルダで現在のパスや選択ファイルを渡せます。</li>
         <li class="f-item"><strong>言語</strong>: 日本語 / 英語（Auto は OS 設定に追従）。</li>
@@ -245,6 +251,7 @@
         <li class="f-item"><strong>Windows</strong>: インストーラ <code>.exe</code> またはポータブル <code>.zip</code>（x64）。現状コード署名は未対応です。</li>
         <li class="f-item"><strong>Linux</strong>: <code>.AppImage</code> または <code>.deb</code>（x86_64）。</li>
         <li class="f-item"><strong>自動アップデート</strong>: 起動時に新版をチェックし、ワンクリックでダウンロード + SHA256 検証 + インストール。</li>
+        <li class="f-item"><strong>アップデート内容の表示</strong>: アップデート後の初回起動時に変更内容をダイアログで表示します。ヘルプ → アップデート内容... からいつでも再表示できます。</li>
       </ul>
     </section>
 
