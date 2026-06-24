@@ -24,6 +24,10 @@ public:
     return {
       "png", "jpg", "jpeg", "gif", "bmp",
       "svg", "webp", "ico", "tiff", "tif",
+      // PSD は ImageView が合成プレビューに対応している (PsdReader)。
+      // プラグイン化の際に拡張子へ入れ忘れていたため、バイナリビュアーに
+      // 奪われて開けなくなっていた。
+      "psd",
       // HEIC / HEIF は MP4/MOV と同じ ISO BMFF コンテナのため、拡張子で
       // 明示宣言しておかないと内容スニッフで動画扱いされ media_viewer に
       // 奪われる (resolvePlugin が拡張子一致を最優先するので静止画へ回る)。
@@ -41,6 +45,7 @@ public:
       "image/webp",
       "image/x-icon",
       "image/tiff",
+      "image/vnd.adobe.photoshop",
       "image/heic",
       "image/heif"
     };
