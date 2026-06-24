@@ -1,4 +1,15 @@
 cmake_minimum_required(VERSION 3.21)
+
+# macOS の最小デプロイメントターゲット。未設定だと CMake はビルドホストの OS
+# バージョンを minos として埋め込む。GitHub Actions の macos-latest が macOS 26
+# になったことで minos 26.0 の .app が生成され、それ未満の macOS で
+# 「このアプリケーションは macOS 26 以上で…」と言われて起動できなくなっていた。
+# Qt 6.10 がサポートする範囲で広く動くよう明示的に下げる。project() より前に
+# 設定する必要がある (コンパイラ検出に影響するため)。
+if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum macOS deployment target")
+endif()
+
 project(farman VERSION 0.9.6 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
