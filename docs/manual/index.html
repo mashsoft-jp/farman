@@ -14,6 +14,13 @@
 
   <link rel="icon" type="image/png" href="../farman-icon.png" />
   <link rel="stylesheet" href="../style.css" />
+  <style>
+    /* マニュアル本文に挿入するスクリーンショット用 */
+    .doc-figure { margin: 14px 0 20px; max-width: 760px; }
+    .doc-figure img { width: 100%; height: auto; display: block;
+      border: 1px solid var(--border); border-radius: 8px; }
+    .doc-figure figcaption { font-size: .85em; color: var(--fg-muted); margin-top: 6px; }
+  </style>
 </head>
 <body>
   <!-- ===== Header ===== -->
@@ -72,6 +79,7 @@
         <li class="f-item">レイアウトは <strong>2 ペイン / シングルペイン / プレビュー</strong> の 3 種類。<code>Ctrl+O</code> でシングル切替、プレビューはツールバー / 設定から。</li>
         <li class="f-item">macOS では <code>Ctrl</code> は <code>⌘</code>(Command) に割り当てられます。</li>
       </ul>
+      <figure class="doc-figure"><img src="../screenshots/01-main-2pane.png" alt="2 ペインのメイン画面" loading="lazy" /><figcaption>2 ペインのメイン画面</figcaption></figure>
     </section>
 
     <!-- キーバインド一覧 -->
@@ -199,6 +207,7 @@
       <p class="f-item doc-note">HEIC / HEIF 画像は、macOS は OS 標準デコーダ、Windows・Linux は同梱の libheif で表示します。</p>
       <p class="f-item doc-note">各ビュアーの既定設定（対象拡張子、表示方法など）は <strong>設定 → プラグイン</strong> で対象のビュアーを選び <strong>「詳細」</strong> を開いて変更できます（テキストの既定エンコード、画像の Fit / ズーム、PDF の表示方法、CSV の区切り、メディアの音量・自動再生 など）。</p>
       <p class="f-item doc-note"><strong>拡張子の対応付けについて</strong>: 同じ拡張子を複数のビュアーが対象にしている場合、<strong>優先度の高いビュアーが選ばれます</strong>（各ビュアーが宣言する対応拡張子の中から優先度で解決）。特定の拡張子を必ず特定のビュアーに固定する「先勝ち」の上書き指定はありません。狙いどおりに開かない場合は、優先したいビュアー側に拡張子を追加し、競合する側からは外してください。</p>
+      <figure class="doc-figure"><img src="../screenshots/10-media-viewer.png" alt="動画・音声ビュアー" loading="lazy" /><figcaption>動画・音声ビュアー（シーク / 音量 / ループ / 全画面）</figcaption></figure>
     </section>
 
     <!-- 検索・ナビゲーション -->
@@ -225,6 +234,7 @@
         <li class="f-item"><strong>ソート・フィルタ</strong>（<code>s</code>）: ペインごとの並び順・表示フィルタを設定（このディレクトリ専用としても保存可）。</li>
         <li class="f-item"><strong>ログペイン</strong>（<code>Ctrl+L</code>）: 操作ログの表示切替。</li>
       </ul>
+      <figure class="doc-figure"><img src="../screenshots/10-preview-mode.png" alt="プレビューモード（Quick View）" loading="lazy" /><figcaption>プレビューモード（Quick View）— 片側で選ぶともう片側に即プレビュー</figcaption></figure>
     </section>
 
     <!-- 設定 -->
@@ -240,6 +250,7 @@
         <li class="f-item"><strong>設定のエクスポート / インポート</strong>: ブックマーク・カスタムコマンド・カラースキームを含む全設定を 1 ファイルで他マシンへ移行できます。</li>
       </ul>
       <p class="f-item doc-note">設定ファイルの場所: macOS <code>~/Library/Preferences/Farman/farman/settings.json</code> / Linux <code>~/.config/Farman/farman/settings.json</code> / Windows <code>%APPDATA%\Farman\farman\settings.json</code></p>
+      <figure class="doc-figure"><img src="../screenshots/05-settings.png" alt="設定ダイアログ" loading="lazy" /><figcaption>設定ダイアログ</figcaption></figure>
     </section>
 
     <!-- インストールと更新 -->

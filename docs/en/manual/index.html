@@ -14,6 +14,13 @@
 
   <link rel="icon" type="image/png" href="../../farman-icon.png" />
   <link rel="stylesheet" href="../../style.css" />
+  <style>
+    /* Screenshots embedded in the manual body */
+    .doc-figure { margin: 14px 0 20px; max-width: 760px; }
+    .doc-figure img { width: 100%; height: auto; display: block;
+      border: 1px solid var(--border); border-radius: 8px; }
+    .doc-figure figcaption { font-size: .85em; color: var(--fg-muted); margin-top: 6px; }
+  </style>
 </head>
 <body>
   <!-- ===== Header ===== -->
@@ -72,6 +79,7 @@
         <li class="f-item">Three layouts: <strong>dual pane / single pane / preview</strong>. <code>Ctrl+O</code> toggles single pane; preview is available from the toolbar / settings.</li>
         <li class="f-item">On macOS, <code>Ctrl</code> maps to <code>⌘</code> (Command).</li>
       </ul>
+      <figure class="doc-figure"><img src="../../screenshots/01-main-2pane.png" alt="Two-pane main window" loading="lazy" /><figcaption>Two-pane main window</figcaption></figure>
     </section>
 
     <!-- Keybindings -->
@@ -199,6 +207,7 @@
       <p class="f-item doc-note">HEIC / HEIF images are decoded by the system decoder on macOS, and by a bundled libheif on Windows and Linux.</p>
       <p class="f-item doc-note">Each viewer's defaults (associated extensions, display options, etc.) can be changed under <strong>Settings → Plugins</strong>: select the viewer and open <strong>“Details”</strong> (default text encoding, image Fit / zoom, PDF view mode, CSV delimiter, media volume / autoplay, and so on).</p>
       <p class="f-item doc-note"><strong>About extension associations</strong>: when several viewers list the same extension, <strong>the viewer with the higher priority is chosen</strong> (resolved by priority among the extensions each viewer declares). There is no “first-wins” override that pins a specific extension to a specific viewer. If a file does not open in the viewer you want, add the extension to the preferred viewer and remove it from the competing one.</p>
+      <figure class="doc-figure"><img src="../../screenshots/10-media-viewer.png" alt="Video / audio viewer" loading="lazy" /><figcaption>Video / audio viewer (seek / volume / loop / fullscreen)</figcaption></figure>
     </section>
 
     <!-- Search & navigation -->
@@ -225,6 +234,7 @@
         <li class="f-item"><strong>Sort &amp; filter</strong> (<code>s</code>): per-pane ordering and display filter (can be saved for that directory only).</li>
         <li class="f-item"><strong>Log pane</strong> (<code>Ctrl+L</code>): toggle the operation log.</li>
       </ul>
+      <figure class="doc-figure"><img src="../../screenshots/10-preview-mode.png" alt="Preview mode (Quick View)" loading="lazy" /><figcaption>Preview mode (Quick View) — pick a file on one side and preview it on the other</figcaption></figure>
     </section>
 
     <!-- Settings -->
@@ -240,6 +250,7 @@
         <li class="f-item"><strong>Export / import settings</strong>: move all settings — including bookmarks, custom commands, and color schemes — to another machine in a single file.</li>
       </ul>
       <p class="f-item doc-note">Settings file location: macOS <code>~/Library/Preferences/Farman/farman/settings.json</code> / Linux <code>~/.config/Farman/farman/settings.json</code> / Windows <code>%APPDATA%\Farman\farman\settings.json</code></p>
+      <figure class="doc-figure"><img src="../../screenshots/05-settings.png" alt="Settings dialog" loading="lazy" /><figcaption>Settings dialog</figcaption></figure>
     </section>
 
     <!-- Install & updates -->
