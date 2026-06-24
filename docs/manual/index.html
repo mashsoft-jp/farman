@@ -60,10 +60,10 @@
       <a href="#keybindings">キーバインド一覧</a>
       <a href="#fileops">ファイル操作</a>
       <a href="#archive">アーカイブ</a>
-      <a href="#viewers">ビュアー</a>
       <a href="#search-nav">検索・ナビゲーション</a>
       <a href="#layout">表示モード</a>
       <a href="#settings">設定</a>
+      <a href="#viewers">ビュアー</a>
       <a href="#install">インストールと更新</a>
     </nav>
 
@@ -71,15 +71,17 @@
     <section class="doc-section" id="basics">
       <h2>基本操作</h2>
       <ul class="doc-list">
-        <li class="f-item">farman は<strong>左右 2 ペイン</strong>のファイラです。一方を「コピー元」、もう一方を「コピー先」として、ペイン間でファイルをやり取りします。</li>
+        <li class="f-item">farman は<strong>左右にペインを並べるデュアルペイン</strong>のファイラです。一方を「コピー元」、もう一方を「コピー先」として、ペイン間でファイルをやり取りします。</li>
         <li class="f-item">操作対象は<strong>アクティブペイン</strong>（カーソルがある側）。<code>Tab</code> や左右キーの端でペインを切り替えます。</li>
         <li class="f-item">カーソル移動は <code>↑</code> <code>↓</code>、ディレクトリに入るのは <code>Enter</code>、親ディレクトリへ戻るのは <code>Backspace</code>。</li>
         <li class="f-item"><strong>選択</strong>は <code>Space</code>（選択して下へ）/ <code>Shift+Space</code>（移動なしで選択）。<code>i</code> で選択反転、<code>Ctrl+A</code> で全選択。</li>
         <li class="f-item"><code>Shift+文字</code> で、その文字を頭文字とする次のファイルへカーソルジャンプ（連打で次の一致へ）。</li>
-        <li class="f-item">レイアウトは <strong>2 ペイン / シングルペイン / プレビュー</strong> の 3 種類。<code>Ctrl+O</code> でシングル切替、プレビューはツールバー / 設定から。</li>
+        <li class="f-item">レイアウトは <strong>デュアルペイン（2 画面）/ シングルペイン（1 画面）/ プレビュー</strong> の 3 種類。<code>Ctrl+O</code> でデュアル / シングルを切替、プレビューはツールバー / 設定から。（設定・コマンドでは「2 画面 / 1 画面」とも表記）</li>
         <li class="f-item">macOS では <code>Ctrl</code> は <code>⌘</code>(Command) に割り当てられます。</li>
       </ul>
-      <figure class="doc-figure"><img src="../screenshots/01-main-2pane.png" alt="2 ペインのメイン画面" loading="lazy" /><figcaption>2 ペインのメイン画面</figcaption></figure>
+      <figure class="doc-figure"><img src="../screenshots/01-main-2pane.png" alt="デュアルペイン（2 画面）" loading="lazy" /><figcaption>デュアルペイン（2 画面）— 左右にペインを並べる標準のレイアウト</figcaption></figure>
+      <figure class="doc-figure"><img src="../screenshots/15-single-pane.png" alt="シングルペイン（1 画面）" loading="lazy" /><figcaption>シングルペイン（1 画面）— <code>Ctrl+O</code> で切替</figcaption></figure>
+      <figure class="doc-figure"><img src="../screenshots/10-preview-mode.png" alt="プレビュー" loading="lazy" /><figcaption>プレビュー（Quick View）— 片側で選ぶともう片側に即プレビュー</figcaption></figure>
     </section>
 
     <!-- キーバインド一覧 -->
@@ -160,35 +162,91 @@
           <tr class="f-item"><td><kbd>Ctrl+Shift+P</kbd></td><td>プラグイン設定を開く</td></tr>
         </tbody>
       </table>
-      <figure class="doc-figure"><img src="../screenshots/04-shortcut-list.png" alt="ショートカット一覧" loading="lazy" /><figcaption>ヘルプ → ショートカット一覧（現在のキーバインドを一覧表示）</figcaption></figure>
     </section>
 
     <!-- ファイル操作 -->
     <section class="doc-section" id="fileops">
       <h2>ファイル操作</h2>
       <ul class="doc-list">
-        <li class="f-item"><strong>コピー / 移動</strong>（<code>c</code> / <code>m</code>）: 選択（無選択ならカーソル行）を反対ペインへ。確認ダイアログでコピー先・上書き時の挙動（都度確認 / 上書き / スキップ / リネーム）を指定できます。</li>
-        <li class="f-item"><strong>削除</strong>（<code>d</code>）: ゴミ箱に入れる / 完全削除を確認ダイアログで選べます。</li>
+        <li class="f-item"><strong>コピー / 移動</strong>（<code>c</code> / <code>m</code>）: 選択（無選択ならカーソル行）を反対ペインへ。確認ダイアログでコピー先・上書き時の挙動（都度確認 / 上書き / スキップ / リネーム）を指定できます。
+          <figure class="doc-figure"><img src="../screenshots/06-transfer-confirm.png" alt="コピー / 移動の確認" loading="lazy" /><figcaption>コピー / 移動の確認（上書き時の挙動を指定）</figcaption></figure></li>
+        <li class="f-item"><strong>削除</strong>（<code>d</code>）: ゴミ箱に入れる / 完全削除を確認ダイアログで選べます。
+          <figure class="doc-figure"><img src="../screenshots/18-delete-confirm.png" alt="削除の確認" loading="lazy" /><figcaption>削除の確認（ゴミ箱 / 完全削除）</figcaption></figure></li>
         <li class="f-item"><strong>リネーム</strong>（<code>r</code>）: カーソル行の名前を変更。</li>
-        <li class="f-item"><strong>一括リネーム</strong>（<code>Ctrl+R</code>）: テンプレート + 連番 + 正規表現置換に対応。適用前にプレビューで結果を確認できます。</li>
+        <li class="f-item"><strong>一括リネーム</strong>（<code>Ctrl+R</code>）: テンプレート + 連番 + 正規表現置換に対応。適用前にプレビューで結果を確認できます。
+          <figure class="doc-figure"><img src="../screenshots/17-bulk-rename.png" alt="一括リネーム" loading="lazy" /><figcaption>一括リネーム（テンプレート + 連番 + 正規表現、適用前にプレビュー）</figcaption></figure></li>
         <li class="f-item"><strong>新規作成</strong>: <code>k</code> でディレクトリ、<code>n</code> でファイル。</li>
         <li class="f-item"><strong>パスのコピー</strong>（<code>Ctrl+C</code>）: カーソル / 選択ファイルの絶対パスをクリップボードへ（複数は改行区切り）。</li>
-        <li class="f-item"><strong>属性変更</strong>（<code>a</code>）/ <strong>プロパティ</strong>（<code>Alt+Enter</code>）: パーミッションや詳細情報の確認・変更。</li>
+        <li class="f-item"><strong>属性変更</strong>（<code>a</code>）/ <strong>プロパティ</strong>（<code>Alt+Enter</code>）: パーミッションや詳細情報の確認・変更。
+          <figure class="doc-figure"><img src="../screenshots/19-attributes.png" alt="属性変更" loading="lazy" /><figcaption>属性変更（パーミッションなど）</figcaption></figure>
+          <figure class="doc-figure"><img src="../screenshots/20-properties.png" alt="プロパティ" loading="lazy" /><figcaption>プロパティ（詳細情報）</figcaption></figure></li>
         <li class="f-item"><strong>OS 既定アプリで開く</strong>（<code>Shift+Enter</code> またはダブルクリック）: 関連付けられたアプリでファイル / ディレクトリを開きます。</li>
       </ul>
-      <figure class="doc-figure"><img src="../screenshots/17-bulk-rename.png" alt="一括リネーム" loading="lazy" /><figcaption>一括リネーム（テンプレート + 連番 + 正規表現、適用前にプレビュー）</figcaption></figure>
     </section>
 
     <!-- アーカイブ -->
     <section class="doc-section" id="archive">
       <h2>アーカイブ</h2>
       <ul class="doc-list">
-        <li class="f-item"><strong>作成</strong>（<code>p</code>）: 選択ファイルを zip / tar / tar.gz / tar.bz2 / tar.xz で圧縮。<strong>圧縮レベル</strong>や zip の <strong>AES-256 パスワード暗号化</strong>を指定できます。</li>
+        <li class="f-item"><strong>作成</strong>（<code>p</code>）: 選択ファイルを zip / tar / tar.gz / tar.bz2 / tar.xz で圧縮。<strong>圧縮レベル</strong>や zip の <strong>AES-256 パスワード暗号化</strong>を指定できます。
+          <figure class="doc-figure"><img src="../screenshots/21-archive-create.png" alt="アーカイブ作成" loading="lazy" /><figcaption>アーカイブ作成（形式・圧縮レベル・パスワード暗号化）</figcaption></figure></li>
         <li class="f-item"><strong>展開</strong>（<code>u</code>）: カーソル位置のアーカイブを展開。暗号化 zip はパスワード入力で展開できます。</li>
-        <li class="f-item"><strong>アーカイブ内ブラウジング</strong>: アーカイブを<strong>普通のフォルダのように開いて</strong>、中を移動・閲覧できます（パスは <code>archive.zip!/inner/</code> のように表示されます）。</li>
+        <li class="f-item"><strong>アーカイブ内ブラウジング</strong>: アーカイブを<strong>普通のフォルダのように開いて</strong>、中を移動・閲覧できます（パスは <code>archive.zip!/inner/</code> のように表示されます）。
+          <figure class="doc-figure"><img src="../screenshots/02-archive-browsing.png" alt="アーカイブ内ブラウジング" loading="lazy" /><figcaption>アーカイブ内ブラウジング（フォルダのように開いて中を閲覧）</figcaption></figure></li>
         <li class="f-item"><strong>選択抽出</strong>: アーカイブ内で必要なファイル / ディレクトリだけを選んで取り出せます。</li>
       </ul>
-      <figure class="doc-figure"><img src="../screenshots/02-archive-browsing.png" alt="アーカイブ内ブラウジング" loading="lazy" /><figcaption>アーカイブ内ブラウジング（フォルダのように開いて中を閲覧）</figcaption></figure>
+    </section>
+
+    <!-- 検索・ナビゲーション -->
+    <section class="doc-section" id="search-nav">
+      <h2>検索・ナビゲーション</h2>
+      <ul class="doc-list">
+        <li class="f-item"><strong>ファイル検索</strong>（<code>f</code>）: バックグラウンドで再帰検索し、結果から直接ジャンプできます。
+          <figure class="doc-figure"><img src="../screenshots/16-search.png" alt="ファイル検索" loading="lazy" /><figcaption>ファイル検索（バックグラウンドで再帰検索、結果からジャンプ）</figcaption></figure></li>
+        <li class="f-item"><strong>即時フィルタ</strong>（<code>/</code>）: 現在のディレクトリの表示を、入力した文字で素早く絞り込みます。</li>
+        <li class="f-item"><strong>ブックマーク</strong>: <code>b</code> で現在地を登録 / 解除、<code>Ctrl+B</code> で一覧。一覧には、登録したお気に入りに加え、マウント済みのドライブ（外部ディスク・ネットワークドライブ）が自動検出されて表示されます。
+          <figure class="doc-figure"><img src="../screenshots/22-bookmarks.png" alt="ブックマーク一覧" loading="lazy" /><figcaption>ブックマーク一覧（お気に入り + 自動検出されたドライブ）</figcaption></figure></li>
+        <li class="f-item"><strong>ディレクトリ履歴</strong>（<code>h</code>）: これまで開いたディレクトリの履歴から移動。
+          <figure class="doc-figure"><img src="../screenshots/23-history.png" alt="ディレクトリ履歴" loading="lazy" /><figcaption>ディレクトリ履歴</figcaption></figure></li>
+        <li class="f-item"><strong>アドレスバー</strong>: パスを直接入力して移動（パス補完あり）。</li>
+      </ul>
+    </section>
+
+    <!-- 表示モード -->
+    <section class="doc-section" id="layout">
+      <h2>表示モード・ペイン</h2>
+      <ul class="doc-list">
+        <li class="f-item"><strong>サムネイル表示</strong>: リスト / 小・中・大の 4 段階（<code>Cmd/Ctrl+1〜4</code>）。画像や PDF の 1 ページ目に対応。
+          <figure class="doc-figure"><img src="../screenshots/14-thumbnail-view.png" alt="サムネイル表示" loading="lazy" /><figcaption>サムネイル表示（リスト / 小・中・大の 4 段階）</figcaption></figure></li>
+        <li class="f-item"><strong>プレビューモード（Quick View）</strong>: 片側でファイルを選ぶと、もう片側に内容を即プレビュー。
+          <figure class="doc-figure"><img src="../screenshots/10-preview-mode.png" alt="プレビューモード（Quick View）" loading="lazy" /><figcaption>プレビューモード（Quick View）— 片側で選ぶともう片側に即プレビュー</figcaption></figure></li>
+        <li class="f-item"><strong>ディレクトリ比較</strong>: 左右ペインの差分を行ごとに色分け。コピー後も比較状態を維持します。
+          <figure class="doc-figure"><img src="../screenshots/03-directory-compare.png" alt="ディレクトリ比較" loading="lazy" /><figcaption>ディレクトリ比較（左右ペインの差分を色分け）</figcaption></figure></li>
+        <li class="f-item"><strong>同期ブラウズ</strong>（<code>y</code>）: 片方のペインを移動すると、もう片方も相対的に追従します。</li>
+        <li class="f-item"><strong>ディレクトリ同期</strong>（<code>Ctrl+→</code> / <code>Ctrl+←</code>）: 一方のペインのパスを反対側に合わせます。</li>
+        <li class="f-item"><strong>ソート・フィルタ</strong>（<code>s</code>）: ペインごとの並び順・表示フィルタを設定（このディレクトリ専用としても保存可）。
+          <figure class="doc-figure"><img src="../screenshots/24-sort-filter.png" alt="ソート・フィルタ" loading="lazy" /><figcaption>ソート・フィルタ（並び順・表示フィルタをペインごとに）</figcaption></figure></li>
+        <li class="f-item"><strong>ログペイン</strong>（<code>Ctrl+L</code>）: 操作ログの表示切替。</li>
+      </ul>
+    </section>
+
+    <!-- 設定 -->
+    <section class="doc-section" id="settings">
+      <h2>設定</h2>
+      <p class="f-item doc-note"><code>Ctrl+,</code> で設定ダイアログを開きます。左側のカテゴリ（<strong>全般 / 動作 / 外観 / プラグイン / 外部アプリ / キーバインド</strong>）で各設定を切り替えます。</p>
+      <ul class="doc-list">
+        <li class="f-item"><strong>外観</strong>: テーマ、アドレスバー、カーソル、カテゴリ別ファイル色、行高など。
+          <figure class="doc-figure"><img src="../screenshots/05-settings.png" alt="設定ダイアログ（外観）" loading="lazy" /><figcaption>設定ダイアログ（外観）</figcaption></figure></li>
+        <li class="f-item"><strong>プラグイン</strong>: インストール済みのビュアープラグインを種別タブで一覧表示します。各行の「詳細...」から、区分・プラグイン ID・パス・有効 / 無効・優先度・対象拡張子・各ビュアーの既定設定を確認・変更できます。ユーザー作成の外部ビュアープラグイン（.dylib / .so / .dll）も、指定したプラグインディレクトリから読み込めます。
+          <figure class="doc-figure"><img src="../screenshots/25-plugins-tab.png" alt="設定（プラグイン）" loading="lazy" /><figcaption>設定 → プラグイン（インストール済み一覧・詳細）</figcaption></figure></li>
+        <li class="f-item"><strong>キーバインド</strong>: すべてのショートカットを変更可能。デフォルトに戻す、Total Commander 風などのプリセット選択、割り当て解除もできます。
+          <figure class="doc-figure"><img src="../screenshots/26-keybindings-tab.png" alt="設定（キーバインド）" loading="lazy" /><figcaption>設定 → キーバインド</figcaption></figure></li>
+        <li class="f-item"><strong>外部アプリ</strong>: ターミナル（<code>t</code>）・エディタ（<code>e</code>）などの起動コマンドを登録。プレースホルダで現在のパスや選択ファイルを渡せます。
+          <figure class="doc-figure"><img src="../screenshots/27-external-apps.png" alt="設定（外部アプリ）" loading="lazy" /><figcaption>設定 → 外部アプリ</figcaption></figure></li>
+        <li class="f-item"><strong>言語</strong>: 日本語 / 英語（Auto は OS 設定に追従）。</li>
+        <li class="f-item"><strong>設定のエクスポート / インポート</strong>: ブックマーク・カスタムコマンド・カラースキームを含む全設定を 1 ファイルで他マシンへ移行できます。</li>
+      </ul>
+      <p class="f-item doc-note">設定ファイルの場所: macOS <code>~/Library/Preferences/Farman/farman/settings.json</code> / Linux <code>~/.config/Farman/farman/settings.json</code> / Windows <code>%APPDATA%\Farman\farman\settings.json</code></p>
     </section>
 
     <!-- ビュアー -->
@@ -210,53 +268,13 @@
       <p class="f-item doc-note">HEIC / HEIF 画像は、macOS は OS 標準デコーダ、Windows・Linux は同梱の libheif で表示します。</p>
       <p class="f-item doc-note">各ビュアーの既定設定（対象拡張子、表示方法など）は <strong>設定 → プラグイン</strong> で対象のビュアーを選び <strong>「詳細」</strong> を開いて変更できます（テキストの既定エンコード、画像の Fit / ズーム、PDF の表示方法、CSV の区切り、メディアの音量・自動再生 など）。</p>
       <p class="f-item doc-note"><strong>拡張子の対応付けについて</strong>: 同じ拡張子を複数のビュアーが対象にしている場合、<strong>優先度の高いビュアーが選ばれます</strong>（各ビュアーが宣言する対応拡張子の中から優先度で解決）。特定の拡張子を必ず特定のビュアーに固定する「先勝ち」の上書き指定はありません。狙いどおりに開かない場合は、優先したいビュアー側に拡張子を追加し、競合する側からは外してください。</p>
+      <figure class="doc-figure"><img src="../screenshots/07-text-viewer.png" alt="テキストビュアー" loading="lazy" /><figcaption>テキストビュアー</figcaption></figure>
+      <figure class="doc-figure"><img src="../screenshots/08-image-viewer.png" alt="画像ビュアー" loading="lazy" /><figcaption>画像ビュアー</figcaption></figure>
       <figure class="doc-figure"><img src="../screenshots/10-media-viewer.png" alt="動画・音声ビュアー" loading="lazy" /><figcaption>動画・音声ビュアー（シーク / 音量 / ループ / 全画面）</figcaption></figure>
-    </section>
-
-    <!-- 検索・ナビゲーション -->
-    <section class="doc-section" id="search-nav">
-      <h2>検索・ナビゲーション</h2>
-      <ul class="doc-list">
-        <li class="f-item"><strong>ファイル検索</strong>（<code>f</code>）: バックグラウンドで再帰検索し、結果から直接ジャンプできます。</li>
-        <li class="f-item"><strong>即時フィルタ</strong>（<code>/</code>）: 現在のディレクトリの表示を、入力した文字で素早く絞り込みます。</li>
-        <li class="f-item"><strong>ブックマーク</strong>: <code>b</code> で現在地を登録 / 解除、<code>Ctrl+B</code> で一覧。一覧には、登録したお気に入りに加え、マウント済みのドライブ（外部ディスク・ネットワークドライブ）が自動検出されて表示されます。</li>
-        <li class="f-item"><strong>ディレクトリ履歴</strong>（<code>h</code>）: これまで開いたディレクトリの履歴から移動。</li>
-        <li class="f-item"><strong>アドレスバー</strong>: パスを直接入力して移動（パス補完あり）。</li>
-      </ul>
-      <figure class="doc-figure"><img src="../screenshots/16-search.png" alt="ファイル検索" loading="lazy" /><figcaption>ファイル検索（バックグラウンドで再帰検索、結果からジャンプ）</figcaption></figure>
-    </section>
-
-    <!-- 表示モード -->
-    <section class="doc-section" id="layout">
-      <h2>表示モード・ペイン</h2>
-      <ul class="doc-list">
-        <li class="f-item"><strong>サムネイル表示</strong>: リスト / 小・中・大の 4 段階（<code>Cmd/Ctrl+1〜4</code>）。画像や PDF の 1 ページ目に対応。</li>
-        <li class="f-item"><strong>プレビューモード（Quick View）</strong>: 片側でファイルを選ぶと、もう片側に内容を即プレビュー。</li>
-        <li class="f-item"><strong>ディレクトリ比較</strong>: 左右ペインの差分を行ごとに色分け。コピー後も比較状態を維持します。</li>
-        <li class="f-item"><strong>同期ブラウズ</strong>（<code>y</code>）: 片方のペインを移動すると、もう片方も相対的に追従します。</li>
-        <li class="f-item"><strong>ディレクトリ同期</strong>（<code>Ctrl+→</code> / <code>Ctrl+←</code>）: 一方のペインのパスを反対側に合わせます。</li>
-        <li class="f-item"><strong>ソート・フィルタ</strong>（<code>s</code>）: ペインごとの並び順・表示フィルタを設定（このディレクトリ専用としても保存可）。</li>
-        <li class="f-item"><strong>ログペイン</strong>（<code>Ctrl+L</code>）: 操作ログの表示切替。</li>
-      </ul>
-      <figure class="doc-figure"><img src="../screenshots/14-thumbnail-view.png" alt="サムネイル表示" loading="lazy" /><figcaption>サムネイル表示（リスト / 小・中・大の 4 段階）</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/03-directory-compare.png" alt="ディレクトリ比較" loading="lazy" /><figcaption>ディレクトリ比較（左右ペインの差分を色分け）</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/10-preview-mode.png" alt="プレビューモード（Quick View）" loading="lazy" /><figcaption>プレビューモード（Quick View）— 片側で選ぶともう片側に即プレビュー</figcaption></figure>
-    </section>
-
-    <!-- 設定 -->
-    <section class="doc-section" id="settings">
-      <h2>設定</h2>
-      <p class="f-item doc-note"><code>Ctrl+,</code> で設定ダイアログを開きます。左側のカテゴリ（<strong>全般 / 動作 / 外観 / プラグイン / 外部アプリ / キーバインド</strong>）で各設定を切り替えます。</p>
-      <ul class="doc-list">
-        <li class="f-item"><strong>外観</strong>: テーマ、アドレスバー、カーソル、カテゴリ別ファイル色、行高など。</li>
-        <li class="f-item"><strong>プラグイン</strong>: インストール済みのビュアープラグインを種別タブで一覧表示します。各行の「詳細...」から、区分・プラグイン ID・パス・有効 / 無効・優先度・対象拡張子・各ビュアーの既定設定を確認・変更できます。ユーザー作成の外部ビュアープラグイン（.dylib / .so / .dll）も、指定したプラグインディレクトリから読み込めます。</li>
-        <li class="f-item"><strong>キーバインド</strong>: すべてのショートカットを変更可能。デフォルトに戻す、Total Commander 風などのプリセット選択、割り当て解除もできます。</li>
-        <li class="f-item"><strong>外部アプリ</strong>: ターミナル（<code>t</code>）・エディタ（<code>e</code>）などの起動コマンドを登録。プレースホルダで現在のパスや選択ファイルを渡せます。</li>
-        <li class="f-item"><strong>言語</strong>: 日本語 / 英語（Auto は OS 設定に追従）。</li>
-        <li class="f-item"><strong>設定のエクスポート / インポート</strong>: ブックマーク・カスタムコマンド・カラースキームを含む全設定を 1 ファイルで他マシンへ移行できます。</li>
-      </ul>
-      <p class="f-item doc-note">設定ファイルの場所: macOS <code>~/Library/Preferences/Farman/farman/settings.json</code> / Linux <code>~/.config/Farman/farman/settings.json</code> / Windows <code>%APPDATA%\Farman\farman\settings.json</code></p>
-      <figure class="doc-figure"><img src="../screenshots/05-settings.png" alt="設定ダイアログ" loading="lazy" /><figcaption>設定ダイアログ</figcaption></figure>
+      <figure class="doc-figure"><img src="../screenshots/11-markdown-viewer.png" alt="Markdown ビュアー" loading="lazy" /><figcaption>Markdown ビュアー</figcaption></figure>
+      <figure class="doc-figure"><img src="../screenshots/12-pdf-viewer.png" alt="PDF ビュアー" loading="lazy" /><figcaption>PDF ビュアー</figcaption></figure>
+      <figure class="doc-figure"><img src="../screenshots/13-csv-viewer.png" alt="CSV / TSV ビュアー" loading="lazy" /><figcaption>CSV / TSV ビュアー</figcaption></figure>
+      <figure class="doc-figure"><img src="../screenshots/09-binary-viewer.png" alt="バイナリビュアー" loading="lazy" /><figcaption>バイナリビュアー</figcaption></figure>
     </section>
 
     <!-- インストールと更新 -->
