@@ -15,11 +15,27 @@
   <link rel="icon" type="image/png" href="../farman-icon.png" />
   <link rel="stylesheet" href="../style.css" />
   <style>
-    /* マニュアル本文に挿入するスクリーンショット用 */
+    /* マニュアル本文に挿入するスクリーンショット用。ホバーで少し拡大、
+       クリックで拡大表示 (site.js の lightbox を共用)。 */
     .doc-figure { margin: 14px 0 20px; max-width: 760px; }
     .doc-figure img { width: 100%; height: auto; display: block;
-      border: 1px solid var(--border); border-radius: 8px; }
+      border: 1px solid var(--border); border-radius: 8px;
+      cursor: zoom-in; transition: transform .18s ease, box-shadow .18s ease;
+      transform-origin: center; }
+    .doc-figure img:hover { transform: scale(1.02);
+      box-shadow: 0 2px 6px rgba(0,0,0,.10), 0 12px 28px rgba(0,0,0,.12); }
     .doc-figure figcaption { font-size: .85em; color: var(--fg-muted); margin-top: 6px; }
+    /* スクショを横並びにする (例: 新規作成のディレクトリ / ファイル) */
+    .doc-figure-row { display: flex; flex-wrap: wrap; gap: 16px; max-width: 760px; margin: 14px 0 20px; }
+    .doc-figure-row .doc-figure { flex: 1 1 0; min-width: 240px; margin: 0; max-width: none; }
+    /* ビュアーごとの説明 + スクショのまとまり */
+    .viewer-block { margin: 22px 0; }
+    .viewer-block h3 { margin: 0 0 6px; font-size: 1.05em; }
+    .viewer-block .viewer-meta { margin: 2px 0; font-size: .92em; }
+    .viewer-block .doc-figure { margin-top: 10px; }
+    /* 設定カテゴリの各項目（概要 + スクショの下に置く箇条書き） */
+    .settings-detail { margin: 8px 0 6px; padding-left: 1.4em; list-style: disc; }
+    .settings-detail li { margin: 3px 0; font-size: .94em; }
   </style>
 </head>
 <body>
@@ -54,19 +70,21 @@
     </div>
     <p id="manual-noresults" class="manual-noresults" hidden>「<span></span>」に一致する項目はありません。</p>
 
+    <div class="manual-body">
     <!-- 目次 -->
     <nav class="manual-toc" id="manual-toc" aria-label="目次">
       <a href="#basics">基本操作</a>
+      <a href="#layout">表示モード</a>
       <a href="#keybindings">キーバインド一覧</a>
       <a href="#fileops">ファイル操作</a>
       <a href="#archive">アーカイブ</a>
       <a href="#search-nav">検索・ナビゲーション</a>
-      <a href="#layout">表示モード</a>
       <a href="#settings">設定</a>
       <a href="#viewers">ビュアー</a>
       <a href="#install">インストールと更新</a>
     </nav>
 
+    <div class="manual-content">
     <!-- 基本操作 -->
     <section class="doc-section" id="basics">
       <h2>基本操作</h2>
@@ -79,9 +97,28 @@
         <li class="f-item">レイアウトは <strong>デュアルペイン（2 画面）/ シングルペイン（1 画面）/ プレビュー</strong> の 3 種類。<code>Ctrl+O</code> でデュアル / シングルを切替、プレビューはツールバー / 設定から。（設定・コマンドでは「2 画面 / 1 画面」とも表記）</li>
         <li class="f-item">macOS では <code>Ctrl</code> は <code>⌘</code>(Command) に割り当てられます。</li>
       </ul>
-      <figure class="doc-figure"><img src="../screenshots/01-main-2pane.png" alt="デュアルペイン（2 画面）" loading="lazy" /><figcaption>デュアルペイン（2 画面）— 左右にペインを並べる標準のレイアウト</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/15-single-pane.png" alt="シングルペイン（1 画面）" loading="lazy" /><figcaption>シングルペイン（1 画面）— <code>Ctrl+O</code> で切替</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/10-preview-mode.png" alt="プレビュー" loading="lazy" /><figcaption>プレビュー（Quick View）— 片側で選ぶともう片側に即プレビュー</figcaption></figure>
+    </section>
+
+    <!-- 表示モード・ペイン -->
+    <section class="doc-section" id="layout">
+      <h2>表示モード・ペイン</h2>
+      <ul class="doc-list">
+        <li class="f-item"><strong>表示レイアウト</strong>: <strong>デュアルペイン（2 画面）/ シングルペイン（1 画面）/ プレビュー（Quick View）</strong> の 3 種類。<code>Ctrl+O</code> でデュアル / シングルを切替、プレビューはツールバー / 設定から。プレビューは片側でファイルを選ぶと、もう片側に内容を即表示します。（設定・コマンドでは「2 画面 / 1 画面」とも表記）
+          <div class="doc-figure-row">
+            <figure class="doc-figure"><img src="../screenshots/01-main-2pane.png" width="1200" height="725" alt="デュアルペイン（2 画面）" loading="lazy" /><figcaption>デュアルペイン（2 画面）</figcaption></figure>
+            <figure class="doc-figure"><img src="../screenshots/15-single-pane.png" width="1200" height="729" alt="シングルペイン（1 画面）" loading="lazy" /><figcaption>シングルペイン（1 画面）</figcaption></figure>
+            <figure class="doc-figure"><img src="../screenshots/10-preview-mode.png" width="1200" height="725" alt="プレビュー（Quick View）" loading="lazy" /><figcaption>プレビュー（Quick View）</figcaption></figure>
+          </div></li>
+        <li class="f-item"><strong>サムネイル表示</strong>: リスト / 小・中・大の 4 段階（<code>Cmd/Ctrl+1〜4</code>）。画像や PDF の 1 ページ目に対応。
+          <figure class="doc-figure"><img src="../screenshots/14-thumbnail-view.png" width="1200" height="725" alt="サムネイル表示" loading="lazy" /><figcaption>サムネイル表示（リスト / 小・中・大の 4 段階）</figcaption></figure></li>
+        <li class="f-item"><strong>ディレクトリ比較</strong>: 左右ペインの差分を行ごとに色分け。コピー後も比較状態を維持します。
+          <figure class="doc-figure"><img src="../screenshots/03-directory-compare.png" width="1200" height="729" alt="ディレクトリ比較" loading="lazy" /><figcaption>ディレクトリ比較（左右ペインの差分を色分け）</figcaption></figure></li>
+        <li class="f-item"><strong>同期ブラウズ</strong>（<code>y</code>）: 片方のペインを移動すると、もう片方も相対的に追従します。</li>
+        <li class="f-item"><strong>ディレクトリ同期</strong>（<code>Ctrl+→</code> / <code>Ctrl+←</code>）: 一方のペインのパスを反対側に合わせます。</li>
+        <li class="f-item"><strong>ソート・フィルタ</strong>（<code>s</code>）: ペインごとの並び順・表示フィルタを設定（このディレクトリ専用としても保存可）。
+          <figure class="doc-figure"><img src="../screenshots/24-sort-filter.png" width="1201" height="728" alt="ソート・フィルタ" loading="lazy" /><figcaption>ソート・フィルタ（並び順・表示フィルタをペインごとに）</figcaption></figure></li>
+        <li class="f-item"><strong>ログペイン</strong>（<code>Ctrl+L</code>）: 操作ログの表示切替。</li>
+      </ul>
     </section>
 
     <!-- キーバインド一覧 -->
@@ -169,17 +206,22 @@
       <h2>ファイル操作</h2>
       <ul class="doc-list">
         <li class="f-item"><strong>コピー / 移動</strong>（<code>c</code> / <code>m</code>）: 選択（無選択ならカーソル行）を反対ペインへ。確認ダイアログでコピー先・上書き時の挙動（都度確認 / 上書き / スキップ / リネーム）を指定できます。
-          <figure class="doc-figure"><img src="../screenshots/06-transfer-confirm.png" alt="コピー / 移動の確認" loading="lazy" /><figcaption>コピー / 移動の確認（上書き時の挙動を指定）</figcaption></figure></li>
+          <figure class="doc-figure"><img src="../screenshots/06-transfer-confirm.png" width="1200" height="731" alt="コピー / 移動の確認" loading="lazy" /><figcaption>コピー / 移動の確認（上書き時の挙動を指定）</figcaption></figure></li>
         <li class="f-item"><strong>削除</strong>（<code>d</code>）: ゴミ箱に入れる / 完全削除を確認ダイアログで選べます。
-          <figure class="doc-figure"><img src="../screenshots/18-delete-confirm.png" alt="削除の確認" loading="lazy" /><figcaption>削除の確認（ゴミ箱 / 完全削除）</figcaption></figure></li>
-        <li class="f-item"><strong>リネーム</strong>（<code>r</code>）: カーソル行の名前を変更。</li>
+          <figure class="doc-figure"><img src="../screenshots/18-delete-confirm.png" width="1202" height="731" alt="削除の確認" loading="lazy" /><figcaption>削除の確認（ゴミ箱 / 完全削除）</figcaption></figure></li>
+        <li class="f-item"><strong>リネーム</strong>（<code>r</code>）: カーソル行の名前を変更。
+          <figure class="doc-figure"><img src="../screenshots/28-rename.png" width="1202" height="729" alt="リネーム" loading="lazy" /><figcaption>リネーム（カーソル行の名前を変更）</figcaption></figure></li>
         <li class="f-item"><strong>一括リネーム</strong>（<code>Ctrl+R</code>）: テンプレート + 連番 + 正規表現置換に対応。適用前にプレビューで結果を確認できます。
-          <figure class="doc-figure"><img src="../screenshots/17-bulk-rename.png" alt="一括リネーム" loading="lazy" /><figcaption>一括リネーム（テンプレート + 連番 + 正規表現、適用前にプレビュー）</figcaption></figure></li>
-        <li class="f-item"><strong>新規作成</strong>: <code>k</code> でディレクトリ、<code>n</code> でファイル。</li>
+          <figure class="doc-figure"><img src="../screenshots/17-bulk-rename.png" width="1203" height="727" alt="一括リネーム" loading="lazy" /><figcaption>一括リネーム（テンプレート + 連番 + 正規表現、適用前にプレビュー）</figcaption></figure></li>
+        <li class="f-item"><strong>新規作成</strong>: <code>k</code> でディレクトリ、<code>n</code> でファイル。
+          <div class="doc-figure-row">
+            <figure class="doc-figure"><img src="../screenshots/29-create-dir.png" width="1193" height="722" alt="新規作成（ディレクトリ）" loading="lazy" /><figcaption>新規作成 — ディレクトリ（<code>k</code>）</figcaption></figure>
+            <figure class="doc-figure"><img src="../screenshots/29-create-file.png" width="1202" height="729" alt="新規作成（ファイル）" loading="lazy" /><figcaption>新規作成 — ファイル（<code>n</code>）</figcaption></figure>
+          </div></li>
         <li class="f-item"><strong>パスのコピー</strong>（<code>Ctrl+C</code>）: カーソル / 選択ファイルの絶対パスをクリップボードへ（複数は改行区切り）。</li>
         <li class="f-item"><strong>属性変更</strong>（<code>a</code>）/ <strong>プロパティ</strong>（<code>Alt+Enter</code>）: パーミッションや詳細情報の確認・変更。
-          <figure class="doc-figure"><img src="../screenshots/19-attributes.png" alt="属性変更" loading="lazy" /><figcaption>属性変更（パーミッションなど）</figcaption></figure>
-          <figure class="doc-figure"><img src="../screenshots/20-properties.png" alt="プロパティ" loading="lazy" /><figcaption>プロパティ（詳細情報）</figcaption></figure></li>
+          <figure class="doc-figure"><img src="../screenshots/19-attributes.png" width="1201" height="728" alt="属性変更" loading="lazy" /><figcaption>属性変更（パーミッションなど）</figcaption></figure>
+          <figure class="doc-figure"><img src="../screenshots/20-properties.png" width="1199" height="728" alt="プロパティ" loading="lazy" /><figcaption>プロパティ（詳細情報）</figcaption></figure></li>
         <li class="f-item"><strong>OS 既定アプリで開く</strong>（<code>Shift+Enter</code> またはダブルクリック）: 関連付けられたアプリでファイル / ディレクトリを開きます。</li>
       </ul>
     </section>
@@ -189,11 +231,11 @@
       <h2>アーカイブ</h2>
       <ul class="doc-list">
         <li class="f-item"><strong>作成</strong>（<code>p</code>）: 選択ファイルを zip / tar / tar.gz / tar.bz2 / tar.xz で圧縮。<strong>圧縮レベル</strong>や zip の <strong>AES-256 パスワード暗号化</strong>を指定できます。
-          <figure class="doc-figure"><img src="../screenshots/21-archive-create.png" alt="アーカイブ作成" loading="lazy" /><figcaption>アーカイブ作成（形式・圧縮レベル・パスワード暗号化）</figcaption></figure></li>
-        <li class="f-item"><strong>展開</strong>（<code>u</code>）: カーソル位置のアーカイブを展開。暗号化 zip はパスワード入力で展開できます。</li>
-        <li class="f-item"><strong>アーカイブ内ブラウジング</strong>: アーカイブを<strong>普通のフォルダのように開いて</strong>、中を移動・閲覧できます（パスは <code>archive.zip!/inner/</code> のように表示されます）。
-          <figure class="doc-figure"><img src="../screenshots/02-archive-browsing.png" alt="アーカイブ内ブラウジング" loading="lazy" /><figcaption>アーカイブ内ブラウジング（フォルダのように開いて中を閲覧）</figcaption></figure></li>
-        <li class="f-item"><strong>選択抽出</strong>: アーカイブ内で必要なファイル / ディレクトリだけを選んで取り出せます。</li>
+          <figure class="doc-figure"><img src="../screenshots/21-archive-create.png" width="1200" height="729" alt="アーカイブ作成" loading="lazy" /><figcaption>アーカイブ作成（形式・圧縮レベル・パスワード暗号化）</figcaption></figure></li>
+        <li class="f-item"><strong>展開</strong>（<code>u</code>）: カーソル位置のアーカイブを展開。暗号化 zip はパスワード入力で展開できます。
+          <figure class="doc-figure"><img src="../screenshots/30-archive-extract.png" width="1202" height="729" alt="アーカイブ展開" loading="lazy" /><figcaption>アーカイブ展開（展開先の指定）</figcaption></figure></li>
+        <li class="f-item"><strong>アーカイブ内ブラウジング</strong>: アーカイブを<strong>普通のフォルダのように開いて</strong>、中を移動・閲覧できます（パスは <code>archive.zip!/inner/</code> のように表示されます）。必要なファイル / ディレクトリだけを選んで取り出す<strong>選択抽出</strong>もできます。
+          <figure class="doc-figure"><img src="../screenshots/02-archive-browsing.png" width="1200" height="729" alt="アーカイブ内ブラウジング" loading="lazy" /><figcaption>アーカイブ内ブラウジング（フォルダのように開いて閲覧・選択抽出）</figcaption></figure></li>
       </ul>
     </section>
 
@@ -202,49 +244,63 @@
       <h2>検索・ナビゲーション</h2>
       <ul class="doc-list">
         <li class="f-item"><strong>ファイル検索</strong>（<code>f</code>）: バックグラウンドで再帰検索し、結果から直接ジャンプできます。
-          <figure class="doc-figure"><img src="../screenshots/16-search.png" alt="ファイル検索" loading="lazy" /><figcaption>ファイル検索（バックグラウンドで再帰検索、結果からジャンプ）</figcaption></figure></li>
-        <li class="f-item"><strong>即時フィルタ</strong>（<code>/</code>）: 現在のディレクトリの表示を、入力した文字で素早く絞り込みます。</li>
+          <figure class="doc-figure"><img src="../screenshots/16-search.png" width="1205" height="741" alt="ファイル検索" loading="lazy" /><figcaption>ファイル検索（バックグラウンドで再帰検索、結果からジャンプ）</figcaption></figure></li>
+        <li class="f-item"><strong>即時フィルタ</strong>（<code>/</code>）: 現在のディレクトリの表示を、入力した文字で素早く絞り込みます。
+          <figure class="doc-figure"><img src="../screenshots/31-filter.png" width="1201" height="732" alt="即時フィルタ" loading="lazy" /><figcaption>即時フィルタ（入力した文字で表示を絞り込み）</figcaption></figure></li>
         <li class="f-item"><strong>ブックマーク</strong>: <code>b</code> で現在地を登録 / 解除、<code>Ctrl+B</code> で一覧。一覧には、登録したお気に入りに加え、マウント済みのドライブ（外部ディスク・ネットワークドライブ）が自動検出されて表示されます。
-          <figure class="doc-figure"><img src="../screenshots/22-bookmarks.png" alt="ブックマーク一覧" loading="lazy" /><figcaption>ブックマーク一覧（お気に入り + 自動検出されたドライブ）</figcaption></figure></li>
+          <figure class="doc-figure"><img src="../screenshots/22-bookmarks.png" width="1198" height="729" alt="ブックマーク一覧" loading="lazy" /><figcaption>ブックマーク一覧（お気に入り + 自動検出されたドライブ）</figcaption></figure></li>
         <li class="f-item"><strong>ディレクトリ履歴</strong>（<code>h</code>）: これまで開いたディレクトリの履歴から移動。
-          <figure class="doc-figure"><img src="../screenshots/23-history.png" alt="ディレクトリ履歴" loading="lazy" /><figcaption>ディレクトリ履歴</figcaption></figure></li>
-        <li class="f-item"><strong>アドレスバー</strong>: パスを直接入力して移動（パス補完あり）。</li>
-      </ul>
-    </section>
-
-    <!-- 表示モード -->
-    <section class="doc-section" id="layout">
-      <h2>表示モード・ペイン</h2>
-      <ul class="doc-list">
-        <li class="f-item"><strong>サムネイル表示</strong>: リスト / 小・中・大の 4 段階（<code>Cmd/Ctrl+1〜4</code>）。画像や PDF の 1 ページ目に対応。
-          <figure class="doc-figure"><img src="../screenshots/14-thumbnail-view.png" alt="サムネイル表示" loading="lazy" /><figcaption>サムネイル表示（リスト / 小・中・大の 4 段階）</figcaption></figure></li>
-        <li class="f-item"><strong>プレビューモード（Quick View）</strong>: 片側でファイルを選ぶと、もう片側に内容を即プレビュー。
-          <figure class="doc-figure"><img src="../screenshots/10-preview-mode.png" alt="プレビューモード（Quick View）" loading="lazy" /><figcaption>プレビューモード（Quick View）— 片側で選ぶともう片側に即プレビュー</figcaption></figure></li>
-        <li class="f-item"><strong>ディレクトリ比較</strong>: 左右ペインの差分を行ごとに色分け。コピー後も比較状態を維持します。
-          <figure class="doc-figure"><img src="../screenshots/03-directory-compare.png" alt="ディレクトリ比較" loading="lazy" /><figcaption>ディレクトリ比較（左右ペインの差分を色分け）</figcaption></figure></li>
-        <li class="f-item"><strong>同期ブラウズ</strong>（<code>y</code>）: 片方のペインを移動すると、もう片方も相対的に追従します。</li>
-        <li class="f-item"><strong>ディレクトリ同期</strong>（<code>Ctrl+→</code> / <code>Ctrl+←</code>）: 一方のペインのパスを反対側に合わせます。</li>
-        <li class="f-item"><strong>ソート・フィルタ</strong>（<code>s</code>）: ペインごとの並び順・表示フィルタを設定（このディレクトリ専用としても保存可）。
-          <figure class="doc-figure"><img src="../screenshots/24-sort-filter.png" alt="ソート・フィルタ" loading="lazy" /><figcaption>ソート・フィルタ（並び順・表示フィルタをペインごとに）</figcaption></figure></li>
-        <li class="f-item"><strong>ログペイン</strong>（<code>Ctrl+L</code>）: 操作ログの表示切替。</li>
+          <figure class="doc-figure"><img src="../screenshots/23-history.png" width="1200" height="731" alt="ディレクトリ履歴" loading="lazy" /><figcaption>ディレクトリ履歴</figcaption></figure></li>
+        <li class="f-item"><strong>アドレスバー</strong>: パスを直接入力して移動（パス補完あり）。
+          <figure class="doc-figure"><img src="../screenshots/32-address-bar.png" width="1201" height="727" alt="アドレスバー（パス補完）" loading="lazy" /><figcaption>アドレスバー（パス入力中の補完候補）</figcaption></figure></li>
       </ul>
     </section>
 
     <!-- 設定 -->
     <section class="doc-section" id="settings">
       <h2>設定</h2>
-      <p class="f-item doc-note"><code>Ctrl+,</code> で設定ダイアログを開きます。左側のカテゴリ（<strong>全般 / 動作 / 外観 / プラグイン / 外部アプリ / キーバインド</strong>）で各設定を切り替えます。</p>
+      <p class="f-item doc-note"><code>Ctrl+,</code> で設定ダイアログを開きます。左側のカテゴリ（<strong>全般 / 動作 / 外観 / プラグイン / 外部アプリ / キーバインド</strong>）で各設定を切り替えます。各カテゴリの主な項目は次のとおりです。</p>
       <ul class="doc-list">
-        <li class="f-item"><strong>外観</strong>: テーマ、アドレスバー、カーソル、カテゴリ別ファイル色、行高など。
-          <figure class="doc-figure"><img src="../screenshots/05-settings.png" alt="設定ダイアログ（外観）" loading="lazy" /><figcaption>設定ダイアログ（外観）</figcaption></figure></li>
+        <li class="f-item"><strong>全般</strong>: 起動時の挙動・ウィンドウ・言語・ログなど、アプリ全体の基本設定。
+          <figure class="doc-figure"><img src="../screenshots/33-settings-general.png" width="1000" height="652" alt="設定（全般）" loading="lazy" /><figcaption>設定 → 全般</figcaption></figure>
+          <ul class="settings-detail">
+            <li>初期ディレクトリ: 起動時に開く場所を <strong>ホーム / 前回のセッション / 任意のパス</strong> から選択。左右ペインそれぞれに指定できます。</li>
+            <li>ウィンドウ: サイズと位置を <strong>デフォルト / 前回のセッション / カスタム</strong> で指定。</li>
+            <li>ログ: ログペインの表示（高さの指定）、ファイルへの出力（日付ごとのログを指定フォルダに保存、保持日数を過ぎたものは自動削除 / 無期限保持も選択可）。</li>
+            <li>終了時の確認: アプリ終了時に確認ダイアログを表示するかどうか。</li>
+            <li>二重起動の防止: farman を同時に複数起動させない（次回起動時に反映）。</li>
+            <li>ツールバーの表示: ツールバーの表示 / 非表示。</li>
+            <li>言語: <strong>自動（OS 追従）/ 英語 / 日本語</strong>。次回起動時に反映されます。</li>
+            <li>自動アップデート: 1 日 1 回の自動チェック、確認なしでのダウンロード・インストール、「今すぐ確認」も可能。</li>
+            <li>バックアップ / 復元: 全設定（ブックマーク・カスタムコマンド・カラースキームを含む）を 1 つの JSON ファイルにエクスポート / インポートして他マシンへ移行できます。</li>
+          </ul></li>
+        <li class="f-item"><strong>動作</strong>: ソート・ナビゲーション・ファイル操作・一覧表示の既定の挙動。
+          <figure class="doc-figure"><img src="../screenshots/33-settings-behavior.png" width="1000" height="652" alt="設定（動作）" loading="lazy" /><figcaption>設定 → 動作</figcaption></figure>
+          <ul class="settings-detail">
+            <li>既定のソート・フィルタ: ソートキー（第 1・第 2）と昇順 / 降順、ディレクトリの配置（先頭 / 末尾 / ファイルと混在）、ドットファイルを先頭に、大文字小文字の区別、隠しファイルを既定で表示。</li>
+            <li>ナビゲーション: カーソルの上下ループ、ディレクトリ履歴の永続化（次回起動時に復元）、<code>Shift+文字</code> でドットファイルの 2 文字目にマッチ、同期ブラウズが自動解除されたときの通知。</li>
+            <li>ファイル操作: 削除時は既定でゴミ箱へ、自動リネームの接尾辞、検索時の除外ディレクトリ、完了時に進捗ダイアログを自動で閉じる。</li>
+            <li>一覧表示: ファイルサイズの単位（バイト / KB / KiB / 自動）と桁区切り、日時の書式、一覧に表示するカラム。</li>
+            <li>ビュアー表示: ビュアーの表示方法（インライン / 別ウィンドウなど）の既定。</li>
+          </ul></li>
+        <li class="f-item"><strong>外観</strong>: テーマ・配色・カーソル・行高など、見た目に関する設定。
+          <figure class="doc-figure"><img src="../screenshots/33-settings-appearance.png" width="1000" height="652" alt="設定ダイアログ（外観）" loading="lazy" /><figcaption>設定 → 外観</figcaption></figure>
+          <ul class="settings-detail">
+            <li>外観は <strong>メイン / テキストビュアー / バイナリビュアー / 画像ビュアー</strong> のサブタブで構成されます。</li>
+            <li>テーマ: UI 全体の配色プリセット。</li>
+            <li>UI 全体: アプリ全体の基調色。</li>
+            <li>アドレスバー: アドレスバーの配色。</li>
+            <li>ファイルリスト: カテゴリ別のファイル色、行高。</li>
+            <li>カーソル / アクティブペイン: カーソルの見た目、アクティブな側の強調表示。</li>
+            <li>ディレクトリ比較: 差分行の配色。</li>
+            <li>テキスト / バイナリ / 画像ビュアー: 各ビュアーごとに <strong>フォント・配色・対象拡張子・MIME パターン</strong> をサブタブで設定（画像ビュアーは透過部分の表示を <strong>チェッカー柄 / 単色</strong> から選べます）。なお対象拡張子は <strong>設定 → プラグイン</strong> の「詳細」からも変更できます。</li>
+          </ul></li>
         <li class="f-item"><strong>プラグイン</strong>: インストール済みのビュアープラグインを種別タブで一覧表示します。各行の「詳細...」から、区分・プラグイン ID・パス・有効 / 無効・優先度・対象拡張子・各ビュアーの既定設定を確認・変更できます。ユーザー作成の外部ビュアープラグイン（.dylib / .so / .dll）も、指定したプラグインディレクトリから読み込めます。
-          <figure class="doc-figure"><img src="../screenshots/25-plugins-tab.png" alt="設定（プラグイン）" loading="lazy" /><figcaption>設定 → プラグイン（インストール済み一覧・詳細）</figcaption></figure></li>
-        <li class="f-item"><strong>キーバインド</strong>: すべてのショートカットを変更可能。デフォルトに戻す、Total Commander 風などのプリセット選択、割り当て解除もできます。
-          <figure class="doc-figure"><img src="../screenshots/26-keybindings-tab.png" alt="設定（キーバインド）" loading="lazy" /><figcaption>設定 → キーバインド</figcaption></figure></li>
+          <figure class="doc-figure"><img src="../screenshots/33-settings-plugins.png" width="1000" height="652" alt="設定（プラグイン）" loading="lazy" /><figcaption>設定 → プラグイン（インストール済み一覧・詳細）</figcaption></figure></li>
         <li class="f-item"><strong>外部アプリ</strong>: ターミナル（<code>t</code>）・エディタ（<code>e</code>）などの起動コマンドを登録。プレースホルダで現在のパスや選択ファイルを渡せます。
-          <figure class="doc-figure"><img src="../screenshots/27-external-apps.png" alt="設定（外部アプリ）" loading="lazy" /><figcaption>設定 → 外部アプリ</figcaption></figure></li>
-        <li class="f-item"><strong>言語</strong>: 日本語 / 英語（Auto は OS 設定に追従）。</li>
-        <li class="f-item"><strong>設定のエクスポート / インポート</strong>: ブックマーク・カスタムコマンド・カラースキームを含む全設定を 1 ファイルで他マシンへ移行できます。</li>
+          <figure class="doc-figure"><img src="../screenshots/33-settings-external-apps.png" width="1000" height="652" alt="設定（外部アプリ）" loading="lazy" /><figcaption>設定 → 外部アプリ</figcaption></figure></li>
+        <li class="f-item"><strong>キーバインド</strong>: すべてのショートカットを変更可能。デフォルトに戻す、Total Commander 風などのプリセット選択、割り当て解除もできます。
+          <figure class="doc-figure"><img src="../screenshots/33-settings-keybinding.png" width="1000" height="652" alt="設定（キーバインド）" loading="lazy" /><figcaption>設定 → キーバインド</figcaption></figure></li>
       </ul>
       <p class="f-item doc-note">設定ファイルの場所: macOS <code>~/Library/Preferences/Farman/farman/settings.json</code> / Linux <code>~/.config/Farman/farman/settings.json</code> / Windows <code>%APPDATA%\Farman\farman\settings.json</code></p>
     </section>
@@ -253,28 +309,57 @@
     <section class="doc-section" id="viewers">
       <h2>同梱公式ビュアー</h2>
       <p class="f-item doc-note"><code>v</code> でビュアー起動、<code>Ctrl+Enter</code> でビュアーを選択。インライン表示 / 別ウィンドウのどちらにも対応し、全文検索が使えます。</p>
-      <table class="kb-table">
-        <thead><tr><th>ビュアー</th><th>対応形式（拡張子）</th><th>主な機能</th></tr></thead>
-        <tbody>
-          <tr class="f-item"><td><strong>テキスト</strong></td><td>txt, log, c / cpp / h, py, js, ts, java, json, xml, yml, ini, sh / bash / fish など</td><td>文字エンコード自動判定、行番号、ワードラップ、全文検索</td></tr>
-          <tr class="f-item"><td><strong>画像</strong></td><td>png, jpg, jpeg, gif, bmp, svg, webp, ico, tiff, tif, psd, heic, heif</td><td>ズーム / Fit、透明背景チェッカー、GIF・WebP アニメ、90° 回転、Info（Exif・ICC・DPI）、PSD 合成プレビュー</td></tr>
-          <tr class="f-item"><td><strong>動画 / 音声</strong></td><td>動画: mp4, mov, webm, mkv, avi, wmv, mpeg, m2ts, ts など／音声: mp3, flac, wav, aac, ogg, wma など</td><td>再生、シーク（バーのクリックでその位置へ即移動）、音量、ループ、フルスクリーン、Info（メタデータ）</td></tr>
-          <tr class="f-item"><td><strong>Markdown</strong></td><td>md, markdown, mdown, mkd</td><td>整形プレビュー / ソース表示の切替、表・タスクリスト、全文検索</td></tr>
-          <tr class="f-item"><td><strong>PDF</strong></td><td>pdf</td><td>ページ送り、ズーム / Fit、全文検索</td></tr>
-          <tr class="f-item"><td><strong>CSV・TSV</strong></td><td>csv, tsv</td><td>区切り自動判定、セル検索、先頭行をヘッダ扱い、巨大ファイルの遅延ロード</td></tr>
-          <tr class="f-item"><td><strong>バイナリ</strong></td><td>上記いずれにも該当しない任意のファイル</td><td>16 進ダンプ（アドレス列・文字列列のカラーリング）</td></tr>
-        </tbody>
-      </table>
-      <p class="f-item doc-note">HEIC / HEIF 画像は、macOS は OS 標準デコーダ、Windows・Linux は同梱の libheif で表示します。</p>
+      <div class="f-item viewer-block">
+        <h3>テキスト</h3>
+        <p class="viewer-meta"><strong>対応形式</strong>: txt, log, c / cpp / h, py, js, ts, java, json, xml, yml, ini, sh / bash / fish など</p>
+        <p class="viewer-meta"><strong>主な機能</strong>: 文字エンコード自動判定、行番号、ワードラップ、全文検索</p>
+        <figure class="doc-figure"><img src="../screenshots/07-text-viewer.png" width="1200" height="729" alt="テキストビュアー" loading="lazy" /><figcaption>テキストビュアー</figcaption></figure>
+      </div>
+
+      <div class="f-item viewer-block">
+        <h3>画像</h3>
+        <p class="viewer-meta"><strong>対応形式</strong>: png, jpg, jpeg, gif, bmp, svg, webp, ico, tiff, tif, psd, heic, heif</p>
+        <p class="viewer-meta"><strong>主な機能</strong>: ズーム / Fit、透明背景チェッカー、GIF・WebP アニメ、90° 回転、Info（Exif・ICC・DPI）、PSD 合成プレビュー</p>
+        <figure class="doc-figure"><img src="../screenshots/08-image-viewer.png" width="1200" height="729" alt="画像ビュアー" loading="lazy" /><figcaption>画像ビュアー</figcaption></figure>
+      </div>
+
+      <div class="f-item viewer-block">
+        <h3>動画 / 音声</h3>
+        <p class="viewer-meta"><strong>対応形式</strong>: 動画: mp4, mov, webm, mkv, avi, wmv, mpeg, m2ts, ts など／音声: mp3, flac, wav, aac, ogg, wma など</p>
+        <p class="viewer-meta"><strong>主な機能</strong>: 再生、シーク（バーのクリックでその位置へ即移動）、音量、ループ、フルスクリーン、Info（メタデータ）</p>
+        <figure class="doc-figure"><img src="../screenshots/10-media-viewer.png" width="1200" height="729" alt="動画・音声ビュアー" loading="lazy" /><figcaption>動画・音声ビュアー（シーク / 音量 / ループ / 全画面）</figcaption></figure>
+      </div>
+
+      <div class="f-item viewer-block">
+        <h3>Markdown</h3>
+        <p class="viewer-meta"><strong>対応形式</strong>: md, markdown, mdown, mkd</p>
+        <p class="viewer-meta"><strong>主な機能</strong>: 整形プレビュー / ソース表示の切替、表・タスクリスト、全文検索</p>
+        <figure class="doc-figure"><img src="../screenshots/11-markdown-viewer.png" width="1200" height="725" alt="Markdown ビュアー" loading="lazy" /><figcaption>Markdown ビュアー</figcaption></figure>
+      </div>
+
+      <div class="f-item viewer-block">
+        <h3>PDF</h3>
+        <p class="viewer-meta"><strong>対応形式</strong>: pdf</p>
+        <p class="viewer-meta"><strong>主な機能</strong>: ページ送り、ズーム / Fit、全文検索</p>
+        <figure class="doc-figure"><img src="../screenshots/12-pdf-viewer.png" width="1200" height="725" alt="PDF ビュアー" loading="lazy" /><figcaption>PDF ビュアー</figcaption></figure>
+      </div>
+
+      <div class="f-item viewer-block">
+        <h3>CSV・TSV</h3>
+        <p class="viewer-meta"><strong>対応形式</strong>: csv, tsv</p>
+        <p class="viewer-meta"><strong>主な機能</strong>: 区切り自動判定、セル検索、先頭行をヘッダ扱い、巨大ファイルの遅延ロード</p>
+        <figure class="doc-figure"><img src="../screenshots/13-csv-viewer.png" width="1200" height="725" alt="CSV / TSV ビュアー" loading="lazy" /><figcaption>CSV / TSV ビュアー</figcaption></figure>
+      </div>
+
+      <div class="f-item viewer-block">
+        <h3>バイナリ</h3>
+        <p class="viewer-meta"><strong>対応形式</strong>: 上記いずれにも該当しない任意のファイル</p>
+        <p class="viewer-meta"><strong>主な機能</strong>: 16 進ダンプ（アドレス列・文字列列のカラーリング）</p>
+        <figure class="doc-figure"><img src="../screenshots/09-binary-viewer.png" width="1200" height="729" alt="バイナリビュアー" loading="lazy" /><figcaption>バイナリビュアー</figcaption></figure>
+      </div>
+
       <p class="f-item doc-note">各ビュアーの既定設定（対象拡張子、表示方法など）は <strong>設定 → プラグイン</strong> で対象のビュアーを選び <strong>「詳細」</strong> を開いて変更できます（テキストの既定エンコード、画像の Fit / ズーム、PDF の表示方法、CSV の区切り、メディアの音量・自動再生 など）。</p>
       <p class="f-item doc-note"><strong>拡張子の対応付けについて</strong>: 同じ拡張子を複数のビュアーが対象にしている場合、<strong>優先度の高いビュアーが選ばれます</strong>（各ビュアーが宣言する対応拡張子の中から優先度で解決）。特定の拡張子を必ず特定のビュアーに固定する「先勝ち」の上書き指定はありません。狙いどおりに開かない場合は、優先したいビュアー側に拡張子を追加し、競合する側からは外してください。</p>
-      <figure class="doc-figure"><img src="../screenshots/07-text-viewer.png" alt="テキストビュアー" loading="lazy" /><figcaption>テキストビュアー</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/08-image-viewer.png" alt="画像ビュアー" loading="lazy" /><figcaption>画像ビュアー</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/10-media-viewer.png" alt="動画・音声ビュアー" loading="lazy" /><figcaption>動画・音声ビュアー（シーク / 音量 / ループ / 全画面）</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/11-markdown-viewer.png" alt="Markdown ビュアー" loading="lazy" /><figcaption>Markdown ビュアー</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/12-pdf-viewer.png" alt="PDF ビュアー" loading="lazy" /><figcaption>PDF ビュアー</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/13-csv-viewer.png" alt="CSV / TSV ビュアー" loading="lazy" /><figcaption>CSV / TSV ビュアー</figcaption></figure>
-      <figure class="doc-figure"><img src="../screenshots/09-binary-viewer.png" alt="バイナリビュアー" loading="lazy" /><figcaption>バイナリビュアー</figcaption></figure>
     </section>
 
     <!-- インストールと更新 -->
@@ -294,6 +379,8 @@
       この内容は farman の最新版に基づいています。キーバインドは初期設定（Default）の値です。
       不明点や記載の誤りは <a href="https://github.com/mashsoft-jp/farman/issues" rel="noopener">GitHub Issues</a> へ。
     </p>
+    </div>
+    </div>
   </main>
 
   <!-- ===== Footer ===== -->
@@ -306,6 +393,7 @@
     <p class="copyright">© <a href="https://www.mashsoft.co.jp/" rel="noopener">Mashsoft Inc.</a></p>
   </footer>
 
+  <script src="../site.js"></script>
   <script src="manual.js"></script>
 </body>
 </html>

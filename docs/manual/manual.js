@@ -157,4 +157,43 @@
   input.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && input.value) { input.value = ""; apply(""); }
   });
+
+  // ===== 目次の現在位置ハイライト (sticky サイドバー) =====
+  // ビューポート上端の判定線を最後に越えた (= いま読んでいる) セクションを active にする。
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll(".manual-toc a"));
+  if (tocLinks.length) {
+    var linkById = {};
+    tocLinks.forEach(function (a) {
+      linkById[a.getAttribute("href").replace(/^#/, "")] = a;
+    });
+    // sticky ヘッダ + doc-section の scroll-margin-top 相当の判定線 (px)。
+    var THRESHOLD = 130;
+    var current = null;
+    var updateActive = function () {
+      if (!sections.length) return;
+      var activeId = sections[0].id;
+      // sections は文書順 (= 画面の上から下)。上端が判定線以上に来た最後のものを採用。
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].getBoundingClientRect().top <= THRESHOLD) activeId = sections[i].id;
+        else break;
+      }
+      // ページ最下部に到達したら、先頭が判定線まで届かない末尾セクションも active にする。
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+        activeId = sections[sections.length - 1].id;
+      }
+      if (activeId === current) return;
+      current = activeId;
+      tocLinks.forEach(function (a) { a.classList.remove("active"); });
+      if (linkById[activeId]) linkById[activeId].classList.add("active");
+    };
+    var ticking = false;
+    var onScroll = function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { updateActive(); ticking = false; });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    updateActive();
+  }
 })();

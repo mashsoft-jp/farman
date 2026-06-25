@@ -4,7 +4,7 @@
   function initScreenshotDialog() {
     if (typeof HTMLDialogElement === "undefined") return;
 
-    var shots = document.querySelectorAll(".hero-shot img, .shot-grid img");
+    var shots = document.querySelectorAll(".hero-shot img, .shot-grid img, .doc-figure img");
     if (!shots.length) return;
 
     var dialog = document.createElement("dialog");
