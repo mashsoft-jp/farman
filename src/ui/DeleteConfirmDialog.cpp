@@ -16,11 +16,12 @@ namespace Farman {
 DeleteConfirmDialog::DeleteConfirmDialog(const QString& message,
                                          bool defaultToTrash,
                                          QWidget* parent,
-                                         const QString& detailTooltip)
+                                         const QString& detailTooltip,
+                                         bool trashAvailable)
   : QDialog(parent)
   , m_trashRadio(nullptr)
   , m_permanentRadio(nullptr) {
-  setupUi(message, defaultToTrash, detailTooltip);
+  setupUi(message, defaultToTrash, detailTooltip, trashAvailable);
 }
 
 bool DeleteConfirmDialog::toTrash() const {
@@ -28,7 +29,7 @@ bool DeleteConfirmDialog::toTrash() const {
 }
 
 void DeleteConfirmDialog::setupUi(const QString& message, bool defaultToTrash,
-                                  const QString& detailTooltip) {
+                                  const QString& detailTooltip, bool trashAvailable) {
   setWindowTitle(tr("Confirm Delete"));
   setModal(true);
 
@@ -63,9 +64,23 @@ void DeleteConfirmDialog::setupUi(const QString& message, bool defaultToTrash,
     withAltMnemonic(tr("Delete permanently"), Qt::Key_P), this);
   m_trashRadio->setFocusPolicy(Qt::StrongFocus);
   m_permanentRadio->setFocusPolicy(Qt::StrongFocus);
-  (defaultToTrash ? m_trashRadio : m_permanentRadio)->setChecked(true);
+  if (trashAvailable) {
+    (defaultToTrash ? m_trashRadio : m_permanentRadio)->setChecked(true);
+  } else {
+    // ネットワーク / リムーバブルドライブではゴミ箱 (moveToTrash) が使えないため、
+    // ゴミ箱を無効化して完全削除を選択させる。
+    m_trashRadio->setEnabled(false);
+    m_permanentRadio->setChecked(true);
+  }
   actionLayout->addWidget(m_trashRadio);
   actionLayout->addWidget(m_permanentRadio);
+  if (!trashAvailable) {
+    auto* trashNote = new QLabel(
+      tr("Trash is unavailable on this drive (e.g. a network or removable "
+         "drive); files will be deleted permanently."), this);
+    trashNote->setWordWrap(true);
+    actionLayout->addWidget(trashNote);
+  }
   mainLayout->addWidget(actionGroup);
 
   QButtonGroup* group = new QButtonGroup(this);

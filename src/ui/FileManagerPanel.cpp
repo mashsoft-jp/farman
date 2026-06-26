@@ -35,6 +35,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QStorageInfo>
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QLocale>
@@ -2021,8 +2022,25 @@ void FileManagerPanel::deleteSelectedFiles() {
     message = tr("Are you sure you want to delete %1 items?").arg(selectedFiles.size());
   }
 
+  // ネットワーク / リムーバブルドライブでは moveToTrash がゴミ箱を作れず常に失敗する
+  // ため、対象ボリュームのファイルシステム種別から事前に判定し、ゴミ箱を使えないなら
+  // 確認ダイアログ側でゴミ箱オプションを無効化する。代表として先頭ファイルで判定する。
+  bool trashAvailable = true;
+  {
+    const QStorageInfo vol(QFileInfo(selectedFiles.first()).absolutePath());
+    const QString fsType = QString::fromLatin1(vol.fileSystemType()).toLower();
+    static const char* const kNetworkFs[] = {
+      "smb", "afp", "nfs", "cifs", "webdav", "ftp", "sshfs", "fuse"
+    };
+    for (const char* t : kNetworkFs) {
+      if (fsType.contains(QLatin1String(t))) { trashAvailable = false; break; }
+    }
+  }
+
   DeleteConfirmDialog confirmDlg(
-    message, Settings::instance().defaultDeleteToTrash(), this, detailTooltip);
+    message,
+    Settings::instance().defaultDeleteToTrash() && trashAvailable,
+    this, detailTooltip, trashAvailable);
   if (confirmDlg.exec() != QDialog::Accepted) {
     return;
   }

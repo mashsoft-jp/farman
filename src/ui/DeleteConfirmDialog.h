@@ -19,7 +19,8 @@ public:
   DeleteConfirmDialog(const QString& message,
                       bool defaultToTrash,
                       QWidget* parent = nullptr,
-                      const QString& detailTooltip = QString());
+                      const QString& detailTooltip = QString(),
+                      bool trashAvailable = true);
   ~DeleteConfirmDialog() override = default;
 
   bool toTrash() const;
@@ -29,7 +30,7 @@ protected:
 
 private:
   void setupUi(const QString& message, bool defaultToTrash,
-               const QString& detailTooltip);
+               const QString& detailTooltip, bool trashAvailable);
 
   QRadioButton* m_trashRadio;
   QRadioButton* m_permanentRadio;
