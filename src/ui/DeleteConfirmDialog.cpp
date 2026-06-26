@@ -2,6 +2,7 @@
 #include "utils/Dialogs.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QFontMetrics>
 #include <QLabel>
 #include <QRadioButton>
 #include <QButtonGroup>
@@ -14,26 +15,42 @@ namespace Farman {
 
 DeleteConfirmDialog::DeleteConfirmDialog(const QString& message,
                                          bool defaultToTrash,
-                                         QWidget* parent)
+                                         QWidget* parent,
+                                         const QString& detailTooltip)
   : QDialog(parent)
   , m_trashRadio(nullptr)
   , m_permanentRadio(nullptr) {
-  setupUi(message, defaultToTrash);
+  setupUi(message, defaultToTrash, detailTooltip);
 }
 
 bool DeleteConfirmDialog::toTrash() const {
   return m_trashRadio ? m_trashRadio->isChecked() : true;
 }
 
-void DeleteConfirmDialog::setupUi(const QString& message, bool defaultToTrash) {
+void DeleteConfirmDialog::setupUi(const QString& message, bool defaultToTrash,
+                                  const QString& detailTooltip) {
   setWindowTitle(tr("Confirm Delete"));
   setModal(true);
-  resize(480, 0);
 
   QVBoxLayout* mainLayout = new QVBoxLayout(this);
 
   auto* label = new QLabel(message, this);
   label->setWordWrap(true);
+  // ダイアログ幅はメッセージの長さに応じて可変にする。1 行で表示したときの幅を測り、
+  // 下限/上限 (280〜760) でクランプしてラベル幅を固定する。SetMinimumSize 制約下では
+  // レイアウト (= ラベル) の幅がダイアログ幅を駆動するため、短い名前は狭く、長い名前は
+  // 上限まで広がり、超過分だけ word wrap で折り返す。
+  {
+    const QFontMetrics fm(label->fontMetrics());
+    const int textWidth = fm.horizontalAdvance(message);
+    const int width = qBound(280, textWidth + 24, 760);
+    label->setMinimumWidth(width);
+    label->setMaximumWidth(width);
+  }
+  // 中央省略した長いファイル名の全文をホバーで確認できるようにする。
+  if (!detailTooltip.isEmpty()) {
+    label->setToolTip(detailTooltip);
+  }
   mainLayout->addWidget(label);
 
   // ── Action 選択 ──
@@ -74,6 +91,11 @@ void DeleteConfirmDialog::setupUi(const QString& message, bool defaultToTrash) {
   setTabOrder(m_trashRadio,     m_permanentRadio);
   setTabOrder(m_permanentRadio, cancelBtn);
   setTabOrder(cancelBtn,        okBtn);
+
+  // 長いファイル名でメッセージが折り返しても各要素が潰れないように、ダイアログを
+  // レイアウトの最小サイズで開く。幅はラベル側 (上で設定) が駆動し、QLabel の
+  // 折り返し高さ計算 (height-for-width) を正しく効かせて高さ不足を防ぐ。
+  mainLayout->setSizeConstraint(QLayout::SetMinimumSize);
 }
 
 void DeleteConfirmDialog::keyPressEvent(QKeyEvent* event) {

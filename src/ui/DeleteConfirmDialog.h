@@ -18,7 +18,8 @@ class DeleteConfirmDialog : public QDialog {
 public:
   DeleteConfirmDialog(const QString& message,
                       bool defaultToTrash,
-                      QWidget* parent = nullptr);
+                      QWidget* parent = nullptr,
+                      const QString& detailTooltip = QString());
   ~DeleteConfirmDialog() override = default;
 
   bool toTrash() const;
@@ -27,7 +28,8 @@ protected:
   void keyPressEvent(QKeyEvent* event) override;
 
 private:
-  void setupUi(const QString& message, bool defaultToTrash);
+  void setupUi(const QString& message, bool defaultToTrash,
+               const QString& detailTooltip);
 
   QRadioButton* m_trashRadio;
   QRadioButton* m_permanentRadio;

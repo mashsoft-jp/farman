@@ -2002,15 +2002,27 @@ void FileManagerPanel::deleteSelectedFiles() {
 
   // Ask for confirmation
   QString message;
+  QString detailTooltip;
   if (selectedFiles.size() == 1) {
     QFileInfo info(selectedFiles[0]);
-    message = tr("Are you sure you want to delete '%1'?").arg(info.fileName());
+    const QString name = info.fileName();
+    // 極端に長いファイル名は中央省略して 1〜2 行に収め、全文はツールチップへ回す
+    // (スペースの無い名前が文字の途中で折り返されて読みにくくなるのを避ける)。
+    QString shown = name;
+    const int kMaxChars = 72;
+    if (name.size() > kMaxChars) {
+      const int head = (kMaxChars - 1) / 2;
+      const int tail = (kMaxChars - 1) - head;
+      shown = name.left(head) + QChar(0x2026) + name.right(tail);  // … で中央省略
+      detailTooltip = name;
+    }
+    message = tr("Are you sure you want to delete '%1'?").arg(shown);
   } else {
     message = tr("Are you sure you want to delete %1 items?").arg(selectedFiles.size());
   }
 
   DeleteConfirmDialog confirmDlg(
-    message, Settings::instance().defaultDeleteToTrash(), this);
+    message, Settings::instance().defaultDeleteToTrash(), this, detailTooltip);
   if (confirmDlg.exec() != QDialog::Accepted) {
     return;
   }
