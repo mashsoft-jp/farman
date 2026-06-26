@@ -236,19 +236,26 @@ void FileManagerPanel::loadInitialPath() {
 
   auto resolveInitialPath = [&](PaneType pane) -> QString {
     const QString home = QDir::homePath();
+    QString primary;
     switch (settings.initialPathMode(pane)) {
       case InitialPathMode::Default:
-        return home;
-      case InitialPathMode::LastSession: {
-        const QString last = settings.paneSettings(pane).path;
-        return (!last.isEmpty() && QDir(last).exists()) ? last : home;
-      }
-      case InitialPathMode::Custom: {
-        const QString custom = settings.customInitialPath(pane);
-        return (!custom.isEmpty() && QDir(custom).exists()) ? custom : home;
-      }
+        primary = home;
+        break;
+      case InitialPathMode::LastSession:
+        primary = settings.paneSettings(pane).path;
+        break;
+      case InitialPathMode::Custom:
+        primary = settings.customInitialPath(pane);
+        break;
     }
-    return home;
+    // 設定された初期ディレクトリ → ホーム → ルート の順にフォールバックし、
+    // 必ず実在するディレクトリを返す。存在しないパスで起動して一覧が空に
+    // なる (ネットワークドライブ切断・削除済みフォルダ等) のを防ぐ。
+    // ルートは QDir::rootPath() でクロスプラットフォーム (Unix "/" /
+    // Windows はシステムドライブのルート) に解決する。
+    if (!primary.isEmpty() && QDir(primary).exists()) return primary;
+    if (QDir(home).exists()) return home;
+    return QDir::rootPath();
   };
 
   // 表示モード (List / Thumbnail) を Settings から復元する。navigatePane が
