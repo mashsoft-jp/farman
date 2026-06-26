@@ -45,6 +45,8 @@ private:
   // ビュアーを呼び出し側で固定して開く（任意ビュアー機能から使う）
   void showViewerWith(const QString& filePath, ViewerPanel::ViewerKind kind,
                       const QString& displayPath = {});
+  // 指定 pluginId のビュアーで開く（"Open With Viewer..." の動的メニューから使う）。
+  void showViewerWithPlugin(const QString& filePath, const QString& pluginId);
   // page 指定でそのカテゴリを選択した状態で開く (既定は General)。
   void showSettingsDialog(
     SettingsDialog::Page page = SettingsDialog::Page::General);

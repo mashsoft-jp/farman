@@ -583,6 +583,56 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   m_viewerPanel->setFocus();
 }
 
+void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pluginId) {
+  // 内蔵 ViewerKind を持つプラグインは従来の経路 (専用ウィンドウ / 内蔵ビュー) で
+  // 開く。検索バー等を備えた既存ビューをそのまま使えるようにするため。
+  ViewerPanel::ViewerKind kind;
+  if (ViewerPanel::viewerKindFromPluginId(pluginId, kind)) {
+    showViewerWith(filePath, kind);
+    return;
+  }
+
+  // ViewerKind を持たない (media 等 / 外部) プラグインは createViewer() の
+  // QWidget で開く。External は同じウィジェットをトップレベル化し、Inline は
+  // ViewerPanel に埋め込む。
+  const ViewerMode mode = Settings::instance().viewerMode();
+  if (mode == ViewerMode::External) {
+    auto& dispatcher = ViewerDispatcher::instance();
+    IViewerPlugin* plugin = dispatcher.pluginById(pluginId);
+    QWidget* w = plugin
+      ? plugin->createViewer(filePath, this, dispatcher.pluginContext())
+      : nullptr;
+    if (!w) return;
+    // 既存の External ウィンドウがあればジオメトリを引き継いで破棄 (showViewerWith
+    // と同じ「同じ場所・サイズで上書き」挙動)。
+    QRect savedGeom;
+    bool  hasSavedGeom = false;
+    if (m_externalViewerWindow) {
+      savedGeom    = m_externalViewerWindow->geometry();
+      hasSavedGeom = true;
+      delete m_externalViewerWindow;
+    }
+    w->setAttribute(Qt::WA_DeleteOnClose);
+    w->setWindowFlag(Qt::Window, true);
+    if (hasSavedGeom) w->setGeometry(savedGeom);
+    w->show();
+    w->raise();
+    w->activateWindow();
+    m_externalViewerWindow = w;
+    return;
+  }
+
+  // Inline
+  m_stack->setCurrentWidget(m_viewerPanel);
+  if (m_toolbar) m_toolbar->setVisible(false);
+  updateStatusBar();
+  if (!m_viewerPanel->openWithPlugin(filePath, pluginId)) {
+    showFileManager();
+    return;
+  }
+  m_viewerPanel->setFocus();
+}
+
 bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
   if (event->type() == QEvent::KeyPress) {
     QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
@@ -1042,25 +1092,24 @@ void MainWindow::registerCommands() {
       if (!item || item->isDir()) return;
       const QString path = item->absolutePath();
 
+      // 登録済みビュアープラグイン (同梱 + 外部) から動的にメニューを生成する。
+      // これにより media_viewer やユーザーの外部プラグインも明示選択できる。
       QMenu menu(this);
-      menu.addAction(tr("Text Viewer"), this, [this, path]() {
-        showViewerWith(path, ViewerPanel::ViewerKind::Text);
-      });
-      menu.addAction(tr("Image Viewer"), this, [this, path]() {
-        showViewerWith(path, ViewerPanel::ViewerKind::Image);
-      });
-      menu.addAction(tr("Markdown Viewer"), this, [this, path]() {
-        showViewerWith(path, ViewerPanel::ViewerKind::Markdown);
-      });
-      menu.addAction(tr("PDF Viewer"), this, [this, path]() {
-        showViewerWith(path, ViewerPanel::ViewerKind::Pdf);
-      });
-      menu.addAction(tr("CSV/TSV Viewer"), this, [this, path]() {
-        showViewerWith(path, ViewerPanel::ViewerKind::Csv);
-      });
-      menu.addAction(tr("Binary Viewer"), this, [this, path]() {
-        showViewerWith(path, ViewerPanel::ViewerKind::Binary);
-      });
+      const QList<PluginRecord> records =
+        ViewerDispatcher::instance().pluginRecords();
+      for (const PluginRecord& rec : records) {
+        if (!rec.loaded || rec.pluginId.isEmpty()) {
+          continue;  // ロード失敗 / id 不明のプラグインは出さない
+        }
+        const QString id   = rec.pluginId;
+        const QString name = rec.pluginName.isEmpty() ? id : rec.pluginName;
+        menu.addAction(name, this, [this, path, id]() {
+          showViewerWithPlugin(path, id);
+        });
+      }
+      if (menu.isEmpty()) {
+        return;  // 念のため: 選べるビュアーが無ければ何もしない
+      }
       // カーソル行の左端付近に出す
       const QRect rect = pane->view()->visualRect(idx);
       const QPoint pos = pane->view()->viewport()->mapToGlobal(rect.bottomLeft());

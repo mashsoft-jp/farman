@@ -49,6 +49,15 @@ public:
   // 専用にせず公開する。
   static ViewerKind resolveAuto(const QString& filePath);
 
+  // pluginId から内蔵 ViewerKind を引く。media_viewer など内蔵種別を持たない
+  // プラグインは false を返す (埋め込み経路で開く)。
+  static bool viewerKindFromPluginId(const QString& pluginId, ViewerKind& kind);
+
+  // 指定した pluginId のビュアーで明示的に開く。内蔵種別を持つものは
+  // openFile(kind)、持たないもの (media 等 / 外部プラグイン) は埋め込み経路。
+  bool openWithPlugin(const QString& filePath, const QString& pluginId,
+                      const QString& displayPath = QString());
+
   // 現在のファイルパス
   QString currentFilePath() const { return m_currentFilePath; }
 

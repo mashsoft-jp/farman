@@ -178,35 +178,17 @@ bool mimeMatches(const QStringList& patterns, const QMimeType& mime) {
   return false;
 }
 
-bool viewerKindFromPluginId(const QString& pluginId, ViewerPanel::ViewerKind& kind) {
-  if (pluginId == QLatin1String("text_viewer")) {
-    kind = ViewerPanel::ViewerKind::Text;
-    return true;
-  }
-  if (pluginId == QLatin1String("image_viewer")) {
-    kind = ViewerPanel::ViewerKind::Image;
-    return true;
-  }
-  if (pluginId == QLatin1String("binary_viewer")) {
-    kind = ViewerPanel::ViewerKind::Binary;
-    return true;
-  }
-  if (pluginId == QLatin1String("markdown_viewer")) {
-    kind = ViewerPanel::ViewerKind::Markdown;
-    return true;
-  }
-  if (pluginId == QLatin1String("pdf_viewer")) {
-    kind = ViewerPanel::ViewerKind::Pdf;
-    return true;
-  }
-  if (pluginId == QLatin1String("csv_viewer")) {
-    kind = ViewerPanel::ViewerKind::Csv;
-    return true;
-  }
+} // anonymous namespace
+
+bool ViewerPanel::viewerKindFromPluginId(const QString& pluginId, ViewerKind& kind) {
+  if (pluginId == QLatin1String("text_viewer"))     { kind = ViewerKind::Text;     return true; }
+  if (pluginId == QLatin1String("image_viewer"))    { kind = ViewerKind::Image;    return true; }
+  if (pluginId == QLatin1String("binary_viewer"))   { kind = ViewerKind::Binary;   return true; }
+  if (pluginId == QLatin1String("markdown_viewer")) { kind = ViewerKind::Markdown; return true; }
+  if (pluginId == QLatin1String("pdf_viewer"))      { kind = ViewerKind::Pdf;      return true; }
+  if (pluginId == QLatin1String("csv_viewer"))      { kind = ViewerKind::Csv;      return true; }
   return false;
 }
-
-} // anonymous namespace
 
 ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
   // ViewerPanel::openFile() の Auto 分岐と同じルーティング。
@@ -297,6 +279,32 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
     case ViewerKind::Auto:     /* unreachable */ break;
   }
 
+  QApplication::restoreOverrideCursor();
+  return ok;
+}
+
+bool ViewerPanel::openWithPlugin(const QString& filePath, const QString& pluginId,
+                                 const QString& displayPath) {
+  // 内蔵 ViewerKind を持つ同梱プラグインは既存の openFile 経路で開く
+  // (検索バー等を備えた内蔵ビューをそのまま使う)。
+  ViewerKind kind;
+  if (viewerKindFromPluginId(pluginId, kind)) {
+    return openFile(filePath, kind, displayPath);
+  }
+
+  // ViewerKind を持たない (media 等 / 外部) プラグインは埋め込み経路で開く。
+  IViewerPlugin* plugin = ViewerDispatcher::instance().pluginById(pluginId);
+  if (!plugin || filePath.isEmpty()) {
+    return false;
+  }
+  const QFileInfo fileInfo(filePath);
+  if (!fileInfo.exists() || !fileInfo.isFile()) {
+    return false;
+  }
+  const QString pathForStatus = displayPath.isEmpty() ? filePath : displayPath;
+  showLoadingState(pathForStatus);
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  const bool ok = openPluginFile(plugin, filePath, pathForStatus);
   QApplication::restoreOverrideCursor();
   return ok;
 }
