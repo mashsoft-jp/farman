@@ -9,7 +9,7 @@
 #include "SortFilterDialog.h"
 #include "TransferConfirmDialog.h"
 #include "OverwriteDialog.h"
-#include "AttributesDialog.h"
+#include "PropertiesDialog.h"
 #include "BulkRenameDialog.h"
 #include "DeleteConfirmDialog.h"
 #include "CreateArchiveDialog.h"
@@ -2250,7 +2250,7 @@ void FileManagerPanel::changeAttributes() {
   }
   if (paths.isEmpty()) return;
 
-  AttributesDialog dlg(paths, this);
+  PropertiesDialog dlg(paths, this);
   if (dlg.exec() == QDialog::Accepted) {
     // カーソルが乗っていたファイル名を控えてからリフレッシュし、同名の行を再選択
     QString currentName;

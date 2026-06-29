@@ -4,13 +4,25 @@
 
 namespace Farman {
 
-PropertiesWorker::PropertiesWorker(const QString& rootPath, QObject* parent)
+PropertiesWorker::PropertiesWorker(const QStringList& paths, QObject* parent)
   : WorkerBase(parent)
-  , m_rootPath(rootPath) {
+  , m_paths(paths) {
 }
 
 void PropertiesWorker::run() {
-  scan(m_rootPath);
+  // 選択された各項目を集計する。ファイルはサイズ加算、ディレクトリは配下を
+  // 再帰集計する (ディレクトリ自身は数えない)。シンボリックリンクは追跡しない。
+  for (const QString& p : m_paths) {
+    if (isCancelled()) break;
+    const QFileInfo fi(p);
+    if (fi.isSymLink()) continue;
+    if (fi.isDir()) {
+      scan(p);
+    } else if (fi.isFile()) {
+      m_totalBytes += fi.size();
+      ++m_fileCount;
+    }
+  }
   // 最終結果を必ず一回流す
   if (!isCancelled()) {
     emit statsUpdated(m_totalBytes, m_fileCount, m_dirCount);

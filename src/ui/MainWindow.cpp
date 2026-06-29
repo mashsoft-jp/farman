@@ -965,11 +965,14 @@ void MainWindow::registerCommands() {
 
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "file.attributes",
-    tr("Change Attributes"),
+    tr("Properties"),
     [this]() {
       m_fileManagerPanel->changeAttributes();
     },
-    "file"
+    "file",
+    tr("Show file or directory details and edit changeable attributes "
+       "(permissions / Windows attributes). For directories, recursively "
+       "calculates the total size in the background.")
   ));
 
   registry.registerCommand(std::make_shared<LambdaCommand>(
@@ -1116,25 +1119,6 @@ void MainWindow::registerCommands() {
       menu.exec(pos);
     },
     "view"
-  ));
-
-  // ファイル / ディレクトリのプロパティ表示 (Alt+Enter)
-  registry.registerCommand(std::make_shared<LambdaCommand>(
-    "file.properties",
-    tr("Properties..."),
-    [this]() {
-      auto* pane = m_fileManagerPanel->activePane();
-      auto* model = pane->model();
-      const QModelIndex idx = pane->view()->currentIndex();
-      if (!idx.isValid()) return;
-      const FileItem* item = model->itemAt(idx.row());
-      if (!item || item->isDotDot()) return;
-      PropertiesDialog dlg(item->absolutePath(), this);
-      dlg.exec();
-    },
-    "file",
-    tr("Show file or directory details. For directories, recursively "
-       "calculates the total size in the background.")
   ));
 
   registry.registerCommand(std::make_shared<LambdaCommand>(
@@ -1468,8 +1452,7 @@ void MainWindow::createMenus() {
   addCmd(fileMenu, "file.move",       tr("Move"));
   addCmd(fileMenu, "file.delete",     tr("Delete"));
   fileMenu->addSeparator();
-  addCmd(fileMenu, "file.attributes", tr("Change Attributes..."));
-  addCmd(fileMenu, "file.properties", tr("Properties..."));
+  addCmd(fileMenu, "file.attributes", tr("Properties..."));
   fileMenu->addSeparator();
   addCmd(fileMenu, "file.execute",    tr("Execute / Open Externally"));
   fileMenu->addSeparator();

@@ -283,7 +283,7 @@ void PreviewController::onDebounceTimeout() {
       // 寿命管理は (a) 現役は m_dirSizeWorker (QPointer) + dtor の wait、
       // (b) detach 済は QThread::finished → deleteLater の標準イディオム
       // ( cancelDirSizeWorker で接続 ) に分けている。
-      auto* w = new PropertiesWorker(m_pendingFilePath, nullptr);
+      auto* w = new PropertiesWorker(QStringList{m_pendingFilePath}, nullptr);
       m_dirSizeWorker = w;
       QPointer<PreviewController> self(this);
 
