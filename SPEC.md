@@ -1162,6 +1162,30 @@ BinaryView では `setPlainText` 前後で `AddressHighlighter` を一時的に
     - 初期設定はリトル
   - 文字列のエンコード種別
     - 初期設定はUTF-8
+- **大ファイル対応・アドレスジャンプ** *（v0.9.8 以降の拡張）*
+  - 現状は先頭 8 MB を `QByteArray` に読み、`formatHexDump` で全行の hex 文字列を
+    生成して `QPlainTextEdit` に流し込む方式 (全バイト + 全テキストを保持するため、
+    巨大ファイルでメモリ・時間とも破綻する)。これを「全読込しつつ、見えている分
+    だけ読込・破棄」する形に作り替える。
+  - **データ層**: `QFile::map()` (mmap) でファイル全体をマップし、アクセスした
+    ページだけ OS が物理ロード / 破棄する (8 MB 上限を撤廃)。mmap が不安定な環境
+    向けに、64 KB チャンク + LRU キャッシュをフォールバックとして用意してもよい。
+  - **表示層**: `QPlainTextEdit` をやめ、CSV ビュアーと同様に `QTableView` +
+    自前 `QAbstractTableModel` にする。`rowCount = ceil(fileSize / bytesPerLine)`、
+    列はアドレス / 16 進 / 文字列。`data(row)` が呼ばれた行だけ mmap から読み、
+    `formatHexLine(offset, unit, endian, encoding)` で整形する (= 表示中の行だけ
+    生成・破棄)。既存の `formatHexDump(全体)` は行単位 `formatHexLine` に分解する。
+    アドレス列のハイライトは `QSyntaxHighlighter` から delegate / 色 role へ移す。
+  - **アドレスジャンプ**: ツールバーに **16 進アドレス入力欄** (`[0-9A-Fa-f]` /
+    `0x` 許容) と **「ジャンプ」ボタン** (入力欄で Enter でも発火) を追加する。
+    入力をバイトオフセットに変換し、`row = offset / bytesPerLine` へ `scrollTo`
+    して該当行を選択する (範囲外はクランプ)。仮想モデルなのでその行だけ即ロード。
+  - unit / endian / encoding の変更時はモデルを reset して再描画する。
+  - **検索機能は持たない** (全文検索は実装しない)。
+  - 超巨大ファイル (行数が `int` ≒ 21 億行を超える 〜32 GB 級) はスクロールバーの
+    粒度を行→ページ単位に間引く必要がある (実用上はほぼ問題にならない)。
+  - 段階移行: ① mmap でデータ層を差し替えて 8 MB 上限を撤廃 → ② 表示の仮想化 +
+    アドレスジャンプ、の 2 段階で進める。
 
 #### CSV / TSV ビュアー
 - 対象: `.csv` `.tsv` (Settings の `csvViewer.extensions` で変更可)。
