@@ -6,6 +6,8 @@
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QStackedWidget>
+#include <QLabel>
+#include <QStatusBar>
 #include <QtConcurrent/QtConcurrentRun>
 
 namespace Farman {
@@ -63,6 +65,7 @@ void CsvViewerWindow::loadFile() {
   m_csvView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_csvView);
   m_csvView->setFocus();
+  statusBar()->addPermanentWidget(new QLabel(m_csvView->statusInfo(), this));
   logViewerLoadResult(QStringLiteral("CSV, external"),
                        m_displayPath, true, false);
 }

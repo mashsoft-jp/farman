@@ -6,6 +6,8 @@
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QStackedWidget>
+#include <QLabel>
+#include <QStatusBar>
 #include <QtConcurrent/QtConcurrentRun>
 
 namespace Farman {
@@ -62,6 +64,7 @@ void PdfViewerWindow::loadFile() {
   m_pdfView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_pdfView);
   m_pdfView->setFocus();
+  statusBar()->addPermanentWidget(new QLabel(m_pdfView->statusInfo(), this));
   logViewerLoadResult(QStringLiteral("PDF, external"),
                        m_displayPath, true, false);
 }

@@ -46,10 +46,16 @@ public:
   void openFile(const QString& filePath);
   void clearContent();
 
+  // ステータスバー用の 1 行要約 (フォーマット / コーデック / 解像度 / 長さ)。
+  // メタデータが揃う前は得られた分だけを返す。
+  QString statusInfo() const;
+
 signals:
   // openFile ごとに最初のロード結末を 1 回だけ通知する。
   // Loaded/Buffered → true、InvalidMedia / エラー → false。
   void loadFinished(bool ok);
+  // ステータスバー用の要約が更新されたとき (メタデータ / 長さの確定時)。
+  void statusInfoChanged(const QString& info);
 
 protected:
   void keyPressEvent(QKeyEvent* event) override;

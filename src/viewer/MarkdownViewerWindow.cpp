@@ -6,6 +6,8 @@
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QStackedWidget>
+#include <QLabel>
+#include <QStatusBar>
 #include <QtConcurrent/QtConcurrentRun>
 
 namespace Farman {
@@ -62,6 +64,7 @@ void MarkdownViewerWindow::loadFile() {
   m_markdownView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_markdownView);
   m_markdownView->setFocus();
+  statusBar()->addPermanentWidget(new QLabel(m_markdownView->statusInfo(), this));
   logViewerLoadResult(QStringLiteral("Markdown, external"),
                        m_displayPath, true, false);
 }

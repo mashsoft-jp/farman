@@ -6,6 +6,8 @@
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QStackedWidget>
+#include <QLabel>
+#include <QStatusBar>
 #include <QtConcurrent/QtConcurrentRun>
 
 namespace Farman {
@@ -66,6 +68,8 @@ void TextViewerWindow::loadFile() {
   m_textView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_textView);
   m_textView->setFocus();
+  // Inline ビュアーと同じ内容をウィンドウのステータスバーにも表示する。
+  statusBar()->addPermanentWidget(new QLabel(m_textView->statusInfo(), this));
   logViewerLoadResult(QStringLiteral("Text, external"),
                        m_displayPath, true, false);
 }

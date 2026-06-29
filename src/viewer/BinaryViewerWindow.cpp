@@ -6,6 +6,8 @@
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QStackedWidget>
+#include <QLabel>
+#include <QStatusBar>
 #include <QtConcurrent/QtConcurrentRun>
 
 namespace Farman {
@@ -65,6 +67,7 @@ void BinaryViewerWindow::loadFile() {
   m_stack->setCurrentWidget(m_view);
   // BinaryView の setFocusProxy(m_textArea) を効かせるため明示的に setFocus。
   m_view->setFocus();
+  statusBar()->addPermanentWidget(new QLabel(m_view->statusInfo(), this));
   logViewerLoadResult(QStringLiteral("Binary, external"),
                        m_displayPath, true, false);
 }

@@ -8,6 +8,8 @@
 #include <QKeyEvent>
 #include <QScreen>
 #include <QStackedWidget>
+#include <QLabel>
+#include <QStatusBar>
 #include <QToolButton>
 #include <QtConcurrent/QtConcurrentRun>
 
@@ -90,6 +92,7 @@ void ImageViewerWindow::loadImage() {
   m_imageView->applyPreparedLoad(p);
   m_stack->setCurrentWidget(m_imageView);
   m_imageView->setFocus();
+  statusBar()->addPermanentWidget(new QLabel(m_imageView->statusInfo(), this));
   logViewerLoadResult(QStringLiteral("Image, external"),
                        m_displayPath, true, false);
 }

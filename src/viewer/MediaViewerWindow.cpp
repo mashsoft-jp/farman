@@ -4,6 +4,9 @@
 
 #include <QFileInfo>
 #include <QKeyEvent>
+#include <QLabel>
+#include <QShowEvent>
+#include <QStatusBar>
 
 namespace Farman {
 
@@ -43,6 +46,15 @@ void MediaViewerWindow::setupUi() {
 
   m_mediaView = new MediaView(this);
   setCentralWidget(m_mediaView);
+
+  // External (トップレベル) のときだけ、自前 statusBar にメディア情報を右寄せで
+  // 表示する。Inline 埋め込み時は showEvent で隠し、本体ステータスバーに任せる。
+  auto* statusLabel = new QLabel(this);
+  statusBar()->addPermanentWidget(statusLabel);
+  connect(m_mediaView, &MediaView::statusInfoChanged, statusLabel, &QLabel::setText);
+  // Inline 埋め込み時に本体ステータスバーへ中継できるよう、MediaView の更新を転送。
+  connect(m_mediaView, &MediaView::statusInfoChanged,
+          this,        &MediaViewerWindow::statusInfoChanged);
   // External モードの activateWindow / Inline モードの
   // ViewerPanel::setFocusProxy(view) のどちらでも、ウィンドウ宛のフォーカスが
   // キー処理を持つ MediaView 本体へ届くようにする。
@@ -64,6 +76,17 @@ void MediaViewerWindow::keyPressEvent(QKeyEvent* event) {
     }
   }
   QMainWindow::keyPressEvent(event);
+}
+
+QString MediaViewerWindow::statusInfo() const {
+  return m_mediaView ? m_mediaView->statusInfo() : QString();
+}
+
+void MediaViewerWindow::showEvent(QShowEvent* event) {
+  QMainWindow::showEvent(event);
+  // Inline 埋め込み (非トップレベル) では自前 statusBar を隠し、本体ステータス
+  // バーに任せる。External (トップレベル) のときだけ表示する。
+  statusBar()->setVisible(isWindow());
 }
 
 } // namespace Farman

@@ -15,6 +15,8 @@
 #include <QLabel>
 #include <QLocale>
 #include <QMediaMetaData>
+#include <QSize>
+#include <QStringList>
 #include <QPlainTextEdit>
 #include <QMouseEvent>
 #include <QSlider>
@@ -281,13 +283,21 @@ void MediaView::setupUi() {
     updateTimeLabel();
     // duration はメタデータより後に確定することがあるので情報も更新する。
     refreshMediaInfoDialog();
+    emit statusInfoChanged(statusInfo());
   });
   connect(m_player, &QMediaPlayer::playbackStateChanged,
           this,     &MediaView::updatePlayButton);
   connect(m_player, &QMediaPlayer::hasVideoChanged,
           this,     &MediaView::updateCurrentPage);
-  connect(m_player, &QMediaPlayer::metaDataChanged,
-          this,     &MediaView::updateMetadataCard);
+  connect(m_player, &QMediaPlayer::metaDataChanged, this, [this]() {
+    updateMetadataCard();
+    emit statusInfoChanged(statusInfo());
+  });
+  // コーデック / 解像度はトラックが解析されて初めて分かるので、トラック確定でも
+  // ステータスバー要約を更新する (metaDataChanged より後に来ることがある)。
+  connect(m_player, &QMediaPlayer::tracksChanged, this, [this]() {
+    emit statusInfoChanged(statusInfo());
+  });
   connect(m_player, &QMediaPlayer::mediaStatusChanged,
           this,     [this](QMediaPlayer::MediaStatus status) {
     switch (status) {
@@ -682,6 +692,70 @@ void MediaView::updateCurrentPage() {
   m_stack->setCurrentWidget(hasVideo ? static_cast<QWidget*>(m_videoWidget)
                                      : static_cast<QWidget*>(m_audioCard));
   m_fullScreenAction->setVisible(hasVideo);
+}
+
+QString MediaView::statusInfo() const {
+  if (!m_player) return QString();
+  const QMediaMetaData md = m_player->metaData();
+  QStringList parts;
+
+  // フォーマット: メタデータが取れなければ拡張子から補う (バックエンドが
+  // FileFormat を埋めないことがあるため)。
+  QString fmt = md.stringValue(QMediaMetaData::FileFormat);
+  if (fmt.isEmpty() && !m_filePath.isEmpty()) {
+    fmt = QFileInfo(m_filePath).suffix().toUpper();
+  }
+
+  // コーデック / 解像度はコンテナ全体の metaData() には入らないことが多く
+  // (特に macOS/AVFoundation)、トラック単位のメタデータに入っている。情報
+  // ダイアログと同じく、コンテナ→トラックの順で最初に見つかった値を使う。
+  auto fromTracks = [](const QList<QMediaMetaData>& tracks,
+                       QMediaMetaData::Key key) -> QString {
+    for (const QMediaMetaData& t : tracks) {
+      const QString v = t.stringValue(key);
+      if (!v.isEmpty()) return v;
+    }
+    return QString();
+  };
+
+  QString vcodec = md.stringValue(QMediaMetaData::VideoCodec);
+  if (vcodec.isEmpty()) {
+    vcodec = fromTracks(m_player->videoTracks(), QMediaMetaData::VideoCodec);
+  }
+  QString acodec = md.stringValue(QMediaMetaData::AudioCodec);
+  if (acodec.isEmpty()) {
+    acodec = fromTracks(m_player->audioTracks(), QMediaMetaData::AudioCodec);
+  }
+
+  // コーデック (映像 / 音声) は「フォーマット (vcodec, acodec)」とまとめる。
+  QStringList codecs;
+  if (!vcodec.isEmpty()) codecs << vcodec;
+  if (!acodec.isEmpty()) codecs << acodec;
+
+  if (!fmt.isEmpty()) {
+    QString formatPart = fmt;
+    if (!codecs.isEmpty()) {
+      formatPart += QStringLiteral(" (%1)").arg(codecs.join(QStringLiteral(", ")));
+    }
+    parts << formatPart;
+  } else if (!codecs.isEmpty()) {
+    parts << codecs.join(QStringLiteral(", "));
+  }
+
+  QSize res = md.value(QMediaMetaData::Resolution).toSize();
+  if (!res.isValid() || res.isEmpty()) {
+    for (const QMediaMetaData& t : m_player->videoTracks()) {
+      const QSize r = t.value(QMediaMetaData::Resolution).toSize();
+      if (r.isValid() && !r.isEmpty()) { res = r; break; }
+    }
+  }
+  if (res.isValid() && !res.isEmpty()) {
+    parts << QStringLiteral("%1x%2").arg(res.width()).arg(res.height());
+  }
+  if (m_player->duration() > 0) {
+    parts << formatTime(m_player->duration());
+  }
+  return parts.join(QStringLiteral("   "));
 }
 
 QString MediaView::formatTime(qint64 ms) const {

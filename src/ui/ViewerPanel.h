@@ -75,6 +75,11 @@ signals:
   // 何も表示していなければ両方空文字列。
   void viewerStatusChanged(const QString& path, const QString& summary);
 
+private slots:
+  // statusInfoChanged(QString) を出すプラグインビュー (media 等) からの中継。
+  // 本体ステータスバーへ現在ファイルの最新要約を流す。
+  void onPluginStatusInfoChanged(const QString& info);
+
 private:
   void setupUi();
   // 第二引数は「ステータス・currentFilePath として記録する表示用パス」。

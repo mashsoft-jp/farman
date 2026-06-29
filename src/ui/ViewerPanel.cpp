@@ -567,10 +567,28 @@ bool ViewerPanel::openPluginFile(IViewerPlugin* plugin,
   view->setFocus(Qt::OtherFocusReason);
   m_currentFilePath = displayPath;
   emit fileOpened(displayPath);
-  emit viewerStatusChanged(displayPath, plugin->pluginName());
+  // プラグインのビューが statusInfoChanged(QString) シグナルと statusInfo() を
+  // 持つ場合 (media 等) は、本体ステータスバーにその要約を出して追従更新する。
+  // プラグインは別ターゲットのため、型に依存せずメタオブジェクト経由で扱う。
+  const QMetaObject* mo = view->metaObject();
+  if (mo->indexOfSignal("statusInfoChanged(QString)") >= 0 &&
+      mo->indexOfMethod("statusInfo()") >= 0) {
+    QString info;
+    QMetaObject::invokeMethod(view, "statusInfo", Qt::DirectConnection,
+                              Q_RETURN_ARG(QString, info));
+    emit viewerStatusChanged(displayPath, info);
+    connect(view, SIGNAL(statusInfoChanged(QString)),
+            this, SLOT(onPluginStatusInfoChanged(QString)));
+  } else {
+    emit viewerStatusChanged(displayPath, plugin->pluginName());
+  }
   logViewerLoadResult(QStringLiteral("Plugin:%1").arg(plugin->pluginId()),
                       displayPath, true, false);
   return true;
+}
+
+void ViewerPanel::onPluginStatusInfoChanged(const QString& info) {
+  emit viewerStatusChanged(m_currentFilePath, info);
 }
 
 void ViewerPanel::clear() {

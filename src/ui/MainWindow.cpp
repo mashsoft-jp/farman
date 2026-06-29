@@ -45,6 +45,7 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QTimer>
+#include <QFileInfo>
 #include <QLabel>
 #include <QFontMetrics>
 #include <QUrl>
@@ -541,6 +542,8 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       // 独立ウィンドウとして表示。アプリのメインから切り離して別ディスプレイ
       // へドラッグできるよう、Qt::Window フラグでトップレベルを保証。
       w->setWindowFlag(Qt::Window, true);
+      // 内蔵の専用ウィンドウ (TextViewerWindow 等) と media の MediaViewerWindow は
+      // 自前で statusBar を持つので、ここでは追加しない。
       // 前回のジオメトリを引き継ぎ。初回は *ViewerWindow の setupUi 側で
       // resize(800, 600) してくれる。
       if (hasSavedGeom) {
@@ -599,10 +602,10 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
   if (mode == ViewerMode::External) {
     auto& dispatcher = ViewerDispatcher::instance();
     IViewerPlugin* plugin = dispatcher.pluginById(pluginId);
-    QWidget* w = plugin
+    QWidget* inner = plugin
       ? plugin->createViewer(filePath, this, dispatcher.pluginContext())
       : nullptr;
-    if (!w) return;
+    if (!inner) return;
     // 既存の External ウィンドウがあればジオメトリを引き継いで破棄 (showViewerWith
     // と同じ「同じ場所・サイズで上書き」挙動)。
     QRect savedGeom;
@@ -612,13 +615,31 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
       hasSavedGeom = true;
       delete m_externalViewerWindow;
     }
-    w->setAttribute(Qt::WA_DeleteOnClose);
-    w->setWindowFlag(Qt::Window, true);
-    if (hasSavedGeom) w->setGeometry(savedGeom);
-    w->show();
-    w->raise();
-    w->activateWindow();
-    m_externalViewerWindow = w;
+    // ステータスバー (Inline と同じプラグイン名) を右寄せで出す。プラグインが
+    // 自前の QMainWindow を返した場合 (media_viewer など) はラップせず、その
+    // statusBar に追加する。埋め込み QWidget の場合は QMainWindow でラップする。
+    QMainWindow* win = qobject_cast<QMainWindow*>(inner);
+    if (win) {
+      // プラグイン自前の QMainWindow (media 等) は自分で statusBar を持つ。
+      win->setAttribute(Qt::WA_DeleteOnClose);
+      win->setWindowFlag(Qt::Window, true);
+    } else {
+      // 埋め込み QWidget は QMainWindow でラップし、Inline と同じプラグイン名を
+      // ステータスバーに右寄せで出す。
+      auto* wrap = new QMainWindow();
+      wrap->setAttribute(Qt::WA_DeleteOnClose);
+      wrap->setWindowFlag(Qt::Window, true);
+      wrap->setCentralWidget(inner);
+      wrap->setWindowTitle(QFileInfo(filePath).fileName());
+      wrap->statusBar()->addPermanentWidget(new QLabel(plugin->pluginName(), wrap));
+      win = wrap;
+    }
+    if (hasSavedGeom) win->setGeometry(savedGeom);
+    else if (win->size().isEmpty()) win->resize(800, 600);
+    win->show();
+    win->raise();
+    win->activateWindow();
+    m_externalViewerWindow = win;
     return;
   }
 
