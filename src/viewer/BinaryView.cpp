@@ -381,10 +381,11 @@ BinaryView::PreparedLoad BinaryView::prepareLoad(const QString&     filePath,
   // formatHexDump は cancelToken を見ながら 256 行おきに途中で中断できる。
   r.text = formatHexDump(r.data, unit, endian, r.actualEncoding, cancelToken);
 
-  if (cancelled() || r.text.isEmpty()) {
-    // formatHexDump がキャンセルで空を返した場合 (or 実際に空) は ok=false。
+  if (cancelled()) {
+    // キャンセルされた場合のみ未完成 (ok=false) のまま返す。
     return r;
   }
+  // 0 バイトファイル等で r.text が空でも正常。空のまま ok=true で表示する。
 
   if (r.totalSize > r.loadedSize) {
     r.text.append(QStringLiteral("...\n[truncated: showing first %1 of %2 bytes]\n")
