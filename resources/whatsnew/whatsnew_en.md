@@ -1,48 +1,34 @@
-# What's New in farman 0.9.6
+# What's New in farman 0.9.7
 
-### Video / Audio Viewer
+### Redesigned Properties Dialog
 
-Play videos (mp4 / mov / webm / mkv, etc.) and audio files
-(mp3 / flac / wav, etc.) directly inside farman with the `V` key.
-Seeking, volume, looping, and fullscreen are supported.
+File / folder properties are now consolidated into a single dialog.
 
-### Viewers Are Now Plugins
+- Review name, location, size, modified date, and created date together
+- Multi-selection shows aggregated total size and item count
+- Edit the modified date and attributes (permissions) in place
+- Owner / group are shown with both name and ID; the name is editable
+  only when it is common across the selected files (hidden on Windows)
 
-The bundled viewers (Text / Image / PDF / CSV / Markdown / Binary / Media)
-have been migrated to dynamically loaded official plugins.
+### "Open With Viewer..." Built from Plugins
 
-- User-built external viewer plugins (.dylib / .so / .dll) can be loaded
-- Per-extension Viewer Associations now also apply in Inline mode
+The "Open With Viewer..." menu is now generated automatically from the
+registered plugins. Viewers that previously didn't appear in the list,
+such as the video / audio viewer, can now be chosen from all installed
+viewers.
 
-### New "Plugins" Settings Page
+### Status Bar in External Viewers
 
-Everything plugin-related now lives in one place: the plugins
-directory and the installed plugin list, grouped into per-type tabs,
-with load status and enable/disable toggles. Each row's "Details..."
-shows the full plugin information. Help → Plugins...
-(toolbar button / shortcut available) opens the page directly.
-
-### Change Viewer Defaults from "Details"
-
-Each viewer's defaults can now be changed from a settings page inside
-its plugin "Details". Besides the associated extensions, you can set
-the default text encoding, image Fit / zoom, PDF view mode, CSV
-delimiter, media volume / autoplay, and more. When several viewers
-list the same extension, the one with the higher priority is used.
-
-### HEIC / HEIF Image Support
-
-HEIC / HEIF images (e.g. photos taken on an iPhone) can now be shown in
-the image viewer. macOS uses the system decoder; Windows and Linux use a
-bundled libheif.
-
-### What's New Dialog
-
-After an update, farman shows this dialog once on first launch.
-You can reopen it any time via Help → What's New...
+Viewers opened in a separate window now show the same status information
+as the inline view. The media viewer shows a summary of the format /
+codec / resolution / duration.
 
 ### Other Changes
 
-- Broadened the media viewer's supported formats (WMV / MPEG-1·2 / M2TS / WMA, etc.)
-- Removed the SHA-256 hash option from directory compare in favor of the fast default comparison
+- Fixed Markdown documents containing raw HTML being truncated partway
+- On network / removable drives, where the Trash is unavailable, "Move to
+  Trash" is now disabled so only permanent deletion is offered
+- Fixed the delete-confirmation dialog layout breaking with long file names
+- Fall back to home / root when the initial startup directory does not exist
+- Fixed 0-byte files getting stuck on "Loading" in the binary viewer
 - Stability improvements and bug fixes
