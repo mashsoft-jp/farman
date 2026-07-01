@@ -3,6 +3,7 @@
 #include "viewer/IPluginSettingsPage.h"
 
 class QCheckBox;
+class QComboBox;
 class QLineEdit;
 class QSpinBox;
 
@@ -21,10 +22,12 @@ public:
 
 private:
   void applyValuesToUi(const QStringList& extensions, int volume, bool loop,
-                       bool autoplay);
+                       bool autoplay, bool fitToWindow, int zoomPercent);
 
   QLineEdit* m_extensionsEdit = nullptr;
   QSpinBox*  m_volumeSpin   = nullptr;
+  QComboBox* m_zoomCombo     = nullptr;
+  QCheckBox* m_fitCheck      = nullptr;
   QCheckBox* m_loopCheck     = nullptr;
   QCheckBox* m_autoplayCheck = nullptr;
 };

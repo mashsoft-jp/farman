@@ -8,6 +8,7 @@
 #include <QString>
 #include <QWidget>
 
+class QAction;
 class QComboBox;
 class QLabel;
 class QMovie;
@@ -73,6 +74,11 @@ public:
   // 計算するために使う。
   int effectiveZoomPercent() const;
 
+  // 「ウィンドウを画像に合わせる」で使う基準倍率 (%)。Fit 中は 100 (実寸)、
+  // 手動ズーム時は m_zoomPercent。effectiveZoomPercent は Fit 中フィット比を
+  // 返すのでウィンドウフィットには使わない。
+  int windowFitZoomPercent() const { return m_fitToWindow ? 100 : m_zoomPercent; }
+
   // 画像が描画されるエリア (= スクロールエリアのビューポート) の現在サイズ。
   // これと window 全体サイズの差が「ツールバー + ウィンドウ枠」分の chrome。
   QSize imageAreaSize() const;
@@ -107,6 +113,9 @@ private:
   void syncFromSettings();
   void applyDisplayState();
   void updateZoomEnabled();
+  // ズームコンボの表示値を更新する。Fit 中はその時の実効倍率
+  // (effectiveZoomPercent) を、手動時は m_zoomPercent を表示する。
+  void updateZoomComboText();
   static bool detectAnimated(const QString& filePath);
 
   // ツールバー
@@ -116,6 +125,9 @@ private:
   QComboBox*   m_zoomCombo         = nullptr;
   // 「ウィンドウに合わせる」のチェック付きトグルボタン (アイコンのみ)。
   QToolButton* m_fitButton         = nullptr;
+  // Fit ボタンの QAction。addToolbarWidget が「ウィンドウを画像に合わせる」を
+  // Fit ボタンの直後に挿入する (= Fit 系と同じグループに並べる) のに使う。
+  QAction*     m_fitButtonAction   = nullptr;
   // アニメ再生 / 停止のトグル。OFF (停止中) は ▶、ON (再生中) は ⏸ アイコンを
   // 都度切替える。GIF / WebP 等のアニメ画像でのみ有効化される。
   QToolButton* m_animButton        = nullptr;

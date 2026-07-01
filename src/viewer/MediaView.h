@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMediaPlayer>
+#include <QSize>
 #include <QWidget>
 
 class QAction;
@@ -9,6 +10,7 @@ class QComboBox;
 class QDialog;
 class QMediaMetaData;
 class QLabel;
+class QScrollArea;
 class QSlider;
 class QStackedWidget;
 class QToolBar;
@@ -50,6 +52,22 @@ public:
   // メタデータが揃う前は得られた分だけを返す。
   QString statusInfo() const;
 
+  // ── 外部ウィンドウ (MediaViewerWindow) 連携用 ──
+  // ツールバー末尾に widget を追加し、その QAction を返す (表示制御に使う)。
+  // ImageView::addToolbarWidget と同じ用途 (「ウィンドウサイズを動画にあわせる」)。
+  QAction* addToolbarWidget(QWidget* widget);
+  // 動画の自然サイズ (px)。音声 / 未確定時は QSize() (= invalid)。
+  QSize naturalVideoSize() const;
+  // 動画が描画される領域 (= スクロールエリアのビューポート) の現在サイズ。
+  QSize videoAreaSize() const;
+  // 「ウィンドウを動画に合わせる」で使う基準倍率 (%)。fit 中は 100 (実寸)、
+  // 手動ズーム時は設定倍率。
+  int windowFitZoomPercent() const;
+  // フルスクリーンを解除する (生存中に呼ぶこと。MediaViewerWindow::closeEvent 用)。
+  void exitFullscreen();
+  // Fit 中に動画が viewport に収まる実効倍率 (%)。解像度未確定時は m_zoomPercent。
+  int effectiveVideoZoomPercent() const;
+
 signals:
   // openFile ごとに最初のロード結末を 1 回だけ通知する。
   // Loaded/Buffered → true、InvalidMedia / エラー → false。
@@ -79,6 +97,20 @@ private:
   void updateMetadataCard();
   void updateCurrentPage();
 
+  // 動画表示の拡大縮小 (ImageView と同じ作法。設定には保存しない)。
+  // Fit ON 時はスクロールエリアにフィット、OFF 時は m_zoomPercent で固定。
+  void applyVideoZoom();
+  // ズーム UI の有効/無効を更新 (Fit 中はコンボを無効化)。
+  void updateZoomEnabled();
+  // 動画の自然サイズ (px)。コンテナ→トラック→QVideoWidget::sizeHint の順で取得。
+  // 音声 / 未確定時は QSize() (= invalid)。
+  QSize videoResolution() const;
+  // ネイティブ解像度が確定したら一度だけキャッシュし、手動ズーム中なら再適用する。
+  // フレーム描画後でないと sizeHint が無効なため、再生中に解決する。
+  void updateNativeVideoSize();
+  // ズームコンボの表示値を更新する (Fit 中は実効倍率、手動時は m_zoomPercent)。
+  void updateZoomComboText();
+
   // メディア情報 / メタデータダイアログ (ImageView の情報表示と同じ作法)。
   void toggleMediaInfoDialog();
   void refreshMediaInfoDialog();
@@ -96,9 +128,10 @@ private:
   QMediaPlayer* m_player      = nullptr;
   QAudioOutput* m_audioOutput = nullptr;
 
-  QStackedWidget* m_stack        = nullptr;
-  QVideoWidget*   m_videoWidget  = nullptr;
-  QWidget*        m_audioCard    = nullptr;
+  QStackedWidget* m_stack           = nullptr;
+  QScrollArea*    m_videoScrollArea = nullptr;
+  QVideoWidget*   m_videoWidget     = nullptr;
+  QWidget*        m_audioCard       = nullptr;
   QLabel*         m_coverLabel   = nullptr;
   QLabel*         m_titleLabel   = nullptr;
   QLabel*         m_detailLabel  = nullptr;
@@ -114,12 +147,26 @@ private:
   QComboBox*   m_rateCombo        = nullptr;
   QToolButton* m_muteButton       = nullptr;
   QSlider*     m_volumeSlider     = nullptr;
+  QComboBox*   m_zoomCombo        = nullptr;
+  QToolButton* m_fitButton        = nullptr;
   QToolButton* m_fullScreenButton = nullptr;
   QToolButton* m_infoButton        = nullptr;
   QDialog*     m_infoDialog         = nullptr;  // モードレス。WA_DeleteOnClose=false
+  // 情報 (i) ボタンの QAction。addToolbarWidget が i の直前に挿入するのに使う。
+  QAction*     m_infoAction        = nullptr;
   // QToolBar::addWidget が返す QAction。ツールバー内ウィジェットの表示 /
   // 非表示はウィジェット直接ではなくこの action で切り替える必要がある。
+  // ズーム関連 / フルスクリーンは動画のみ表示 (音声では非表示)。
+  QAction*     m_zoomLabelAction  = nullptr;
+  QAction*     m_zoomComboAction  = nullptr;
+  QAction*     m_fitAction        = nullptr;
   QAction*     m_fullScreenAction = nullptr;
+
+  // 動画ズームの実効状態 (ローカル上書き。Settings には保存しない)。
+  int  m_zoomPercent = 100;
+  bool m_fitToWindow = true;
+  // 確定したネイティブ動画解像度のキャッシュ (100% の基準)。未確定なら空。
+  QSize m_nativeVideoSize;
 
   // ツールバー内ボタンの Enter→クリック化 (ImageView と同じ作法)。
   EnterClickFilter* m_clickFilter = nullptr;

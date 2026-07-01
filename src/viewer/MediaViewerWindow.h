@@ -31,13 +31,20 @@ protected:
   void keyPressEvent(QKeyEvent* event) override;
   // Inline (非トップレベル) では自前 statusBar を隠し、本体ステータスバーに任せる。
   void showEvent(QShowEvent* event) override;
+  // 閉じる前にフルスクリーンを解除する (破棄時の createWinId 無限再帰回避)。
+  void closeEvent(QCloseEvent* event) override;
 
 private:
   void setupUi();
+  // 動画の自然サイズに合わせてウィンドウを resize する (External のみ)。
+  // ImageViewerWindow::fitWindowToImage の動画版。
+  void fitWindowToVideo();
 
   QString    m_filePath;
   QString    m_displayPath;
   MediaView* m_mediaView = nullptr;
+  // 「ウィンドウサイズを動画にあわせる」ボタンの QAction (External のみ表示)。
+  QAction*   m_fitWindowAction = nullptr;
 };
 
 } // namespace Farman

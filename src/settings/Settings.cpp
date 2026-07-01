@@ -176,7 +176,7 @@ void Settings::applyDefaults() {
   m_imageViewerExtensions       = { "png", "jp*g", "gif", "bmp", "svg", "webp", "ico", "tif*" };
   m_imageViewerMimePatterns     = { "image/*" };
   m_imageViewerZoomPercent      = 100;
-  m_imageViewerFitToWindow      = false;
+  m_imageViewerFitToWindow      = true;
   m_imageViewerAnimation        = false;
   m_imageViewerTransparencyMode = ImageTransparencyMode::Checker;
   m_imageViewerSolidColor       = QColor(Qt::white);
@@ -203,6 +203,8 @@ void Settings::applyDefaults() {
   m_mediaViewerVolume         = 80;
   m_mediaViewerLoop           = false;
   m_mediaViewerAutoplay       = true;
+  m_mediaViewerFitToWindow    = true;
+  m_mediaViewerZoomPercent    = 100;
 
   // ── 履歴・ブックマーク・ファイル操作・検索 ──
   m_persistHistory = false;
@@ -1116,6 +1118,12 @@ bool Settings::mediaViewerLoop() const { return m_mediaViewerLoop; }
 void Settings::setMediaViewerLoop(bool on) { m_mediaViewerLoop = on; }
 bool Settings::mediaViewerAutoplay() const { return m_mediaViewerAutoplay; }
 void Settings::setMediaViewerAutoplay(bool on) { m_mediaViewerAutoplay = on; }
+bool Settings::mediaViewerFitToWindow() const { return m_mediaViewerFitToWindow; }
+void Settings::setMediaViewerFitToWindow(bool on) { m_mediaViewerFitToWindow = on; }
+int  Settings::mediaViewerZoomPercent() const { return m_mediaViewerZoomPercent; }
+void Settings::setMediaViewerZoomPercent(int percent) {
+  m_mediaViewerZoomPercent = qBound(1, percent, 1000);
+}
 
 QFont Settings::binaryViewerFont() const {
   return m_binaryViewerFont;
@@ -2039,7 +2047,7 @@ void Settings::load() {
     if (!list.isEmpty()) m_imageViewerMimePatterns = list;
   }
   m_imageViewerZoomPercent = qBound(1, imageViewer.value("zoomPercent").toInt(100), 1000);
-  m_imageViewerFitToWindow = imageViewer.value("fitToWindow").toBool(false);
+  m_imageViewerFitToWindow = imageViewer.value("fitToWindow").toBool(true);
   m_imageViewerAnimation   = imageViewer.value("animation").toBool(false);
   {
     const QString modeStr = imageViewer.value("transparencyMode").toString();
@@ -2119,6 +2127,9 @@ void Settings::load() {
   m_mediaViewerVolume   = qBound(0, mediaViewer.value("volume").toInt(80), 100);
   m_mediaViewerLoop     = mediaViewer.value("loop").toBool(false);
   m_mediaViewerAutoplay = mediaViewer.value("autoplay").toBool(true);
+  m_mediaViewerFitToWindow = mediaViewer.value("fitToWindow").toBool(true);
+  m_mediaViewerZoomPercent =
+    qBound(1, mediaViewer.value("zoomPercent").toInt(100), 1000);
 
   // ペイン履歴（ON の時のみ読む。OFF の時は必ず空にする）
   for (int i = 0; i < static_cast<int>(PaneType::Count); ++i) {
@@ -2603,6 +2614,8 @@ void Settings::save() const {
   mediaViewer["volume"]   = m_mediaViewerVolume;
   mediaViewer["loop"]     = m_mediaViewerLoop;
   mediaViewer["autoplay"] = m_mediaViewerAutoplay;
+  mediaViewer["fitToWindow"] = m_mediaViewerFitToWindow;
+  mediaViewer["zoomPercent"] = m_mediaViewerZoomPercent;
   root["mediaViewer"] = mediaViewer;
 
   // ペイン履歴（ON のときだけディスクに出す）

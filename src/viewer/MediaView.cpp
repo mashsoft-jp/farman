@@ -2,6 +2,7 @@
 #include "settings/Settings.h"
 #include "utils/EnterClickFilter.h"
 
+#include <QAction>
 #include <QAudio>
 #include <QAudioOutput>
 #include <QComboBox>
@@ -19,6 +20,9 @@
 #include <QStringList>
 #include <QPlainTextEdit>
 #include <QMouseEvent>
+#include <QFrame>
+#include <QPalette>
+#include <QScrollArea>
 #include <QSlider>
 #include <QStackedWidget>
 #include <QStyle>
@@ -78,13 +82,25 @@ protected:
 MediaView::MediaView(QWidget* parent)
   : QWidget(parent)
 {
+  // 表示の既定 (fit-to-window / 既定拡大率) を設定から取得する。ImageView と同様、
+  // ツールバー操作によるローカル上書きは Settings には保存しない。
+  const Settings& s = Settings::instance();
+  m_fitToWindow = s.mediaViewerFitToWindow();
+  m_zoomPercent = s.mediaViewerZoomPercent();
   setupUi();
 }
 
 MediaView::~MediaView() {
-  // フルスクリーンのままビュアーが破棄されると QVideoWidget のトップレベル
-  // ウィンドウだけが残るので、先に通常表示へ戻しておく。
-  setVideoFullScreen(false);
+  // フルスクリーン解除は生存中 (closeEvent / clearContent) に済ませておく方針。
+  // ここ (破棄途中) で setVideoFullScreen(false) を呼ぶと、QScrollArea 内の
+  // QVideoWidget を再ペアレントする過程で QWindowContainer 経由の createWinId が
+  // 無限再帰してクラッシュする (macOS)。破棄時はプレイヤーを止めるだけにして、
+  // QVideoWidget は通常の子ウィジェット破棄に任せる (フルスクリーン中でも
+  // ネイティブウィンドウごと破棄されるため残留しない)。
+  if (m_player) {
+    m_player->stop();
+    m_player->setVideoOutput(static_cast<QVideoWidget*>(nullptr));
+  }
 }
 
 void MediaView::setupUi() {
@@ -95,11 +111,29 @@ void MediaView::setupUi() {
   m_player->setAudioOutput(m_audioOutput);
 
   // ── 表示ページ (動画 / 音声カード / メッセージ) ──
-  m_videoWidget = new QVideoWidget(this);
+  m_videoWidget = new QVideoWidget;
   m_videoWidget->setAspectRatioMode(Qt::KeepAspectRatio);
   m_videoWidget->setFocusPolicy(Qt::StrongFocus);
   m_videoWidget->installEventFilter(this);
   m_player->setVideoOutput(m_videoWidget);
+
+  // 拡大縮小に対応するため、QVideoWidget はスクロールエリアに入れる。
+  // Fit ON では viewport にフィット (widgetResizable=true)、手動ズーム時は
+  // 解像度×倍率に固定 (widgetResizable=false) してスクロールバーを出す。
+  // 余白は動画らしく黒で塗る。
+  m_videoScrollArea = new QScrollArea(this);
+  m_videoScrollArea->setWidget(m_videoWidget);
+  m_videoScrollArea->setWidgetResizable(true);
+  m_videoScrollArea->setAlignment(Qt::AlignCenter);
+  m_videoScrollArea->setFrameShape(QFrame::NoFrame);
+  m_videoScrollArea->viewport()->setAutoFillBackground(true);
+  {
+    QPalette pal = m_videoScrollArea->viewport()->palette();
+    pal.setColor(QPalette::Window, Qt::black);
+    m_videoScrollArea->viewport()->setPalette(pal);
+  }
+  // Fit 中はリサイズで実効倍率が変わるので、viewport のリサイズを監視する。
+  m_videoScrollArea->viewport()->installEventFilter(this);
 
   m_audioCard = new QWidget(this);
   {
@@ -135,7 +169,7 @@ void MediaView::setupUi() {
   m_messageLabel->setWordWrap(true);
 
   m_stack = new QStackedWidget(this);
-  m_stack->addWidget(m_videoWidget);
+  m_stack->addWidget(m_videoScrollArea);
   m_stack->addWidget(m_audioCard);
   m_stack->addWidget(m_messageLabel);
   m_stack->setCurrentWidget(m_audioCard);
@@ -182,17 +216,7 @@ void MediaView::setupUi() {
   m_timeLabel->setContentsMargins(6, 0, 6, 0);
   m_toolbar->addWidget(m_timeLabel);
 
-  m_loopButton = new QToolButton(m_toolbar);
-  m_loopButton->setCheckable(true);
-  m_loopButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/loop.svg")));
-  m_loopButton->setToolTip(tr("Loop playback (L)"));
-  m_loopButton->setFocusPolicy(Qt::StrongFocus);
-  connect(m_loopButton, &QToolButton::toggled, this, [this](bool checked) {
-    m_player->setLoops(checked ? QMediaPlayer::Infinite : QMediaPlayer::Once);
-  });
-  m_loopButton->setChecked(Settings::instance().mediaViewerLoop());
-  m_toolbar->addWidget(m_loopButton);
-
+  // 再生速度ドロップダウンはシークバー (＋時間表示) のすぐ隣に置く。
   m_rateCombo = new QComboBox(m_toolbar);
   m_rateCombo->addItem(QStringLiteral("0.5x"), 0.5);
   m_rateCombo->addItem(QStringLiteral("1.0x"), 1.0);
@@ -205,6 +229,17 @@ void MediaView::setupUi() {
     m_player->setPlaybackRate(m_rateCombo->currentData().toReal());
   });
   m_toolbar->addWidget(m_rateCombo);
+
+  m_loopButton = new QToolButton(m_toolbar);
+  m_loopButton->setCheckable(true);
+  m_loopButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/loop.svg")));
+  m_loopButton->setToolTip(tr("Loop playback (L)"));
+  m_loopButton->setFocusPolicy(Qt::StrongFocus);
+  connect(m_loopButton, &QToolButton::toggled, this, [this](bool checked) {
+    m_player->setLoops(checked ? QMediaPlayer::Infinite : QMediaPlayer::Once);
+  });
+  m_loopButton->setChecked(Settings::instance().mediaViewerLoop());
+  m_toolbar->addWidget(m_loopButton);
 
   m_muteButton = new QToolButton(m_toolbar);
   m_muteButton->setCheckable(true);
@@ -227,6 +262,52 @@ void MediaView::setupUi() {
           this,           &MediaView::applyVolume);
   m_toolbar->addWidget(m_volumeSlider);
 
+  // ── 動画ズーム (ImageView と同じ Zoom% コンボ + Fit トグル) ──
+  // 動画のみ表示し、音声では updateCurrentPage で非表示にする。
+  auto* zoomLabel = new QLabel(tr("Zoom:"), m_toolbar);
+  zoomLabel->setContentsMargins(6, 0, 2, 0);
+  m_zoomLabelAction = m_toolbar->addWidget(zoomLabel);
+
+  m_zoomCombo = new QComboBox(m_toolbar);
+  m_zoomCombo->setEditable(true);
+  for (int p : {25, 50, 75, 100, 150, 200, 400}) {
+    m_zoomCombo->addItem(QString::number(p) + QLatin1Char('%'), p);
+  }
+  m_zoomCombo->setCurrentText(QString::number(m_zoomPercent) + QLatin1Char('%'));
+  m_zoomCombo->setToolTip(tr("Zoom"));
+  m_zoomCombo->setFocusPolicy(Qt::StrongFocus);
+  m_zoomComboAction = m_toolbar->addWidget(m_zoomCombo);
+  connect(m_zoomCombo, &QComboBox::currentTextChanged, this, [this](const QString& text) {
+    QString digits = text;
+    digits.remove(QLatin1Char('%'));
+    bool okNum = false;
+    const int p = digits.trimmed().toInt(&okNum);
+    if (!okNum || p <= 0) return;
+    m_zoomPercent = qBound(10, p, 800);
+    m_fitToWindow = false;
+    if (m_fitButton) {
+      QSignalBlocker b(m_fitButton);
+      m_fitButton->setChecked(false);
+    }
+    updateZoomEnabled();
+    applyVideoZoom();
+  });
+
+  m_fitButton = new QToolButton(m_toolbar);
+  m_fitButton->setCheckable(true);
+  m_fitButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-to-window.svg")));
+  m_fitButton->setToolTip(tr("Fit to window"));
+  m_fitButton->setFocusPolicy(Qt::StrongFocus);
+  m_fitButton->setChecked(m_fitToWindow);
+  m_fitAction = m_toolbar->addWidget(m_fitButton);
+  connect(m_fitButton, &QToolButton::toggled, this, [this](bool checked) {
+    m_fitToWindow = checked;
+    updateZoomEnabled();
+    applyVideoZoom();
+    // Fit 中はその時点の実効倍率を、手動復帰時は m_zoomPercent をコンボへ。
+    updateZoomComboText();
+  });
+
   m_fullScreenButton = new QToolButton(m_toolbar);
   m_fullScreenButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fullscreen.svg")));
   m_fullScreenButton->setToolTip(tr("Full screen (F / double-click, Esc to exit)"));
@@ -235,8 +316,11 @@ void MediaView::setupUi() {
     setVideoFullScreen(true);
   });
   m_fullScreenAction = m_toolbar->addWidget(m_fullScreenButton);
-  // 動画のあるファイルでのみ表示 (updateCurrentPage で切替)。
+  // 動画のあるファイルでのみ表示 (updateCurrentPage で切替)。ズーム関連も同様。
   m_fullScreenAction->setVisible(false);
+  m_zoomLabelAction->setVisible(false);
+  m_zoomComboAction->setVisible(false);
+  m_fitAction->setVisible(false);
 
   // 情報 (メタデータ) ボタン。ImageView と同じく斜体太字の "i"。
   m_infoButton = new QToolButton(m_toolbar);
@@ -249,7 +333,7 @@ void MediaView::setupUi() {
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_infoButton, &QToolButton::clicked,
           this,         &MediaView::toggleMediaInfoDialog);
-  m_toolbar->addWidget(m_infoButton);
+  m_infoAction = m_toolbar->addWidget(m_infoButton);
 
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
@@ -259,10 +343,12 @@ void MediaView::setupUi() {
 
   // Tab 順を明示 (ImageView と同じ作法。スライダは NoFocus なので含めない)。
   setTabOrder(m_playButton, m_stopButton);
-  setTabOrder(m_stopButton, m_loopButton);
-  setTabOrder(m_loopButton, m_rateCombo);
-  setTabOrder(m_rateCombo,  m_muteButton);
-  setTabOrder(m_muteButton, m_fullScreenButton);
+  setTabOrder(m_stopButton, m_rateCombo);
+  setTabOrder(m_rateCombo,  m_loopButton);
+  setTabOrder(m_loopButton, m_muteButton);
+  setTabOrder(m_muteButton, m_zoomCombo);
+  setTabOrder(m_zoomCombo,  m_fitButton);
+  setTabOrder(m_fitButton,  m_fullScreenButton);
   setTabOrder(m_fullScreenButton, m_infoButton);
 
   // ツールバー内ボタンで Tab フォーカス中に Enter を押したらクリック扱いに
@@ -276,6 +362,8 @@ void MediaView::setupUi() {
       m_positionSlider->setValue(int(pos));
     }
     updateTimeLabel();
+    // 再生が進めばフレームが描画され sizeHint が確定する。確定し次第キャッシュ。
+    updateNativeVideoSize();
   });
   connect(m_player, &QMediaPlayer::durationChanged, this, [this](qint64 dur) {
     m_positionSlider->setRange(0, int(dur));
@@ -292,11 +380,13 @@ void MediaView::setupUi() {
   connect(m_player, &QMediaPlayer::metaDataChanged, this, [this]() {
     updateMetadataCard();
     emit statusInfoChanged(statusInfo());
+    updateNativeVideoSize();  // 解像度が確定したら手動ズームを実ピクセル基準で再適用
   });
   // コーデック / 解像度はトラックが解析されて初めて分かるので、トラック確定でも
   // ステータスバー要約を更新する (metaDataChanged より後に来ることがある)。
   connect(m_player, &QMediaPlayer::tracksChanged, this, [this]() {
     emit statusInfoChanged(statusInfo());
+    updateNativeVideoSize();
   });
   connect(m_player, &QMediaPlayer::mediaStatusChanged,
           this,     [this](QMediaPlayer::MediaStatus status) {
@@ -323,11 +413,13 @@ void MediaView::setupUi() {
   applyVolume();
   updatePlayButton();
   updateMuteButton();
+  updateZoomEnabled();  // Fit 既定なら手動ズームコンボを無効化
 }
 
 void MediaView::openFile(const QString& filePath) {
   m_filePath     = filePath;
   m_loadNotified = false;
+  m_nativeVideoSize = QSize();  // 別ファイルでは解像度を取り直す
   updateMetadataCard();
   m_player->setSource(QUrl::fromLocalFile(filePath));
   // ビュアーとして明示的に開かれた場面なので、既定では再生を開始する
@@ -361,6 +453,10 @@ bool MediaView::eventFilter(QObject* watched, QEvent* event) {
       setVideoFullScreen(!m_videoWidget->isFullScreen());
       return true;
     }
+  } else if (m_videoScrollArea && watched == m_videoScrollArea->viewport()
+             && event->type() == QEvent::Resize) {
+    // Fit 中はリサイズで実効倍率が変わるので、コンボ表示を追従させる。
+    if (m_fitToWindow) updateZoomComboText();
   }
   return QWidget::eventFilter(watched, event);
 }
@@ -689,9 +785,126 @@ void MediaView::updateCurrentPage() {
   // エラーメッセージ表示中はそのまま維持する。
   if (m_stack->currentWidget() == m_messageLabel) return;
   const bool hasVideo = m_player->hasVideo();
-  m_stack->setCurrentWidget(hasVideo ? static_cast<QWidget*>(m_videoWidget)
+  m_stack->setCurrentWidget(hasVideo ? static_cast<QWidget*>(m_videoScrollArea)
                                      : static_cast<QWidget*>(m_audioCard));
+  // ズーム / フルスクリーンは動画のみ (音声では非表示)。
   m_fullScreenAction->setVisible(hasVideo);
+  m_zoomLabelAction->setVisible(hasVideo);
+  m_zoomComboAction->setVisible(hasVideo);
+  m_fitAction->setVisible(hasVideo);
+  updateZoomEnabled();
+  applyVideoZoom();
+  updateZoomComboText();
+}
+
+void MediaView::applyVideoZoom() {
+  if (!m_videoScrollArea) return;
+  if (m_fitToWindow) {
+    // viewport にフィット (QVideoWidget の KeepAspectRatio でレターボックス)。
+    m_videoScrollArea->setWidgetResizable(true);
+    return;
+  }
+  // 手動ズーム: 100% = 動画の自然サイズ (実ピクセル等倍。ImageView と同義) を
+  // 基準に、× 倍率で固定してスクロールバーを出す。ネイティブ解像度はフレーム
+  // 描画後に確定するので、未確定の間だけ暫定で viewport を基準にし、確定後は
+  // updateNativeVideoSize() が実ピクセル基準で再適用する。
+  QSize base = m_nativeVideoSize;
+  if (base.isEmpty()) base = m_videoScrollArea->viewport()->size();
+  if (base.isEmpty()) return;
+  const QSize target = base * (m_zoomPercent / 100.0);
+  if (m_videoScrollArea->widgetResizable()) {
+    m_videoScrollArea->setWidgetResizable(false);
+  }
+  if (m_videoWidget->size() != target) {
+    m_videoWidget->resize(target);
+  }
+}
+
+void MediaView::updateNativeVideoSize() {
+  if (!m_nativeVideoSize.isEmpty()) return;  // 既知なら以後は何もしない
+  const QSize s = videoResolution();
+  if (s.isValid() && !s.isEmpty()) {
+    m_nativeVideoSize = s;
+    // 暫定 (viewport) 基準で当てていた手動ズームを実ピクセル基準で当て直す。
+    if (!m_fitToWindow) applyVideoZoom();
+    // Fit 中は解像度が分かって初めて実効倍率を計算できるのでコンボへ反映。
+    else updateZoomComboText();
+  }
+}
+
+int MediaView::effectiveVideoZoomPercent() const {
+  if (m_nativeVideoSize.isEmpty() || !m_videoScrollArea) return m_zoomPercent;
+  const QSize vp = m_videoScrollArea->viewport()->size();
+  if (vp.isEmpty()) return m_zoomPercent;
+  // KeepAspectRatio で viewport に収めたときの実倍率。
+  const double rx = double(vp.width())  / m_nativeVideoSize.width();
+  const double ry = double(vp.height()) / m_nativeVideoSize.height();
+  return qMax(1, int(qRound(qMin(rx, ry) * 100)));
+}
+
+void MediaView::updateZoomComboText() {
+  if (!m_zoomCombo) return;
+  const int pct = m_fitToWindow ? effectiveVideoZoomPercent() : m_zoomPercent;
+  QSignalBlocker b(m_zoomCombo);
+  m_zoomCombo->setCurrentText(QString::number(pct) + QLatin1Char('%'));
+}
+
+QAction* MediaView::addToolbarWidget(QWidget* widget) {
+  if (!m_toolbar || !widget) return nullptr;
+  // 情報 (i) ボタンの直前に挿入する。フルスクリーン / ズームなどの表示系
+  // コントロールと同じグループ (i の左) に並べるため。
+  QAction* action = m_infoAction ? m_toolbar->insertWidget(m_infoAction, widget)
+                                  : m_toolbar->addWidget(widget);
+  // Tab 順: フルスクリーン → 新 widget → 情報。
+  setTabOrder(m_fullScreenButton, widget);
+  setTabOrder(widget, m_infoButton);
+  if (m_clickFilter) m_clickFilter->installOnButtonsIn(widget);
+  return action;
+}
+
+QSize MediaView::naturalVideoSize() const {
+  return videoResolution();
+}
+
+QSize MediaView::videoAreaSize() const {
+  return m_videoScrollArea ? m_videoScrollArea->viewport()->size() : QSize();
+}
+
+void MediaView::updateZoomEnabled() {
+  // Fit 中は手動ズーム指定を無効化 (ImageView と同じ作法)。
+  if (m_zoomCombo) m_zoomCombo->setEnabled(!m_fitToWindow);
+}
+
+QSize MediaView::videoResolution() const {
+  if (!m_player) return QSize();
+  QSize res = m_player->metaData().value(QMediaMetaData::Resolution).toSize();
+  if (!res.isValid() || res.isEmpty()) {
+    for (const QMediaMetaData& t : m_player->videoTracks()) {
+      const QSize r = t.value(QMediaMetaData::Resolution).toSize();
+      if (r.isValid() && !r.isEmpty()) { res = r; break; }
+    }
+  }
+  // メタデータに解像度が無いバックエンド (macOS/AVFoundation 等) でも、実際に
+  // 描画された動画の自然サイズ (QVideoWidget::sizeHint) からネイティブ解像度を
+  // 取得できる。これにより 100% = 実ピクセル等倍 を ImageView と揃えられる。
+  if ((!res.isValid() || res.isEmpty()) && m_videoWidget) {
+    const QSize hint = m_videoWidget->sizeHint();
+    if (hint.isValid() && !hint.isEmpty()) res = hint;
+  }
+  return res;
+}
+
+void MediaView::exitFullscreen() {
+  // 生存中 (closeEvent / clearContent) に呼ぶ。破棄途中に呼ぶと QScrollArea 内
+  // QVideoWidget の再ペアレントで createWinId 無限再帰クラッシュになるため。
+  setVideoFullScreen(false);
+}
+
+int MediaView::windowFitZoomPercent() const {
+  // 「ウィンドウを動画に合わせる」で使う基準倍率。fit-to-window 中は実寸
+  // (100%)、手動ズーム時は設定倍率を使う。effectiveVideoZoomPercent は常に
+  // フィット比を返すのでここでは使わない。
+  return m_fitToWindow ? 100 : m_zoomPercent;
 }
 
 QString MediaView::statusInfo() const {

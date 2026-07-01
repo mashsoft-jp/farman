@@ -4,6 +4,7 @@
 #include "viewer/ExtensionsField.h"
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QSpinBox>
@@ -13,9 +14,11 @@ namespace Farman {
 
 namespace {
 // 既定値 (Settings の初期値と一致させる)。
-constexpr int  kDefVolume   = 80;
-constexpr bool kDefLoop     = false;
-constexpr bool kDefAutoplay = true;
+constexpr int  kDefVolume    = 80;
+constexpr bool kDefLoop       = false;
+constexpr bool kDefAutoplay   = true;
+constexpr bool kDefFit        = true;
+constexpr int  kDefZoom       = 100;
 const QStringList kDefExtensions = {
   "mp4", "mov", "m4v", "webm", "avi", "mkv",
   "wmv", "mpg", "mpeg", "m2v", "m2ts", "mts", "ts",
@@ -39,7 +42,21 @@ MediaViewerSettingsPage::MediaViewerSettingsPage(QWidget* parent)
   m_volumeSpin->setSuffix(QStringLiteral(" %"));
   m_volumeSpin->setToolTip(tr("Initial playback volume"));
   form->addRow(tr("Volume:"), m_volumeSpin);
+  m_zoomCombo = new QComboBox(this);
+  m_zoomCombo->setEditable(true);
+  for (int p : { 25, 50, 75, 100, 150, 200 }) {
+    m_zoomCombo->addItem(QString::number(p) + QLatin1Char('%'), p);
+  }
+  m_zoomCombo->setToolTip(
+    tr("Default zoom factor (used when 'Fit video to window' is off)"));
+  form->addRow(tr("Zoom:"), m_zoomCombo);
   outer->addLayout(form);
+
+  m_fitCheck = new QCheckBox(tr("Fit video to window"), this);
+  m_fitCheck->setToolTip(tr(
+    "Scale the video to fit within the viewer; zoom factor is ignored "
+    "while this is on."));
+  outer->addWidget(m_fitCheck);
 
   m_autoplayCheck = new QCheckBox(tr("Start playback automatically"), this);
   outer->addWidget(m_autoplayCheck);
@@ -51,14 +68,18 @@ MediaViewerSettingsPage::MediaViewerSettingsPage(QWidget* parent)
   Settings& s = Settings::instance();
   s.load();
   applyValuesToUi(s.mediaViewerExtensions(), s.mediaViewerVolume(),
-                  s.mediaViewerLoop(), s.mediaViewerAutoplay());
+                  s.mediaViewerLoop(), s.mediaViewerAutoplay(),
+                  s.mediaViewerFitToWindow(), s.mediaViewerZoomPercent());
 }
 
 void MediaViewerSettingsPage::applyValuesToUi(const QStringList& extensions,
                                               int volume, bool loop,
-                                              bool autoplay) {
+                                              bool autoplay, bool fitToWindow,
+                                              int zoomPercent) {
   m_extensionsEdit->setText(joinExtensionsText(extensions));
   m_volumeSpin->setValue(volume);
+  m_zoomCombo->setCurrentText(QString::number(zoomPercent) + QLatin1Char('%'));
+  m_fitCheck->setChecked(fitToWindow);
   m_loopCheck->setChecked(loop);
   m_autoplayCheck->setChecked(autoplay);
 }
@@ -68,13 +89,19 @@ void MediaViewerSettingsPage::save() {
   const QStringList exts = parseExtensionsText(m_extensionsEdit->text());
   if (!exts.isEmpty()) s.setMediaViewerExtensions(exts);
   s.setMediaViewerVolume(m_volumeSpin->value());
+  bool ok = false;
+  const int zoom =
+    m_zoomCombo->currentText().remove(QLatin1Char('%')).trimmed().toInt(&ok);
+  if (ok && zoom > 0) s.setMediaViewerZoomPercent(zoom);
+  s.setMediaViewerFitToWindow(m_fitCheck->isChecked());
   s.setMediaViewerLoop(m_loopCheck->isChecked());
   s.setMediaViewerAutoplay(m_autoplayCheck->isChecked());
   s.save();
 }
 
 void MediaViewerSettingsPage::restoreDefaults() {
-  applyValuesToUi(kDefExtensions, kDefVolume, kDefLoop, kDefAutoplay);
+  applyValuesToUi(kDefExtensions, kDefVolume, kDefLoop, kDefAutoplay,
+                  kDefFit, kDefZoom);
 }
 
 } // namespace Farman

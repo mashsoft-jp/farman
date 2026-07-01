@@ -418,6 +418,12 @@ public:
   void             setMediaViewerLoop(bool on);
   bool             mediaViewerAutoplay()        const;
   void             setMediaViewerAutoplay(bool on);
+  // 動画の表示サイズをウィンドウに合わせる (fit-to-window) を既定にするか。
+  bool             mediaViewerFitToWindow()     const;
+  void             setMediaViewerFitToWindow(bool on);
+  // fit-to-window が OFF のときに使う既定拡大率 (%)。
+  int              mediaViewerZoomPercent()     const;
+  void             setMediaViewerZoomPercent(int percent);
 
   // ディレクトリ履歴を終了時に保存し、起動時に復元するか
   bool persistHistory()                 const;
@@ -671,7 +677,7 @@ private:
   };
   QStringList           m_imageViewerMimePatterns = { "image/*" };
   int                   m_imageViewerZoomPercent      = 100;
-  bool                  m_imageViewerFitToWindow      = false;
+  bool                  m_imageViewerFitToWindow      = true;
   bool                  m_imageViewerAnimation        = false;
   ImageTransparencyMode m_imageViewerTransparencyMode = ImageTransparencyMode::Checker;
   QColor                m_imageViewerSolidColor       = QColor(Qt::white);
@@ -710,6 +716,8 @@ private:
   int              m_mediaViewerVolume   = 80;
   bool             m_mediaViewerLoop     = false;
   bool             m_mediaViewerAutoplay = true;
+  bool             m_mediaViewerFitToWindow = true;
+  int              m_mediaViewerZoomPercent = 100;
 
   bool             m_persistHistory  = false;
   QStringList      m_paneHistory[static_cast<int>(PaneType::Count)];

@@ -13,6 +13,7 @@
 #include <QEvent>
 #include <QFileInfo>
 #include <QHBoxLayout>
+#include <QAction>
 #include <QToolBar>
 #include <QColorSpace>
 #include <QImage>
@@ -246,7 +247,7 @@ void ImageView::setupUi() {
   m_fitButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-to-window.svg")));
   m_fitButton->setToolTip(tr("Fit to Window"));
   m_fitButton->setFocusPolicy(Qt::StrongFocus);
-  m_toolbar->addWidget(m_fitButton);
+  m_fitButtonAction = m_toolbar->addWidget(m_fitButton);
 
   // 再生 / 停止 (アニメ画像のみ)。OFF なら ▶、ON なら ⏸ アイコン。
   m_animButton = new QToolButton(m_toolbar);
@@ -351,9 +352,8 @@ void ImageView::setupUi() {
       m_fitToWindow = true;
       updateZoomEnabled();
       m_display->setFitToWindow(true);
-      // Fit 時はコンボの表示値を実効ズームに合わせる (シグナル抑止)
-      QSignalBlocker b(m_zoomCombo);
-      m_zoomCombo->setCurrentText(QString::number(m_display->effectiveZoomPercent()) + QLatin1Char('%'));
+      // Fit 時はコンボの表示値をその時点の実効ズームに合わせる。
+      updateZoomComboText();
     } else {
       // Fit OFF: 直前の実効ズームを引き継ぐ (フィット結果のまま固定)
       const int held = m_display->effectiveZoomPercent();
@@ -391,13 +391,11 @@ void ImageView::syncFromSettings() {
   m_transparencyMode = s.imageViewerTransparencyMode();
 
   {
-    QSignalBlocker b(m_zoomCombo);
-    m_zoomCombo->setCurrentText(QString::number(m_zoomPercent) + QLatin1Char('%'));
-  }
-  {
     QSignalBlocker b(m_fitButton);
     m_fitButton->setChecked(m_fitToWindow);
   }
+  // Fit なら実効倍率、手動なら m_zoomPercent をコンボへ表示する。
+  updateZoomComboText();
   {
     QSignalBlocker b(m_animButton);
     m_animButton->setChecked(m_animation);
@@ -418,6 +416,14 @@ void ImageView::updateZoomEnabled() {
   m_zoomCombo->setEnabled(!m_fitToWindow);
 }
 
+void ImageView::updateZoomComboText() {
+  if (!m_zoomCombo) return;
+  // Fit 中はその時点の実効倍率を表示する (無効状態でも値は実態に追従させる)。
+  const int pct = m_fitToWindow ? effectiveZoomPercent() : m_zoomPercent;
+  QSignalBlocker b(m_zoomCombo);
+  m_zoomCombo->setCurrentText(QString::number(pct) + QLatin1Char('%'));
+}
+
 void ImageView::applyDisplayState() {
   if (!m_display) return;
   m_display->setFitToWindow(m_fitToWindow);
@@ -434,6 +440,9 @@ void ImageView::applyDisplayState() {
       m_movie->jumpToFrame(0);
     }
   }
+
+  // ロード直後など、Fit 中はその時点の実効倍率をコンボへ反映する。
+  if (m_fitToWindow) updateZoomComboText();
 }
 
 bool ImageView::loadFile(const QString& filePath) {
@@ -598,14 +607,22 @@ QSize ImageView::imageAreaSize() const {
 
 void ImageView::addToolbarWidget(QWidget* widget) {
   if (!m_toolbar || !widget) return;
-  // QToolBar は addWidget で末尾追加。ImageViewerWindow が「ウィンドウ
-  // サイズを画像にあわせる」ボタンを足すような用途。
-  m_toolbar->addWidget(widget);
+  // 「ウィンドウを画像に合わせる」ボタンは Fit (ウィンドウに合わせる) ボタンの
+  // 直後 (= Fit 系と同じグループ) に挿入する。Fit の action が取れなければ末尾。
+  QAction* before = nullptr;
+  if (m_fitButtonAction) {
+    const QList<QAction*> acts = m_toolbar->actions();
+    const int idx = acts.indexOf(m_fitButtonAction);
+    if (idx >= 0 && idx + 1 < acts.size()) before = acts[idx + 1];
+  }
+  if (before) m_toolbar->insertWidget(before, widget);
+  else        m_toolbar->addWidget(widget);
 
-  // Tab 順: 既存ツールバー末尾 → 新 widget → scrollArea。
-  // これをやらないと、デフォルトのウィジェット作成順では新 widget が
-  // scrollArea の後ろに回ってしまい、Tab で巡回しづらくなる。
-  if (m_lastToolbarWidget && m_scrollArea) {
+  // Tab 順: Fit → 新 widget → (以降の既存ボタン)。
+  if (m_fitButton) {
+    setTabOrder(m_fitButton, widget);
+    if (m_animButton) setTabOrder(widget, m_animButton);
+  } else if (m_lastToolbarWidget && m_scrollArea) {
     setTabOrder(m_lastToolbarWidget, widget);
     setTabOrder(widget,              m_scrollArea);
     m_lastToolbarWidget = widget;
@@ -633,6 +650,8 @@ bool ImageView::eventFilter(QObject* watched, QEvent* event) {
   if (m_scrollArea && watched == m_scrollArea->viewport()
       && event->type() == QEvent::Resize) {
     if (m_display) m_display->onViewportResized();
+    // Fit 中はリサイズで実効倍率が変わるので、コンボ表示を追従させる。
+    if (m_fitToWindow) updateZoomComboText();
   }
   return QWidget::eventFilter(watched, event);
 }

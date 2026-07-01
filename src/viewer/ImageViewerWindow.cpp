@@ -107,7 +107,7 @@ void ImageViewerWindow::fitWindowToImage() {
   // 現在の実効ズーム率 (Fit-to-Window 時はビューポートに基づく自動倍率) を
   // 反映する。ユーザーが Zoom = 25% にしているなら、ウィンドウは画像の
   // 25% サイズに収まるよう調整される。
-  const int zoom = qMax(1, m_imageView->effectiveZoomPercent());
+  const int zoom = qMax(1, m_imageView->windowFitZoomPercent());
   const QSize scaledImage(
     qMax(1, imgSize.width()  * zoom / 100),
     qMax(1, imgSize.height() * zoom / 100));

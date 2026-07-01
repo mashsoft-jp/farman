@@ -14,8 +14,8 @@ namespace Farman {
 namespace {
 // 既定値 (Settings の初期値と一致させる)。
 constexpr int  kDefZoomPercent = 100;
-constexpr bool kDefFit         = false;
-constexpr bool kDefAnimation   = false;
+constexpr bool kDefFit          = true;
+constexpr bool kDefAnimation    = false;
 // 既定の対応拡張子 (Settings::m_imageViewerExtensions と一致させる)。
 const QStringList kDefExtensions = {
   "png", "jp*g", "gif", "bmp", "svg", "webp", "ico", "tif*", "psd"
