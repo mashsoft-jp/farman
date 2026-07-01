@@ -63,7 +63,15 @@ PdfView::PdfView(QWidget* parent) : QWidget(parent) {
   setupUi();
 }
 
-PdfView::~PdfView() = default;
+PdfView::~PdfView() {
+  // 破棄時、子として持つ QPdfDocument が deleteChildren で close() され、
+  // pageCountChanged(0) を emit する。このとき既に破棄された m_pageSpin へ
+  // onPageCountChanged がアクセスしてクラッシュする (外部ウィンドウを Enter で
+  // 閉じたとき等)。先にドキュメントからの signal を切っておく。
+  if (m_document) {
+    m_document->disconnect(this);
+  }
+}
 
 void PdfView::setupUi() {
   auto* root = new QVBoxLayout(this);
