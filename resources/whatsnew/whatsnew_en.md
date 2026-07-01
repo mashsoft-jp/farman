@@ -23,6 +23,14 @@ Viewers opened in a separate window now show the same status information
 as the inline view. The media viewer shows a summary of the format /
 codec / resolution / duration.
 
+### Improved Zoom for Image / Video Viewers
+
+- The video viewer now also has a zoom factor and a "Fit to window" toggle
+- "Fit content to window" is enabled by default; when turned off, content is
+  shown / played at the default zoom (configurable in the plugin settings)
+- In external viewers, "Fit window to image / video" (Ctrl+1) resizes the
+  window to the actual size for the current zoom factor
+
 ### Other Changes
 
 - Fixed Markdown documents containing raw HTML being truncated partway
