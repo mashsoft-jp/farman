@@ -161,6 +161,7 @@ qt_add_executable(farman
   src/core/UserCommandManager.cpp
   src/core/AppPresets.cpp
   src/core/ArchiveContext.cpp
+  src/core/ArchiveEntryName.cpp
   src/core/ThumbnailCache.cpp
   src/core/ThumbnailWorker.cpp
   src/core/UpdateChecker.cpp

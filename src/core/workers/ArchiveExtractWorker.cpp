@@ -1,4 +1,5 @@
 #include "ArchiveExtractWorker.h"
+#include "core/ArchiveEntryName.h"
 #include "utils/ArchivePath.h"
 #include <QDir>
 #include <QFileInfo>
@@ -115,22 +116,10 @@ void ArchiveExtractWorker::run() {
     if (r < ARCHIVE_OK) continue;  // 警告は黙って次へ
 
     // 出力パスを outputDir 配下へ書き換える。
-    // Windows ではアーカイブ内エントリ名が UTF-16 で取れる pathname_w を使う
-    // (zip の EFS bit 付きや PaX UTF-8 tar に対応)。書き戻す宛先 path も
-    // 同様に wchar_t 版でセットしないと write-disk 段で日本語ファイル名が
-    // 化けて作成失敗する。
-    QString origName;
-#ifdef Q_OS_WIN
-    if (const wchar_t* wname = archive_entry_pathname_w(entry)) {
-      origName = QString::fromWCharArray(wname);
-    } else if (const char* uname = archive_entry_pathname_utf8(entry)) {
-      origName = QString::fromUtf8(uname);
-    } else if (const char* name = archive_entry_pathname(entry)) {
-      origName = QString::fromLocal8Bit(name);
-    }
-#else
-    origName = QString::fromUtf8(archive_entry_pathname(entry));
-#endif
+    // エントリ名は UTF-8 フラグ無しの CP932 (Shift-JIS) zip でも文字化けしない
+    // よう共通ヘルパで判定して QString 化する。宛先 path も下でこの UTF-8 /
+    // wchar_t からセットするので、write-disk 段で日本語ファイル名が化けない。
+    const QString origName = decodeArchiveEntryName(entry);
     // Zip Slip 対策: `..` / 絶対パス / outputDir を抜け出すエントリは拒否。
     // 危険エントリを 1 件でも含むアーカイブは「正常終了」にせず、操作全体を
     // 失敗扱いにする (UI 側で errorOccurred を表示しなくても、最終的な

@@ -1,4 +1,5 @@
 #include "ArchiveContext.h"
+#include "ArchiveEntryName.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -20,22 +21,9 @@ inline const wchar_t* asWChar(const QString& s) {
 // libarchive のエントリパス (アーカイブの内部表現) を取得して
 // 「先頭 '/' なし、末尾 '/' なし」のキー文字列に整える。
 QString readEntryPath(struct archive_entry* entry) {
-  QString path;
-#ifdef Q_OS_WIN
-  if (const wchar_t* wname = archive_entry_pathname_w(entry)) {
-    path = QString::fromWCharArray(wname);
-  } else if (const char* uname = archive_entry_pathname_utf8(entry)) {
-    path = QString::fromUtf8(uname);
-  } else if (const char* name = archive_entry_pathname(entry)) {
-    path = QString::fromLocal8Bit(name);
-  }
-#else
-  if (const char* uname = archive_entry_pathname_utf8(entry)) {
-    path = QString::fromUtf8(uname);
-  } else if (const char* name = archive_entry_pathname(entry)) {
-    path = QString::fromUtf8(name);
-  }
-#endif
+  // UTF-8 フラグ無しの CP932 (Shift-JIS) zip 等でも文字化けしないよう、
+  // 共通ヘルパでエンコーディングを判定して QString 化する。
+  QString path = decodeArchiveEntryName(entry);
   // 末尾 '/' (ディレクトリ表記) を落とす
   while (path.size() > 0 && path.endsWith(QLatin1Char('/'))) {
     path.chop(1);

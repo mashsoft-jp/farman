@@ -1,4 +1,5 @@
 #include "ArchiveExtractEntriesWorker.h"
+#include "core/ArchiveEntryName.h"
 #include "utils/ArchivePath.h"
 #include <QDir>
 #include <QFile>
@@ -19,22 +20,8 @@ inline const wchar_t* asWChar(const QString& s) {
 #endif
 
 QString readEntryPath(struct archive_entry* entry) {
-  QString path;
-#ifdef Q_OS_WIN
-  if (const wchar_t* wname = archive_entry_pathname_w(entry)) {
-    path = QString::fromWCharArray(wname);
-  } else if (const char* uname = archive_entry_pathname_utf8(entry)) {
-    path = QString::fromUtf8(uname);
-  } else if (const char* name = archive_entry_pathname(entry)) {
-    path = QString::fromLocal8Bit(name);
-  }
-#else
-  if (const char* uname = archive_entry_pathname_utf8(entry)) {
-    path = QString::fromUtf8(uname);
-  } else if (const char* name = archive_entry_pathname(entry)) {
-    path = QString::fromUtf8(name);
-  }
-#endif
+  // CP932 (Shift-JIS) 等の非 UTF-8 zip でも文字化けしないよう共通ヘルパで判定。
+  QString path = decodeArchiveEntryName(entry);
   while (path.size() > 0 && path.endsWith(QLatin1Char('/'))) path.chop(1);
   while (path.size() > 0 && path.startsWith(QLatin1Char('/'))) path.remove(0, 1);
   return path;

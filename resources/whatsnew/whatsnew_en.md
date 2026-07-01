@@ -39,4 +39,7 @@ codec / resolution / duration.
 - Fixed the delete-confirmation dialog layout breaking with long file names
 - Fall back to home / root when the initial startup directory does not exist
 - Fixed 0-byte files getting stuck on "Loading" in the binary viewer
+- Fixed garbled file names for Japanese (Shift-JIS) zips without the UTF-8
+  flag, both when browsing inside the archive and when extracting
+- Fixed a possible crash when closing a PDF opened in an external viewer
 - Stability improvements and bug fixes

@@ -1,4 +1,5 @@
 #include "ThumbnailWorker.h"
+#include "core/ArchiveEntryName.h"
 #include "utils/ArchivePath.h"
 
 #include <QBuffer>
@@ -44,7 +45,11 @@ QImage loadImageFromArchive(const QString& archivePath, const QString& innerPath
   QImage img;
   struct archive_entry* entry = nullptr;
   while (archive_read_next_header(src, &entry) == ARCHIVE_OK) {
-    const QString name = QString::fromUtf8(archive_entry_pathname(entry));
+    // 一覧側 (ArchiveContext) と同じ判定で復号し、CP932 zip でも needle と一致
+    // させる。末尾/先頭 '/' は付かない前提 (readEntryPath と同様)。
+    QString name = decodeArchiveEntryName(entry);
+    while (name.endsWith(QLatin1Char('/'))) name.chop(1);
+    while (name.startsWith(QLatin1Char('/'))) name.remove(0, 1);
     if (name != needle) {
       archive_read_data_skip(src);
       continue;
