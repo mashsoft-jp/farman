@@ -12,6 +12,7 @@
 #include "utils/EnterClickFilter.h"
 #include <QEvent>
 #include <QFileInfo>
+#include <QKeyEvent>
 #include <QHBoxLayout>
 #include <QAction>
 #include <QToolBar>
@@ -245,7 +246,7 @@ void ImageView::setupUi() {
   m_fitButton = new QToolButton(m_toolbar);
   m_fitButton->setCheckable(true);
   m_fitButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-to-window.svg")));
-  m_fitButton->setToolTip(tr("Fit to Window"));
+  m_fitButton->setToolTip(tr("Fit to Window (F)"));
   m_fitButton->setFocusPolicy(Qt::StrongFocus);
   m_fitButtonAction = m_toolbar->addWidget(m_fitButton);
 
@@ -253,7 +254,7 @@ void ImageView::setupUi() {
   m_animButton = new QToolButton(m_toolbar);
   m_animButton->setCheckable(true);
   m_animButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/play.svg")));
-  m_animButton->setToolTip(tr("Play / Pause animation (GIF / WebP)"));
+  m_animButton->setToolTip(tr("Play / Pause animation (GIF / WebP) (Space)"));
   m_animButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_animButton);
 
@@ -262,7 +263,7 @@ void ImageView::setupUi() {
   m_transparencyButton->setCheckable(true);
   m_transparencyButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/transparency.svg")));
   m_transparencyButton->setToolTip(tr(
-    "Transparency background: off = checker, on = solid color"));
+    "Transparency background: off = checker, on = solid color (T)"));
   m_transparencyButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_transparencyButton);
 
@@ -270,7 +271,7 @@ void ImageView::setupUi() {
   // 連打すると 0 → 90 → 180 → 270 → 0 と進む。ファイル切替で 0 にリセット。
   m_rotateCwButton = new QToolButton(m_toolbar);
   m_rotateCwButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/rotate-cw.svg")));
-  m_rotateCwButton->setToolTip(tr("Rotate 90° clockwise (display only)"));
+  m_rotateCwButton->setToolTip(tr("Rotate 90° clockwise (display only) (R)"));
   m_rotateCwButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_rotateCwButton, &QToolButton::clicked,
           this,             &ImageView::rotateCw90);
@@ -289,7 +290,7 @@ void ImageView::setupUi() {
   infoFont.setItalic(true);
   infoFont.setBold(true);
   m_infoButton->setFont(infoFont);
-  m_infoButton->setToolTip(tr("Show image information / metadata"));
+  m_infoButton->setToolTip(tr("Show image information / metadata (I)"));
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_infoButton, &QToolButton::clicked,
           this,         &ImageView::toggleImageInfoDialog);
@@ -647,13 +648,79 @@ void ImageView::clearContent() {
 }
 
 bool ImageView::eventFilter(QObject* watched, QEvent* event) {
-  if (m_scrollArea && watched == m_scrollArea->viewport()
-      && event->type() == QEvent::Resize) {
-    if (m_display) m_display->onViewportResized();
-    // Fit 中はリサイズで実効倍率が変わるので、コンボ表示を追従させる。
-    if (m_fitToWindow) updateZoomComboText();
+  if (m_scrollArea && watched == m_scrollArea->viewport()) {
+    if (event->type() == QEvent::Resize) {
+      if (m_display) m_display->onViewportResized();
+      // Fit 中はリサイズで実効倍率が変わるので、コンボ表示を追従させる。
+      if (m_fitToWindow) updateZoomComboText();
+    } else if (event->type() == QEvent::KeyPress) {
+      // フォーカスは focusProxy 経由で scrollArea/viewport にあるので、
+      // ここでビュアーのキー操作を拾う (スクロール系キーは scrollArea に任せる)。
+      if (handleViewerKey(static_cast<QKeyEvent*>(event))) return true;
+    }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void ImageView::keyPressEvent(QKeyEvent* event) {
+  if (handleViewerKey(event)) return;
+  QWidget::keyPressEvent(event);
+}
+
+bool ImageView::handleViewerKey(QKeyEvent* event) {
+  switch (event->key()) {
+    case Qt::Key_I:
+      toggleImageInfoDialog();
+      return true;
+    case Qt::Key_R:
+      rotateCw90();
+      return true;
+    case Qt::Key_F:
+      if (m_fitButton) { m_fitButton->toggle(); return true; }
+      return false;
+    case Qt::Key_T:
+      // 透明部分の背景 (チェッカー / 単色) をトグル。
+      if (m_transparencyButton) { m_transparencyButton->toggle(); return true; }
+      return false;
+    case Qt::Key_Space:
+      // アニメ画像のときだけ再生/停止をトグル (それ以外は既定動作に任せる)。
+      if (m_animButton && m_animButton->isEnabled()) {
+        m_animButton->toggle();
+        return true;
+      }
+      return false;
+    case Qt::Key_Plus:
+    case Qt::Key_Equal:  // Shift 無しの '=' キーも '+' 相当として受ける
+      stepZoom(true);
+      return true;
+    case Qt::Key_Minus:
+      stepZoom(false);
+      return true;
+    default:
+      return false;
+  }
+}
+
+void ImageView::stepZoom(bool zoomIn) {
+  if (!m_zoomCombo) return;
+  // 基準は現在の実効倍率 (Fit 中はフィット比、手動時は m_zoomPercent)。
+  const int base = m_fitToWindow ? effectiveZoomPercent() : m_zoomPercent;
+  // Fit 中は解除して手動ズームに切り替える (Fit トグル OFF と同じ流れ)。
+  if (m_fitToWindow && m_fitButton) {
+    QSignalBlocker b(m_fitButton);
+    m_fitButton->setChecked(false);
+    m_fitToWindow = false;
+    updateZoomEnabled();
+    if (m_display) m_display->setFitToWindow(false);
+  }
+  // 25% 刻みのグリッドにスナップして増減する (100→125→150…、または
+  // 100→75→50…)。開始値が中途半端 (Fit の実効倍率等) でも 25 の倍数に揃う。
+  const int step = 25;
+  const int next = zoomIn
+      ? qBound(step, (base / step + 1) * step, 1000)   // base より上の最小の 25 の倍数
+      : qBound(step, (base - 1) / step * step, 1000);  // base より下の最大の 25 の倍数
+  // コンボへ反映 → currentTextChanged 経由で m_display->setZoomPercent が走る。
+  m_zoomCombo->setCurrentText(QString::number(next) + QLatin1Char('%'));
 }
 
 bool ImageView::detectAnimated(const QString& filePath) {

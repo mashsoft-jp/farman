@@ -43,17 +43,18 @@ void ImageViewerWindow::setupUi() {
   // 「ウィンドウサイズを画像にあわせる」ボタンを ImageView の既存ツールバー
   // (Zoom / Fit / Anim / Transparency) と同じ列に挿入する。
   // - 表示形式: アイコンのみ (他のツールバーボタンと揃える)
-  // - ショートカット: Ctrl+1 (Total Commander 風の "1:1 表示" 流儀)
+  // - ショートカット: W キー (keyPressEvent で処理)。Ctrl/Cmd 系は macOS の
+  //   メニューショートカット (表示モード切替 Cmd+1〜4 等) と衝突して発火しない
+  //   ため、修飾キー無しのアルファベットキーで受ける。
   // - Tab フォーカス: macOS のキーボードナビゲーション設定に依存しないよう
   //   StrongFocus を明示。
   auto* fitWinBtn = new QToolButton(this);
   fitWinBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-window-to-image.svg")));
   fitWinBtn->setIconSize(QSize(20, 20));
-  fitWinBtn->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_1));
   fitWinBtn->setFocusPolicy(Qt::StrongFocus);
   fitWinBtn->setToolButtonStyle(Qt::ToolButtonIconOnly);
   fitWinBtn->setToolTip(tr(
-    "Fit window to image (Ctrl+1) — resize this window so the image is shown "
+    "Fit window to image (W) — resize this window so the image is shown "
     "at its natural size. If the image is larger than the screen, the window "
     "is clamped to the available screen area."));
   connect(fitWinBtn, &QToolButton::clicked, this,
@@ -145,6 +146,13 @@ void ImageViewerWindow::keyPressEvent(QKeyEvent* event) {
       event->key() == Qt::Key_Return ||
       event->key() == Qt::Key_Enter) {
     close();
+    return;
+  }
+  // W: ウィンドウサイズを画像に合わせる。ImageView が消費しなかったキーが
+  // ここへ伝播してくる (Cmd/Ctrl 系はメニューショートカットと衝突するため
+  // アルファベットキーで受ける)。
+  if (event->key() == Qt::Key_W) {
+    fitWindowToImage();
     return;
   }
   QMainWindow::keyPressEvent(event);

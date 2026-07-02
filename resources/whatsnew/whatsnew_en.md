@@ -28,8 +28,12 @@ codec / resolution / duration.
 - The video viewer now also has a zoom factor and a "Fit to window" toggle
 - "Fit content to window" is enabled by default; when turned off, content is
   shown / played at the default zoom (configurable in the plugin settings)
-- In external viewers, "Fit window to image / video" (Ctrl+1) resizes the
+- In external viewers, "Fit window to image / video" (W key) resizes the
   window to the actual size for the current zoom factor
+- Added keyboard shortcuts to the image viewer
+  (`I`=info, `Space`=play/pause animation, `R`=rotate, `F`=fit to window,
+  `T`=toggle transparency background, `+`/`-`=zoom in / out by 25%,
+  `W`=fit window to image)
 
 ### Other Changes
 

@@ -70,11 +70,12 @@ void MediaViewerWindow::setupUi() {
   auto* fitWinBtn = new QToolButton(this);
   fitWinBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-window-to-image.svg")));
   fitWinBtn->setIconSize(QSize(20, 20));
-  fitWinBtn->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_1));
+  // ショートカットは W キー (keyPressEvent で処理)。Cmd/Ctrl 系はメニュー
+  // ショートカットと衝突して発火しないため、修飾キー無しのアルファベットで受ける。
   fitWinBtn->setFocusPolicy(Qt::StrongFocus);
   fitWinBtn->setToolButtonStyle(Qt::ToolButtonIconOnly);
   fitWinBtn->setToolTip(tr(
-    "Fit window to video (Ctrl+1) — resize this window so the video is shown "
+    "Fit window to video (W) — resize this window so the video is shown "
     "at its natural size. If the video is larger than the screen, the window "
     "is clamped to the available screen area."));
   connect(fitWinBtn, &QToolButton::clicked, this,
@@ -103,6 +104,13 @@ void MediaViewerWindow::keyPressEvent(QKeyEvent* event) {
       close();
       return;
     }
+  }
+  // W: ウィンドウサイズを動画に合わせる (External のみ。fitWindowToVideo が
+  // isWindow() を確認する)。Cmd/Ctrl 系はメニューショートカットと衝突するため
+  // アルファベットキーで受ける。
+  if (event->key() == Qt::Key_W && isWindow()) {
+    fitWindowToVideo();
+    return;
   }
   QMainWindow::keyPressEvent(event);
 }

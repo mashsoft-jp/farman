@@ -3737,87 +3737,107 @@ What would you like to do?</source>
 <context>
     <name>Farman::ImageView</name>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="235"/>
+        <location filename="../src/viewer/ImageView.cpp" line="236"/>
         <source>Zoom:</source>
         <translation>ズーム:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="248"/>
         <source>Fit to Window</source>
-        <translation>ウィンドウに合わせる</translation>
+        <translation type="vanished">ウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="256"/>
         <source>Play / Pause animation (GIF / WebP)</source>
-        <translation>アニメ再生 / 一時停止 (GIF / WebP)</translation>
+        <translation type="vanished">アニメ再生 / 一時停止 (GIF / WebP)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="264"/>
         <source>Transparency background: off = checker, on = solid color</source>
-        <translation>透明部分の背景: OFF = チェッカー、ON = 単色</translation>
+        <translation type="vanished">透明部分の背景: OFF = チェッカー、ON = 単色</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="273"/>
         <source>Rotate 90° clockwise (display only)</source>
-        <translation>時計回りに 90° 回転 (表示のみ)</translation>
+        <translation type="vanished">時計回りに 90° 回転 (表示のみ)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="292"/>
         <source>Show image information / metadata</source>
-        <translation>画像情報 / メタデータを表示</translation>
+        <translation type="vanished">画像情報 / メタデータを表示</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="733"/>
+        <location filename="../src/viewer/ImageView.cpp" line="249"/>
+        <source>Fit to Window (F)</source>
+        <translation>ウィンドウに合わせる (F)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="257"/>
+        <source>Play / Pause animation (GIF / WebP) (Space)</source>
+        <translation>アニメーション再生 / 停止 (GIF / WebP) (Space)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="265"/>
+        <source>Transparency background: off = checker, on = solid color (T)</source>
+        <translation>透明部分の背景: OFF = チェッカー、ON = 単色 (T)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="274"/>
+        <source>Rotate 90° clockwise (display only) (R)</source>
+        <translation>時計回りに 90° 回転 (表示のみ) (R)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="293"/>
+        <source>Show image information / metadata (I)</source>
+        <translation>画像情報 / メタデータを表示 (I)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="796"/>
         <source>File: %1</source>
         <translation>ファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="734"/>
+        <location filename="../src/viewer/ImageView.cpp" line="797"/>
         <source>Format: %1</source>
         <translation>フォーマット: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="736"/>
+        <location filename="../src/viewer/ImageView.cpp" line="799"/>
         <source>Size: %1 x %2 px</source>
         <translation>サイズ: %1 × %2 px</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="738"/>
+        <location filename="../src/viewer/ImageView.cpp" line="801"/>
         <source>File size: %1</source>
         <translation>ファイルサイズ: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="752"/>
+        <location filename="../src/viewer/ImageView.cpp" line="815"/>
         <source>Color depth: %1 bpp</source>
         <translation>色深度: %1 bpp</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="759"/>
+        <location filename="../src/viewer/ImageView.cpp" line="822"/>
         <source>Frames: %1</source>
         <translation>フレーム数: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="777"/>
+        <location filename="../src/viewer/ImageView.cpp" line="840"/>
         <source>Resolution: %1 x %2 DPI</source>
         <translation>解像度: %1 × %2 DPI</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="788"/>
+        <location filename="../src/viewer/ImageView.cpp" line="851"/>
         <source>Color profile: %1</source>
         <translation>カラープロファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="797"/>
+        <location filename="../src/viewer/ImageView.cpp" line="860"/>
         <source>--- Embedded text ---</source>
         <translation>--- 埋め込みテキスト ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="813"/>
+        <location filename="../src/viewer/ImageView.cpp" line="876"/>
         <source>--- Exif ---</source>
         <translation>--- Exif ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="832"/>
+        <location filename="../src/viewer/ImageView.cpp" line="895"/>
         <source>Image Information</source>
         <translation>画像情報</translation>
     </message>
@@ -3895,13 +3915,21 @@ What would you like to do?</source>
         <translation type="vanished">画像が自然サイズで表示されるよう、このウィンドウのサイズを調整します (Ctrl+1)。画像が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageViewerWindow.cpp" line="55"/>
         <source>Fit window to image (Ctrl+1) — resize this window so the image is shown at its natural size. If the image is larger than the screen, the window is clamped to the available screen area.</source>
-        <translation>ウィンドウサイズを画像にあわせる (Ctrl+1) — 画像が自然サイズで表示されるようウィンドウを調整します。画像が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
+        <translation type="vanished">ウィンドウサイズを画像にあわせる (Ctrl+1) — 画像が自然サイズで表示されるようウィンドウを調整します。画像が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
     </message>
     <message>
         <source>Resize this window so that the image is shown at its natural size. If the image is larger than the screen, the window is clamped to the available screen area.</source>
         <translation type="vanished">画像が自然サイズで表示されるよう、このウィンドウのサイズを調整します。画像が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
+    </message>
+    <message>
+        <source>Fit window to image (Ctrl+0) — resize this window so the image is shown at its natural size. If the image is larger than the screen, the window is clamped to the available screen area.</source>
+        <translation type="vanished">ウィンドウサイズを画像にあわせる (Ctrl+0) — 画像が自然サイズで表示されるようウィンドウを調整します。画像が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageViewerWindow.cpp" line="56"/>
+        <source>Fit window to image (W) — resize this window so the image is shown at its natural size. If the image is larger than the screen, the window is clamped to the available screen area.</source>
+        <translation>ウィンドウサイズを画像にあわせる (W) — 画像が自然サイズで表示されるようウィンドウを調整します。画像が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
     </message>
 </context>
 <context>
@@ -5543,9 +5571,17 @@ The format or codec is not supported on this platform.</source>
 <context>
     <name>Farman::MediaViewerWindow</name>
     <message>
-        <location filename="../src/viewer/MediaViewerWindow.cpp" line="76"/>
         <source>Fit window to video (Ctrl+1) — resize this window so the video is shown at its natural size. If the video is larger than the screen, the window is clamped to the available screen area.</source>
-        <translation>ウィンドウサイズを動画にあわせる (Ctrl+1) — 動画が自然サイズで表示されるようウィンドウを調整します。動画が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
+        <translation type="vanished">ウィンドウサイズを動画にあわせる (Ctrl+1) — 動画が自然サイズで表示されるようウィンドウを調整します。動画が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
+    </message>
+    <message>
+        <source>Fit window to video (Ctrl+0) — resize this window so the video is shown at its natural size. If the video is larger than the screen, the window is clamped to the available screen area.</source>
+        <translation type="vanished">ウィンドウサイズを動画にあわせる (Ctrl+0) — 動画が自然サイズで表示されるようウィンドウを調整します。動画が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaViewerWindow.cpp" line="77"/>
+        <source>Fit window to video (W) — resize this window so the video is shown at its natural size. If the video is larger than the screen, the window is clamped to the available screen area.</source>
+        <translation>ウィンドウサイズを動画にあわせる (W) — 動画が自然サイズで表示されるようウィンドウを調整します。動画が画面より大きい場合は利用可能な画面領域にクランプされます。</translation>
     </message>
 </context>
 <context>
@@ -5616,87 +5652,87 @@ The format or codec is not supported on this platform.</source>
 <context>
     <name>Farman::PdfView</name>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="82"/>
+        <location filename="../src/viewer/PdfView.cpp" line="90"/>
         <source>Previous page (PageUp)</source>
         <translation>前のページ (PageUp)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="92"/>
+        <location filename="../src/viewer/PdfView.cpp" line="100"/>
         <source>Jump to page</source>
         <translation>ページにジャンプ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="105"/>
+        <location filename="../src/viewer/PdfView.cpp" line="113"/>
         <source>Next page (PageDown)</source>
         <translation>次のページ (PageDown)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="115"/>
+        <location filename="../src/viewer/PdfView.cpp" line="123"/>
         <source>Zoom out (Ctrl+-)</source>
         <translation>ズームアウト (Ctrl+-)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="122"/>
+        <location filename="../src/viewer/PdfView.cpp" line="130"/>
         <source>Zoom in (Ctrl++)</source>
         <translation>ズームイン (Ctrl++)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="128"/>
+        <location filename="../src/viewer/PdfView.cpp" line="136"/>
         <source>Fit Width</source>
         <translation>幅にフィット</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="130"/>
+        <location filename="../src/viewer/PdfView.cpp" line="138"/>
         <source>Fit page width to view</source>
         <translation>ページ幅をビューに合わせる</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="136"/>
+        <location filename="../src/viewer/PdfView.cpp" line="144"/>
         <source>Fit Page</source>
         <translation>ページ全体</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="138"/>
+        <location filename="../src/viewer/PdfView.cpp" line="146"/>
         <source>Fit whole page in view</source>
         <translation>ページ全体をビューに収める</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="147"/>
+        <location filename="../src/viewer/PdfView.cpp" line="155"/>
         <source>Continuous</source>
         <translation>連続表示</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="151"/>
+        <location filename="../src/viewer/PdfView.cpp" line="159"/>
         <source>Continuous multi-page scrolling (off = single page)</source>
         <translation>複数ページを連続スクロール表示 (オフ = 1 ページずつ)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="160"/>
+        <location filename="../src/viewer/PdfView.cpp" line="168"/>
         <source>Find:</source>
         <translation>検索:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="166"/>
+        <location filename="../src/viewer/PdfView.cpp" line="174"/>
         <source>Search text  (%1)</source>
         <translation>検索する文字列  (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="167"/>
+        <location filename="../src/viewer/PdfView.cpp" line="175"/>
         <source>Search text in this PDF (%1)</source>
         <translation>この PDF 内のテキストを検索 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="177"/>
+        <location filename="../src/viewer/PdfView.cpp" line="185"/>
         <source>Previous match (Shift+Enter)</source>
         <translation>前のマッチへ (Shift+Enter)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="184"/>
+        <location filename="../src/viewer/PdfView.cpp" line="192"/>
         <source>Next match (Enter)</source>
         <translation>次のマッチへ (Enter)</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/viewer/PdfView.cpp" line="335"/>
+        <location filename="../src/viewer/PdfView.cpp" line="343"/>
         <source>PDF · %1 page(s) · %2</source>
         <comment>PDF status: page count + file size</comment>
         <translation>
@@ -5704,17 +5740,17 @@ The format or codec is not supported on this platform.</source>
         </translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="512"/>
+        <location filename="../src/viewer/PdfView.cpp" line="520"/>
         <source>Not found</source>
         <translation>見つかりません</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="514"/>
+        <location filename="../src/viewer/PdfView.cpp" line="522"/>
         <source>%1 matches</source>
         <translation>%1 件</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="516"/>
+        <location filename="../src/viewer/PdfView.cpp" line="524"/>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
     </message>
@@ -7817,12 +7853,12 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>実行ファイルを参照...</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveContext.cpp" line="99"/>
+        <location filename="../src/core/ArchiveContext.cpp" line="87"/>
         <source>Failed to open archive: %1</source>
         <translation>アーカイブを開けませんでした: %1</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveContext.cpp" line="130"/>
+        <location filename="../src/core/ArchiveContext.cpp" line="118"/>
         <source>Archive read error: %1</source>
         <translation>アーカイブの読込エラー: %1</translation>
     </message>
@@ -7831,7 +7867,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation type="vanished">このアーカイブはパスワードで保護されています (非対応)。</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveContext.cpp" line="118"/>
+        <location filename="../src/core/ArchiveContext.cpp" line="106"/>
         <source>Archive load cancelled.</source>
         <translation>アーカイブの読み込みをキャンセルしました。</translation>
     </message>

@@ -94,6 +94,9 @@ public:
 
 protected:
   bool eventFilter(QObject* watched, QEvent* event) override;
+  // ビュアーにフォーカスがあるときのキー操作 (I=情報, R=回転, F=Fit, Space=アニメ
+  // 再生/停止, +/-=ズーム)。MediaView と同じ作法で focus 内でのみ処理する。
+  void keyPressEvent(QKeyEvent* event) override;
 
 private slots:
   // ツールバーの "i" ボタンと `i` キーから呼ばれる。
@@ -113,6 +116,10 @@ private:
   void syncFromSettings();
   void applyDisplayState();
   void updateZoomEnabled();
+  // キー操作の実処理。処理したら true。keyPressEvent と eventFilter から呼ぶ。
+  bool handleViewerKey(QKeyEvent* event);
+  // +/- キーによる拡大 / 縮小。Fit 中は解除して現在の実効倍率から段階変更する。
+  void stepZoom(bool zoomIn);
   // ズームコンボの表示値を更新する。Fit 中はその時の実効倍率
   // (effectiveZoomPercent) を、手動時は m_zoomPercent を表示する。
   void updateZoomComboText();
