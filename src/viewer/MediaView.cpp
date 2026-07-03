@@ -182,7 +182,7 @@ void MediaView::setupUi() {
   m_toolbar->setMovable(false);
   m_toolbar->setFloatable(false);
   m_toolbar->setIconSize(QSize(20, 20));
-  m_toolbar->setStyleSheet(toolbarStyleSheet());
+  applyToolbarStyle(m_toolbar);
 
   m_playButton = new QToolButton(m_toolbar);
   m_playButton->setToolTip(tr("Play / Pause (Space)"));

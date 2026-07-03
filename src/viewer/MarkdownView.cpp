@@ -70,7 +70,7 @@ void MarkdownView::setupUi() {
   m_toolbar->setMovable(false);
   m_toolbar->setFloatable(false);
   m_toolbar->setIconSize(QSize(20, 20));
-  m_toolbar->setStyleSheet(toolbarStyleSheet());
+  applyToolbarStyle(m_toolbar);
 
   // 「ソース表示」トグル: ON = 生 Markdown (= テキストエディタ風)、
   //                      OFF = 整形表示 (= QTextDocument::setMarkdown)。

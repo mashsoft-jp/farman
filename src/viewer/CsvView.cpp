@@ -418,7 +418,7 @@ void CsvView::setupUi() {
   m_toolbar->setMovable(false);
   m_toolbar->setFloatable(false);
   m_toolbar->setIconSize(QSize(20, 20));
-  m_toolbar->setStyleSheet(toolbarStyleSheet());
+  applyToolbarStyle(m_toolbar);
 
   // ── エンコーディング ──
   m_toolbar->addWidget(new QLabel(tr("Encoding:"), m_toolbar));

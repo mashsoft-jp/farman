@@ -1,7 +1,14 @@
 #pragma once
 
+#include "settings/Settings.h"
+
+#include <QApplication>
+#include <QColor>
+#include <QEvent>
 #include <QObject>
+#include <QPalette>
 #include <QString>
+#include <QToolBar>
 
 class QWidget;
 
@@ -15,14 +22,53 @@ namespace Farman {
 // 切り替わるので、:checked の押下状態も明示しないと「ON にしても見た目が
 // 変わらない」状態になる。ここで一括カバーする。
 inline QString toolbarStyleSheet() {
-  return QStringLiteral(
+  // QSS の palette() は setStyleSheet 時点の色で固定されテーマ変更に追従しない
+  // (Light↔Dark 切替で色が残る)。そこで現在のパレットから実際の色を計算して
+  // 埋め込み、テーマ変更時は applyToolbarStyle() が再適用して計算し直す。
+  const QPalette pal = qApp ? qApp->palette() : QPalette();
+  const QColor win = pal.color(QPalette::Active, QPalette::Window);
+  const bool dark = win.lightness() < 128;
+  // ホバー / 押下 (checked) の背景。ライトは少し暗く、ダークは少し明るくして、
+  // どちらのテーマでも「控えめだが分かる」ハイライトにする (押下がライトで
+  // 暗くなり過ぎないよう darker は弱め)。
+  const QColor hover        = dark ? win.lighter(140) : win.darker(106);
+  const QColor checked      = dark ? win.lighter(175) : win.darker(112);
+  const QColor checkedHover = dark ? win.lighter(195) : win.darker(117);
+  const QColor focusBorder  = pal.color(QPalette::Active, QPalette::Highlight);
+
+  QString s;
+  // QToolBar 背景を明示してスタイルシート描画 (フラット) にする。これをやらないと
+  // macOS はネイティブツールバーが押下 (checked) 状態を暗く描いてスタイルシートを
+  // 上書きし、Linux は QToolBar 背景をデスクトップテーマで描いてダーク配色が
+  // 反映されない。全 OS で背景を敷くことで、押下色やテーマ追従を一貫させる。
+  s += QStringLiteral("QToolBar { background-color: %1; border: 0px; }")
+         .arg(win.name());
+  s += QStringLiteral(
     "QToolButton { padding: 3px; border: 1px solid transparent; border-radius: 3px; }"
-    "QToolButton:hover { background-color: palette(midlight); }"
-    "QToolButton:checked { background-color: palette(mid); }"
-    "QToolButton:checked:hover { background-color: palette(mid); }"
-    "QToolButton:focus { border: 2px solid palette(highlight); padding: 2px; }"
-    "QToolButton:checked:focus { background-color: palette(mid); border: 2px solid palette(highlight); padding: 2px; }"
-  );
+    "QToolButton:hover { background-color: %1; }"
+    "QToolButton:checked { background-color: %2; }"
+    "QToolButton:checked:hover { background-color: %3; }"
+    "QToolButton:focus { border: 2px solid %4; padding: 2px; }"
+    "QToolButton:checked:focus { background-color: %2; border: 2px solid %4; padding: 2px; }"
+  ).arg(hover.name(), checked.name(), checkedHover.name(), focusBorder.name());
+  return s;
+}
+
+// ツールバーに共通スタイルを適用し、テーマ変更に追従させる。
+// setStyleSheet(toolbarStyleSheet()) の代わりにこれを使う。
+//
+// toolbarStyleSheet() は現在のパレットから実際の色を計算して埋め込むが、QSS の
+// 値はテーマ変更で自動更新されない。そこで farman のテーマ / 設定変更通知
+// (Settings::settingsChanged) を受けて計算し直して再適用する。settingsChanged は
+// applyThemeFields (qApp->setPalette) の後に emit されるので、この時点で
+// qApp->palette() は既に新テーマ = 正しい色になっている。tb を context にして
+// いるので、ツールバー破棄時に接続は自動解除される。
+inline void applyToolbarStyle(QToolBar* tb) {
+  if (!tb) return;
+  tb->setStyleSheet(toolbarStyleSheet());
+  QObject::connect(&Settings::instance(), &Settings::settingsChanged, tb, [tb]() {
+    tb->setStyleSheet(toolbarStyleSheet());
+  });
 }
 
 // QTableView / QTreeView / QListView (および QTableWidget 等の Widget 系派生)

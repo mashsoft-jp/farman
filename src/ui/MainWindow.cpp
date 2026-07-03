@@ -1734,7 +1734,7 @@ void MainWindow::createMainToolBar() {
   m_toolbar->setIconSize(QSize(20, 20));
   // フォーカス枠 + checkable トグルの押下状態 + ホバーをまとめてスタイリング。
   // (utils/EnterClickFilter.h の toolbarStyleSheet() に共通定義あり)
-  m_toolbar->setStyleSheet(toolbarStyleSheet());
+  applyToolbarStyle(m_toolbar);
 
   // 1 ボタン分の生成ヘルパ。CommandRegistry::execute(id) を呼ぶだけの
   // QAction を作って toolbar に追加。tooltip にはラベル + キーバインドを

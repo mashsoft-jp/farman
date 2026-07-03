@@ -209,7 +209,7 @@ void BinaryView::setupUi() {
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
   // 現状 BinaryView のヘッダは QComboBox のみだが、将来トグルボタンが
   // 追加される可能性も見越して同じスタイルを適用しておく。
-  toolbar->setStyleSheet(toolbarStyleSheet());
+  applyToolbarStyle(toolbar);
 
   toolbar->addWidget(new QLabel(tr("Unit:"), toolbar));
   m_unitCombo = new QComboBox(toolbar);

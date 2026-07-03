@@ -231,7 +231,7 @@ void ImageView::setupUi() {
   m_toolbar->setFloatable(false);
   m_toolbar->setIconSize(QSize(20, 20));
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
-  m_toolbar->setStyleSheet(toolbarStyleSheet());
+  applyToolbarStyle(m_toolbar);
 
   m_toolbar->addWidget(new QLabel(tr("Zoom:"), m_toolbar));
   m_zoomCombo = new QComboBox(m_toolbar);

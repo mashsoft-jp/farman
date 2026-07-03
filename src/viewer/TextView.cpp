@@ -171,7 +171,7 @@ void TextView::setupUi() {
   toolbar->setFloatable(false);
   toolbar->setIconSize(QSize(20, 20));
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
-  toolbar->setStyleSheet(toolbarStyleSheet());
+  applyToolbarStyle(toolbar);
 
   toolbar->addWidget(new QLabel(tr("Encoding:"), toolbar));
   m_encodingCombo = new QComboBox(toolbar);
