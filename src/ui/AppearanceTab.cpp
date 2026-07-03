@@ -446,26 +446,8 @@ QWidget* AppearanceTab::buildTextViewerPage() {
   QWidget* page = new QWidget(this);
   QVBoxLayout* outer = new QVBoxLayout(page);
 
-  // ── 関連付け: 拡張子 / MIME パターン ──
-  m_textExtensionsEdit = new QLineEdit(page);
-  m_textExtensionsEdit->setToolTip(
-    tr("Whitespace-separated list of extensions (without leading dot). "
-       "Wildcards `*` and `?` are supported (e.g. c*, htm*). "
-       "Prefix with `!` to exclude (e.g. `c* !class` matches c-prefixed "
-       "extensions except 'class')"));
-  m_textExtensionsEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  m_textMimePatternsEdit = new QLineEdit(page);
-  m_textMimePatternsEdit->setToolTip(
-    tr("Whitespace-separated MIME patterns. Use trailing '*' for prefix "
-       "match (e.g. text/*)"));
-  m_textMimePatternsEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  {
-    QFormLayout* assoc = new QFormLayout();
-    assoc->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-    assoc->addRow(tr("Extensions:"), m_textExtensionsEdit);
-    assoc->addRow(tr("MIME patterns:"), m_textMimePatternsEdit);
-    outer->addLayout(assoc);
-  }
+  // 拡張子 / MIME パターンの関連付けは「プラグイン設定」(TextViewerSettingsPage)
+  // に一本化した。外観タブは配色 / フォント (テーマ依存) のみを扱う。
 
   // ── 上段: Font / Encoding / 行番号 / 折り返し ──
   QHBoxLayout* row = new QHBoxLayout();
@@ -592,29 +574,8 @@ QWidget* AppearanceTab::buildImageViewerPage() {
   QWidget* page = new QWidget(this);
   QVBoxLayout* outer = new QVBoxLayout(page);
 
-  // ── 関連付け: 拡張子 / MIME パターン ──
-  m_imageExtensionsEdit = new QLineEdit(page);
-  m_imageExtensionsEdit->setToolTip(
-    tr("Whitespace-separated list of extensions (without leading dot). "
-       "Wildcards `*` and `?` are supported (e.g. c*, htm*). "
-       "Prefix with `!` to exclude (e.g. `c* !class` matches c-prefixed "
-       "extensions except 'class')"));
-  m_imageExtensionsEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  m_imageMimePatternsEdit = new QLineEdit(page);
-  m_imageMimePatternsEdit->setToolTip(
-    tr("Whitespace-separated MIME patterns. Use trailing '*' for prefix "
-       "match (e.g. image/*)"));
-  m_imageMimePatternsEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  {
-    QFormLayout* assoc = new QFormLayout();
-    assoc->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-    assoc->addRow(tr("Extensions:"), m_imageExtensionsEdit);
-    assoc->addRow(tr("MIME patterns:"), m_imageMimePatternsEdit);
-    outer->addLayout(assoc);
-  }
-
-  // 既定ズーム / ウィンドウに合わせる / アニメ再生は、テーマ非依存の表示設定
-  // として画像ビュアープラグインの設定 (Settings → Plugins → 詳細 → 設定...)
+  // 拡張子 / MIME・既定ズーム / ウィンドウに合わせる / アニメ再生は、テーマ非依存
+  // の設定として画像ビュアープラグインの設定 (Settings → Plugins → 詳細 → 設定...)
   // へ移設した。ここ (外観) にはテーマと一体の色設定 (透過) のみ残す。
 
   // ── Transparency セクション ──
@@ -700,15 +661,9 @@ void AppearanceTab::loadSettings() {
   m_cursorThicknessSpin->setValue(settings.cursorThickness());
   m_cursorThicknessSpin->setEnabled(settings.cursorShape() == CursorShape::Underline);
 
-  // ── ビュアー設定 (theme-independent fields) ──
-  // Text viewer
-  m_textExtensionsEdit->setText(settings.textViewerExtensions().join(QLatin1Char(' ')));
-  m_textMimePatternsEdit->setText(settings.textViewerMimePatterns().join(QLatin1Char(' ')));
-  // エンコーディング / 行番号 / 折り返しはプラグイン設定へ移設したので扱わない。
-  // Image viewer
-  m_imageExtensionsEdit->setText(settings.imageViewerExtensions().join(QLatin1Char(' ')));
-  m_imageMimePatternsEdit->setText(settings.imageViewerMimePatterns().join(QLatin1Char(' ')));
-  // ズーム / フィット / アニメはプラグイン設定へ移設したのでここでは扱わない。
+  // ── ビュアー設定 ──
+  // 拡張子 / MIME・エンコーディング・ズーム等はプラグイン設定へ移設済み。
+  // 外観タブはテーマ依存の色設定 (画像の透過) のみを扱う。
   if (settings.imageViewerTransparencyMode() == ImageTransparencyMode::SolidColor) {
     m_imageTransparencySolidRadio->setChecked(true);
   } else {
@@ -1214,18 +1169,8 @@ void AppearanceTab::save() {
     static_cast<CursorShape>(m_cursorShapeCombo->currentData().toInt()));
   settings.setCursorThickness(m_cursorThicknessSpin->value());
 
-  // 5. ビュアーのテーマ非依存フィールド (拡張子 / MIME / encoding / zoom 等)
-  auto splitList = [](const QString& text) {
-    return text.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
-  };
-  // Text viewer
-  settings.setTextViewerExtensions(splitList(m_textExtensionsEdit->text()));
-  settings.setTextViewerMimePatterns(splitList(m_textMimePatternsEdit->text()));
-  // エンコーディング / 行番号 / 折り返しはプラグイン設定へ移設したので保存しない。
-  // Image viewer
-  settings.setImageViewerExtensions(splitList(m_imageExtensionsEdit->text()));
-  settings.setImageViewerMimePatterns(splitList(m_imageMimePatternsEdit->text()));
-  // ズーム / フィット / アニメはプラグイン設定へ移設したのでここでは保存しない。
+  // 5. ビュアー設定: 拡張子 / MIME・encoding・zoom 等はプラグイン設定へ移設済み。
+  //    外観タブはテーマ依存の色設定 (画像の透過) のみ保存する。
   // Image viewer checker colors (theme-independent)
   settings.setImageViewerCheckerColor1(m_imageCheckerColor1Value);
   settings.setImageViewerCheckerColor2(m_imageCheckerColor2Value);

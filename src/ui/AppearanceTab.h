@@ -200,8 +200,7 @@ private:
   // Viewer Display Mode (Inline / External) は Viewer Associations ページへ移動した。
 
   // Text viewer
-  QLineEdit*   m_textExtensionsEdit       = nullptr;
-  QLineEdit*   m_textMimePatternsEdit     = nullptr;
+  // 拡張子 / MIME はプラグイン設定 (TextViewerSettingsPage) へ一本化。
   QPushButton* m_textFontButton           = nullptr;
   QFont        m_textSelectedFont;
   // エンコーディング / 行番号 / 折り返しはテキストビュアープラグインの設定へ移設済み。
@@ -219,9 +218,7 @@ private:
   QColor       m_textLineNumberBgValue;
 
   // Image viewer
-  QLineEdit*    m_imageExtensionsEdit           = nullptr;
-  QLineEdit*    m_imageMimePatternsEdit         = nullptr;
-  // ズーム / フィット / アニメは画像ビュアープラグインの設定へ移設済み。
+  // 拡張子 / MIME・ズーム / フィット / アニメは画像ビュアープラグインの設定へ移設済み。
   QRadioButton* m_imageTransparencyCheckerRadio = nullptr;
   QRadioButton* m_imageTransparencySolidRadio   = nullptr;
   QPushButton*  m_imageCheckerColor1Button      = nullptr;
