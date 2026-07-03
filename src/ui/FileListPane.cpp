@@ -27,6 +27,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QPainter>
+#include <QPixmap>
 #include <QStackedWidget>
 #include <QStyle>
 #include <QTableView>
@@ -36,6 +38,22 @@
 #include <QVBoxLayout>
 
 namespace Farman {
+
+namespace {
+// モノクロ SVG アイコンを指定色で塗り直す (テーマ追従アイコン)。ダークでは
+// 明るい文字色、ライトでは暗い文字色にして、フッタメニュー等で埋もれないように
+// する。少し大きめ (32px) にレンダリングしてから SourceIn で着色する。
+QIcon tintedSvgIcon(const QString& resPath, const QColor& color) {
+  QPixmap pm(32, 32);
+  pm.fill(Qt::transparent);
+  QPainter p(&pm);
+  QIcon(resPath).paint(&p, QRect(0, 0, 32, 32));
+  p.setCompositionMode(QPainter::CompositionMode_SourceIn);
+  p.fillRect(pm.rect(), color);
+  p.end();
+  return QIcon(pm);
+}
+} // namespace
 
 // アドレスバー入力欄のパス補完で使う QCompleter サブクラス。
 // QFileSystemModel と組み合わせる。先頭の `~` / `~/` は QDir::homePath() に
@@ -303,17 +321,21 @@ void FileListPane::setupUi() {
   // サムネイル表示モード時はサイズ切替ボタン (右) を同じ行に並べる。
   // フッタ全体に薄いグレーの背景を当てて、リスト本体と視覚的に分離する。
   QWidget* footerWidget = new QWidget(this);
-  footerWidget->setStyleSheet(
-    "QWidget { background-color: #e8e8e8; }"
-  );
+  // 背景はテーマ (Light/Dark) に追従させる。stylesheet で固定色や palette() を
+  // 指定するとテーマ変更で更新されない/暗くならないため、autoFillBackground +
+  // パレットロールにする。Button ロールはリスト本体 (Base) と少し差が付く薄い
+  // グレー相当で、ダークでは暗いグレーになり視覚的分離を保てる。
+  footerWidget->setAutoFillBackground(true);
+  footerWidget->setBackgroundRole(QPalette::Button);
   QHBoxLayout* footerLayout = new QHBoxLayout(footerWidget);
   footerLayout->setContentsMargins(0, 0, 0, 0);
   footerLayout->setSpacing(0);
 
   m_sortFilterStatusLabel = new QLabel(footerWidget);
-  m_sortFilterStatusLabel->setStyleSheet(
-    "QLabel { color: #333; padding: 2px 5px; background-color: transparent; }"
-  );
+  // 文字色はテーマ (パレット) 追従にする。stylesheet を当てると QLabel が
+  // アプリのカスタムパレットを拾えず文字が黒のままになる (Qt の癖) ため、
+  // stylesheet は使わず余白は contentsMargins で付ける。
+  m_sortFilterStatusLabel->setContentsMargins(5, 2, 5, 2);
   m_sortFilterStatusLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
   QFont statusFont = m_sortFilterStatusLabel->font();
   statusFont.setPointSize(qMax(statusFont.pointSize() - 1, 9));
@@ -333,19 +355,33 @@ void FileListPane::setupUi() {
   m_viewModeButton->setPopupMode(QToolButton::InstantPopup);
   m_viewModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
   m_viewModeButton->setFont(statusFont);
-  m_viewModeButton->setStyleSheet(
-    "QToolButton { background-color: transparent; border: 1px solid transparent; padding: 2px 6px; color: #333; }"
-    "QToolButton:hover { background-color: #d0d0d0; }"
-    "QToolButton:focus { background-color: #d0d0d0; border: 1px solid #5b8def; }"
-    "QToolButton::menu-indicator { width: 0; }"
-  );
+  // 文字色はテーマ追従にしたいが、stylesheet を当てた QToolButton はパレットを
+  // 拾えず黒のままになる (Qt の癖)。そこで現在のパレットの ButtonText を明示
+  // 指定し、テーマ変更 (settingsChanged) で計算し直して再適用する。ホバー/
+  // フォーカスの地色はテーマ中立の半透明グレー (両テーマで見え、固定問題なし)。
+  {
+    QToolButton* btn = m_viewModeButton;
+    auto applyStyle = [btn]() {
+      const QString txt =
+        qApp->palette().color(QPalette::Active, QPalette::ButtonText).name();
+      btn->setStyleSheet(QStringLiteral(
+        "QToolButton { background-color: transparent; border: 1px solid transparent; padding: 2px 6px; color: %1; }"
+        "QToolButton:hover { background-color: rgba(127, 127, 127, 0.30); }"
+        "QToolButton:focus { background-color: rgba(127, 127, 127, 0.30); border: 1px solid #5b8def; }"
+        "QToolButton::menu-indicator { width: 0; }"
+      ).arg(txt));
+    };
+    applyStyle();
+    connect(&Settings::instance(), &Settings::settingsChanged, btn, applyStyle);
+  }
   m_viewModeButton->setFocusPolicy(Qt::StrongFocus);
   m_viewModeButton->installEventFilter(this);
   {
     QMenu* menu = new QMenu(m_viewModeButton);
     auto addItem = [&](const QString& label, const QString& iconPath,
                        ListViewMode mode) {
-      QAction* a = new QAction(QIcon(iconPath), label, menu);
+      // アイコンは refreshViewModeIcons() でテーマ色に着色して設定する。
+      QAction* a = new QAction(label, menu);
       a->setCheckable(true);
       connect(a, &QAction::triggered, this, [this, mode]() {
         if (m_viewMode == mode) return;
@@ -355,6 +391,7 @@ void FileListPane::setupUi() {
         s.save();
       });
       menu->addAction(a);
+      m_viewModeMenuIcons.append({a, iconPath});
       return a;
     };
     QAction* listAct  = addItem(tr("List"),                QStringLiteral(":/icons/toolbar/view-list-rows.svg"), ListViewMode::List);
@@ -388,6 +425,10 @@ void FileListPane::setupUi() {
     // settingsChanged だけだと自ペイン setViewMode 時に届かないので、
     // setViewMode 内で直接 setText する)。
   }
+  // View Mode ボタン / メニューのアイコンをテーマ色で着色し、テーマ変更にも追従。
+  refreshViewModeIcons();
+  connect(&Settings::instance(), &Settings::settingsChanged, m_viewModeButton,
+          [this]() { refreshViewModeIcons(); });
   footerLayout->addWidget(m_viewModeButton, 0);
 
   mainLayout->addWidget(footerWidget);
@@ -858,6 +899,22 @@ void FileListPane::reapplyThumbnailMetrics() {
   }
 }
 
+void FileListPane::refreshViewModeIcons() {
+  const QColor c =
+    qApp->palette().color(QPalette::Active, QPalette::WindowText);
+  for (const auto& pair : m_viewModeMenuIcons) {
+    if (pair.first) pair.first->setIcon(tintedSvgIcon(pair.second, c));
+  }
+  if (m_viewModeButton) {
+    const QString iconPath =
+      m_viewMode == ListViewMode::List            ? QStringLiteral(":/icons/toolbar/view-list-rows.svg") :
+      m_viewMode == ListViewMode::ThumbnailSmall  ? QStringLiteral(":/icons/toolbar/view-grid-3.svg")    :
+      m_viewMode == ListViewMode::ThumbnailLarge  ? QStringLiteral(":/icons/toolbar/view-grid-1.svg")    :
+                                                     QStringLiteral(":/icons/toolbar/view-grid-2.svg");
+    m_viewModeButton->setIcon(tintedSvgIcon(iconPath, c));
+  }
+}
+
 void FileListPane::setViewMode(ListViewMode mode) {
   if (mode == m_viewMode) return;
   m_viewMode = mode;
@@ -889,12 +946,8 @@ void FileListPane::setViewMode(ListViewMode mode) {
       mode == ListViewMode::ThumbnailLarge  ? tr("Thumbnail (L)") :
                                                 tr("Thumbnail (M)");
     m_viewModeButton->setText(label);
-    const QString iconPath =
-      mode == ListViewMode::List            ? QStringLiteral(":/icons/toolbar/view-list-rows.svg")  :
-      mode == ListViewMode::ThumbnailSmall  ? QStringLiteral(":/icons/toolbar/view-grid-3.svg")    :
-      mode == ListViewMode::ThumbnailLarge  ? QStringLiteral(":/icons/toolbar/view-grid-1.svg")    :
-                                                QStringLiteral(":/icons/toolbar/view-grid-2.svg");
-    m_viewModeButton->setIcon(QIcon(iconPath));
+    // アイコンは現在テーマ色で着色し直す (m_viewMode を見るので設定済みが前提)。
+    refreshViewModeIcons();
   }
   // フォーカスは現状を維持する (Cmd+G で連続モード切替する際に
   // フォーカス位置が動かない方が UX が良い)。Tab 経由で view モード button

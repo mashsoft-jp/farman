@@ -168,6 +168,11 @@ private:
   // popup から選択)。クリック / Space / Enter で popup を開き、↑↓ で項目
   // 移動、Enter で確定。Cmd+G ショートカットは 4 段階を順に巡回する。
   QToolButton* m_viewModeButton = nullptr;
+  // View Mode メニュー各項目の (action, SVG パス)。テーマ変更時にアイコンを
+  // パレット色へ再着色するため保持する。
+  QList<QPair<QAction*, QString>> m_viewModeMenuIcons;
+  // View Mode ボタン / メニューのアイコンを現在テーマ色で着色し直す。
+  void refreshViewModeIcons();
   // 即時フィルタの 1 行入力欄。デフォルトは非表示。
   QLineEdit*       m_quickFilterEdit = nullptr;
   FileListModel* m_model;
