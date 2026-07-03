@@ -46,4 +46,8 @@ codec / resolution / duration.
 - Fixed garbled file names for Japanese (Shift-JIS) zips without the UTF-8
   flag, both when browsing inside the archive and when extracting
 - Fixed a possible crash when closing a PDF opened in an external viewer
+- Fixed the toolbar and the pane's sort/filter footer not following the theme
+  (staying light) in dark mode
+- Consolidated each viewer's extension / MIME association into the plugin
+  settings (it was duplicated between Appearance and Plugins)
 - Stability improvements and bug fixes
