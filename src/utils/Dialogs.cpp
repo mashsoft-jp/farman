@@ -51,7 +51,9 @@ bool confirm(QWidget* parent,
   // 「No」を左、「Yes」を右に置く (Apple HIG の "Cancel 左 / Action 右"
   // と整合)。Esc で No 扱いになるよう escapeButton 明示。
   FarmanMessageBox box(parent);
-  box.setIcon(QMessageBox::Question);
+  // アイコンは表示しない。標準の Question「?」はダークテーマで埋没し、また
+  // 確認ダイアログの視認性にはタイトル + 本文で十分なため省く。
+  box.setIcon(QMessageBox::NoIcon);
   box.setWindowTitle(title);
   box.setText(text);
   auto* noBtn  = box.addButton(QObject::tr("No"),  QMessageBox::RejectRole);
