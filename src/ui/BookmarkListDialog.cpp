@@ -18,6 +18,7 @@
 #include <QFont>
 #include <QBrush>
 #include <QColor>
+#include <QPalette>
 
 namespace Farman {
 
@@ -265,10 +266,14 @@ void BookmarkListDialog::rebuildTable() {
   m_table->clearSpans();
   m_table->setRowCount(m_rowInfos.size());
 
-  const QBrush separatorBg(QColor(230, 230, 240));
+  // Default / Detected 行は「編集不可」を示すミュート文字色で描く。ライトでは
+  // 濃いスレート、ダークでは黒背景に埋もれないよう明るいスレートにする
+  // (テーマは実際に適用されているパレットのベース明度から判定)。
+  const bool darkTheme = m_table->palette().color(QPalette::Base).lightness() < 128;
+  const QBrush separatorBg(darkTheme ? QColor(55, 55, 68) : QColor(230, 230, 240));
   QFont boldFont = m_table->font();
   boldFont.setBold(true);
-  const QBrush detectedFg(QColor(80, 80, 100));
+  const QBrush detectedFg(darkTheme ? QColor(190, 190, 205) : QColor(80, 80, 100));
 
   for (int r = 0; r < m_rowInfos.size(); ++r) {
     const RowInfo& ri = m_rowInfos[r];
