@@ -12,6 +12,7 @@ class QGroupBox;
 class QCheckBox;
 class QRadioButton;
 class QGridLayout;
+class QVBoxLayout;
 class QSpinBox;
 class QLabel;
 class QLineEdit;
@@ -51,9 +52,10 @@ private:
   void loadSettings();
 
   // ファイルリスト外観 (ベース色 / フォント / カテゴリ色 / アドレス / カーソル /
-  // ディレクトリ比較色) を構築するページ。Theme グループ (Mode + Preset) の
-  // 下に直接置く。ビュアーのフォント / 配色 / 透過はプラグイン設定へ移設済み。
-  QWidget* buildMainPage();
+  // ディレクトリ比較色) の各グループを、渡されたレイアウト (setupUi の Theme
+  // グループと同じ) へ直接積む。ビュアーのフォント / 配色 / 透過はプラグイン
+  // 設定へ移設済み。
+  void buildMainSections(QVBoxLayout* into);
 
   // ── Light / Dark スキーム編集 ─────────────────
   // ダイアログ内では Light/Dark 双方の ColorScheme をシャドーで保持する。

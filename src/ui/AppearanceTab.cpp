@@ -114,12 +114,13 @@ void AppearanceTab::setupUi() {
   // ビュアー (テキスト / バイナリ / 画像) のフォント / 配色 / 透過は、各ビュアーの
   // プラグイン設定 (Settings → Plugins → 詳細 → 設定...) へ移設した。テーマ非依存
   // のビュアー挙動設定 (拡張子/MIME/エンコーディング/zoom 等) も同様。
-  mainLayout->addWidget(buildMainPage(), /*stretch*/ 1);
+  buildMainSections(mainLayout);
 }
 
-QWidget* AppearanceTab::buildMainPage() {
-  QWidget* page = new QWidget(this);
-  QVBoxLayout* mainLayout = new QVBoxLayout(page);
+void AppearanceTab::buildMainSections(QVBoxLayout* mainLayout) {
+  // ファイルリスト外観の各グループを、呼び出し側 (setupUi) の Theme グループと
+  // 同じレイアウトへ直接積む。以前は専用ページ QWidget に入れていたが、別
+  // レイアウトになる分だけ Theme との間隔が広がっていたため一本化した。
 
   // 色ボタン生成のヘルパー
   auto makeColorButton = [this](QColor& storedValue, const QString& dialogTitle) -> QPushButton* {
@@ -393,8 +394,6 @@ QWidget* AppearanceTab::buildMainPage() {
       setTabOrder(m_inactivePaneCheck, firstInactiveCell);
     }
   }
-
-  return page;
 }
 
 void AppearanceTab::loadSettings() {
