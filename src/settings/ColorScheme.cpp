@@ -111,6 +111,10 @@ ColorScheme defaultLightScheme() {
   s.binaryViewerAddressFg   = QColor(Qt::darkGray);
   s.binaryViewerAddressBg   = QColor(0xF0, 0xF0, 0xF0);
 
+  // CSV / TSV ビュアー (等幅で表を揃える) / Markdown ビュアー (本文は比例フォント)
+  s.csvViewerFont           = defaultMonospaceFont();
+  s.markdownViewerFont      = defaultUiFont();
+
   return s;
 }
 
@@ -163,6 +167,10 @@ ColorScheme defaultDarkScheme() {
   s.binaryViewerSelectedBg  = QColor(0x26, 0x4F, 0x78);
   s.binaryViewerAddressFg   = QColor(0x80, 0x80, 0x80);
   s.binaryViewerAddressBg   = QColor(0x25, 0x25, 0x26);
+
+  // CSV / TSV ビュアー / Markdown ビュアー (フォントはテーマで変えない既定値)
+  s.csvViewerFont           = defaultMonospaceFont();
+  s.markdownViewerFont      = defaultUiFont();
 
   return s;
 }
@@ -338,6 +346,19 @@ QJsonObject colorSchemeToJson(const ColorScheme& s) {
   bv["addressBg"]  = colorString(s.binaryViewerAddressBg);
   o["binaryViewer"] = bv;
 
+  // ── CSV / TSV ビュアー (フォントのみ)
+  QJsonObject cv;
+  cv["font"] = fontToJson(s.csvViewerFont);
+  o["csvViewer"] = cv;
+
+  // ── Markdown ビュアー (フォント + 本文 文字色 / 背景色 / リンク色)
+  QJsonObject mv;
+  mv["font"] = fontToJson(s.markdownViewerFont);
+  mv["fg"]   = colorString(s.markdownViewerFg);
+  mv["bg"]   = colorString(s.markdownViewerBg);
+  mv["link"] = colorString(s.markdownViewerLink);
+  o["markdownViewer"] = mv;
+
   return o;
 }
 
@@ -406,6 +427,19 @@ void colorSchemeFromJson(const QJsonObject& o, ColorScheme& s) {
     readColor(bv, "selectedBg", s.binaryViewerSelectedBg);
     readColor(bv, "addressFg",  s.binaryViewerAddressFg);
     readColor(bv, "addressBg",  s.binaryViewerAddressBg);
+  }
+
+  if (o.contains("csvViewer")) {
+    QJsonObject cv = o.value("csvViewer").toObject();
+    if (cv.contains("font")) s.csvViewerFont = fontFromJson(cv.value("font").toObject(), s.csvViewerFont);
+  }
+
+  if (o.contains("markdownViewer")) {
+    QJsonObject mv = o.value("markdownViewer").toObject();
+    if (mv.contains("font")) s.markdownViewerFont = fontFromJson(mv.value("font").toObject(), s.markdownViewerFont);
+    readColor(mv, "fg",   s.markdownViewerFg);
+    readColor(mv, "bg",   s.markdownViewerBg);
+    readColor(mv, "link", s.markdownViewerLink);
   }
 }
 

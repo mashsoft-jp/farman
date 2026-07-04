@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include <QFont>
 #include <QColor>
+#include <QPalette>
 #include <QMap>
 #include <QSize>
 #include <QPoint>
@@ -404,10 +405,23 @@ public:
   void             setCsvViewerDelimiter(const QString& d);
   bool             csvViewerFirstRowAsHeader()  const;
   void             setCsvViewerFirstRowAsHeader(bool on);
+  // 表示フォント (テーマ依存: ColorScheme に格納)
+  QFont            csvViewerFont()             const;
+  void             setCsvViewerFont(const QFont& font);
 
   // ── Markdown ビュアー既定 ──────────────────
   bool             markdownViewerShowSource()   const;
   void             setMarkdownViewerShowSource(bool on);
+  // 表示フォント / 本文 文字色 / 背景色 (テーマ依存: ColorScheme に格納)。
+  // 文字色 / 背景色は無効色ならパレット既定 (テーマ追従) で描画する。
+  QFont            markdownViewerFont()        const;
+  void             setMarkdownViewerFont(const QFont& font);
+  QColor           markdownViewerForeground()  const;
+  void             setMarkdownViewerForeground(const QColor& c);
+  QColor           markdownViewerBackground()  const;
+  void             setMarkdownViewerBackground(const QColor& c);
+  QColor           markdownViewerLinkColor()   const;
+  void             setMarkdownViewerLinkColor(const QColor& c);
 
   // ── メディアビュアー既定 ───────────────────
   QStringList      mediaViewerExtensions()      const;
@@ -491,6 +505,11 @@ public:
   //  場合は m_ フィールドへの再ロードを内部で行い settingsChanged を発火)
   ColorScheme scheme(ThemeMode which) const;
   void        setScheme(ThemeMode which, const ColorScheme& s);
+
+  // ColorScheme のベース 2 色からアプリ全体の QPalette を派生させる
+  // (applyThemeFields が適用するのと同じ色)。設定ダイアログで「未設定の色は
+  // 結局どのテーマ色になるか」を先読み表示するのに使う。
+  static QPalette paletteForScheme(const ColorScheme& s);
 
   // OS の現在のカラースキーム (Light/Dark) を読む。Settings に保存された
   // m_themeMode とは独立に「いま OS は何?」を取得したいときに使う。
@@ -702,8 +721,13 @@ private:
   // CSV/TSV viewer
   QString          m_csvViewerDelimiter        = QStringLiteral("auto");
   bool             m_csvViewerFirstRowAsHeader = false;
+  QFont            m_csvViewerFont;       // 既定は monospace (コンストラクタで初期化)
   // Markdown viewer
   bool             m_markdownViewerShowSource  = false;
+  QFont            m_markdownViewerFont;  // 既定は UI フォント (コンストラクタで初期化)
+  QColor           m_markdownViewerFg;    // 無効色ならパレット既定 (テーマ追従)
+  QColor           m_markdownViewerBg;    // 無効色ならパレット既定 (テーマ追従)
+  QColor           m_markdownViewerLink;  // 無効色ならパレット既定 (テーマ追従)
   // Media viewer
   // メディア (動画 + 音声)。プラットフォームのデコーダ依存だが既定一覧を持つ。
   QStringList      m_mediaViewerExtensions = {

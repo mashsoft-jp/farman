@@ -71,6 +71,8 @@ private slots:
 
 private:
   void setupUi();
+  // フォント / 本文文字色 / 背景色 (テーマ依存設定) をビューアに適用する。
+  void applyViewerAppearance();
   void renderCurrent();  // m_text を m_rawSource フラグで整形 or 生表示する
   void findInDirection(bool backward);
   void refreshMatchHighlights();

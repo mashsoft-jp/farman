@@ -2,12 +2,22 @@
 
 #include "settings/Settings.h"
 #include "viewer/ExtensionsField.h"
+#include "viewer/ViewerThemeFields.h"
 
+#include <QButtonGroup>
 #include <QCheckBox>
+#include <QColorDialog>
 #include <QComboBox>
+#include <QFontDialog>
 #include <QFormLayout>
+#include <QGridLayout>
+#include <QGroupBox>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
+#include <QPalette>
+#include <QPushButton>
+#include <QRadioButton>
 #include <QVBoxLayout>
 
 namespace Farman {
@@ -56,12 +66,156 @@ TextViewerSettingsPage::TextViewerSettingsPage(QWidget* parent)
   row->addWidget(m_wordWrapCheck);
   row->addStretch();
   outer->addLayout(row);
+
+  outer->addWidget(buildThemeColorSection());
   outer->addStretch();
 
   Settings& s = Settings::instance();
   s.load();
   applyValuesToUi(s.textViewerExtensions(), s.textViewerEncoding(),
                   s.textViewerShowLineNumbers(), s.textViewerWordWrap());
+
+  // テーマ依存フィールド: Light/Dark 双方のスキームをシャドーに取り込み、
+  // 現在有効なテーマ側を初期表示する。
+  m_light = s.scheme(ThemeMode::Light);
+  m_dark  = s.scheme(ThemeMode::Dark);
+  m_editSide = s.effectiveTheme();
+  (m_editSide == ThemeMode::Dark ? m_themeDarkRadio : m_themeLightRadio)
+    ->setChecked(true);
+  loadSideToUi(m_editSide);
+}
+
+QWidget* TextViewerSettingsPage::buildThemeColorSection() {
+  auto* group = new QGroupBox(tr("Font && Colors (per theme)"), this);
+  auto* outer = new QVBoxLayout(group);
+
+  // ── テーマ切替 (Light / Dark) + フォント (同じ行) ──
+  auto* topRow = new QHBoxLayout();
+  topRow->addWidget(new QLabel(tr("Theme:"), group));
+  m_themeLightRadio = new QRadioButton(tr("Light"), group);
+  m_themeDarkRadio  = new QRadioButton(tr("Dark"), group);
+  auto* themeGroup = new QButtonGroup(this);
+  themeGroup->addButton(m_themeLightRadio);
+  themeGroup->addButton(m_themeDarkRadio);
+  topRow->addWidget(m_themeLightRadio);
+  topRow->addWidget(m_themeDarkRadio);
+  topRow->addSpacing(16);
+  topRow->addWidget(new QLabel(tr("Font:"), group));
+  m_fontButton = new QPushButton(group);
+  m_fontButton->setToolTip(tr("Choose the font for the text viewer"));
+  connect(m_fontButton, &QPushButton::clicked, this, [this]() {
+    bool ok = false;
+    const QFont chosen = QFontDialog::getFont(&ok, m_uiFont, this,
+                                              tr("Text Viewer Font"));
+    if (ok) {
+      m_uiFont = chosen;
+      styleThemeFontButton(m_fontButton, m_uiFont);
+    }
+  });
+  topRow->addWidget(m_fontButton);
+  topRow->addStretch();
+  outer->addLayout(topRow);
+
+  auto onToggled = [this]() {
+    const ThemeMode newSide =
+      m_themeDarkRadio->isChecked() ? ThemeMode::Dark : ThemeMode::Light;
+    if (newSide == m_editSide) return;
+    commitUiToSide(m_editSide);   // 旧側へ書き戻し
+    m_editSide = newSide;
+    loadSideToUi(m_editSide);     // 新側を表示
+  };
+  connect(m_themeLightRadio, &QRadioButton::toggled, this, onToggled);
+  connect(m_themeDarkRadio,  &QRadioButton::toggled, this, onToggled);
+
+  // ── カラー (Normal / Selected / 行番号) ──
+  auto* colors = new QGridLayout();
+  colors->setColumnStretch(3, 1);
+  int r = 0;
+  colors->addWidget(new QLabel(tr("Foreground"), group), r, 1, Qt::AlignCenter);
+  colors->addWidget(new QLabel(tr("Background"), group), r, 2, Qt::AlignCenter);
+  ++r;
+  auto addColorRow = [&](const QString& label, QPushButton*& fg, QColor* fgVal,
+                         QPushButton*& bg, QColor* bgVal,
+                         const QString& fgTitle, const QString& bgTitle) {
+    fg = new QPushButton(group);
+    fg->setFixedWidth(100);
+    bg = new QPushButton(group);
+    bg->setFixedWidth(100);
+    wireColorButton(fg, fgVal, fgTitle);
+    wireColorButton(bg, bgVal, bgTitle);
+    colors->addWidget(new QLabel(label, group), r, 0);
+    colors->addWidget(fg, r, 1);
+    colors->addWidget(bg, r, 2);
+    ++r;
+  };
+  addColorRow(tr("Normal:"), m_normalFgButton, &m_uiNormalFg,
+              m_normalBgButton, &m_uiNormalBg,
+              tr("Normal Foreground"), tr("Normal Background"));
+  addColorRow(tr("Selected:"), m_selectedFgButton, &m_uiSelectedFg,
+              m_selectedBgButton, &m_uiSelectedBg,
+              tr("Selected Foreground"), tr("Selected Background"));
+  addColorRow(tr("Line Number:"), m_lineNumberFgButton, &m_uiLineNumberFg,
+              m_lineNumberBgButton, &m_uiLineNumberBg,
+              tr("Line Number Foreground"), tr("Line Number Background"));
+  outer->addLayout(colors);
+  return group;
+}
+
+void TextViewerSettingsPage::wireColorButton(QPushButton* btn,
+                                             QColor* storedValue,
+                                             const QString& title) {
+  connect(btn, &QPushButton::clicked, this, [this, btn, storedValue, title]() {
+    const QColor picked = QColorDialog::getColor(
+      storedValue->isValid() ? *storedValue : QColor(Qt::black),
+      this, title, QColorDialog::ShowAlphaChannel);
+    if (picked.isValid()) {
+      *storedValue = picked;
+      styleThemeColorButton(btn, picked);
+    }
+  });
+}
+
+void TextViewerSettingsPage::loadSideToUi(ThemeMode side) {
+  const ColorScheme& s = (side == ThemeMode::Dark) ? m_dark : m_light;
+  m_uiFont         = s.textViewerFont;
+  m_uiNormalFg     = s.textViewerNormalFg;
+  m_uiNormalBg     = s.textViewerNormalBg;
+  m_uiSelectedFg   = s.textViewerSelectedFg;
+  m_uiSelectedBg   = s.textViewerSelectedBg;
+  m_uiLineNumberFg = s.textViewerLineNumberFg;
+  m_uiLineNumberBg = s.textViewerLineNumberBg;
+  styleThemeFontButton(m_fontButton, m_uiFont);
+  // 未設定 (無効色) のときに実際に使われるテーマ既定色をボタン背景に出す。
+  const QPalette pal = Settings::paletteForScheme(
+    (side == ThemeMode::Dark) ? m_dark : m_light);
+  styleThemeColorButton(m_normalFgButton,     m_uiNormalFg,     pal.color(QPalette::Text));
+  styleThemeColorButton(m_normalBgButton,     m_uiNormalBg,     pal.color(QPalette::Base));
+  styleThemeColorButton(m_selectedFgButton,   m_uiSelectedFg,   pal.color(QPalette::HighlightedText));
+  styleThemeColorButton(m_selectedBgButton,   m_uiSelectedBg,   pal.color(QPalette::Highlight));
+  styleThemeColorButton(m_lineNumberFgButton, m_uiLineNumberFg, pal.color(QPalette::Text));
+  styleThemeColorButton(m_lineNumberBgButton, m_uiLineNumberBg, pal.color(QPalette::Base));
+}
+
+void TextViewerSettingsPage::commitUiToSide(ThemeMode side) {
+  ColorScheme& s = (side == ThemeMode::Dark) ? m_dark : m_light;
+  s.textViewerFont         = m_uiFont;
+  s.textViewerNormalFg     = m_uiNormalFg;
+  s.textViewerNormalBg     = m_uiNormalBg;
+  s.textViewerSelectedFg   = m_uiSelectedFg;
+  s.textViewerSelectedBg   = m_uiSelectedBg;
+  s.textViewerLineNumberFg = m_uiLineNumberFg;
+  s.textViewerLineNumberBg = m_uiLineNumberBg;
+}
+
+void TextViewerSettingsPage::overlayFields(const ColorScheme& src,
+                                           ColorScheme& dst) {
+  dst.textViewerFont         = src.textViewerFont;
+  dst.textViewerNormalFg     = src.textViewerNormalFg;
+  dst.textViewerNormalBg     = src.textViewerNormalBg;
+  dst.textViewerSelectedFg   = src.textViewerSelectedFg;
+  dst.textViewerSelectedBg   = src.textViewerSelectedBg;
+  dst.textViewerLineNumberFg = src.textViewerLineNumberFg;
+  dst.textViewerLineNumberBg = src.textViewerLineNumberBg;
 }
 
 void TextViewerSettingsPage::applyValuesToUi(const QStringList& extensions,
@@ -81,13 +235,30 @@ void TextViewerSettingsPage::save() {
   s.setTextViewerEncoding(m_encodingCombo->currentText().trimmed());
   s.setTextViewerShowLineNumbers(m_lineNumbersCheck->isChecked());
   s.setTextViewerWordWrap(m_wordWrapCheck->isChecked());
+
+  // テーマ依存フィールド: 現在編集中側を確定してから、両スキームを
+  // fresh に対する overlay (RMW) で書き戻す。
+  commitUiToSide(m_editSide);
+  ColorScheme fresh = s.scheme(ThemeMode::Light);
+  overlayFields(m_light, fresh);
+  s.setScheme(ThemeMode::Light, fresh);
+  fresh = s.scheme(ThemeMode::Dark);
+  overlayFields(m_dark, fresh);
+  s.setScheme(ThemeMode::Dark, fresh);
+
   s.save();
 }
 
 void TextViewerSettingsPage::restoreDefaults() {
-  // Settings の初期値に合わせる。
   applyValuesToUi(kDefExtensions, QStringLiteral("Auto"),
                   /*showLineNumbers=*/true, /*wordWrap=*/false);
+
+  // テーマ依存フィールドは出荷時テーマの値へ戻す。
+  const ColorScheme dl = defaultLightScheme();
+  const ColorScheme dd = defaultDarkScheme();
+  overlayFields(dl, m_light);
+  overlayFields(dd, m_dark);
+  loadSideToUi(m_editSide);
 }
 
 } // namespace Farman

@@ -538,6 +538,17 @@ void CsvView::setupUi() {
 
   setFocusProxy(m_table);
 
+  // 表示フォント (テーマ依存: Settings → Plugins → CSV/TSV Viewer)。
+  // ヘッダ / セルの両方に適用し、テーマ・フォント変更に追従する。
+  auto applyViewerFont = [this]() {
+    const QFont f = Settings::instance().csvViewerFont();
+    m_table->setFont(f);
+    m_table->horizontalHeader()->setFont(f);
+    m_table->verticalHeader()->setFont(f);
+  };
+  applyViewerFont();
+  connect(&Settings::instance(), &Settings::settingsChanged, this, applyViewerFont);
+
   connect(m_encodingCombo, &QComboBox::currentTextChanged,
           this,             &CsvView::onEncodingComboChanged);
   connect(m_delimiterCombo, qOverload<int>(&QComboBox::currentIndexChanged),

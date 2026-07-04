@@ -81,6 +81,8 @@ void Settings::applyDefaults() {
   m_addressFont      = QGuiApplication::font();
   m_textViewerFont   = QFontDatabase::systemFont(QFontDatabase::FixedFont);
   m_binaryViewerFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+  m_csvViewerFont    = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+  m_markdownViewerFont = QGuiApplication::font();
 
   // ── 表示設定 ─────────────────────
   m_fileSizeFormatDual         = FileSizeFormat::Auto;
@@ -282,11 +284,15 @@ void Settings::applyDefaults() {
   m_lightScheme.addressFont = m_addressFont;
   m_lightScheme.textViewerFont   = m_textViewerFont;
   m_lightScheme.binaryViewerFont = m_binaryViewerFont;
+  m_lightScheme.csvViewerFont      = m_csvViewerFont;
+  m_lightScheme.markdownViewerFont = m_markdownViewerFont;
   // Dark 側も実行環境のフォントで揃えておく (色だけを差し替えるため)。
   m_darkScheme.listFont    = m_font;
   m_darkScheme.addressFont = m_addressFont;
   m_darkScheme.textViewerFont   = m_textViewerFont;
   m_darkScheme.binaryViewerFont = m_binaryViewerFont;
+  m_darkScheme.csvViewerFont      = m_csvViewerFont;
+  m_darkScheme.markdownViewerFont = m_markdownViewerFont;
 
   m_themeMode     = ThemeMode::Auto;
   m_lastEffective = detectOsTheme();
@@ -348,6 +354,12 @@ ColorScheme Settings::collectThemeFields() const {
   s.binaryViewerSelectedBg  = m_binaryViewerSelectedBg;
   s.binaryViewerAddressFg   = m_binaryViewerAddressFg;
   s.binaryViewerAddressBg   = m_binaryViewerAddressBg;
+
+  s.csvViewerFont           = m_csvViewerFont;
+  s.markdownViewerFont      = m_markdownViewerFont;
+  s.markdownViewerFg        = m_markdownViewerFg;
+  s.markdownViewerBg        = m_markdownViewerBg;
+  s.markdownViewerLink      = m_markdownViewerLink;
   return s;
 }
 
@@ -399,6 +411,12 @@ void Settings::applyThemeFields(const ColorScheme& s) {
   m_binaryViewerAddressFg   = s.binaryViewerAddressFg;
   m_binaryViewerAddressBg   = s.binaryViewerAddressBg;
 
+  m_csvViewerFont           = s.csvViewerFont;
+  m_markdownViewerFont      = s.markdownViewerFont;
+  m_markdownViewerFg        = s.markdownViewerFg;
+  m_markdownViewerBg        = s.markdownViewerBg;
+  m_markdownViewerLink      = s.markdownViewerLink;
+
   // QApplication 全体のパレット + 既定フォントをスキームから派生させる。
   //
   // ベース 2 色 (baseBackground / baseForeground) を起点に、Window /
@@ -407,26 +425,7 @@ void Settings::applyThemeFields(const ColorScheme& s) {
   // 適切なアクセント色をハードコードする。
   if (qApp) {
     const QColor bg = s.baseBackground.isValid() ? s.baseBackground : QColor(Qt::white);
-    const QColor fg = s.baseForeground.isValid() ? s.baseForeground : QColor(Qt::black);
     const bool isDark = bg.lightness() < 128;
-
-    // bg と fg を t (0.0=bg, 1.0=fg) でブレンドする。
-    auto blend = [&](qreal t) -> QColor {
-      const qreal u = 1.0 - t;
-      return QColor(
-        qBound(0, int(bg.red()   * u + fg.red()   * t), 255),
-        qBound(0, int(bg.green() * u + bg.green() * 0 + fg.green() * t), 255),
-        qBound(0, int(bg.blue()  * u + fg.blue()  * t), 255));
-    };
-    // 上の式の green に bug があったので別実装に分ける (簡明性優先)。
-    auto mix = [&](qreal t) -> QColor {
-      const qreal u = 1.0 - t;
-      const int r = qBound(0, int(bg.red()   * u + fg.red()   * t), 255);
-      const int g = qBound(0, int(bg.green() * u + fg.green() * t), 255);
-      const int b = qBound(0, int(bg.blue()  * u + fg.blue()  * t), 255);
-      return QColor(r, g, b);
-    };
-    (void)blend;  // silence unused
 
     // Qt 6.8+: QStyleHints::setColorScheme() で macOS native chrome を
     // Light/Dark に追従させる。Auto モード時は Unknown で「OS 追従」へ戻す。
@@ -440,40 +439,7 @@ void Settings::applyThemeFields(const ColorScheme& s) {
     }
 #endif
 
-    QPalette p;
-    // ベース 2 色 (そのまま)
-    p.setColor(QPalette::Base,              bg);
-    p.setColor(QPalette::Text,              fg);
-    p.setColor(QPalette::WindowText,        fg);
-    p.setColor(QPalette::ButtonText,        fg);
-    p.setColor(QPalette::ToolTipText,       fg);
-    // bg を少しずつ fg 方向へずらしたもの (グラデーション)
-    p.setColor(QPalette::AlternateBase,     mix(0.04));
-    p.setColor(QPalette::Window,            mix(0.06));
-    p.setColor(QPalette::ToolTipBase,       mix(0.08));
-    p.setColor(QPalette::Button,            mix(0.10));
-    p.setColor(QPalette::Midlight,          mix(0.15));
-    p.setColor(QPalette::Light,             mix(0.18));
-    p.setColor(QPalette::Mid,               mix(0.28));
-    p.setColor(QPalette::Dark,              mix(0.48));
-    // Shadow は Light テーマでは中央寄り、Dark テーマでは bg より暗く
-    // (= HSV で darker)。テーマ別に処理。
-    p.setColor(QPalette::Shadow,            isDark ? bg.darker(180) : mix(0.65));
-
-    // アクセント色 (Light/Dark で別の青系)
-    p.setColor(QPalette::BrightText,        QColor(Qt::red));
-    p.setColor(QPalette::Highlight,         isDark ? QColor(0x26, 0x4F, 0x78)
-                                                   : QColor(0x00, 0x78, 0xD7));
-    p.setColor(QPalette::HighlightedText,   QColor(Qt::white));
-    p.setColor(QPalette::Link,              isDark ? QColor(0x4D, 0xA1, 0xFF)
-                                                   : QColor(0x00, 0x66, 0xCC));
-
-    // Disabled (各 fg を bg 寄りに 40% ブレンドした薄い色)
-    p.setColor(QPalette::Disabled, QPalette::WindowText, mix(0.40));
-    p.setColor(QPalette::Disabled, QPalette::Text,       mix(0.40));
-    p.setColor(QPalette::Disabled, QPalette::ButtonText, mix(0.40));
-
-    qApp->setPalette(p);
+    qApp->setPalette(paletteForScheme(s));
 
     // UI フォント (汎用ウィジェット全体に伝播)。個別 setFont() してある
     // ウィジェット (ファイルリスト / アドレス / 各ビュアー) は影響を受けない。
@@ -481,6 +447,57 @@ void Settings::applyThemeFields(const ColorScheme& s) {
       qApp->setFont(s.uiFont);
     }
   }
+}
+
+QPalette Settings::paletteForScheme(const ColorScheme& s) {
+  // ベース 2 色 (baseBackground / baseForeground) を起点に、Window /
+  // AlternateBase / Button / Mid / Midlight / Light / Dark / Shadow 等を
+  // 線形補間 (mix) で算出。Highlight / Link は Light/Dark で別のアクセント色。
+  // applyThemeFields() が qApp に適用するのと同じ色を返すので、設定ダイアログが
+  // 「未設定の色は結局どのテーマ色になるか」を先読み表示するのにも使える。
+  const QColor bg = s.baseBackground.isValid() ? s.baseBackground : QColor(Qt::white);
+  const QColor fg = s.baseForeground.isValid() ? s.baseForeground : QColor(Qt::black);
+  const bool isDark = bg.lightness() < 128;
+  auto mix = [&](qreal t) -> QColor {
+    const qreal u = 1.0 - t;
+    const int r = qBound(0, int(bg.red()   * u + fg.red()   * t), 255);
+    const int g = qBound(0, int(bg.green() * u + fg.green() * t), 255);
+    const int b = qBound(0, int(bg.blue()  * u + fg.blue()  * t), 255);
+    return QColor(r, g, b);
+  };
+
+  QPalette p;
+  // ベース 2 色 (そのまま)
+  p.setColor(QPalette::Base,              bg);
+  p.setColor(QPalette::Text,              fg);
+  p.setColor(QPalette::WindowText,        fg);
+  p.setColor(QPalette::ButtonText,        fg);
+  p.setColor(QPalette::ToolTipText,       fg);
+  // bg を少しずつ fg 方向へずらしたもの (グラデーション)
+  p.setColor(QPalette::AlternateBase,     mix(0.04));
+  p.setColor(QPalette::Window,            mix(0.06));
+  p.setColor(QPalette::ToolTipBase,       mix(0.08));
+  p.setColor(QPalette::Button,            mix(0.10));
+  p.setColor(QPalette::Midlight,          mix(0.15));
+  p.setColor(QPalette::Light,             mix(0.18));
+  p.setColor(QPalette::Mid,               mix(0.28));
+  p.setColor(QPalette::Dark,              mix(0.48));
+  // Shadow は Light テーマでは中央寄り、Dark テーマでは bg より暗く。
+  p.setColor(QPalette::Shadow,            isDark ? bg.darker(180) : mix(0.65));
+
+  // アクセント色 (Light/Dark で別の青系)
+  p.setColor(QPalette::BrightText,        QColor(Qt::red));
+  p.setColor(QPalette::Highlight,         isDark ? QColor(0x26, 0x4F, 0x78)
+                                                 : QColor(0x00, 0x78, 0xD7));
+  p.setColor(QPalette::HighlightedText,   QColor(Qt::white));
+  p.setColor(QPalette::Link,              isDark ? QColor(0x4D, 0xA1, 0xFF)
+                                                 : QColor(0x00, 0x66, 0xCC));
+
+  // Disabled (各 fg を bg 寄りに 40% ブレンドした薄い色)
+  p.setColor(QPalette::Disabled, QPalette::WindowText, mix(0.40));
+  p.setColor(QPalette::Disabled, QPalette::Text,       mix(0.40));
+  p.setColor(QPalette::Disabled, QPalette::ButtonText, mix(0.40));
+  return p;
 }
 
 ThemeMode Settings::detectOsTheme() const {
@@ -1100,10 +1117,20 @@ QString Settings::csvViewerDelimiter() const { return m_csvViewerDelimiter; }
 void Settings::setCsvViewerDelimiter(const QString& d) { m_csvViewerDelimiter = d; }
 bool Settings::csvViewerFirstRowAsHeader() const { return m_csvViewerFirstRowAsHeader; }
 void Settings::setCsvViewerFirstRowAsHeader(bool on) { m_csvViewerFirstRowAsHeader = on; }
+QFont Settings::csvViewerFont() const { return m_csvViewerFont; }
+void  Settings::setCsvViewerFont(const QFont& font) { m_csvViewerFont = font; }
 
 // ── Markdown ビュアー既定 ──
 bool Settings::markdownViewerShowSource() const { return m_markdownViewerShowSource; }
 void Settings::setMarkdownViewerShowSource(bool on) { m_markdownViewerShowSource = on; }
+QFont Settings::markdownViewerFont() const { return m_markdownViewerFont; }
+void  Settings::setMarkdownViewerFont(const QFont& font) { m_markdownViewerFont = font; }
+QColor Settings::markdownViewerForeground() const { return m_markdownViewerFg; }
+void   Settings::setMarkdownViewerForeground(const QColor& c) { m_markdownViewerFg = c; }
+QColor Settings::markdownViewerBackground() const { return m_markdownViewerBg; }
+void   Settings::setMarkdownViewerBackground(const QColor& c) { m_markdownViewerBg = c; }
+QColor Settings::markdownViewerLinkColor() const { return m_markdownViewerLink; }
+void   Settings::setMarkdownViewerLinkColor(const QColor& c) { m_markdownViewerLink = c; }
 
 // ── メディアビュアー既定 ──
 QStringList Settings::mediaViewerExtensions() const { return m_mediaViewerExtensions; }
@@ -1967,6 +1994,24 @@ void Settings::load() {
     if (!list.isEmpty()) m_markdownViewerExtensions = list;
   }
   m_markdownViewerShowSource = markdownViewer.value("showSource").toBool(false);
+  if (markdownViewer.contains("font")) {
+    QFont f;
+    if (f.fromString(markdownViewer.value("font").toString())) {
+      m_markdownViewerFont = f;
+    }
+  }
+  {
+    // fg/bg: 空文字列 (= 無効色) はテーマ既定を維持する。
+    auto loadMdColor = [&](const QString& key, QColor& dst) {
+      if (markdownViewer.contains(key)) {
+        const QString str = markdownViewer.value(key).toString();
+        dst = str.isEmpty() ? QColor() : QColor(str);
+      }
+    };
+    loadMdColor("fg",   m_markdownViewerFg);
+    loadMdColor("bg",   m_markdownViewerBg);
+    loadMdColor("link", m_markdownViewerLink);
+  }
 
   // PDF ビュアー: バイナリ判定より先に評価される
   QJsonObject pdfViewer = root.value("pdfViewer").toObject();
@@ -1998,6 +2043,12 @@ void Settings::load() {
   }
   m_csvViewerDelimiter        = csvViewer.value("delimiter").toString(QStringLiteral("auto"));
   m_csvViewerFirstRowAsHeader = csvViewer.value("firstRowAsHeader").toBool(false);
+  if (csvViewer.contains("font")) {
+    QFont f;
+    if (f.fromString(csvViewer.value("font").toString())) {
+      m_csvViewerFont = f;
+    }
+  }
   if (textViewer.contains("mimePatterns")) {
     QStringList list;
     for (const QJsonValue& v : textViewer.value("mimePatterns").toArray()) {
@@ -2509,6 +2560,11 @@ void Settings::save() const {
     for (const QString& s : m_markdownViewerExtensions) arr.append(s);
     mdViewer["extensions"] = arr;
     mdViewer["showSource"] = m_markdownViewerShowSource;
+    mdViewer["font"]       = m_markdownViewerFont.toString();
+    // 無効色は空文字列で保存 (テーマ既定に追従)。
+    mdViewer["fg"]   = m_markdownViewerFg.isValid()   ? m_markdownViewerFg.name(QColor::HexArgb)   : QString();
+    mdViewer["bg"]   = m_markdownViewerBg.isValid()   ? m_markdownViewerBg.name(QColor::HexArgb)   : QString();
+    mdViewer["link"] = m_markdownViewerLink.isValid() ? m_markdownViewerLink.name(QColor::HexArgb) : QString();
     root["markdownViewer"] = mdViewer;
   }
 
@@ -2534,6 +2590,7 @@ void Settings::save() const {
     csvViewer["extensions"] = arr;
     csvViewer["delimiter"]        = m_csvViewerDelimiter;
     csvViewer["firstRowAsHeader"] = m_csvViewerFirstRowAsHeader;
+    csvViewer["font"]             = m_csvViewerFont.toString();
     root["csvViewer"] = csvViewer;
   }
 

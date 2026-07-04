@@ -2,11 +2,16 @@
 
 #include "settings/Settings.h"
 #include "viewer/ExtensionsField.h"
+#include "viewer/ViewerThemeFields.h"
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QFontDialog>
 #include <QFormLayout>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QVBoxLayout>
 
 namespace Farman {
@@ -40,12 +45,38 @@ CsvViewerSettingsPage::CsvViewerSettingsPage(QWidget* parent)
 
   m_headerCheck = new QCheckBox(tr("Treat first row as header"), this);
   outer->addWidget(m_headerCheck);
+
+  outer->addWidget(buildFontSection());
   outer->addStretch();
 
   Settings& s = Settings::instance();
   s.load();
   applyValuesToUi(s.csvViewerExtensions(), s.csvViewerDelimiter(),
                   s.csvViewerFirstRowAsHeader());
+  // フォントは有効テーマ側の値を初期表示 (Light/Dark 双方に同値保存される)。
+  m_uiFont = s.csvViewerFont();
+  styleThemeFontButton(m_fontButton, m_uiFont);
+}
+
+QWidget* CsvViewerSettingsPage::buildFontSection() {
+  auto* row = new QWidget(this);
+  auto* layout = new QHBoxLayout(row);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->addWidget(new QLabel(tr("Font:"), row));
+  m_fontButton = new QPushButton(row);
+  m_fontButton->setToolTip(tr("Choose the font for the CSV / TSV table"));
+  connect(m_fontButton, &QPushButton::clicked, this, [this]() {
+    bool ok = false;
+    const QFont chosen = QFontDialog::getFont(&ok, m_uiFont, this,
+                                              tr("CSV / TSV Viewer Font"));
+    if (ok) {
+      m_uiFont = chosen;
+      styleThemeFontButton(m_fontButton, m_uiFont);
+    }
+  });
+  layout->addWidget(m_fontButton);
+  layout->addStretch();
+  return row;
 }
 
 void CsvViewerSettingsPage::applyValuesToUi(const QStringList& extensions,
@@ -63,11 +94,24 @@ void CsvViewerSettingsPage::save() {
   if (!exts.isEmpty()) s.setCsvViewerExtensions(exts);
   s.setCsvViewerDelimiter(m_delimiterCombo->currentData().toString());
   s.setCsvViewerFirstRowAsHeader(m_headerCheck->isChecked());
+
+  // フォントは Light / Dark 双方のスキームへ同じ値を書き込む (RMW overlay)。
+  // 将来 CSV に文字色などテーマ依存項目が増えても分岐しやすいよう、
+  // ストレージ上はテーマ別のままにしておく。
+  ColorScheme fresh = s.scheme(ThemeMode::Light);
+  fresh.csvViewerFont = m_uiFont;
+  s.setScheme(ThemeMode::Light, fresh);
+  fresh = s.scheme(ThemeMode::Dark);
+  fresh.csvViewerFont = m_uiFont;
+  s.setScheme(ThemeMode::Dark, fresh);
+
   s.save();
 }
 
 void CsvViewerSettingsPage::restoreDefaults() {
   applyValuesToUi(kDefExtensions, kDefDelimiter, kDefFirstRowHeader);
+  m_uiFont = defaultLightScheme().csvViewerFont;
+  styleThemeFontButton(m_fontButton, m_uiFont);
 }
 
 } // namespace Farman

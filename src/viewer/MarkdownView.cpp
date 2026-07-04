@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QLocale>
+#include <QPalette>
 #include <QScrollBar>
 #include <QSizePolicy>
 #include <QStringDecoder>
@@ -162,6 +163,39 @@ void MarkdownView::setupUi() {
   root->addWidget(m_browser, /*stretch*/ 1);
 
   setFocusProxy(m_browser);
+
+  // 表示フォント + 本文 文字色 / 背景色 (テーマ依存: Settings → Plugins →
+  // Markdown Viewer)。QTextDocument の既定フォントが本文の基準フォントになり、
+  // 見出し等は相対サイズで描かれる。文字色 / 背景色はビューアのパレット
+  // (Text / Base) に反映する。無効色のときはテーマ既定パレットに追従する。
+  applyViewerAppearance();
+  connect(&Settings::instance(), &Settings::settingsChanged, this, [this]() {
+    applyViewerAppearance();
+    renderCurrent();
+  });
+}
+
+void MarkdownView::applyViewerAppearance() {
+  Settings& s = Settings::instance();
+  m_browser->document()->setDefaultFont(s.markdownViewerFont());
+
+  // テーマ既定パレットを起点に、明示指定された色だけ上書きする。
+  QPalette pal = qApp->palette(m_browser);
+  const QColor fg = s.markdownViewerForeground();
+  const QColor bg = s.markdownViewerBackground();
+  if (bg.isValid()) {
+    pal.setColor(QPalette::Base,   bg);
+    pal.setColor(QPalette::Window, bg);
+  }
+  if (fg.isValid()) {
+    pal.setColor(QPalette::Text,       fg);
+    pal.setColor(QPalette::WindowText, fg);
+  }
+  const QColor link = s.markdownViewerLinkColor();
+  if (link.isValid()) {
+    pal.setColor(QPalette::Link, link);
+  }
+  m_browser->setPalette(pal);
 }
 
 bool MarkdownView::loadFile(const QString& filePath) {

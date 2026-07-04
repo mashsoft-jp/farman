@@ -48,6 +48,12 @@ codec / resolution / duration.
 - Fixed a possible crash when closing a PDF opened in an external viewer
 - Fixed the toolbar and the pane's sort/filter footer not following the theme
   (staying light) in dark mode
-- Consolidated each viewer's extension / MIME association into the plugin
-  settings (it was duplicated between Appearance and Plugins)
+- Consolidated each viewer's settings (extension / MIME association, font,
+  colors, and image transparency) into that viewer's plugin settings; they
+  used to be split between Appearance and Plugins. Fonts and colors can be
+  edited per Light / Dark theme via a toggle inside the plugin settings
+- Added a display font setting to the CSV / TSV viewer
+- Added display font plus body text / background / link color settings to the
+  Markdown viewer (colors are configurable per Light / Dark theme; when left
+  unset they follow the theme's default)
 - Stability improvements and bug fixes

@@ -96,6 +96,18 @@ struct ColorScheme {
   QColor  binaryViewerSelectedBg;
   QColor  binaryViewerAddressFg;
   QColor  binaryViewerAddressBg;
+
+  // ── CSV / TSV ビュアー ──
+  // フォントのみテーマ依存 (文字色設定は持たない)。
+  QFont   csvViewerFont;
+
+  // ── Markdown ビュアー ──
+  // フォント + 本文の文字色 / 背景色 / リンク色 (テーマ依存)。色が無効色の
+  // ときはパレット既定色 (= テーマ追従) で描画する。
+  QFont   markdownViewerFont;
+  QColor  markdownViewerFg;
+  QColor  markdownViewerBg;
+  QColor  markdownViewerLink;
 };
 
 // 出荷時の Light テーマ (= これまでの farman の既定値そのまま)

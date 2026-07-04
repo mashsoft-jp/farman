@@ -109,35 +109,12 @@ void AppearanceTab::setupUi() {
 
   mainLayout->addWidget(themeGroup);
 
-  // ── サブタブ: メイン (ファイルリスト) / テキスト / バイナリ / 画像 ──
-  // どのページのフィールドもダイアログ内シャドウ (m_dialogLight / m_dialogDark)
-  // と紐付き、Mode ラジオ切替えで一斉に Light/Dark を行き来する。テーマ非依存
-  // フィールド (ビュアーの拡張子/MIME/エンコーディング/zoom 等) は各ビュアー
-  // サブタブの中に置く (旧 ViewersTab から統合)。
-  // Viewer Display Mode (Inline/External) は Viewer Associations ページへ移動済み。
-  m_subTabs = new QTabWidget(this);
-  m_subTabs->addTab(buildMainPage(),         tr("Main"));
-  m_subTabs->addTab(buildTextViewerPage(),   tr("Text Viewer"));
-  m_subTabs->addTab(buildBinaryViewerPage(), tr("Binary Viewer"));
-  m_subTabs->addTab(buildImageViewerPage(),  tr("Image Viewer"));
-  mainLayout->addWidget(m_subTabs, /*stretch*/ 1);
-
-  // タブバーへフォーカスが当たっているときと外れたときで選択中タブの色を
-  // 変える。FocusIn ではスタイルシートを外して native の鮮やかな青を、
-  // FocusOut では選択中タブをくすませた色で描画する。stylesheet を有効にすると
-  // native rendering からは離れるが、ユーザーに「今フォーカスがこのタブバーに
-  // 無いこと」を視覚的に伝えるための副作用として許容する。
-  if (m_subTabs && m_subTabs->tabBar()) {
-    m_subTabs->tabBar()->installEventFilter(this);
-    // ダイアログを開いた直後はサイドメニュー側にフォーカスがあるため、初期
-    // 状態は "non-focused"。FocusIn が来たら eventFilter 側で stylesheet を
-    // クリアして native の青を取り戻す。
-    m_subTabs->tabBar()->setStyleSheet(QStringLiteral(
-      "QTabBar::tab:selected { "
-          "background: palette(mid); "
-          "color: palette(window-text); }"
-    ));
-  }
+  // ファイルリスト外観 (ベース色 / UI・リストフォント / カテゴリ色 / アドレス /
+  // カーソル / ディレクトリ比較色) を直接下に置く。
+  // ビュアー (テキスト / バイナリ / 画像) のフォント / 配色 / 透過は、各ビュアーの
+  // プラグイン設定 (Settings → Plugins → 詳細 → 設定...) へ移設した。テーマ非依存
+  // のビュアー挙動設定 (拡張子/MIME/エンコーディング/zoom 等) も同様。
+  mainLayout->addWidget(buildMainPage(), /*stretch*/ 1);
 }
 
 QWidget* AppearanceTab::buildMainPage() {
@@ -420,196 +397,6 @@ QWidget* AppearanceTab::buildMainPage() {
   return page;
 }
 
-// 色ボタン共通ヘルパー (ビュアーサブタブ用)。各ビュアーで微妙にボタン幅が
-// 違うため width を引数で受け取る。クリックで QColorDialog を開き、選択色を
-// storedValue に書き込み + ボタン外観を更新。
-static QPushButton* makeViewerColorButton(QWidget* parent, QColor& storedValue,
-                                          const QString& dialogTitle, int width = 100) {
-  QPushButton* btn = new QPushButton(parent);
-  btn->setFixedWidth(width);
-  QObject::connect(btn, &QPushButton::clicked, parent,
-                   [parent, &storedValue, btn, dialogTitle]() {
-    QColor picked = QColorDialog::getColor(
-      storedValue.isValid() ? storedValue : QColor(Qt::black),
-      parent, dialogTitle, QColorDialog::ShowAlphaChannel);
-    if (picked.isValid()) {
-      storedValue = picked;
-      btn->setStyleSheet(QString("background-color: %1; color: %2;")
-        .arg(picked.name(), picked.lightness() > 128 ? "black" : "white"));
-      btn->setText(picked.name());
-    }
-  });
-  return btn;
-}
-
-QWidget* AppearanceTab::buildTextViewerPage() {
-  QWidget* page = new QWidget(this);
-  QVBoxLayout* outer = new QVBoxLayout(page);
-
-  // 拡張子 / MIME パターンの関連付けは「プラグイン設定」(TextViewerSettingsPage)
-  // に一本化した。外観タブは配色 / フォント (テーマ依存) のみを扱う。
-
-  // ── 上段: Font / Encoding / 行番号 / 折り返し ──
-  QHBoxLayout* row = new QHBoxLayout();
-  row->setSpacing(12);
-  auto addPair = [page, row](const QString& labelText, QWidget* w) {
-    row->addWidget(new QLabel(labelText, page));
-    row->addWidget(w);
-  };
-
-  m_textFontButton = new QPushButton(tr("Select Font..."), page);
-  m_textFontButton->setToolTip(tr("Choose the font for the text viewer"));
-  connect(m_textFontButton, &QPushButton::clicked, this, [this]() {
-    bool ok = false;
-    const QFont chosen = QFontDialog::getFont(&ok, m_textSelectedFont, this,
-                                              tr("Text Viewer Font"));
-    if (ok) {
-      m_textSelectedFont = chosen;
-      m_textFontButton->setText(QString("%1, %2pt")
-        .arg(m_textSelectedFont.family())
-        .arg(m_textSelectedFont.pointSize()));
-    }
-  });
-  addPair(tr("Font:"), m_textFontButton);
-
-  // エンコーディング / 行番号表示 / 折り返しは、テーマ非依存の表示設定として
-  // テキストビュアープラグインの設定 (Settings → Plugins → 詳細 → 設定...) へ
-  // 移設した。ここ (外観) にはテーマと一体のフォント / 色のみ残す。
-  row->addStretch();
-  outer->addLayout(row);
-
-  // ── カラー (Normal / Selected / 行番号) ──
-  QGridLayout* colors = new QGridLayout();
-  colors->setColumnStretch(3, 1);
-  int r = 0;
-  colors->addWidget(new QLabel(tr("Foreground"), page), r, 1, Qt::AlignCenter);
-  colors->addWidget(new QLabel(tr("Background"), page), r, 2, Qt::AlignCenter);
-  ++r;
-  m_textNormalFgButton   = makeViewerColorButton(page, m_textNormalFgValue,   tr("Normal Foreground"));
-  m_textNormalBgButton   = makeViewerColorButton(page, m_textNormalBgValue,   tr("Normal Background"));
-  colors->addWidget(new QLabel(tr("Normal:"), page), r, 0);
-  colors->addWidget(m_textNormalFgButton, r, 1);
-  colors->addWidget(m_textNormalBgButton, r, 2);
-  ++r;
-  m_textSelectedFgButton = makeViewerColorButton(page, m_textSelectedFgValue, tr("Selected Foreground"));
-  m_textSelectedBgButton = makeViewerColorButton(page, m_textSelectedBgValue, tr("Selected Background"));
-  colors->addWidget(new QLabel(tr("Selected:"), page), r, 0);
-  colors->addWidget(m_textSelectedFgButton, r, 1);
-  colors->addWidget(m_textSelectedBgButton, r, 2);
-  ++r;
-  m_textLineNumberFgButton = makeViewerColorButton(page, m_textLineNumberFgValue, tr("Line Number Foreground"));
-  m_textLineNumberBgButton = makeViewerColorButton(page, m_textLineNumberBgValue, tr("Line Number Background"));
-  colors->addWidget(new QLabel(tr("Line Number:"), page), r, 0);
-  colors->addWidget(m_textLineNumberFgButton, r, 1);
-  colors->addWidget(m_textLineNumberBgButton, r, 2);
-  ++r;
-  outer->addLayout(colors);
-  outer->addStretch();
-  return page;
-}
-
-QWidget* AppearanceTab::buildBinaryViewerPage() {
-  QWidget* page = new QWidget(this);
-  QVBoxLayout* outer = new QVBoxLayout(page);
-
-  // ── 上段: Font ──
-  // 表示単位 / エンディアン / 文字列エンコーディングは、テーマ非依存の表示
-  // 設定としてバイナリビュアープラグインの設定 (Settings → Plugins → 詳細 →
-  // 設定...) へ移設した。ここ (外観) にはテーマと一体のフォント / 色のみ残す。
-  QHBoxLayout* topRow = new QHBoxLayout();
-  topRow->setSpacing(12);
-  auto addPair = [page](QHBoxLayout* row, const QString& labelText, QWidget* w) {
-    row->addWidget(new QLabel(labelText, page));
-    row->addWidget(w);
-  };
-
-  m_binaryFontButton = new QPushButton(tr("Select Font..."), page);
-  m_binaryFontButton->setToolTip(tr("Choose the font for the binary viewer hex dump"));
-  connect(m_binaryFontButton, &QPushButton::clicked, this, [this]() {
-    bool ok = false;
-    const QFont chosen = QFontDialog::getFont(&ok, m_binarySelectedFont, this,
-                                              tr("Binary Viewer Font"));
-    if (ok) {
-      m_binarySelectedFont = chosen;
-      m_binaryFontButton->setText(QString("%1, %2pt")
-        .arg(m_binarySelectedFont.family())
-        .arg(m_binarySelectedFont.pointSize()));
-    }
-  });
-  addPair(topRow, tr("Font:"), m_binaryFontButton);
-  topRow->addStretch();
-  outer->addLayout(topRow);
-
-  // ── カラー (Normal / Selected / Address) ──
-  QGridLayout* colors = new QGridLayout();
-  colors->setColumnStretch(3, 1);
-  int r = 0;
-  colors->addWidget(new QLabel(tr("Foreground"), page), r, 1, Qt::AlignCenter);
-  colors->addWidget(new QLabel(tr("Background"), page), r, 2, Qt::AlignCenter);
-  ++r;
-  m_binaryNormalFgButton = makeViewerColorButton(page, m_binaryNormalFgValue, tr("Normal Foreground"));
-  m_binaryNormalBgButton = makeViewerColorButton(page, m_binaryNormalBgValue, tr("Normal Background"));
-  colors->addWidget(new QLabel(tr("Normal:"), page), r, 0);
-  colors->addWidget(m_binaryNormalFgButton, r, 1);
-  colors->addWidget(m_binaryNormalBgButton, r, 2);
-  ++r;
-  m_binarySelectedFgButton = makeViewerColorButton(page, m_binarySelectedFgValue, tr("Selected Foreground"));
-  m_binarySelectedBgButton = makeViewerColorButton(page, m_binarySelectedBgValue, tr("Selected Background"));
-  colors->addWidget(new QLabel(tr("Selected:"), page), r, 0);
-  colors->addWidget(m_binarySelectedFgButton, r, 1);
-  colors->addWidget(m_binarySelectedBgButton, r, 2);
-  ++r;
-  m_binaryAddressFgButton = makeViewerColorButton(page, m_binaryAddressFgValue, tr("Address Foreground"));
-  m_binaryAddressBgButton = makeViewerColorButton(page, m_binaryAddressBgValue, tr("Address Background"));
-  colors->addWidget(new QLabel(tr("Address:"), page), r, 0);
-  colors->addWidget(m_binaryAddressFgButton, r, 1);
-  colors->addWidget(m_binaryAddressBgButton, r, 2);
-  ++r;
-  outer->addLayout(colors);
-  outer->addStretch();
-  return page;
-}
-
-QWidget* AppearanceTab::buildImageViewerPage() {
-  QWidget* page = new QWidget(this);
-  QVBoxLayout* outer = new QVBoxLayout(page);
-
-  // 拡張子 / MIME・既定ズーム / ウィンドウに合わせる / アニメ再生は、テーマ非依存
-  // の設定として画像ビュアープラグインの設定 (Settings → Plugins → 詳細 → 設定...)
-  // へ移設した。ここ (外観) にはテーマと一体の色設定 (透過) のみ残す。
-
-  // ── Transparency セクション ──
-  QGroupBox* transparencyGroup = new QGroupBox(tr("Transparency"), page);
-  QVBoxLayout* transparencyLayout = new QVBoxLayout(transparencyGroup);
-
-  QGroupBox* checkerGroup = new QGroupBox(transparencyGroup);
-  QHBoxLayout* checkerRow = new QHBoxLayout(checkerGroup);
-  m_imageTransparencyCheckerRadio = new QRadioButton(tr("Checker"), checkerGroup);
-  checkerRow->addWidget(m_imageTransparencyCheckerRadio);
-  m_imageCheckerColor1Button = makeViewerColorButton(checkerGroup, m_imageCheckerColor1Value, tr("Checker Color 1"), 120);
-  m_imageCheckerColor2Button = makeViewerColorButton(checkerGroup, m_imageCheckerColor2Value, tr("Checker Color 2"), 120);
-  checkerRow->addWidget(new QLabel(tr("Color 1:"), checkerGroup));
-  checkerRow->addWidget(m_imageCheckerColor1Button);
-  checkerRow->addWidget(new QLabel(tr("Color 2:"), checkerGroup));
-  checkerRow->addWidget(m_imageCheckerColor2Button);
-  checkerRow->addStretch();
-  transparencyLayout->addWidget(checkerGroup);
-
-  QGroupBox* solidGroup = new QGroupBox(transparencyGroup);
-  QHBoxLayout* solidRow = new QHBoxLayout(solidGroup);
-  m_imageTransparencySolidRadio = new QRadioButton(tr("Solid Color"), solidGroup);
-  solidRow->addWidget(m_imageTransparencySolidRadio);
-  m_imageSolidColorButton = makeViewerColorButton(solidGroup, m_imageSolidColorValue, tr("Solid Color"), 120);
-  solidRow->addWidget(new QLabel(tr("Color:"), solidGroup));
-  solidRow->addWidget(m_imageSolidColorButton);
-  solidRow->addStretch();
-  transparencyLayout->addWidget(solidGroup);
-
-  outer->addWidget(transparencyGroup);
-  outer->addStretch();
-  return page;
-}
-
 void AppearanceTab::loadSettings() {
   auto& settings = Settings::instance();
 
@@ -661,34 +448,8 @@ void AppearanceTab::loadSettings() {
   m_cursorThicknessSpin->setValue(settings.cursorThickness());
   m_cursorThicknessSpin->setEnabled(settings.cursorShape() == CursorShape::Underline);
 
-  // ── ビュアー設定 ──
-  // 拡張子 / MIME・エンコーディング・ズーム等はプラグイン設定へ移設済み。
-  // 外観タブはテーマ依存の色設定 (画像の透過) のみを扱う。
-  if (settings.imageViewerTransparencyMode() == ImageTransparencyMode::SolidColor) {
-    m_imageTransparencySolidRadio->setChecked(true);
-  } else {
-    m_imageTransparencyCheckerRadio->setChecked(true);
-  }
-  // Binary viewer: 単位 / エンディアン / エンコーディングはプラグイン設定へ移設。
-
-  // ── Image Viewer checker 2 色 (theme-independent) ──
-  // 「透明部分のインジケータ」として全テーマで共通の見た目を保つため、
-  // ColorScheme には含めず Settings の flat フィールドから直接読み書きする。
-  auto applyCheckerButton = [](QPushButton* btn, const QColor& c) {
-    if (!btn) return;
-    if (!c.isValid()) {
-      btn->setStyleSheet(QString());
-      btn->setText(QObject::tr("(none)"));
-      return;
-    }
-    btn->setStyleSheet(QString("background-color: %1; color: %2;")
-      .arg(c.name(), c.lightness() > 128 ? "black" : "white"));
-    btn->setText(c.name());
-  };
-  m_imageCheckerColor1Value = settings.imageViewerCheckerColor1();
-  m_imageCheckerColor2Value = settings.imageViewerCheckerColor2();
-  applyCheckerButton(m_imageCheckerColor1Button, m_imageCheckerColor1Value);
-  applyCheckerButton(m_imageCheckerColor2Button, m_imageCheckerColor2Value);
+  // ビュアー設定 (拡張子 / MIME / エンコーディング / ズーム / フォント / 配色 /
+  // 透過) は各ビュアーのプラグイン設定へ移設済み。外観タブは扱わない。
 }
 
 ColorScheme& AppearanceTab::currentScheme() {
@@ -752,63 +513,6 @@ void AppearanceTab::loadFromScheme(const ColorScheme& s) {
   m_cursorInactiveValue = s.cursorInactiveColor;
   updateColorButton(m_cursorActiveButton,   m_cursorActiveValue);
   updateColorButton(m_cursorInactiveButton, m_cursorInactiveValue);
-
-  // ── ビュアー (theme-dependent: font + colors) ──
-  auto applyViewerButton = [](QPushButton* btn, const QColor& c) {
-    if (!btn) return;
-    if (!c.isValid()) {
-      btn->setStyleSheet(QString());
-      btn->setText(QObject::tr("(none)"));
-      return;
-    }
-    btn->setStyleSheet(QString("background-color: %1; color: %2;")
-      .arg(c.name(), c.lightness() > 128 ? "black" : "white"));
-    btn->setText(c.name());
-  };
-  // Text viewer
-  m_textSelectedFont = s.textViewerFont;
-  if (m_textFontButton) {
-    m_textFontButton->setText(QString("%1, %2pt")
-      .arg(m_textSelectedFont.family())
-      .arg(m_textSelectedFont.pointSize()));
-  }
-  m_textNormalFgValue     = s.textViewerNormalFg;
-  m_textNormalBgValue     = s.textViewerNormalBg;
-  m_textSelectedFgValue   = s.textViewerSelectedFg;
-  m_textSelectedBgValue   = s.textViewerSelectedBg;
-  m_textLineNumberFgValue = s.textViewerLineNumberFg;
-  m_textLineNumberBgValue = s.textViewerLineNumberBg;
-  applyViewerButton(m_textNormalFgButton,     m_textNormalFgValue);
-  applyViewerButton(m_textNormalBgButton,     m_textNormalBgValue);
-  applyViewerButton(m_textSelectedFgButton,   m_textSelectedFgValue);
-  applyViewerButton(m_textSelectedBgButton,   m_textSelectedBgValue);
-  applyViewerButton(m_textLineNumberFgButton, m_textLineNumberFgValue);
-  applyViewerButton(m_textLineNumberBgButton, m_textLineNumberBgValue);
-  // Image viewer
-  // Checker 柄の 2 色は「透明部分のインジケータ」としてテーマに依存しない
-  // 固定 (= Settings の flat フィールド) 扱いにしたので、ここでは触らない。
-  // Solid 色のみテーマ依存。
-  m_imageSolidColorValue = s.imageViewerSolidColor;
-  applyViewerButton(m_imageSolidColorButton, m_imageSolidColorValue);
-  // Binary viewer
-  m_binarySelectedFont = s.binaryViewerFont;
-  if (m_binaryFontButton) {
-    m_binaryFontButton->setText(QString("%1, %2pt")
-      .arg(m_binarySelectedFont.family())
-      .arg(m_binarySelectedFont.pointSize()));
-  }
-  m_binaryNormalFgValue   = s.binaryViewerNormalFg;
-  m_binaryNormalBgValue   = s.binaryViewerNormalBg;
-  m_binarySelectedFgValue = s.binaryViewerSelectedFg;
-  m_binarySelectedBgValue = s.binaryViewerSelectedBg;
-  m_binaryAddressFgValue  = s.binaryViewerAddressFg;
-  m_binaryAddressBgValue  = s.binaryViewerAddressBg;
-  applyViewerButton(m_binaryNormalFgButton,   m_binaryNormalFgValue);
-  applyViewerButton(m_binaryNormalBgButton,   m_binaryNormalBgValue);
-  applyViewerButton(m_binarySelectedFgButton, m_binarySelectedFgValue);
-  applyViewerButton(m_binarySelectedBgButton, m_binarySelectedBgValue);
-  applyViewerButton(m_binaryAddressFgButton,  m_binaryAddressFgValue);
-  applyViewerButton(m_binaryAddressBgButton,  m_binaryAddressBgValue);
 }
 
 void AppearanceTab::saveToScheme(ColorScheme& s) const {
@@ -837,25 +541,9 @@ void AppearanceTab::saveToScheme(ColorScheme& s) const {
   s.cursorActiveColor  = m_cursorActiveValue;
   s.cursorInactiveColor= m_cursorInactiveValue;
 
-  // ── ビュアー (theme-dependent: font + colors) ──
-  s.textViewerFont         = m_textSelectedFont;
-  s.textViewerNormalFg     = m_textNormalFgValue;
-  s.textViewerNormalBg     = m_textNormalBgValue;
-  s.textViewerSelectedFg   = m_textSelectedFgValue;
-  s.textViewerSelectedBg   = m_textSelectedBgValue;
-  s.textViewerLineNumberFg = m_textLineNumberFgValue;
-  s.textViewerLineNumberBg = m_textLineNumberBgValue;
-  // checker 2 色はテーマ非依存。save() 内で Settings へ直接書き込む。
-  s.imageViewerSolidColor = m_imageSolidColorValue;
-  s.binaryViewerFont       = m_binarySelectedFont;
-  s.binaryViewerNormalFg   = m_binaryNormalFgValue;
-  s.binaryViewerNormalBg   = m_binaryNormalBgValue;
-  s.binaryViewerSelectedFg = m_binarySelectedFgValue;
-  s.binaryViewerSelectedBg = m_binarySelectedBgValue;
-  s.binaryViewerAddressFg  = m_binaryAddressFgValue;
-  s.binaryViewerAddressBg  = m_binaryAddressBgValue;
-
-  // 注意: colorRules はここでは触らない (UI 無し)。
+  // 注意: colorRules と、ビュアー (テキスト/バイナリ/画像) のフォント・配色・
+  // 透過は UI を持たないためここでは触らない。ビュアー欄は各プラグイン設定
+  // ページが setScheme() で直接書き込む。
 }
 
 void AppearanceTab::applyThemeModeChange() {
@@ -1131,24 +819,9 @@ void AppearanceTab::save() {
     dst.compareOnlyHereBackground = src.compareOnlyHereBackground;
     dst.cursorActiveColor   = src.cursorActiveColor;
     dst.cursorInactiveColor = src.cursorInactiveColor;
-    // ビュアー (テキスト / バイナリ / 画像)
-    dst.textViewerFont         = src.textViewerFont;
-    dst.textViewerNormalFg     = src.textViewerNormalFg;
-    dst.textViewerNormalBg     = src.textViewerNormalBg;
-    dst.textViewerSelectedFg   = src.textViewerSelectedFg;
-    dst.textViewerSelectedBg   = src.textViewerSelectedBg;
-    dst.textViewerLineNumberFg = src.textViewerLineNumberFg;
-    dst.textViewerLineNumberBg = src.textViewerLineNumberBg;
-    dst.imageViewerSolidColor    = src.imageViewerSolidColor;
-    // checker 2 色はテーマ非依存のため overlay 不要 (Settings の flat フィールド
-    // を save() の末尾で直接書き込む)。
-    dst.binaryViewerFont       = src.binaryViewerFont;
-    dst.binaryViewerNormalFg   = src.binaryViewerNormalFg;
-    dst.binaryViewerNormalBg   = src.binaryViewerNormalBg;
-    dst.binaryViewerSelectedFg = src.binaryViewerSelectedFg;
-    dst.binaryViewerSelectedBg = src.binaryViewerSelectedBg;
-    dst.binaryViewerAddressFg  = src.binaryViewerAddressFg;
-    dst.binaryViewerAddressBg  = src.binaryViewerAddressBg;
+    // ビュアー (テキスト / バイナリ / 画像) のフォント・配色・透過 Solid 色は
+    // 各プラグイン設定ページが直接 setScheme() で書き込むため、ここでは
+    // overlay しない (fresh に残る既存値を温存する)。
   };
 
   ColorScheme fresh;
@@ -1169,36 +842,8 @@ void AppearanceTab::save() {
     static_cast<CursorShape>(m_cursorShapeCombo->currentData().toInt()));
   settings.setCursorThickness(m_cursorThicknessSpin->value());
 
-  // 5. ビュアー設定: 拡張子 / MIME・encoding・zoom 等はプラグイン設定へ移設済み。
-  //    外観タブはテーマ依存の色設定 (画像の透過) のみ保存する。
-  // Image viewer checker colors (theme-independent)
-  settings.setImageViewerCheckerColor1(m_imageCheckerColor1Value);
-  settings.setImageViewerCheckerColor2(m_imageCheckerColor2Value);
-  settings.setImageViewerTransparencyMode(
-    m_imageTransparencySolidRadio->isChecked()
-      ? ImageTransparencyMode::SolidColor
-      : ImageTransparencyMode::Checker);
-  // Binary viewer: 単位 / エンディアン / エンコーディングはプラグイン設定へ移設。
-}
-
-bool AppearanceTab::eventFilter(QObject* watched, QEvent* event) {
-  // m_subTabs の QTabBar に対する FocusIn/FocusOut を捕捉。
-  //   FocusIn  → stylesheet を外して native の鮮やかな選択色に戻す
-  //   FocusOut → 選択中タブだけ palette(mid) で塗って「フォーカスが外れた」
-  //              ことを示す。native 描画からは離れるが、視覚的なフォーカス
-  //              インジケータとして機能する。
-  if (m_subTabs && m_subTabs->tabBar() && watched == m_subTabs->tabBar()) {
-    if (event->type() == QEvent::FocusIn) {
-      m_subTabs->tabBar()->setStyleSheet(QString());
-    } else if (event->type() == QEvent::FocusOut) {
-      m_subTabs->tabBar()->setStyleSheet(QStringLiteral(
-        "QTabBar::tab:selected { "
-            "background: palette(mid); "
-            "color: palette(window-text); }"
-      ));
-    }
-  }
-  return QWidget::eventFilter(watched, event);
+  // 5. ビュアー設定 (拡張子 / MIME / encoding / zoom / フォント / 配色 / 透過)
+  //    はすべて各ビュアーのプラグイン設定へ移設済み。外観タブは保存しない。
 }
 
 } // namespace Farman
