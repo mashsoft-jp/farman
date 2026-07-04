@@ -538,16 +538,22 @@ void CsvView::setupUi() {
 
   setFocusProxy(m_table);
 
-  // 表示フォント (テーマ依存: Settings → Plugins → CSV/TSV Viewer)。
-  // ヘッダ / セルの両方に適用し、テーマ・フォント変更に追従する。
-  auto applyViewerFont = [this]() {
+  // 表示フォント (テーマ依存: Settings → Plugins → CSV/TSV Viewer) と配色を
+  // 適用する。QTableView に stylesheet を当てると、その時点の qApp パレットが
+  // 固定され、以後のテーマ切替 (qApp->setPalette) に追従しなくなる。テーマ変更
+  // 時に stylesheet を一旦クリアして再適用することで QStyleSheetStyle を
+  // 再ポリッシュさせ、現在のパレットへ更新させる。
+  auto applyViewerAppearance = [this]() {
     const QFont f = Settings::instance().csvViewerFont();
     m_table->setFont(f);
     m_table->horizontalHeader()->setFont(f);
     m_table->verticalHeader()->setFont(f);
+    m_table->setStyleSheet(QString());
+    m_table->setStyleSheet(inactiveSelectionStyleSheet());
   };
-  applyViewerFont();
-  connect(&Settings::instance(), &Settings::settingsChanged, this, applyViewerFont);
+  applyViewerAppearance();
+  connect(&Settings::instance(), &Settings::settingsChanged, this,
+          applyViewerAppearance);
 
   connect(m_encodingCombo, &QComboBox::currentTextChanged,
           this,             &CsvView::onEncodingComboChanged);
