@@ -36,6 +36,25 @@ void fillLightCategories(ColorScheme& s) {
   // Hidden は薄字
   const int hidIdx = static_cast<int>(FileCategory::Hidden);
   s.categoryColors[hidIdx].foreground = QColor(0x80, 0x80, 0x80);
+
+  // 選択中 (アクティブ / 非アクティブ) の既定色。従来は未設定 ({}) で、
+  // パレットの選択色にフォールバックしていたが、設定 UI で "(none)" と
+  // 表示されるため、フォールバック相当の具体値を全カテゴリに与える。
+  for (auto& c : s.selectedCategoryColors) {
+    c.foreground = QColor(0xFF, 0xFF, 0xFF);   // 白文字
+    c.background = QColor(0x00, 0x78, 0xD7);   // Light の選択青 (palette Highlight)
+  }
+  for (auto& c : s.inactiveSelectedCategoryColors) {
+    c.foreground = QColor(0x00, 0x00, 0x00);   // 黒文字
+    c.background = QColor(0xC8, 0xC8, 0xC8);   // 薄いグレー
+  }
+
+  // ディレクトリは全状態で太字 (非アクティブ通常の文字色は未設定のままでも
+  // 太字フラグは有効。色はパレット既定にフォールバックする)。
+  s.categoryColors[dirIdx].bold                 = true;
+  s.selectedCategoryColors[dirIdx].bold         = true;
+  s.inactiveCategoryColors[dirIdx].bold         = true;
+  s.inactiveSelectedCategoryColors[dirIdx].bold = true;
 }
 
 void fillDarkCategories(ColorScheme& s) {
@@ -55,6 +74,29 @@ void fillDarkCategories(ColorScheme& s) {
   // Hidden は灰色
   const int hidIdx = static_cast<int>(FileCategory::Hidden);
   s.categoryColors[hidIdx].foreground = QColor(0x80, 0x80, 0x80);
+
+  // 非アクティブペインの通常色 (アクティブ色を背景寄りに沈めた既定)。
+  s.inactiveCategoryColors[normIdx].foreground = QColor(0x90, 0x90, 0x90);
+  s.inactiveCategoryColors[dirIdx].foreground  = QColor(0x50, 0x6D, 0xA0);
+  s.inactiveCategoryColors[hidIdx].foreground  = QColor(0x5A, 0x5A, 0x5A);
+
+  // 選択中 (アクティブ / 非アクティブ) の既定色。従来は未設定 ({}) で、
+  // パレットの選択色にフォールバックしていたが、設定 UI で "(none)" と
+  // 表示されるため、フォールバック相当の具体値を全カテゴリに与える。
+  for (auto& c : s.selectedCategoryColors) {
+    c.foreground = QColor(0xFF, 0xFF, 0xFF);   // 白文字
+    c.background = QColor(0x26, 0x4F, 0x78);   // Dark の選択青 (palette Highlight)
+  }
+  for (auto& c : s.inactiveSelectedCategoryColors) {
+    c.foreground = QColor(0xE0, 0xE0, 0xE0);   // 明るいグレー文字
+    c.background = QColor(0x3C, 0x3C, 0x3C);   // 沈んだ選択グレー
+  }
+
+  // ディレクトリは全状態 (通常 / 選択 / 非アクティブ / 非アクティブ選択) で太字。
+  s.categoryColors[dirIdx].bold                 = true;
+  s.selectedCategoryColors[dirIdx].bold         = true;
+  s.inactiveCategoryColors[dirIdx].bold         = true;
+  s.inactiveSelectedCategoryColors[dirIdx].bold = true;
 }
 
 } // namespace

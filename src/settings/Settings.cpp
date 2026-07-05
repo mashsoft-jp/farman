@@ -2369,6 +2369,38 @@ void Settings::load() {
     m_lastEffective = detectOsTheme();
   }
 
+  // version < 3: カテゴリ色の既定を正規化する (非破壊)。
+  //  - ディレクトリは全状態 (通常/選択/非アクティブ/非アクティブ選択) で太字。
+  //    「ディレクトリは常に太字」を既定方針としたため一律 true にする。
+  //  - 選択中 / 非アクティブのカテゴリ色が未設定 (fg/bg とも無効) の古いファイルは
+  //    テーマ既定色で埋める。既定色はパレットのフォールバック色と一致させてある
+  //    ので見た目は変わらない (設定 UI の "(none)" 表示だけが解消される)。
+  //  - 明示的に設定済みの色は尊重する (無効セルのみ補完)。
+  if (fileVersion < 3) {
+    auto normalize = [](ColorScheme& sc, const ColorScheme& def) {
+      const int dirIdx = static_cast<int>(FileCategory::Directory);
+      sc.categoryColors[dirIdx].bold                 = true;
+      sc.selectedCategoryColors[dirIdx].bold         = true;
+      sc.inactiveCategoryColors[dirIdx].bold         = true;
+      sc.inactiveSelectedCategoryColors[dirIdx].bold = true;
+      auto fillEmpty = [](auto& arr, const auto& darr) {
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].foreground.isValid() && !arr[i].background.isValid()) {
+            arr[i].foreground = darr[i].foreground;
+            arr[i].background = darr[i].background;
+          }
+        }
+      };
+      fillEmpty(sc.selectedCategoryColors,         def.selectedCategoryColors);
+      fillEmpty(sc.inactiveCategoryColors,         def.inactiveCategoryColors);
+      fillEmpty(sc.inactiveSelectedCategoryColors, def.inactiveSelectedCategoryColors);
+    };
+    normalize(m_lightScheme, defaultLightScheme());
+    normalize(m_darkScheme,  defaultDarkScheme());
+    // アクティブ側を m_ 作業コピーへ再反映。
+    applyThemeFields(m_lastEffective == ThemeMode::Light ? m_lightScheme : m_darkScheme);
+  }
+
   qDebug() << "Settings::load: loaded settings from" << filePath
            << "(theme mode =" << static_cast<int>(m_themeMode)
            << ", effective =" << static_cast<int>(m_lastEffective) << ")";
@@ -2388,7 +2420,9 @@ void Settings::save() const {
   QString filePath = configPath + "/settings.json";
 
   QJsonObject root;
-  root["version"] = 2;
+  // version 3: カテゴリ色の既定正規化 (ディレクトリ全状態太字 + 空セルの
+  // 既定補完) を済ませたことを示す。load 側の fileVersion < 3 移行と対応。
+  root["version"] = 3;
 
   // Save appearance settings
   QJsonObject appearance;
