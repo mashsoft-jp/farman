@@ -57,6 +57,9 @@ MarkdownViewerSettingsPage::MarkdownViewerSettingsPage(QWidget* parent)
   m_editSide = s.effectiveTheme();
   (m_editSide == ThemeMode::Dark ? m_themeDarkRadio : m_themeLightRadio)
     ->setChecked(true);
+  // フォントはテーマ非依存 (両スキーム同値)。
+  m_uiFont = m_light.markdownViewerFont;
+  styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
 }
 
@@ -146,12 +149,11 @@ void MarkdownViewerSettingsPage::wireColorButton(QPushButton* btn,
 }
 
 void MarkdownViewerSettingsPage::loadSideToUi(ThemeMode side) {
+  // フォントはテーマ非依存 (Light/Dark 共通)。色のみ side から読む。
   const ColorScheme& s = (side == ThemeMode::Dark) ? m_dark : m_light;
-  m_uiFont = s.markdownViewerFont;
   m_uiFg   = s.markdownViewerFg;
   m_uiBg   = s.markdownViewerBg;
   m_uiLink = s.markdownViewerLink;
-  styleThemeFontButton(m_fontButton, m_uiFont);
   // 未設定 (無効色) のときに実際に使われるテーマ既定色をボタン背景に出す。
   const QPalette pal = Settings::paletteForScheme(
     (side == ThemeMode::Dark) ? m_dark : m_light);
@@ -161,8 +163,8 @@ void MarkdownViewerSettingsPage::loadSideToUi(ThemeMode side) {
 }
 
 void MarkdownViewerSettingsPage::commitUiToSide(ThemeMode side) {
+  // フォントはテーマ非依存なので side には書かない (色のみ)。
   ColorScheme& s = (side == ThemeMode::Dark) ? m_dark : m_light;
-  s.markdownViewerFont = m_uiFont;
   s.markdownViewerFg   = m_uiFg;
   s.markdownViewerBg   = m_uiBg;
   s.markdownViewerLink = m_uiLink;
@@ -170,7 +172,7 @@ void MarkdownViewerSettingsPage::commitUiToSide(ThemeMode side) {
 
 void MarkdownViewerSettingsPage::overlayFields(const ColorScheme& src,
                                                ColorScheme& dst) {
-  dst.markdownViewerFont = src.markdownViewerFont;
+  // フォントは save() で m_uiFont を両スキームへ直接書くため、ここでは色のみ。
   dst.markdownViewerFg   = src.markdownViewerFg;
   dst.markdownViewerBg   = src.markdownViewerBg;
   dst.markdownViewerLink = src.markdownViewerLink;
@@ -189,11 +191,14 @@ void MarkdownViewerSettingsPage::save() {
   s.setMarkdownViewerShowSource(m_showSourceCheck->isChecked());
 
   commitUiToSide(m_editSide);
+  // 色は per-theme、フォント (m_uiFont) は共通で両側へ書く。
   ColorScheme fresh = s.scheme(ThemeMode::Light);
   overlayFields(m_light, fresh);
+  fresh.markdownViewerFont = m_uiFont;
   s.setScheme(ThemeMode::Light, fresh);
   fresh = s.scheme(ThemeMode::Dark);
   overlayFields(m_dark, fresh);
+  fresh.markdownViewerFont = m_uiFont;
   s.setScheme(ThemeMode::Dark, fresh);
 
   s.save();
@@ -206,6 +211,8 @@ void MarkdownViewerSettingsPage::restoreDefaults() {
   const ColorScheme dd = defaultDarkScheme();
   overlayFields(dl, m_light);
   overlayFields(dd, m_dark);
+  m_uiFont = dl.markdownViewerFont;
+  styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
 }
 

@@ -511,6 +511,11 @@ public:
   // 結局どのテーマ色になるか」を先読み表示するのに使う。
   static QPalette paletteForScheme(const ColorScheme& s);
 
+  // 本体 (farman 実行ファイル) の main() で一度呼ぶ。これにより本体の Settings
+  // だけが applyThemeFields で qApp パレット/フォント/カラースキームを適用する。
+  // プラグイン dylib はこれを呼ばないので qApp を触らず、本体の適用を継承する。
+  static void setHostApplication();
+
   // OS の現在のカラースキーム (Light/Dark) を読む。Settings に保存された
   // m_themeMode とは独立に「いま OS は何?」を取得したいときに使う。
   // Qt 6.5 未満や判定不能なら Light を返す。
@@ -786,6 +791,11 @@ private:
   // 上書きされてしまうため、OS 状態を独立に追跡しないと
   // detectOsTheme() が正しい結果を返せなくなる。
   mutable ThemeMode  m_osColorScheme = ThemeMode::Light;
+
+  // applyThemeFields() が最後に QStyleHints::setColorScheme() した値
+  // (Qt::ColorScheme を int で保持。-1 = 未設定)。同じ値の再設定による
+  // colorSchemeChanged 再発火 → 無限再帰を防ぐためのガード。
+  int m_appliedColorScheme = -1;
 
   // m_ フィールド ↔ ColorScheme のシリアライズ。private 実装ヘルパ。
   ColorScheme collectThemeFields() const;

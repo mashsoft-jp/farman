@@ -77,6 +77,12 @@ QString singleInstanceServerName() {
 int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
 
+  // この実行ファイルが「本体」であることを Settings に伝える。以降、本体の
+  // Settings だけが applyThemeFields で qApp パレット/フォントを適用する
+  // (プラグイン dylib の Settings は qApp を触らない)。Settings::instance() を
+  // 初めて使う前に呼ぶ必要がある。
+  Farman::Settings::setHostApplication();
+
   app.setOrganizationName("Farman");
   app.setApplicationName("farman");
   app.setApplicationVersion(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)));

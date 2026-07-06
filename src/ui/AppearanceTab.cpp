@@ -1,6 +1,7 @@
 #include "AppearanceTab.h"
 #include "settings/PresetIO.h"
 #include "utils/Dialogs.h"
+#include "viewer/ViewerThemeFields.h"  // fontFamilyLabel
 #include <QVBoxLayout>
 #include <QFileDialog>
 #include <QStandardPaths>
@@ -165,7 +166,7 @@ void AppearanceTab::buildMainSections(QVBoxLayout* mainLayout) {
     if (ok) {
       m_uiFontValue = chosen;
       m_uiFontButton->setText(QString("%1, %2pt")
-        .arg(m_uiFontValue.family())
+        .arg(fontFamilyLabel(m_uiFontValue))
         .arg(m_uiFontValue.pointSize()));
     }
   });
@@ -195,7 +196,7 @@ void AppearanceTab::buildMainSections(QVBoxLayout* mainLayout) {
     if (ok) {
       m_addressFontValue = chosen;
       m_addressFontButton->setText(QString("%1, %2pt")
-        .arg(m_addressFontValue.family())
+        .arg(fontFamilyLabel(m_addressFontValue))
         .arg(m_addressFontValue.pointSize()));
     }
   });
@@ -464,14 +465,14 @@ void AppearanceTab::loadFromScheme(const ColorScheme& s) {
   m_uiFontValue = s.uiFont;
   if (m_uiFontButton) {
     m_uiFontButton->setText(QString("%1, %2pt")
-      .arg(m_uiFontValue.family()).arg(m_uiFontValue.pointSize()));
+      .arg(fontFamilyLabel(m_uiFontValue)).arg(m_uiFontValue.pointSize()));
   }
 
   // フォント
   m_selectedFont = s.listFont;
-  m_fontButton->setText(QString("%1, %2pt").arg(m_selectedFont.family()).arg(m_selectedFont.pointSize()));
+  m_fontButton->setText(QString("%1, %2pt").arg(fontFamilyLabel(m_selectedFont)).arg(m_selectedFont.pointSize()));
   m_addressFontValue = s.addressFont;
-  m_addressFontButton->setText(QString("%1, %2pt").arg(m_addressFontValue.family()).arg(m_addressFontValue.pointSize()));
+  m_addressFontButton->setText(QString("%1, %2pt").arg(fontFamilyLabel(m_addressFontValue)).arg(m_addressFontValue.pointSize()));
 
   // 行高
   m_rowHeightSpin->setValue(s.fileListRowHeight);
@@ -634,7 +635,7 @@ void AppearanceTab::onSelectFont() {
   QFont font = QFontDialog::getFont(&ok, m_selectedFont, this, tr("Select Font"));
   if (ok) {
     m_selectedFont = font;
-    m_fontButton->setText(QString("%1, %2pt").arg(font.family()).arg(font.pointSize()));
+    m_fontButton->setText(QString("%1, %2pt").arg(fontFamilyLabel(font)).arg(font.pointSize()));
   }
 }
 
@@ -789,6 +790,15 @@ void AppearanceTab::save() {
 
   // 1. 現在ウィジェットに乗っている値を編集中側のシャドースキームへ最終反映
   saveToScheme(currentScheme());
+
+  // フォント (UI 全般 / ファイルリスト / アドレス) とファイルリスト行高は
+  // ライト・ダーク共通にする。現在のウィジェット値を両シャドースキームへ
+  // 書き込み、テーマ非依存にする (色・カテゴリ太字は per-theme のまま)。
+  m_dialogLight.uiFont      = m_dialogDark.uiFont      = m_uiFontValue;
+  m_dialogLight.listFont    = m_dialogDark.listFont    = m_selectedFont;
+  m_dialogLight.addressFont = m_dialogDark.addressFont = m_addressFontValue;
+  m_dialogLight.fileListRowHeight = m_dialogDark.fileListRowHeight =
+    m_rowHeightSpin->value();
 
   // 2. 両方のスキームを Settings へ流し込む (RMW)。
   //    colorRules フィールドは AppearanceTab/ViewersTab 共に編集 UI を持たない

@@ -82,6 +82,9 @@ TextViewerSettingsPage::TextViewerSettingsPage(QWidget* parent)
   m_editSide = s.effectiveTheme();
   (m_editSide == ThemeMode::Dark ? m_themeDarkRadio : m_themeLightRadio)
     ->setChecked(true);
+  // フォントはテーマ非依存。両スキーム同値なのでどちらから読んでも良い。
+  m_uiFont = m_light.textViewerFont;
+  styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
 }
 
@@ -176,15 +179,15 @@ void TextViewerSettingsPage::wireColorButton(QPushButton* btn,
 }
 
 void TextViewerSettingsPage::loadSideToUi(ThemeMode side) {
+  // フォントはテーマ非依存 (Light/Dark 共通) なので、テーマ切替では読み直さない。
+  // 色のみを side スキームから読み込む。
   const ColorScheme& s = (side == ThemeMode::Dark) ? m_dark : m_light;
-  m_uiFont         = s.textViewerFont;
   m_uiNormalFg     = s.textViewerNormalFg;
   m_uiNormalBg     = s.textViewerNormalBg;
   m_uiSelectedFg   = s.textViewerSelectedFg;
   m_uiSelectedBg   = s.textViewerSelectedBg;
   m_uiLineNumberFg = s.textViewerLineNumberFg;
   m_uiLineNumberBg = s.textViewerLineNumberBg;
-  styleThemeFontButton(m_fontButton, m_uiFont);
   // 未設定 (無効色) のときに実際に使われるテーマ既定色をボタン背景に出す。
   const QPalette pal = Settings::paletteForScheme(
     (side == ThemeMode::Dark) ? m_dark : m_light);
@@ -197,8 +200,8 @@ void TextViewerSettingsPage::loadSideToUi(ThemeMode side) {
 }
 
 void TextViewerSettingsPage::commitUiToSide(ThemeMode side) {
+  // フォントはテーマ非依存なので side には書かない (色のみ)。
   ColorScheme& s = (side == ThemeMode::Dark) ? m_dark : m_light;
-  s.textViewerFont         = m_uiFont;
   s.textViewerNormalFg     = m_uiNormalFg;
   s.textViewerNormalBg     = m_uiNormalBg;
   s.textViewerSelectedFg   = m_uiSelectedFg;
@@ -209,7 +212,7 @@ void TextViewerSettingsPage::commitUiToSide(ThemeMode side) {
 
 void TextViewerSettingsPage::overlayFields(const ColorScheme& src,
                                            ColorScheme& dst) {
-  dst.textViewerFont         = src.textViewerFont;
+  // フォントは save() で m_uiFont を両スキームへ直接書くため、ここでは色のみ。
   dst.textViewerNormalFg     = src.textViewerNormalFg;
   dst.textViewerNormalBg     = src.textViewerNormalBg;
   dst.textViewerSelectedFg   = src.textViewerSelectedFg;
@@ -239,11 +242,14 @@ void TextViewerSettingsPage::save() {
   // テーマ依存フィールド: 現在編集中側を確定してから、両スキームを
   // fresh に対する overlay (RMW) で書き戻す。
   commitUiToSide(m_editSide);
+  // 色は per-theme (m_light/m_dark)、フォントは共通 (m_uiFont) を両側へ書く。
   ColorScheme fresh = s.scheme(ThemeMode::Light);
   overlayFields(m_light, fresh);
+  fresh.textViewerFont = m_uiFont;
   s.setScheme(ThemeMode::Light, fresh);
   fresh = s.scheme(ThemeMode::Dark);
   overlayFields(m_dark, fresh);
+  fresh.textViewerFont = m_uiFont;
   s.setScheme(ThemeMode::Dark, fresh);
 
   s.save();
@@ -253,11 +259,13 @@ void TextViewerSettingsPage::restoreDefaults() {
   applyValuesToUi(kDefExtensions, QStringLiteral("Auto"),
                   /*showLineNumbers=*/true, /*wordWrap=*/false);
 
-  // テーマ依存フィールドは出荷時テーマの値へ戻す。
+  // 色 (per-theme) は出荷時テーマの値へ戻す。フォント (共通) も既定へ。
   const ColorScheme dl = defaultLightScheme();
   const ColorScheme dd = defaultDarkScheme();
   overlayFields(dl, m_light);
   overlayFields(dd, m_dark);
+  m_uiFont = dl.textViewerFont;
+  styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
 }
 

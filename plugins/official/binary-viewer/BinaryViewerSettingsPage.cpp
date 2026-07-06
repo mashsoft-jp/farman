@@ -67,6 +67,9 @@ BinaryViewerSettingsPage::BinaryViewerSettingsPage(QWidget* parent)
   m_editSide = s.effectiveTheme();
   (m_editSide == ThemeMode::Dark ? m_themeDarkRadio : m_themeLightRadio)
     ->setChecked(true);
+  // フォントはテーマ非依存 (両スキーム同値)。
+  m_uiFont = m_light.binaryViewerFont;
+  styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
 }
 
@@ -160,15 +163,14 @@ void BinaryViewerSettingsPage::wireColorButton(QPushButton* btn,
 }
 
 void BinaryViewerSettingsPage::loadSideToUi(ThemeMode side) {
+  // フォントはテーマ非依存 (Light/Dark 共通)。色のみ side から読む。
   const ColorScheme& s = (side == ThemeMode::Dark) ? m_dark : m_light;
-  m_uiFont       = s.binaryViewerFont;
   m_uiNormalFg   = s.binaryViewerNormalFg;
   m_uiNormalBg   = s.binaryViewerNormalBg;
   m_uiSelectedFg = s.binaryViewerSelectedFg;
   m_uiSelectedBg = s.binaryViewerSelectedBg;
   m_uiAddressFg  = s.binaryViewerAddressFg;
   m_uiAddressBg  = s.binaryViewerAddressBg;
-  styleThemeFontButton(m_fontButton, m_uiFont);
   // 未設定 (無効色) のときに実際に使われるテーマ既定色をボタン背景に出す。
   const QPalette pal = Settings::paletteForScheme(
     (side == ThemeMode::Dark) ? m_dark : m_light);
@@ -181,8 +183,8 @@ void BinaryViewerSettingsPage::loadSideToUi(ThemeMode side) {
 }
 
 void BinaryViewerSettingsPage::commitUiToSide(ThemeMode side) {
+  // フォントはテーマ非依存なので side には書かない (色のみ)。
   ColorScheme& s = (side == ThemeMode::Dark) ? m_dark : m_light;
-  s.binaryViewerFont       = m_uiFont;
   s.binaryViewerNormalFg   = m_uiNormalFg;
   s.binaryViewerNormalBg   = m_uiNormalBg;
   s.binaryViewerSelectedFg = m_uiSelectedFg;
@@ -193,7 +195,7 @@ void BinaryViewerSettingsPage::commitUiToSide(ThemeMode side) {
 
 void BinaryViewerSettingsPage::overlayFields(const ColorScheme& src,
                                              ColorScheme& dst) {
-  dst.binaryViewerFont       = src.binaryViewerFont;
+  // フォントは save() で m_uiFont を両スキームへ直接書くため、ここでは色のみ。
   dst.binaryViewerNormalFg   = src.binaryViewerNormalFg;
   dst.binaryViewerNormalBg   = src.binaryViewerNormalBg;
   dst.binaryViewerSelectedFg = src.binaryViewerSelectedFg;
@@ -227,11 +229,14 @@ void BinaryViewerSettingsPage::save() {
   s.setBinaryViewerEncoding(m_encodingCombo->currentText().trimmed());
 
   commitUiToSide(m_editSide);
+  // 色は per-theme、フォント (m_uiFont) は共通で両側へ書く。
   ColorScheme fresh = s.scheme(ThemeMode::Light);
   overlayFields(m_light, fresh);
+  fresh.binaryViewerFont = m_uiFont;
   s.setScheme(ThemeMode::Light, fresh);
   fresh = s.scheme(ThemeMode::Dark);
   overlayFields(m_dark, fresh);
+  fresh.binaryViewerFont = m_uiFont;
   s.setScheme(ThemeMode::Dark, fresh);
 
   s.save();
@@ -245,6 +250,8 @@ void BinaryViewerSettingsPage::restoreDefaults() {
   const ColorScheme dd = defaultDarkScheme();
   overlayFields(dl, m_light);
   overlayFields(dd, m_dark);
+  m_uiFont = dl.binaryViewerFont;
+  styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
 }
 

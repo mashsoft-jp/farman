@@ -185,6 +185,7 @@ qt_add_executable(farman
   src/core/workers/DirectoryCompareWorker.cpp
   src/model/FileListModel.cpp
   src/viewer/IViewerPlugin.cpp
+  src/viewer/ViewerThemeFields.cpp
   src/viewer/ViewerDispatcher.cpp
   src/viewer/TextView.cpp
   src/viewer/MarkdownView.cpp
@@ -315,6 +316,7 @@ endif()
 
 set(FARMAN_PLUGIN_COMMON_SOURCES
   src/viewer/IViewerPlugin.cpp
+  src/viewer/ViewerThemeFields.cpp
   src/settings/Settings.cpp
   src/settings/ColorScheme.cpp
   src/core/UserCommand.cpp

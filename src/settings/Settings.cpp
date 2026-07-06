@@ -19,6 +19,14 @@
 
 namespace Farman {
 
+// この Settings.cpp をコンパイルしたバイナリが「本体 (farman 実行ファイル)」か
+// どうか。本体は main() で setHostApplication() を呼んで true にする。各プラグイン
+// dylib は自前の Settings.cpp を持ち、この静的変数は false のまま → プラグインは
+// applyThemeFields で qApp を触らない (本体だけが qApp パレットを管理する)。
+namespace { bool g_settingsIsHostApp = false; }
+
+void Settings::setHostApplication() { g_settingsIsHostApp = true; }
+
 Settings& Settings::instance() {
   static Settings instance;
   return instance;
@@ -73,6 +81,12 @@ Settings::Settings(QObject* parent) : QObject(parent) {
 
 void Settings::resetToDefaults() {
   applyDefaults();
+  // 先にファイルへ書き出してから settingsChanged を発火する。
+  // settingsChanged は各プラグインの appearanceChanged → syncPluginFromHostSettings
+  // → Settings::load() を呼ぶが、この load はファイルを読み直して配色を再適用
+  // するため、保存前に発火すると「リセット前の古い (ダーク) ファイル」を読んで
+  // せっかくリセットした palette を巻き戻してしまう (再起動でしか直らない)。
+  save();
   emit settingsChanged();
 }
 
@@ -297,14 +311,16 @@ void Settings::applyDefaults() {
 
   m_themeMode     = ThemeMode::Auto;
   m_lastEffective = detectOsTheme();
-  // Light/Dark どちらをアクティブとみなして m_ に流し込むかは effectiveTheme
-  // 次第。ここで applyThemeFields すると上で設定した defaultDarkScheme の
-  // 反転色で m_textViewerNormalFg 等が上書きされてしまうので、Auto かつ
-  // OS が Dark のときだけ Dark を流し込む。それ以外 (Light) では既に
-  // applyDefaults() で設定した Light 値が m_ に入っているのでそのまま。
-  if (m_lastEffective == ThemeMode::Dark) {
-    applyThemeFields(m_darkScheme);
-  }
+  // 有効テーマ側のスキームを m_ 作業コピーへ必ず反映する。以前は Dark の
+  // ときだけ流し込み、Light では「applyDefaults が設定済みの Light 値がそのまま
+  // 入っている」前提だったが、m_baseBackground / m_baseForeground はここで
+  // 設定していないため、リセット前が Dark だとダークのベース色が m_ に残る。
+  // 有効テーマが Light のとき scheme(Light) は m_lightScheme ではなく
+  // collectThemeFields() (= m_) を返すため、その残存ダーク色がライトスキームと
+  // して保存され、ライトモードなのにダーク配色になる不具合につながっていた。
+  // 両テーマとも applyThemeFields して m_ をスキームと一致させることで解消する
+  // (m_lightScheme/m_darkScheme は上で出荷時の正しい色に初期化済み)。
+  applyThemeFields(m_lastEffective == ThemeMode::Dark ? m_darkScheme : m_lightScheme);
 }
 
 // ── テーマヘルパ ─────────────────────────────────
@@ -424,18 +440,35 @@ void Settings::applyThemeFields(const ColorScheme& s) {
   // AlternateBase / Button / Mid / Midlight / Light / Dark / Shadow 等を
   // 線形補間 (blend) で算出。Highlight / Link は Light/Dark のどちらかで
   // 適切なアクセント色をハードコードする。
-  if (qApp) {
+  //
+  // qApp への適用 (setPalette / setFont / setColorScheme) は「本体」の Settings
+  // だけが行う。各プラグインは自前の Settings インスタンスを持ち、その OS テーマ
+  // 判定 (detectOsTheme) は構築タイミング次第で本体の setColorScheme 上書きに
+  // 汚染され得る。プラグイン側が qApp パレットを再適用すると、リセット等で本体が
+  // 適用した正しいパレットを誤ったテーマで上書きしてしまう (ファイルリストだけ
+  // ダークになる等)。qApp は本体が単独で管理し、プラグインは共有 qApp を継承する
+  // だけにする。
+  if (qApp && g_settingsIsHostApp) {
     const QColor bg = s.baseBackground.isValid() ? s.baseBackground : QColor(Qt::white);
     const bool isDark = bg.lightness() < 128;
 
     // Qt 6.8+: QStyleHints::setColorScheme() で macOS native chrome を
     // Light/Dark に追従させる。Auto モード時は Unknown で「OS 追従」へ戻す。
+    //
+    // 重要: setColorScheme() は colorSchemeChanged を同期発火する。特に Auto
+    // (Unknown) では、内部 override が Unknown でも colorScheme() は OS の
+    // Light/Dark を返すため、同じ Unknown を再設定するたびに信号が再発火する。
+    // 本体 + 各プラグインの Settings がそれぞれ colorSchemeChanged を購読して
+    // applyThemeFields を呼ぶため、これが無限再帰 → スタックオーバーフローに
+    // なる (全設定リセット時に発生)。前回適用した値と異なるときだけ設定する。
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
     if (auto* hints = QGuiApplication::styleHints()) {
-      if (m_themeMode == ThemeMode::Auto) {
-        hints->setColorScheme(Qt::ColorScheme::Unknown);
-      } else {
-        hints->setColorScheme(isDark ? Qt::ColorScheme::Dark : Qt::ColorScheme::Light);
+      const Qt::ColorScheme target =
+        (m_themeMode == ThemeMode::Auto) ? Qt::ColorScheme::Unknown
+        : (isDark ? Qt::ColorScheme::Dark : Qt::ColorScheme::Light);
+      if (static_cast<int>(target) != m_appliedColorScheme) {
+        m_appliedColorScheme = static_cast<int>(target);
+        hints->setColorScheme(target);
       }
     }
 #endif
@@ -2414,6 +2447,28 @@ void Settings::load() {
     applyThemeFields(m_lastEffective == ThemeMode::Light ? m_lightScheme : m_darkScheme);
   }
 
+  // version < 5: フォント (形状・サイズ) とファイルリスト行高をライト/ダーク
+  // 共通にする方針へ変更。以前は per-theme 保存だったため、有効テーマ側の値を
+  // 両スキームへコピーして揃える (現在の見た目を維持)。色・カテゴリ太字は
+  // per-theme のまま。
+  if (fileVersion < 5) {
+    const ColorScheme& srcS =
+      (m_lastEffective == ThemeMode::Dark) ? m_darkScheme : m_lightScheme;
+    auto syncCommon = [&](ColorScheme& dst) {
+      dst.uiFont             = srcS.uiFont;
+      dst.listFont           = srcS.listFont;
+      dst.addressFont        = srcS.addressFont;
+      dst.textViewerFont     = srcS.textViewerFont;
+      dst.binaryViewerFont   = srcS.binaryViewerFont;
+      dst.csvViewerFont      = srcS.csvViewerFont;
+      dst.markdownViewerFont = srcS.markdownViewerFont;
+      dst.fileListRowHeight  = srcS.fileListRowHeight;
+    };
+    syncCommon(m_lightScheme);
+    syncCommon(m_darkScheme);
+    applyThemeFields(m_lastEffective == ThemeMode::Light ? m_lightScheme : m_darkScheme);
+  }
+
   qDebug() << "Settings::load: loaded settings from" << filePath
            << "(theme mode =" << static_cast<int>(m_themeMode)
            << ", effective =" << static_cast<int>(m_lastEffective) << ")";
@@ -2433,10 +2488,10 @@ void Settings::save() const {
   QString filePath = configPath + "/settings.json";
 
   QJsonObject root;
-  // version 4: カテゴリ色の既定正規化 (v3) に加え、ドライブルートの既定
-  // ブックマーク撤去 (v4) を済ませたことを示す。load 側の fileVersion < 3 /
-  // < 4 移行と対応。
-  root["version"] = 4;
+  // version 5: カテゴリ色の既定正規化 (v3) / ドライブルート既定ブックマーク
+  // 撤去 (v4) に加え、フォントのライト・ダーク共通化 (v5) を済ませたことを示す。
+  // load 側の fileVersion < 3 / < 4 / < 5 移行と対応。
+  root["version"] = 5;
 
   // Save appearance settings
   QJsonObject appearance;
