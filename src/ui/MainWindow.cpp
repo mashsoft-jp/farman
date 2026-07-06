@@ -58,6 +58,7 @@
 #include <QClipboard>
 #include <QMenuBar>
 #include <QMenu>
+#include <QPalette>
 #include <QToolButton>
 #include <QAction>
 #include <QToolBar>
@@ -1154,6 +1155,24 @@ void MainWindow::registerCommands() {
       if (menu.isEmpty()) {
         return;  // 念のため: 選べるビュアーが無ければ何もしない
       }
+#if defined(Q_OS_WIN)
+      // Windows では QMenu がアプリのカスタムパレット (特にダークテーマ) と
+      // 選択ハイライトを十分に反映せず、選択行が薄いグレーで見えづらい /
+      // ダークだと判別不能になる。パレット由来の色で背景・文字・選択
+      // ハイライトを明示し、上下キー移動時の選択位置を視認できるようにする。
+      {
+        const QPalette pal = qApp->palette();
+        menu.setStyleSheet(QStringLiteral(
+          "QMenu { background-color: %1; color: %2; border: 1px solid %3; }"
+          "QMenu::item { padding: 4px 24px; }"
+          "QMenu::item:selected { background-color: %4; color: %5; }")
+          .arg(pal.color(QPalette::Window).name(),
+               pal.color(QPalette::WindowText).name(),
+               pal.color(QPalette::Mid).name(),
+               pal.color(QPalette::Highlight).name(),
+               pal.color(QPalette::HighlightedText).name()));
+      }
+#endif
       // カーソル行の左端付近に出す
       const QRect rect = pane->view()->visualRect(idx);
       const QPoint pos = pane->view()->viewport()->mapToGlobal(rect.bottomLeft());
