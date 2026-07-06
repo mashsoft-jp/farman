@@ -241,8 +241,7 @@ void PdfView::setupUi() {
 bool PdfView::loadFile(const QString& filePath) {
   PreparedLoad p = prepareLoad(filePath);
   if (!p.ok) return false;
-  applyPreparedLoad(p);
-  return true;
+  return applyPreparedLoad(p);
 }
 
 PdfView::PreparedLoad PdfView::prepareLoad(const QString& filePath,
@@ -260,7 +259,7 @@ PdfView::PreparedLoad PdfView::prepareLoad(const QString& filePath,
   return r;
 }
 
-void PdfView::applyPreparedLoad(const PreparedLoad& r) {
+bool PdfView::applyPreparedLoad(const PreparedLoad& r) {
   m_filePath = r.filePath;
   m_fileSize = r.fileSize;
 
@@ -278,10 +277,14 @@ void PdfView::applyPreparedLoad(const PreparedLoad& r) {
           this,        &PdfView::onPageCountChanged);
 
   const QPdfDocument::Error err = m_document->load(m_filePath);
-  if (err != QPdfDocument::Error::None) {
+  // ロードエラー、または中身が空 (0 ページ) の不正 PDF はロード失敗として扱う。
+  // pdfium はヘッダだけ体裁の整った壊れ PDF を Error::None + 0 ページで返す
+  // ことがあり、そのままだと「空の PDF が開いた」ように見えてしまうため。
+  if (err != QPdfDocument::Error::None || m_document->pageCount() <= 0) {
+    m_view->setDocument(nullptr);
     delete m_document;
     m_document = nullptr;
-    return;
+    return false;
   }
 
   m_view->setDocument(m_document);
@@ -306,6 +309,7 @@ void PdfView::applyPreparedLoad(const PreparedLoad& r) {
 
   onPageCountChanged(m_document->pageCount());
   updatePageLabel();
+  return true;
 }
 
 void PdfView::clearContent() {

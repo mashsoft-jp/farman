@@ -61,7 +61,13 @@ void PdfViewerWindow::loadFile() {
     close();
     return;
   }
-  m_pdfView->applyPreparedLoad(p);
+  if (!m_pdfView->applyPreparedLoad(p)) {
+    // ロード失敗 / 空 PDF は画像と同様に read error 扱いにして閉じる。
+    logViewerLoadResult(QStringLiteral("PDF, external"),
+                         m_displayPath, false, false);
+    close();
+    return;
+  }
   m_stack->setCurrentWidget(m_pdfView);
   m_pdfView->setFocus();
   statusBar()->addPermanentWidget(new QLabel(m_pdfView->statusInfo(), this));

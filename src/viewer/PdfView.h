@@ -50,7 +50,9 @@ public:
   // の中で UI スレッドからやるので、ここでは存在チェックとサイズ取得のみ。
   static PreparedLoad prepareLoad(const QString& filePath,
                                   const std::atomic<bool>* cancelToken = nullptr);
-  void applyPreparedLoad(const PreparedLoad& result);
+  // 実 PDF ロードを行う。成功したら true、ロード失敗 / 中身が空 (0 ページ) の
+  // 不正 PDF なら false を返す (呼び出し側は画像同様に read error 扱いにする)。
+  bool applyPreparedLoad(const PreparedLoad& result);
 
   // 表示中ファイルをクリア
   void clearContent();

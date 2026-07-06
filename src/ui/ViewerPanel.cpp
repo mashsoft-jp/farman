@@ -502,7 +502,11 @@ bool ViewerPanel::openPdfFile(const QString& filePath,
     return false;
   }
 
-  m_pdfView->applyPreparedLoad(p);
+  if (!m_pdfView->applyPreparedLoad(p)) {
+    // ロード失敗 / 空 PDF は画像と同様に read error 扱い。
+    logViewerLoadResult(QStringLiteral("PDF"), displayPath, false, false);
+    return false;
+  }
   m_stack->setCurrentWidget(m_pdfView);
   setFocusProxy(m_pdfView);
   m_currentFilePath = displayPath;

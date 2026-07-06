@@ -462,8 +462,15 @@ ImageView::PreparedLoad ImageView::prepareLoad(const QString& filePath) {
 
   if (!r.isAnimated) {
     // 静止画は QImage で読み込む (QPixmap はメインスレッド限定なので bg では避ける)。
-    QImage img;
-    if (!img.load(filePath)) {
+    // フォーマットは「拡張子」ではなく「内容 (マジックバイト)」から決める。
+    // 拡張子でハンドラを選ぶと、内容が壊れたファイル (例: 全 0x01 の .png) を
+    // そのフォーマットとしてデコードしようとし、一部プラグインがハングする
+    // ことがある (CI ビルドで「読み込み中」のまま固まる事象)。内容が既知の
+    // 画像フォーマットに一致しなければデコーダを起動せず即 read error にする。
+    QImageReader reader(filePath);
+    reader.setDecideFormatFromContent(true);
+    QImage img = reader.read();
+    if (img.isNull()) {
       // Qt 6 同梱の imageformats プラグインには PSD ハンドラが無い。
       // 拡張子 / signature が PSD 系なら自前リーダで合成済プレビューを取得する。
       const QString ext = QFileInfo(filePath).suffix().toLower();
@@ -725,6 +732,11 @@ void ImageView::stepZoom(bool zoomIn) {
 
 bool ImageView::detectAnimated(const QString& filePath) {
   QImageReader reader(filePath);
+  // 内容からフォーマットを判定する (拡張子ベースだと壊れたファイルで
+  // 一部プラグインがハングし得るため。prepareLoad と揃える)。内容が既知の
+  // 画像でなければ supportsAnimation() は false になり、静止画経路で
+  // read error として扱われる。
+  reader.setDecideFormatFromContent(true);
   if (!reader.supportsAnimation()) return false;
   // Qt のプラグインによっては事前にフレーム数を確定できず imageCount() == 0
   // を返す。その場合は安全側に倒して QMovie に渡し、最終判定は
