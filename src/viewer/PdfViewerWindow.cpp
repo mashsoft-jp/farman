@@ -58,14 +58,17 @@ void PdfViewerWindow::loadFile() {
   if (!p.ok) {
     logViewerLoadResult(QStringLiteral("PDF, external"),
                          m_displayPath, false, cancelled);
-    close();
+    // loadFile() はコンストラクタから呼ばれ、この時点ではまだ非表示。close() は
+    // 表示前だと無効なので、失敗フラグを立ててホスト側に show 前の破棄を委ねる
+    // (= 内部ビュアーと同じく開かずに終了)。
+    setProperty("farman_loadFailed", true);
     return;
   }
   if (!m_pdfView->applyPreparedLoad(p)) {
-    // ロード失敗 / 空 PDF は画像と同様に read error 扱いにして閉じる。
+    // ロード失敗 / 空 PDF は画像と同様に read error 扱い。
     logViewerLoadResult(QStringLiteral("PDF, external"),
                          m_displayPath, false, false);
-    close();
+    setProperty("farman_loadFailed", true);
     return;
   }
   m_stack->setCurrentWidget(m_pdfView);

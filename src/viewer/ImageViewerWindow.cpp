@@ -81,13 +81,17 @@ void ImageViewerWindow::loadImage() {
   if (cancelled) {
     logViewerLoadResult(QStringLiteral("Image, external"),
                          m_displayPath, false, true);
-    close();
+    // loadImage() はコンストラクタから呼ばれ、この時点でウィンドウはまだ
+    // 表示されていない。close() は表示前だと無効で、その後ホストが show() する
+    // と「読み込み中」のまま残ってしまう。失敗フラグを立て、ホスト側が show 前に
+    // 検出して破棄する (= 内部ビュアーと同じく開かずに終了)。
+    setProperty("farman_loadFailed", true);
     return;
   }
   if (!p.ok) {
     logViewerLoadResult(QStringLiteral("Image, external"),
                          m_displayPath, false, false);
-    close();
+    setProperty("farman_loadFailed", true);
     return;
   }
   m_imageView->applyPreparedLoad(p);

@@ -535,6 +535,18 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       case ViewerPanel::ViewerKind::Auto:
         /* unreachable */ break;
     }
+    // 外部ビュアーウィンドウはコンストラクタ内で同期ロードし、失敗すると
+    // "farman_loadFailed" プロパティを立てる。表示前にここで検出し、破棄して
+    // 開かずに終了する (= 内部ビュアーと同じ挙動。読み込み中のまま残さない)。
+    // ログはホスト側 Logger から出す (プラグイン生成ウィンドウ内の
+    // logViewerLoadResult はプラグイン dylib 側 Logger に出るため、ホストの
+    // ログファイルには内部ビュアーと同じ経路でここから記録する)。
+    if (w && w->property("farman_loadFailed").toBool()) {
+      delete w;
+      Logger::instance().warn(
+        QStringLiteral("Viewer load failed (external): %1").arg(shownPath));
+      return;
+    }
     if (w) {
       // 閉じたら自前で破棄。MainWindow を親にしておくのは、明示的に閉じずに
       // farman 全体が終了する場合に Qt の親子関係でクリーンアップさせるため。
@@ -606,6 +618,14 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
       ? plugin->createViewer(filePath, this, dispatcher.pluginContext())
       : nullptr;
     if (!inner) return;
+    // コンストラクタ内ロードに失敗したウィンドウ ("farman_loadFailed") は
+    // 表示せず破棄する (読み込み中のまま残さない)。ログはホスト側から出す。
+    if (inner->property("farman_loadFailed").toBool()) {
+      delete inner;
+      Logger::instance().warn(
+        QStringLiteral("Viewer load failed (external): %1").arg(filePath));
+      return;
+    }
     // 既存の External ウィンドウがあればジオメトリを引き継いで破棄 (showViewerWith
     // と同じ「同じ場所・サイズで上書き」挙動)。
     QRect savedGeom;
