@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QFontDatabase>
+#include <QRegularExpression>
 #include <QGuiApplication>
 #include <QPalette>
 #include <QStyleHints>
@@ -1316,13 +1317,10 @@ static QList<Bookmark> buildDefaultBookmarks() {
   addIfExists(QObject::tr("Movies"),
               QStandardPaths::writableLocation(QStandardPaths::MoviesLocation));
 
-  // ドライブは macOS の "/" を除きデフォルトに含める（Windows の C:/ 等を想定）。
-  const QFileInfoList drives = QDir::drives();
-  for (const QFileInfo& fi : drives) {
-    const QString path = fi.absoluteFilePath();
-    if (path == QStringLiteral("/")) continue;
-    addIfExists(path, path);
-  }
+  // ドライブ (Windows の C:/ 等) は既定ブックマークに含めない。ブックマーク
+  // 一覧ダイアログの「検出された場所」(buildDetectedLocations) が接続中の
+  // 全ドライブをボリューム名付きで動的表示するため、ここでレターのみの既定を
+  // 足すと二重表示になっていた。macOS の "/" も従来どおり含めない。
 
   return list;
 }
@@ -2308,6 +2306,21 @@ void Settings::load() {
     }
   }
 
+  // version < 4: 以前はドライブ (Windows の C:/ 等) を isDefault 既定ブックマーク
+  // として保存していた。ブックマーク一覧の「検出された場所」がボリューム名付きで
+  // 同じドライブを出すため二重表示になっていた。既定として保存済みのドライブ
+  // ルート (例 "C:/") を撤去する。ユーザーが手動登録したもの (isDefault=false) は
+  // 残す。ドライブは今後「検出された場所」にのみ出る。
+  if (fileVersion < 4) {
+    static const QRegularExpression driveRoot(QStringLiteral("^[A-Za-z]:/$"));
+    for (int i = m_bookmarks.size() - 1; i >= 0; --i) {
+      if (m_bookmarks[i].isDefault &&
+          driveRoot.match(m_bookmarks[i].path).hasMatch()) {
+        m_bookmarks.removeAt(i);
+      }
+    }
+  }
+
   // 初回のみ: デフォルトブックマークを既存リストにマージ（重複パスはスキップ）。
   if (!m_defaultBookmarksInstalled) {
     for (const Bookmark& d : defaults) {
@@ -2420,9 +2433,10 @@ void Settings::save() const {
   QString filePath = configPath + "/settings.json";
 
   QJsonObject root;
-  // version 3: カテゴリ色の既定正規化 (ディレクトリ全状態太字 + 空セルの
-  // 既定補完) を済ませたことを示す。load 側の fileVersion < 3 移行と対応。
-  root["version"] = 3;
+  // version 4: カテゴリ色の既定正規化 (v3) に加え、ドライブルートの既定
+  // ブックマーク撤去 (v4) を済ませたことを示す。load 側の fileVersion < 3 /
+  // < 4 移行と対応。
+  root["version"] = 4;
 
   // Save appearance settings
   QJsonObject appearance;
