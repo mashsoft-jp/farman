@@ -2684,6 +2684,12 @@ void FileManagerPanel::renameItem() {
 
   QString oldName = item->name();
   QString oldPath = item->absolutePath();
+  // isDir も含めて必要な情報はダイアログを開く前に退避する。
+  // inputText() はネストしたイベントループを回すため、その間に
+  // QFileSystemWatcher 経由でモデルが refresh されると `item` が破棄され得る
+  // (Google ドライブ等のバックグラウンド同期で発生しやすい)。ダイアログ後に
+  // `item` を参照すると use-after-free になるので、以降は退避値のみを使う。
+  const bool itemIsDir = item->isDir();
 
   // Ask for new name. リネームではカーソルを末尾ではなく拡張子の手前に
   // 置く (例: "foo.txt" を選んだ状態で `r` を押すと、カーソルは "foo" の
@@ -2715,9 +2721,9 @@ void FileManagerPanel::renameItem() {
     return;
   }
 
-  // Rename
+  // Rename (item はダイアログ後に破棄され得るため退避した itemIsDir を使う)
   bool success = false;
-  if (item->isDir()) {
+  if (itemIsDir) {
     QDir dir;
     success = dir.rename(oldPath, newPath);
   } else {
