@@ -44,6 +44,11 @@ void ProgressDialog::setupUI(const QString& operationName) {
   m_fileByteLabel->setAlignment(Qt::AlignRight);
   mainLayout->addWidget(m_fileByteLabel);
 
+  // 上段バーはバイト進捗 (total>0) を報告する操作 (コピー / 移動) でのみ表示。
+  // 削除など 1 ファイルを一括処理する操作はバイト進捗を持たないので隠す。
+  m_fileProgressBar->hide();
+  m_fileByteLabel->hide();
+
   // 下段: コピー / 移動対象ファイル数のうち完了した数の進捗。
   m_progressBar = new QProgressBar(this);
   m_progressBar->setRange(0, 100);
@@ -99,8 +104,13 @@ void ProgressDialog::onProgressUpdated(const WorkerProgress& progress) {
     m_currentFileLabel->setText(tr("Processing: %1").arg(info.fileName()));
   }
 
-  // 上段: 現在ファイル 1 個の中でのバイト進捗。
+  // 上段: 現在ファイル 1 個の中でのバイト進捗。バイト進捗を報告する操作
+  // (コピー / 移動) でのみ表示し、削除など報告しない操作では隠したままにする。
   if (progress.total > 0) {
+    if (m_fileProgressBar->isHidden()) {
+      m_fileProgressBar->show();
+      m_fileByteLabel->show();
+    }
     const int filePct = static_cast<int>((progress.processed * 100) / progress.total);
     m_fileProgressBar->setRange(0, 100);
     m_fileProgressBar->setValue(filePct);
@@ -109,9 +119,8 @@ void ProgressDialog::onProgressUpdated(const WorkerProgress& progress) {
     m_fileByteLabel->setText(tr("%1 / %2")
                                .arg(loc.formattedDataSize(progress.processed))
                                .arg(loc.formattedDataSize(progress.total)));
-  } else {
-    // ファイルサイズ不明 / ファイル間 (processed=0, total=-1)。0% に戻す。
-    m_fileProgressBar->setRange(0, 100);
+  } else if (!m_fileProgressBar->isHidden()) {
+    // 一度表示済みでファイル間 (processed=0, total=-1) のとき。0% に戻す。
     m_fileProgressBar->setValue(0);
     m_fileProgressBar->setFormat(QString());
     m_fileByteLabel->clear();
@@ -149,11 +158,13 @@ void ProgressDialog::onFinished(bool success) {
   m_progressBar->setRange(0, 100);
   m_progressBar->setValue(100);
   m_progressBar->setFormat(success ? tr("Done") : tr("Failed"));
-  // 上段 (現在ファイル) も完了状態で固定する。
-  m_fileProgressBar->setRange(0, 100);
-  m_fileProgressBar->setValue(success ? 100 : m_fileProgressBar->value());
-  m_fileProgressBar->setFormat(success ? tr("Done") : tr("Failed"));
-  m_fileByteLabel->clear();
+  // 上段 (現在ファイル) は表示している操作 (コピー / 移動) のみ完了状態で固定。
+  if (!m_fileProgressBar->isHidden()) {
+    m_fileProgressBar->setRange(0, 100);
+    m_fileProgressBar->setValue(success ? 100 : m_fileProgressBar->value());
+    m_fileProgressBar->setFormat(success ? tr("Done") : tr("Failed"));
+    m_fileByteLabel->clear();
+  }
   // "Processing: foo.txt" は実行中の表示なので完了メッセージに差し替える
   m_currentFileLabel->setText(success ? tr("Completed.")
                                       : tr("Completed with errors."));
