@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QSpinBox>
 #include <QFontDialog>
+#include <QGuiApplication>
 #include <QColorDialog>
 #include <QRadioButton>
 #include <QButtonGroup>
@@ -165,9 +166,7 @@ void AppearanceTab::buildMainSections(QVBoxLayout* mainLayout) {
     const QFont chosen = QFontDialog::getFont(&ok, m_uiFontValue, this, tr("UI Font"));
     if (ok) {
       m_uiFontValue = chosen;
-      m_uiFontButton->setText(QString("%1, %2pt")
-        .arg(fontFamilyLabel(m_uiFontValue))
-        .arg(m_uiFontValue.pointSize()));
+      styleThemeFontButton(m_uiFontButton, m_uiFontValue);
     }
   });
   addPair(baseRow, tr("Font:"), m_uiFontButton);
@@ -195,9 +194,7 @@ void AppearanceTab::buildMainSections(QVBoxLayout* mainLayout) {
     const QFont chosen = QFontDialog::getFont(&ok, m_addressFontValue, this, tr("Address Font"));
     if (ok) {
       m_addressFontValue = chosen;
-      m_addressFontButton->setText(QString("%1, %2pt")
-        .arg(fontFamilyLabel(m_addressFontValue))
-        .arg(m_addressFontValue.pointSize()));
+      styleThemeFontButton(m_addressFontButton, m_addressFontValue);
     }
   });
 

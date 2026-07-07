@@ -9,6 +9,7 @@
 #include <QToolBar>
 #include <QLocale>
 #include <QLabel>
+#include <QApplication>
 #include <QPalette>
 #include <QPlainTextEdit>
 #include <QRegularExpression>
@@ -295,14 +296,19 @@ void BinaryView::syncFromSettings() {
   m_encoding = s.binaryViewerEncoding();
   m_textArea->setFont(s.binaryViewerFont());
 
-  // 通常 / 選択カラーは QPalette 経由で適用
-  QPalette pal = m_textArea->palette();
-  pal.setColor(QPalette::Text, s.binaryViewerNormalForeground());
-  if (s.binaryViewerNormalBackground().isValid()) {
+  // 通常 / 選択カラーは QPalette 経由で適用。本体が適用済みの qApp テーマパレット
+  // を起点にし、明示指定 (有効色) の role だけ上書きする。widget の現在パレットを
+  // 起点にすると、前回 setPalette した明示値が残り、未設定の role がテーマ変更に
+  // 追従しない (ライト→ダーク→ライトで背景がダークのまま等) 不具合になる。
+  QPalette pal = QApplication::palette();
+  if (s.binaryViewerNormalForeground().isValid())
+    pal.setColor(QPalette::Text, s.binaryViewerNormalForeground());
+  if (s.binaryViewerNormalBackground().isValid())
     pal.setColor(QPalette::Base, s.binaryViewerNormalBackground());
-  }
-  pal.setColor(QPalette::HighlightedText, s.binaryViewerSelectedForeground());
-  pal.setColor(QPalette::Highlight,       s.binaryViewerSelectedBackground());
+  if (s.binaryViewerSelectedForeground().isValid())
+    pal.setColor(QPalette::HighlightedText, s.binaryViewerSelectedForeground());
+  if (s.binaryViewerSelectedBackground().isValid())
+    pal.setColor(QPalette::Highlight, s.binaryViewerSelectedBackground());
   m_textArea->setPalette(pal);
 
   // アドレス列の色は AddressHighlighter が描画時に Settings から直接読むので

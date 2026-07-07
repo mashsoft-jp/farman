@@ -91,13 +91,16 @@ void Settings::resetToDefaults() {
 }
 
 void Settings::applyDefaults() {
-  // ── フォント (実行環境から取得する分は構築時にしか分からないので明示) ──
-  m_font             = QGuiApplication::font();
-  m_addressFont      = QGuiApplication::font();
-  m_textViewerFont   = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-  m_binaryViewerFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-  m_csvViewerFont    = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-  m_markdownViewerFont = QGuiApplication::font();
+  // ── フォント ──
+  // OS 標準の UI フォント (.AppleSystemUIFont 等) は QFontDialog に出ない隠し
+  // フォントなので使わず、一覧に出る一般的な具体フォント (defaultUiFont /
+  // defaultMonospaceFont) を既定にする。ユーザーが後で選び直せる。
+  m_font             = defaultUiFont();
+  m_addressFont      = defaultUiFont();
+  m_textViewerFont   = defaultMonospaceFont();
+  m_binaryViewerFont = defaultMonospaceFont();
+  m_csvViewerFont    = defaultMonospaceFont();
+  m_markdownViewerFont = defaultUiFont();
 
   // ── 表示設定 ─────────────────────
   m_fileSizeFormatDual         = FileSizeFormat::Auto;
@@ -535,11 +538,20 @@ QPalette Settings::paletteForScheme(const ColorScheme& s) {
 }
 
 ThemeMode Settings::detectOsTheme() const {
-  // m_osColorScheme は constructor で OS の値を最初に捕まえてあり、
-  // その後 colorSchemeChanged シグナル経由で更新される (Auto モード時のみ)。
-  // ここで `QStyleHints::colorScheme()` を直接読んでしまうと、私たち自身が
-  // applyThemeFields 内で `setColorScheme(Light/Dark)` を呼んだ後にその値が
-  // 残ってしまい、OS 状態を取り違えるバグになる。
+  // プラグインの Settings は、自前の OS 判定 (m_osColorScheme) を使わず、本体が
+  // 適用済みの qApp パレットの明度から有効テーマを導く。プラグインの
+  // m_osColorScheme は「本体が setColorScheme で上書きした後」に構築されるため
+  // 汚染されており、Auto モードで誤ったテーマ (ダーク) を選び、ビュアーの配色が
+  // ライトモードでもダークになる不具合につながる。qApp パレットは本体が唯一の
+  // ソースとして管理しているので、それに追従するのが正しい。
+  if (!g_settingsIsHostApp && qApp) {
+    return qApp->palette().color(QPalette::Base).lightness() < 128
+             ? ThemeMode::Dark : ThemeMode::Light;
+  }
+  // 本体: m_osColorScheme は constructor で OS の値を最初に捕まえてあり、その後
+  // colorSchemeChanged シグナル経由で更新される (Auto モード時のみ)。ここで
+  // QStyleHints::colorScheme() を直接読むと、私たち自身の setColorScheme 上書きが
+  // 残って OS 状態を取り違えるので、キャッシュした m_osColorScheme を返す。
   return m_osColorScheme;
 }
 

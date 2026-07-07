@@ -110,6 +110,10 @@ struct ColorScheme {
   QColor  markdownViewerLink;
 };
 
+// 既定フォント (QFontDialog に出る一般的な具体フォントを OS ごとに選ぶ)。
+QFont defaultUiFont();
+QFont defaultMonospaceFont();
+
 // 出荷時の Light テーマ (= これまでの farman の既定値そのまま)
 ColorScheme defaultLightScheme();
 // 出荷時の Dark テーマ (Light を反転させたシンプルなダーク)

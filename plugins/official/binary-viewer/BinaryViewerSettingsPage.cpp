@@ -7,6 +7,7 @@
 #include <QButtonGroup>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QFontDatabase>
 #include <QFontDialog>
 #include <QFormLayout>
 #include <QGridLayout>

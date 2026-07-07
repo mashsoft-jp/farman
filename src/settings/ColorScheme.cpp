@@ -5,20 +5,36 @@
 
 namespace Farman {
 
-namespace {
-
+// 既定フォントは「QFontDialog の一覧に出る一般的な具体フォント」を OS ごとに
+// 選ぶ。OS 標準の UI フォント (macOS の .AppleSystemUIFont 等) は隠しフォントで
+// フォント選択ダイアログに出てこず、選び直せないため使わない。
 QFont defaultMonospaceFont() {
-  QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+  QFont f;
+#if defined(Q_OS_MAC)
+  f.setFamily(QStringLiteral("Menlo"));
+#elif defined(Q_OS_WIN)
+  f.setFamily(QStringLiteral("Consolas"));
+#else
+  f.setFamily(QStringLiteral("DejaVu Sans Mono"));
+#endif
   f.setPointSize(12);
   return f;
 }
 
 QFont defaultUiFont() {
-  // ファイルリスト用は OS 標準の UI フォント。サイズだけ少し詰める。
   QFont f;
+#if defined(Q_OS_MAC)
+  f.setFamily(QStringLiteral("Helvetica Neue"));
+#elif defined(Q_OS_WIN)
+  f.setFamily(QStringLiteral("Segoe UI"));
+#else
+  f.setFamily(QStringLiteral("Noto Sans"));
+#endif
   f.setPointSize(11);
   return f;
 }
+
+namespace {
 
 void fillLightCategories(ColorScheme& s) {
   // Normal / Hidden / Directory の 4 状態 (通常 / 選択 / 非アクティブ /

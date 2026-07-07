@@ -281,12 +281,12 @@
 <context>
     <name>Farman::AppearanceTab</name>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="153" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="154" />
         <source>UI Overall</source>
         <translation>UI 全般</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="154" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="155" />
         <source>Default font and background/text colors for dialogs, menus, buttons, tooltips and any other UI elements not individually themed below.</source>
         <translation>ダイアログ / メニュー / ボタン / ツールチップ等、下で個別に設定していない UI 全般の既定フォント / 文字色 / 背景色。</translation>
     </message>
@@ -295,62 +295,62 @@
         <translation type="vanished">UI フォント:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="160" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="161" />
         <source>Default font for dialogs, menus, buttons and other generic widgets. File list / Address / Viewer fonts are configured separately.</source>
         <translation>ダイアログ / メニュー / ボタン等の汎用ウィジェットの既定フォント。ファイルリスト / アドレス / 各ビュアーのフォントは個別に設定可能。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="165" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="164" />
         <source>UI Font</source>
         <translation>UI フォント</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="175" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="168" />
         <source>Base Foreground Color</source>
         <translation>ベース文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="176" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="169" />
         <source>Base Background Color</source>
         <translation>ベース背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="47" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="48" />
         <source>Theme</source>
         <translation>テーマ</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="52" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="53" />
         <source>Mode:</source>
         <translation>モード:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="53" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="54" />
         <source>Auto (follow OS)</source>
         <translation>自動 (OS 設定に追従)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="57" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="58" />
         <source>Light</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="58" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="59" />
         <source>Dark</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="54" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="55" />
         <source>Auto follows the operating system's appearance setting. Editing automatically targets the currently active side.</source>
         <translation>Auto は OS の外観設定に追従する。編集対象は現在アクティブな側に自動で切り替わる。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="626" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="612" />
         <source>(currently applying: Light)</source>
         <translation>(現在の適用先: Light)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="625" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="611" />
         <source>(currently applying: Dark)</source>
         <translation>(現在の適用先: Dark)</translation>
     </message>
@@ -359,18 +359,18 @@
         <translation type="vanished">選択したプリセットで現在編集中の側の色を全置換する。Light / Dark 両方のブロックを持つプリセットは両側を更新する。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="98" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="99" />
         <source>Save both Light and Dark schemes to a JSON file</source>
         <translation>Light / Dark 両方のスキームを JSON ファイルに保存する</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="104" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="105" />
         <source>Load a theme JSON file. Single-side files update only the matching side.</source>
         <translation>テーマ JSON ファイルを読み込む。片側だけのファイルは該当側のみ更新する。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="732" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="737" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="718" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="723" />
         <source>Apply Theme Preset</source>
         <translation>テーマプリセット適用</translation>
     </message>
@@ -379,88 +379,88 @@
         <translation type="vanished">現在のテーマ色を「%1」プリセットで全置換しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="759" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="765" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="745" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="751" />
         <source>Export Theme</source>
         <translation>テーマをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="761" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="773" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="747" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="759" />
         <source>JSON Files (*.json)</source>
         <translation>JSON ファイル (*.json)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="772" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="778" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="758" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="764" />
         <source>Import Theme</source>
         <translation>テーマをインポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="159" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="191" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="306" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="160" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="184" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="291" />
         <source>Select Font...</source>
         <translation>フォントを選択...</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="173" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="214" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="309" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="166" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="199" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="295" />
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="188" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="181" />
         <source>Address</source>
         <translation>アドレス</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="192" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="185" />
         <source>Choose the font for the address bar above each pane</source>
         <translation>各パネル上部のアドレスバーのフォントを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="195" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="186" />
         <source>Address Font</source>
         <translation>アドレスフォント</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="204" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="189" />
         <source>Address Foreground Color</source>
         <translation>アドレス文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="205" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="190" />
         <source>Address Background Color</source>
         <translation>アドレス背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="177" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="217" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="224" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="248" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="254" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="170" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="202" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="209" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="233" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="239" />
         <source>Foreground:</source>
         <translation>文字色:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="84" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="85" />
         <source>Preset:</source>
         <translation>プリセット:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="87" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="88" />
         <source>Pick a bundled theme to load its colors into the current side. Press OK to commit or Cancel to revert.</source>
         <translation>同梱テーマを選択して、現在のサイドへ色を読み込みます。OK で確定、Cancel で取り消し。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="97" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="98" />
         <source>Export...</source>
         <translation>エクスポート...</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="102" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="103" />
         <source>Import...</source>
         <translation>インポート...</translation>
     </message>
@@ -481,166 +481,166 @@
         <translation type="vanished">画像ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="178" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="219" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="226" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="250" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="256" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="171" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="204" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="211" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="235" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="241" />
         <source>Background:</source>
         <translation>背景色:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="247" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="232" />
         <source>Differ:</source>
         <translation>差分あり:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="253" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="238" />
         <source>Only-Here:</source>
         <translation>このペインのみ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="264" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="249" />
         <source>Cursor</source>
         <translation>カーソル</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="268" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="253" />
         <source>Underline</source>
         <translation>下線</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="269" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="254" />
         <source>Row Background</source>
         <translation>行背景</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="271" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="256" />
         <source>Underline: thin line at the bottom of the row.
 Row Background: fill the entire row with the cursor color.</source>
         <translation>下線: 行下端に細い線を引きます。
 行背景: 行全体をカーソル色で塗ります。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="273" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="258" />
         <source>Shape:</source>
         <translation>形状:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="277" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="315" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="262" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="301" />
         <source> px</source>
         <translation> px</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="278" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="263" />
         <source>Underline thickness in pixels (used only when shape is Underline)</source>
         <translation>下線の太さ (px、形状が下線のときのみ有効)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="279" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="264" />
         <source>Thickness:</source>
         <translation>太さ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="287" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="272" />
         <source>Active Cursor Color</source>
         <translation>アクティブカーソル色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="288" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="273" />
         <source>Inactive Cursor Color</source>
         <translation>非アクティブカーソル色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="289" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="274" />
         <source>Active:</source>
         <translation>アクティブ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="290" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="275" />
         <source>Inactive:</source>
         <translation>非アクティブ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="298" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="283" />
         <source>File List</source>
         <translation>ファイルリスト</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="307" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="292" />
         <source>Choose the font for the file list</source>
         <translation>ファイルリストのフォントを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="314" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="300" />
         <source>Auto</source>
         <translation>自動</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="319" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="305" />
         <source>Row Height:</source>
         <translation>行高:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="333" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="319" />
         <source>Category</source>
         <translation>カテゴリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="334" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="320" />
         <source>Foreground</source>
         <translation>文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="335" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="321" />
         <source>Background</source>
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="336" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="322" />
         <source>Bold</source>
         <translation>太字</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="337" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="323" />
         <source>Normal</source>
         <translation>通常</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="338" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="324" />
         <source>Hidden</source>
         <translation>隠し</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="339" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="325" />
         <source>Directory</source>
         <translation>ディレクトリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="345" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="331" />
         <source>Active Pane</source>
         <translation>アクティブパネル</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="347" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="367" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="333" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="353" />
         <source>Normal State</source>
         <translation>通常</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="348" />
-        <location filename="../src/ui/AppearanceTab.cpp" line="368" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="334" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="354" />
         <source>Selected State</source>
         <translation>選択中</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="363" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="349" />
         <source>Enable separate colors for the non-active pane. When off, the active colors are used for both panes.</source>
         <translation>非アクティブパネルに別カラーを使うかどうか。オフのときは両方のパネルでアクティブカラーが使われます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="361" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="347" />
         <source>Inactive Pane</source>
         <translation>非アクティブパネル</translation>
     </message>
@@ -649,37 +649,37 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">アドレス (アーカイブ内ブラウジング)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="207" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="192" />
         <source>Archive Address Foreground Color</source>
         <translation>アーカイブアドレスの文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="209" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="194" />
         <source>Archive Address Background Color</source>
         <translation>アーカイブアドレスの背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="237" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="222" />
         <source>Directory Compare</source>
         <translation>ディレクトリ比較</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="239" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="224" />
         <source>Differ Foreground Color</source>
         <translation>差分ありの文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="240" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="225" />
         <source>Differ Background Color</source>
         <translation>差分ありの背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="241" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="226" />
         <source>Only-Here Foreground Color</source>
         <translation>このペインのみの文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="242" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="227" />
         <source>Only-Here Background Color</source>
         <translation>このペインのみの背景色</translation>
     </message>
@@ -700,7 +700,7 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">このペインのみ (背景):</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="317" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="303" />
         <source>Custom row height for the file list, in pixels. 'Auto' uses the default height.</source>
         <translation>ファイルリスト 1 行の縦幅 (px)。'Auto' で標準の行高を使います。</translation>
     </message>
@@ -753,12 +753,12 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">通常背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="216" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="201" />
         <source>Normal:</source>
         <translation>通常:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="223" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="208" />
         <source>Archive:</source>
         <translation>アーカイブ:</translation>
     </message>
@@ -911,27 +911,28 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">色:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="591" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="577" />
         <source>(Choose a preset...)</source>
         <translation>(プリセットを選択...)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="635" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="293" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="621" />
         <source>Select Font</source>
         <translation>フォントを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="665" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="651" />
         <source>Select Foreground Color</source>
         <translation>文字色を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="683" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="669" />
         <source>Select Background Color</source>
         <translation>背景色を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="706" />
+        <location filename="../src/ui/AppearanceTab.cpp" line="692" />
         <source>(none)</source>
         <translation>(なし)</translation>
     </message>
@@ -1452,152 +1453,152 @@ Used as the initial value in the Search dialog's Exclude dirs field.</source>
 <context>
     <name>Farman::BinaryViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="30" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="31" />
         <source>1 Byte</source>
         <translation>1 バイト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="31" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="32" />
         <source>2 Byte</source>
         <translation>2 バイト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="32" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="33" />
         <source>4 Byte</source>
         <translation>4 バイト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="33" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="34" />
         <source>8 Byte</source>
         <translation>8 バイト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="34" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="35" />
         <source>Number of bytes grouped per value column.</source>
         <translation>値カラム 1 つにまとめるバイト数。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="35" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="36" />
         <source>Unit:</source>
         <translation>単位:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="38" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="39" />
         <source>Little Endian</source>
         <translation>リトルエンディアン</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="40" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="41" />
         <source>Big Endian</source>
         <translation>ビッグエンディアン</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="42" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="43" />
         <source>Byte order used when grouping multiple bytes.</source>
         <translation>複数バイトをまとめるときのバイト順。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="43" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="44" />
         <source>Endian:</source>
         <translation>エンディアン:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="52" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="53" />
         <source>Encoding used for the string (ASCII/text) column.</source>
         <translation>文字列 (ASCII/テキスト) カラムに使うエンコーディング。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="53" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="54" />
         <source>String Encoding:</source>
         <translation>文字列エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="77" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="78" />
         <source>Font &amp;&amp; Colors (per theme)</source>
         <translation>フォントと配色 (テーマ別)</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="82" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="83" />
         <source>Theme:</source>
         <translation>テーマ:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="83" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="84" />
         <source>Light</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="84" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="85" />
         <source>Dark</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="91" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="92" />
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="93" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="94" />
         <source>Choose the font for the binary viewer hex dump</source>
         <translation>バイナリビュアー (16 進ダンプ) のフォントを選択</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="97" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="95" />
         <source>Binary Viewer Font</source>
         <translation>バイナリビュアーフォント</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="121" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="115" />
         <source>Foreground</source>
         <translation>文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="122" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="116" />
         <source>Background</source>
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="138" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="132" />
         <source>Normal:</source>
         <translation>通常:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="140" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="134" />
         <source>Normal Foreground</source>
         <translation>通常文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="140" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="134" />
         <source>Normal Background</source>
         <translation>通常背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="141" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="135" />
         <source>Selected:</source>
         <translation>選択中:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="143" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="137" />
         <source>Selected Foreground</source>
         <translation>選択中文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="143" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="137" />
         <source>Selected Background</source>
         <translation>選択中背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="144" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="138" />
         <source>Address:</source>
         <translation>アドレス:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="146" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="140" />
         <source>Address Foreground</source>
         <translation>アドレス文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="146" />
+        <location filename="../plugins/official/binary-viewer/BinaryViewerSettingsPage.cpp" line="140" />
         <source>Address Background</source>
         <translation>アドレス背景色</translation>
     </message>
@@ -2123,62 +2124,62 @@ Used as the initial value in the Search dialog's Exclude dirs field.</source>
 <context>
     <name>Farman::CsvViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="35" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="36" />
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
         <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="36" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="37" />
         <source>Extensions:</source>
         <translation>拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="38" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="39" />
         <source>Auto detect</source>
         <translation>自動判別</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="39" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="40" />
         <source>Comma ( , )</source>
         <translation>カンマ ( , )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="40" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="41" />
         <source>Tab ( \t )</source>
         <translation>タブ ( \t )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="41" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="42" />
         <source>Semicolon ( ; )</source>
         <translation>セミコロン ( ; )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="42" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="43" />
         <source>Column separator used when a file is opened</source>
         <translation>ファイルを開くときに使う列の区切り文字</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="43" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="44" />
         <source>Delimiter:</source>
         <translation>区切り:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="46" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="47" />
         <source>Treat first row as header</source>
         <translation>先頭行をヘッダとして扱う</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="65" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="66" />
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="67" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="68" />
         <source>Choose the font for the CSV / TSV table</source>
         <translation>CSV / TSV 表のフォントを選択</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="71" />
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="69" />
         <source>CSV / TSV Viewer Font</source>
         <translation>CSV / TSV ビュアーフォント</translation>
     </message>
@@ -5314,92 +5315,92 @@ Reason: %1</source>
 <context>
     <name>Farman::MarkdownViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="39" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="40" />
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
         <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="40" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="41" />
         <source>Extensions:</source>
         <translation>拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="43" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="44" />
         <source>Show raw source instead of preview</source>
         <translation>プレビューではなくソースを表示する</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="45" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="46" />
         <source>Open documents as plain Markdown text rather than rendered HTML.</source>
         <translation>整形済み HTML ではなく Markdown のソーステキストで開きます。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="67" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="68" />
         <source>Font &amp;&amp; Colors (per theme)</source>
         <translation>フォントと配色 (テーマ別)</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="72" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="73" />
         <source>Theme:</source>
         <translation>テーマ:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="73" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="74" />
         <source>Light</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="74" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="75" />
         <source>Dark</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="81" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="82" />
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="83" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="84" />
         <source>Choose the body font for the Markdown viewer</source>
         <translation>Markdown ビュアーの本文フォントを選択</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="87" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="85" />
         <source>Markdown Viewer Font</source>
         <translation>Markdown ビュアーフォント</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="99" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="93" />
         <source>Text:</source>
         <translation>文字色:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="102" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="96" />
         <source>Text Color</source>
         <translation>文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="105" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="99" />
         <source>Background:</source>
         <translation>背景色:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="108" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="102" />
         <source>Background Color</source>
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="111" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="105" />
         <source>Link:</source>
         <translation>リンク色:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="114" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="108" />
         <source>Link Color</source>
         <translation>リンク色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="120" />
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="114" />
         <source>Leave a color as "(none)" to follow the theme's default.</source>
         <translation>色を「(none)」のままにするとテーマの既定色に従います。</translation>
     </message>
@@ -7235,122 +7236,122 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::TextViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="47" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="48" />
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
         <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="48" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="49" />
         <source>Extensions:</source>
         <translation>拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="56" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="57" />
         <source>Default encoding for opening text files. 'Auto' detects the encoding from the file content.</source>
         <translation>テキストファイルを開く際の既定エンコーディング。「Auto」はファイル内容から自動判別します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="59" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="60" />
         <source>Encoding:</source>
         <translation>エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="63" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="64" />
         <source>Show line numbers</source>
         <translation>行番号を表示</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="65" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="66" />
         <source>Word wrap</source>
         <translation>折り返し</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="92" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="93" />
         <source>Font &amp;&amp; Colors (per theme)</source>
         <translation>フォントと配色 (テーマ別)</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="97" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="98" />
         <source>Theme:</source>
         <translation>テーマ:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="98" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="99" />
         <source>Light</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="99" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="100" />
         <source>Dark</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="106" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="107" />
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="108" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="109" />
         <source>Choose the font for the text viewer</source>
         <translation>テキストビュアーのフォントを選択</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="112" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="110" />
         <source>Text Viewer Font</source>
         <translation>テキストビュアーフォント</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="137" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="131" />
         <source>Foreground</source>
         <translation>文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="138" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="132" />
         <source>Background</source>
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="154" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="148" />
         <source>Normal:</source>
         <translation>通常:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="156" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="150" />
         <source>Normal Foreground</source>
         <translation>通常文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="156" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="150" />
         <source>Normal Background</source>
         <translation>通常背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="157" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="151" />
         <source>Selected:</source>
         <translation>選択中:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="159" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="153" />
         <source>Selected Foreground</source>
         <translation>選択中文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="159" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="153" />
         <source>Selected Background</source>
         <translation>選択中背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="160" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="154" />
         <source>Line Number:</source>
         <translation>行番号:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="162" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="156" />
         <source>Line Number Foreground</source>
         <translation>行番号文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="162" />
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="156" />
         <source>Line Number Background</source>
         <translation>行番号背景色</translation>
     </message>
@@ -7903,22 +7904,32 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>混在</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="14" />
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="29" />
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="29" />
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="29" />
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="29" />
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="29" />
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="29" />
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="29" />
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="29" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="17" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="32" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="32" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="32" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="32" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="32" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="32" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="32" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="32" />
         <source>(none)</source>
         <translation>(なし)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerThemeFields.cpp" line="34" />
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="37" />
         <source>System Font</source>
         <translation>システムフォント</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="53" />
+        <source>Select Font...</source>
+        <translation>フォントを選択...</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ViewerThemeFields.cpp" line="63" />
+        <source>Use System Font</source>
+        <translation>システムフォントに戻す</translation>
     </message>
     <message>
         <location filename="../src/ui/BookmarkListDialog.cpp" line="92" />
@@ -7954,72 +7965,72 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1305" />
+        <location filename="../src/settings/Settings.cpp" line="1338" />
         <source>Home</source>
         <translation>ホーム</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1307" />
+        <location filename="../src/settings/Settings.cpp" line="1340" />
         <source>Desktop</source>
         <translation>デスクトップ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1309" />
+        <location filename="../src/settings/Settings.cpp" line="1342" />
         <source>Documents</source>
         <translation>ドキュメント</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1311" />
+        <location filename="../src/settings/Settings.cpp" line="1344" />
         <source>Downloads</source>
         <translation>ダウンロード</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1313" />
+        <location filename="../src/settings/Settings.cpp" line="1346" />
         <source>Pictures</source>
         <translation>ピクチャ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1315" />
+        <location filename="../src/settings/Settings.cpp" line="1348" />
         <source>Music</source>
         <translation>ミュージック</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1317" />
+        <location filename="../src/settings/Settings.cpp" line="1350" />
         <source>Movies</source>
         <translation>ムービー</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1570" />
+        <location filename="../src/settings/Settings.cpp" line="1603" />
         <source>Settings file does not exist yet.</source>
         <translation>設定ファイルがまだ存在しません。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1575" />
+        <location filename="../src/settings/Settings.cpp" line="1608" />
         <source>Cannot overwrite existing file: %1</source>
         <translation>既存ファイルを上書きできません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1579" />
+        <location filename="../src/settings/Settings.cpp" line="1612" />
         <source>Failed to copy settings to: %1</source>
         <translation>設定ファイルのコピーに失敗しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1599" />
+        <location filename="../src/settings/Settings.cpp" line="1632" />
         <source>Not a valid JSON settings file: %1</source>
         <translation>有効な JSON 設定ファイルではありません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1605" />
+        <location filename="../src/settings/Settings.cpp" line="1638" />
         <source>Missing "version" field — not a farman settings file?</source>
         <translation>「version」フィールドがありません — farman の設定ファイルではない可能性があります。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1614" />
+        <location filename="../src/settings/Settings.cpp" line="1647" />
         <source>Cannot replace existing settings file: %1</source>
         <translation>既存の設定ファイルを置き換えられません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1618" />
+        <location filename="../src/settings/Settings.cpp" line="1651" />
         <source>Failed to install imported settings file</source>
         <translation>インポートした設定ファイルの適用に失敗しました</translation>
     </message>
@@ -8049,7 +8060,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>未知の外部コマンド: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1590" />
+        <location filename="../src/settings/Settings.cpp" line="1623" />
         <location filename="../src/settings/PresetIO.cpp" line="21" />
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>

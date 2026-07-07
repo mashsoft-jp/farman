@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QColorDialog>
 #include <QFontDialog>
+#include <QGuiApplication>
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>

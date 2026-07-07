@@ -6,6 +6,7 @@
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QFontDatabase>
 #include <QFontDialog>
 #include <QFormLayout>
 #include <QHBoxLayout>

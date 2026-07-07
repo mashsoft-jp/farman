@@ -65,13 +65,19 @@ public:
     const Settings& s = Settings::instance();
     setFont(s.textViewerFont());
 
-    QPalette pal = palette();
-    pal.setColor(QPalette::Text, s.textViewerNormalForeground());
-    if (s.textViewerNormalBackground().isValid()) {
+    // 本体が適用済みの qApp テーマパレットを起点にし、明示指定 (有効色) の role
+    // だけ上書きする。widget の現在パレット (palette()) を起点にすると、前回
+    // setPalette した明示値が残り、未設定 (無効色) の role がテーマ変更に追従
+    // しない (ライト→ダーク→ライトで背景がダークのまま等) 不具合になる。
+    QPalette pal = QApplication::palette();
+    if (s.textViewerNormalForeground().isValid())
+      pal.setColor(QPalette::Text, s.textViewerNormalForeground());
+    if (s.textViewerNormalBackground().isValid())
       pal.setColor(QPalette::Base, s.textViewerNormalBackground());
-    }
-    pal.setColor(QPalette::HighlightedText, s.textViewerSelectedForeground());
-    pal.setColor(QPalette::Highlight,       s.textViewerSelectedBackground());
+    if (s.textViewerSelectedForeground().isValid())
+      pal.setColor(QPalette::HighlightedText, s.textViewerSelectedForeground());
+    if (s.textViewerSelectedBackground().isValid())
+      pal.setColor(QPalette::Highlight, s.textViewerSelectedBackground());
     setPalette(pal);
   }
 
