@@ -25,6 +25,24 @@ bool isDestinationInsideSource(const QString& srcPath, const QString& dstDir) {
   return dst.startsWith(src + QLatin1Char('/'));
 }
 
+// エントリ (ファイル or ディレクトリ) の合計バイト数を返す。
+// rename 高速パスでは copyFile を通らずバイト進捗が出ないため、上段バーを
+// 100% 完了として表示する際の分母に使う。
+qint64 entryByteSize(const QString& path) {
+  QFileInfo info(path);
+  if (!info.isDir()) {
+    return info.size();
+  }
+  qint64 total = 0;
+  QDirIterator it(path, QDir::Files | QDir::NoDotAndDotDot | QDir::Hidden,
+                  QDirIterator::Subdirectories);
+  while (it.hasNext()) {
+    it.next();
+    total += it.fileInfo().size();
+  }
+  return total;
+}
+
 } // namespace
 
 MoveWorker::MoveWorker(
@@ -110,6 +128,9 @@ void MoveWorker::run() {
     }
 
     m_progress.currentFile = srcPath;
+    // 新しいエントリ開始。上段 (ファイル内バイト) バーは 0% から始める。
+    m_progress.processed = 0;
+    m_progress.total     = -1;
     emit progressUpdated(m_progress);
 
     // 事前にこの src 配下のファイル数を覚えておく。
@@ -140,8 +161,17 @@ bool MoveWorker::moveEntry(const QString& src, const QString& dst) {
   QFileInfo srcInfo(src);
   // run() 側でトップレベル競合は解決済み。ここでは dst は存在しない前提。
 
+  // rename は瞬時に成功して src が消えるため、サイズは事前に控えておく。
+  const qint64 entrySize = entryByteSize(src);
+
   // Try to rename first (fast for same filesystem)
   if (QFile::rename(src, dst)) {
+    // 同 FS の rename では copyFile を通らずバイト進捗が出ないので、上段バーを
+    // このエントリのバイト数で 100% 完了として一度報告する (空でも 100% にする)。
+    const qint64 denom = entrySize > 0 ? entrySize : 1;
+    m_progress.processed = denom;
+    m_progress.total     = denom;
+    emit progressUpdated(m_progress);
     return true;
   }
 
