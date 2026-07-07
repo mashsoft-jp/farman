@@ -33,7 +33,18 @@ void ProgressDialog::setupUI(const QString& operationName) {
   m_currentFileLabel->setWordWrap(true);
   mainLayout->addWidget(m_currentFileLabel);
 
-  // Progress bar
+  // 上段: 現在処理中のファイル 1 個の中でのバイト進捗。
+  m_fileProgressBar = new QProgressBar(this);
+  m_fileProgressBar->setRange(0, 100);
+  m_fileProgressBar->setValue(0);
+  mainLayout->addWidget(m_fileProgressBar);
+
+  // バイト量ラベル ("1.2 / 5.0 MB")。macOS はバー上の文字を出さないので別ラベル。
+  m_fileByteLabel = new QLabel(QString(), this);
+  m_fileByteLabel->setAlignment(Qt::AlignRight);
+  mainLayout->addWidget(m_fileByteLabel);
+
+  // 下段: コピー / 移動対象ファイル数のうち完了した数の進捗。
   m_progressBar = new QProgressBar(this);
   m_progressBar->setRange(0, 100);
   m_progressBar->setValue(0);
@@ -88,24 +99,36 @@ void ProgressDialog::onProgressUpdated(const WorkerProgress& progress) {
     m_currentFileLabel->setText(tr("Processing: %1").arg(info.fileName()));
   }
 
-  // Update progress bar + count label
+  // 上段: 現在ファイル 1 個の中でのバイト進捗。
+  if (progress.total > 0) {
+    const int filePct = static_cast<int>((progress.processed * 100) / progress.total);
+    m_fileProgressBar->setRange(0, 100);
+    m_fileProgressBar->setValue(filePct);
+    m_fileProgressBar->setFormat(QStringLiteral("%p%"));
+    const QLocale loc(QLocale::English);
+    m_fileByteLabel->setText(tr("%1 / %2")
+                               .arg(loc.formattedDataSize(progress.processed))
+                               .arg(loc.formattedDataSize(progress.total)));
+  } else {
+    // ファイルサイズ不明 / ファイル間 (processed=0, total=-1)。0% に戻す。
+    m_fileProgressBar->setRange(0, 100);
+    m_fileProgressBar->setValue(0);
+    m_fileProgressBar->setFormat(QString());
+    m_fileByteLabel->clear();
+  }
+
+  // 下段: コピー / 移動対象ファイル数のうち完了した数の進捗。
   if (progress.filesTotal > 0) {
-    int percentage = (progress.filesDone * 100) / progress.filesTotal;
+    const int percentage = (progress.filesDone * 100) / progress.filesTotal;
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(percentage);
-    m_progressBar->setFormat(QString("%p%"));
+    m_progressBar->setFormat(QStringLiteral("%p%"));
     m_countLabel->setText(tr("%1 / %2 files (%3%)")
                             .arg(progress.filesDone)
                             .arg(progress.filesTotal)
                             .arg(percentage));
-  } else if (progress.total > 0) {
-    int percentage = (progress.processed * 100) / progress.total;
-    m_progressBar->setRange(0, 100);
-    m_progressBar->setValue(percentage);
-    m_progressBar->setFormat(QString("%p%"));
-    m_countLabel->setText(QStringLiteral("%1%").arg(percentage));
   } else {
-    // Indeterminate progress
+    // 総ファイル数が不明なとき (件数を数えない worker) は不確定表示。
     m_progressBar->setRange(0, 0);
     m_progressBar->setFormat(QString());
     m_countLabel->setText(tr("%1 files processed").arg(progress.filesDone));
@@ -126,6 +149,11 @@ void ProgressDialog::onFinished(bool success) {
   m_progressBar->setRange(0, 100);
   m_progressBar->setValue(100);
   m_progressBar->setFormat(success ? tr("Done") : tr("Failed"));
+  // 上段 (現在ファイル) も完了状態で固定する。
+  m_fileProgressBar->setRange(0, 100);
+  m_fileProgressBar->setValue(success ? 100 : m_fileProgressBar->value());
+  m_fileProgressBar->setFormat(success ? tr("Done") : tr("Failed"));
+  m_fileByteLabel->clear();
   // "Processing: foo.txt" は実行中の表示なので完了メッセージに差し替える
   m_currentFileLabel->setText(success ? tr("Completed.")
                                       : tr("Completed with errors."));
