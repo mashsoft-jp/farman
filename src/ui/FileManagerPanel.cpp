@@ -36,6 +36,17 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QStorageInfo>
+#if defined(Q_OS_WIN)
+// GetDriveType でドライブ種別 (ネットワーク / リムーバブル等) を判定する。
+// Qt の min/max マクロ衝突を避けるため NOMINMAX を指定。
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
+#  include <windows.h>
+#endif
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QLocale>
@@ -2027,7 +2038,33 @@ void FileManagerPanel::deleteSelectedFiles() {
   // 確認ダイアログ側でゴミ箱オプションを無効化する。代表として先頭ファイルで判定する。
   bool trashAvailable = true;
   {
-    const QStorageInfo vol(QFileInfo(selectedFiles.first()).absolutePath());
+    const QString path = QFileInfo(selectedFiles.first()).absolutePath();
+#if defined(Q_OS_WIN)
+    // Windows: マップ済みネットワークドライブ (X: 等) は fileSystemType が
+    // "NTFS" 等を返すため fs 名では判定できない。GetDriveType でドライブ種別を
+    // 見る。UNC パス (\\server\share) と DRIVE_REMOTE / REMOVABLE / CDROM /
+    // 判定不能はゴミ箱 (Recycle Bin) が使えないので完全削除のみとする。
+    if (path.startsWith(QLatin1String("\\\\")) ||
+        path.startsWith(QLatin1String("//"))) {
+      trashAvailable = false;   // UNC パス
+    } else {
+      QString driveRoot =
+        QDir::toNativeSeparators(QStorageInfo(path).rootPath());  // 例 "X:\"
+      if (driveRoot.isEmpty() && path.size() >= 2 && path[1] == QLatin1Char(':')) {
+        driveRoot = path.left(2);  // "X:"
+      }
+      if (!driveRoot.endsWith(QLatin1Char('\\'))) {
+        driveRoot += QLatin1Char('\\');
+      }
+      const UINT dt = GetDriveTypeW(
+        reinterpret_cast<const wchar_t*>(driveRoot.utf16()));
+      if (dt == DRIVE_REMOTE || dt == DRIVE_REMOVABLE || dt == DRIVE_CDROM ||
+          dt == DRIVE_NO_ROOT_DIR || dt == DRIVE_UNKNOWN) {
+        trashAvailable = false;
+      }
+    }
+#else
+    const QStorageInfo vol(path);
     const QString fsType = QString::fromLatin1(vol.fileSystemType()).toLower();
     static const char* const kNetworkFs[] = {
       "smb", "afp", "nfs", "cifs", "webdav", "ftp", "sshfs", "fuse"
@@ -2035,6 +2072,7 @@ void FileManagerPanel::deleteSelectedFiles() {
     for (const char* t : kNetworkFs) {
       if (fsType.contains(QLatin1String(t))) { trashAvailable = false; break; }
     }
+#endif
   }
 
   DeleteConfirmDialog confirmDlg(
