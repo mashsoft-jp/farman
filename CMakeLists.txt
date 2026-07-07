@@ -12,6 +12,13 @@ endif()
 
 project(farman VERSION 0.9.7 LANGUAGES CXX)
 
+# Windows (vcpkg + MSBuild): 各ターゲットのビルド後に vcpkg が依存 DLL を出力先へ
+# コピーする (applocal deps)。全プラグインが同じ plugins/viewers/ 出力先へ同じ
+# uchardet.dll 等を並列にコピーするため、"The process cannot access the file
+# because it is being used by another process" (exit code 32) で CI が失敗する
+# ことがある。applocal ステップを直列化してこの競合を防ぐ。
+set(X_VCPKG_APPLOCAL_DEPS_SERIALIZED ON)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
