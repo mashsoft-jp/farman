@@ -1,5 +1,6 @@
 #include "UserCommand.h"
 
+#include <QCoreApplication>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
@@ -34,6 +35,14 @@ UserCommand userCommandFromJson(const QJsonObject& obj) {
   cmd.builtin             = obj.value("builtin").toBool(false);
   cmd.builtinKind         = obj.value("builtinKind").toString();
 
+  // 組み込みコマンドの表示名は、保存された値 (生成時の言語で固定) ではなく
+  // 現在の UI 言語で再導出する。これで日本語環境で保存後に英語で起動しても
+  // Tools メニュー等が英語表示になる。
+  if (cmd.builtin) {
+    const QString localized = builtinUserCommandName(cmd.builtinKind);
+    if (!localized.isEmpty()) cmd.name = localized;
+  }
+
   const QJsonArray args = obj.value("argsTemplate").toArray();
   for (const QJsonValue& v : args) {
     cmd.argsTemplate.append(v.toString());
@@ -41,17 +50,27 @@ UserCommand userCommandFromJson(const QJsonObject& obj) {
   return cmd;
 }
 
+QString builtinUserCommandName(const QString& kind) {
+  // 訳語は Farman::ExternalAppsTab コンテキストの既存エントリを共有する
+  // (translate の第 1 引数をそのコンテキスト名に合わせている)。
+  if (kind == QLatin1String("terminal"))
+    return QCoreApplication::translate("Farman::ExternalAppsTab", "Terminal");
+  if (kind == QLatin1String("editor"))
+    return QCoreApplication::translate("Farman::ExternalAppsTab", "Text Editor");
+  return QString();
+}
+
 QList<UserCommand> defaultBuiltinUserCommands() {
   UserCommand terminal;
   terminal.id              = QStringLiteral("user.cmd.terminal");
-  terminal.name            = QStringLiteral("Terminal");
+  terminal.name            = builtinUserCommandName(QStringLiteral("terminal"));
   terminal.builtin         = true;
   terminal.builtinKind     = QStringLiteral("terminal");
   terminal.showInToolsMenu = true;
 
   UserCommand editor;
   editor.id              = QStringLiteral("user.cmd.editor");
-  editor.name            = QStringLiteral("Text Editor");
+  editor.name            = builtinUserCommandName(QStringLiteral("editor"));
   editor.builtin         = true;
   editor.builtinKind     = QStringLiteral("editor");
   editor.showInToolsMenu = true;

@@ -54,6 +54,12 @@ UserCommand userCommandFromJson(const QJsonObject& obj);
 // Settings で書き換える前提。
 QList<UserCommand> defaultBuiltinUserCommands();
 
+// 組み込みコマンド (builtinKind = "terminal" / "editor") の表示名を、現在の UI
+// 言語で翻訳して返す。名前は settings.json にも保存されるが、保存された値は生成
+// 時の言語で固定されてしまうため、表示・ロード時は必ずこの関数で再導出する。
+// 訳語は Farman::ExternalAppsTab コンテキストの "Terminal" / "Text Editor" を共有。
+QString builtinUserCommandName(const QString& kind);
+
 // 引数テンプレートの 1 行表記 (ユーザーが UI で入力する形) と QStringList の相互変換。
 // `QProcess::splitCommand()` ベースで、シェル風のクォート (`"..."`, `'...'`) を尊重する。
 QString     joinArgsTemplate(const QStringList& args);
