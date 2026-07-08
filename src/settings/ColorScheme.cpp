@@ -11,26 +11,32 @@ namespace Farman {
 QFont defaultMonospaceFont() {
   QFont f;
 #if defined(Q_OS_MAC)
-  f.setFamily(QStringLiteral("Menlo"));
+  // macOS はビュアーも含め既定フォントを Helvetica 12pt に統一する。
+  f.setFamily(QStringLiteral("Helvetica"));
+  f.setPointSize(12);
 #elif defined(Q_OS_WIN)
   f.setFamily(QStringLiteral("Consolas"));
+  f.setPointSize(12);
 #else
   f.setFamily(QStringLiteral("DejaVu Sans Mono"));
-#endif
   f.setPointSize(12);
+#endif
   return f;
 }
 
 QFont defaultUiFont() {
   QFont f;
 #if defined(Q_OS_MAC)
-  f.setFamily(QStringLiteral("Helvetica Neue"));
+  // macOS は UI もビュアーも既定を Helvetica 12pt に統一する。
+  f.setFamily(QStringLiteral("Helvetica"));
+  f.setPointSize(12);
 #elif defined(Q_OS_WIN)
   f.setFamily(QStringLiteral("Segoe UI"));
+  f.setPointSize(11);
 #else
   f.setFamily(QStringLiteral("Noto Sans"));
-#endif
   f.setPointSize(11);
+#endif
   return f;
 }
 

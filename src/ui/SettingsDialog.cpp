@@ -234,6 +234,25 @@ void SettingsDialog::setupUi() {
   setTabOrder(cancelBtn, applyBtn);
   setTabOrder(applyBtn,  okBtn);
 
+#if defined(Q_OS_MAC)
+  // macOS の QMacStyle は、ボタンの高さがわずか (1px) でも標準と異なると、
+  // 丸型のプッシュボタンではなく角型ベゼルで描画する。Apply だけ他より
+  // 1px 高くなり「適用」ボタンだけデザインが浮いて見えるため、ボタンボックス
+  // 内の全ボタンの高さを最小値に揃えて描画を統一する。
+  {
+    int uniformH = -1;
+    for (QAbstractButton* b : m_buttonBox->buttons()) {
+      const int h = b->sizeHint().height();
+      if (uniformH < 0 || h < uniformH) uniformH = h;
+    }
+    if (uniformH > 0) {
+      for (QAbstractButton* b : m_buttonBox->buttons()) {
+        b->setFixedHeight(uniformH);
+      }
+    }
+  }
+#endif
+
   connect(m_buttonBox, &QDialogButtonBox::accepted, this, &SettingsDialog::onOk);
   connect(m_buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
   connect(applyBtn, &QPushButton::clicked, this, &SettingsDialog::onApply);
