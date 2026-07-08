@@ -219,6 +219,7 @@ void SearchDialog::setupUi(const QString& initialPath) {
 
   // Results table
   m_resultsTable = new QTableWidget(this);
+  m_resultsTable->setWordWrap(false);  // 折り返さず省略 (…) で 1 行表示
   m_resultsTable->setColumnCount(4);
   m_resultsTable->setHorizontalHeaderLabels(
     {tr("Name"), tr("Path"), tr("Size"), tr("Modified")});

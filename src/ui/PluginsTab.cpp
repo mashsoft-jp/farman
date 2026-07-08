@@ -110,6 +110,7 @@ void PluginsTab::setupUi() {
   // 見せる。拡張子の紐付けの変更も詳細ダイアログで行う。エラーが起きている
   // 行は名前の前に警告アイコンを出して知らせる。
   m_pluginTable = new QTableWidget(m_pluginTabs);
+  m_pluginTable->setWordWrap(false);  // 折り返さず省略 (…) で 1 行表示
   m_pluginTable->setColumnCount(5);
   m_pluginTable->setHorizontalHeaderLabels({
     tr("Enabled"),

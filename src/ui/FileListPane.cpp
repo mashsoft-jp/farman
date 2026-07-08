@@ -224,6 +224,10 @@ void FileListPane::setupUi() {
   m_view->setAlternatingRowColors(false);
   m_view->setFrameShape(QFrame::NoFrame);
   m_view->setShowGrid(false);
+  // QTableView は wordWrap がデフォルト true。行高より lineSpacing が小さい
+  // フォント (macOS の Helvetica 12pt 等) だと 1 行に収まらないセルが省略 (…)
+  // ではなく 2 行に折り返されてしまうため、常に 1 行 + 省略で表示する。
+  m_view->setWordWrap(false);
   // QAbstractItemView の tabKeyNavigation がデフォルト true で、Tab キーが
   // セル間移動に消費されて次の widget へフォーカスが移らない。farman は
   // ファイルリスト上の Tab は eventFilter 経由で focusBookmarkLabel に飛ばす

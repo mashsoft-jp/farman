@@ -75,6 +75,7 @@ void ShortcutListDialog::setupUi() {
   layout->addWidget(m_searchEdit);
 
   m_table = new QTableWidget(this);
+  m_table->setWordWrap(false);  // 折り返さず省略 (…) で 1 行表示
   m_table->setStyleSheet(inactiveSelectionStyleSheet());
   m_table->setColumnCount(2);
   m_table->setHorizontalHeaderLabels({ tr("Key"), tr("Command") });

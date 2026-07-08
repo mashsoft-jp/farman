@@ -140,6 +140,11 @@ void PropertiesDialog::setupUi() {
     QSizePolicy sp = lbl->sizePolicy();
     sp.setHeightForWidth(true);
     sp.setVerticalPolicy(QSizePolicy::Minimum);
+    // ExpandingFieldsGrow は水平ポリシーが Expanding のフィールドしか広げない。
+    // wordWrap 付き QLabel の sizeHint はフォント次第で 2 行に折り畳んだ幅を
+    // 返す (Helvetica 12pt だと日時ですら折り返す) ため、Expanding にして
+    // 常にフォーム幅いっぱいで折り返し計算させる。
+    sp.setHorizontalPolicy(QSizePolicy::Expanding);
     lbl->setSizePolicy(sp);
     return lbl;
   };
