@@ -157,11 +157,10 @@
           <tr class="f-item"><td><kbd>r</kbd></td><td>Rename</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+R</kbd></td><td>Bulk rename dialog</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+C</kbd></td><td>Copy the cursor / selected file paths to the clipboard</td></tr>
-          <tr class="f-item"><td><kbd>a</kbd></td><td>Change attributes</td></tr>
+          <tr class="f-item"><td><kbd>a</kbd></td><td>Properties (view / edit name, location, size, dates, permissions)</td></tr>
           <tr class="f-item"><td><kbd>p</kbd></td><td>Pack selected files into an archive</td></tr>
           <tr class="f-item"><td><kbd>u</kbd></td><td>Unpack the archive under the cursor</td></tr>
           <tr class="f-item"><td><kbd>Shift+Enter</kbd></td><td>Open / run with the OS default app (double-click does the same)</td></tr>
-          <tr class="f-item"><td><kbd>Alt+Enter</kbd></td><td>Properties dialog</td></tr>
         </tbody>
       </table>
 
@@ -170,7 +169,7 @@
         <thead><tr><th>Key</th><th>Action</th></tr></thead>
         <tbody>
           <tr class="f-item"><td><kbd>v</kbd></td><td>Open in the viewer</td></tr>
-          <tr class="f-item"><td><kbd>Ctrl+Enter</kbd></td><td>Choose which viewer (Text / Image / Binary) to open with</td></tr>
+          <tr class="f-item"><td><kbd>Ctrl+Enter</kbd></td><td>Choose which viewer to open with (built automatically from installed plugins; video / audio and others included)</td></tr>
           <tr class="f-item"><td><kbd>s</kbd></td><td>Sort &amp; filter settings for this pane</td></tr>
           <tr class="f-item"><td><kbd>/</kbd></td><td>Show the Quick Filter</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+O</kbd></td><td>Toggle single / dual pane</td></tr>
@@ -219,9 +218,8 @@
             <figure class="doc-figure"><img src="../../screenshots/29-create-file.png" width="1202" height="729" alt="Create file" loading="lazy" /><figcaption>Create — file (<code>n</code>)</figcaption></figure>
           </div></li>
         <li class="f-item"><strong>Copy path</strong> (<code>Ctrl+C</code>): copies the absolute path of the cursor / selected files to the clipboard (newline-separated for multiple).</li>
-        <li class="f-item"><strong>Attributes</strong> (<code>a</code>) / <strong>Properties</strong> (<code>Alt+Enter</code>): view and change permissions and details.
-          <figure class="doc-figure"><img src="../../screenshots/19-attributes.png" width="1201" height="728" alt="Attributes" loading="lazy" /><figcaption>Attributes (permissions, etc.)</figcaption></figure>
-          <figure class="doc-figure"><img src="../../screenshots/20-properties.png" width="1199" height="728" alt="Properties" loading="lazy" /><figcaption>Properties (details)</figcaption></figure></li>
+        <li class="f-item"><strong>Properties</strong> (<code>a</code>): a single dialog showing name, location, size, and modified / created dates together. The <strong>modified date and permissions (attributes) can be edited in place</strong>. A multi-selection shows the aggregated total size and item count; owner / group are shown with both name and ID (the name is editable only when it is common across the selected files, and is hidden on Windows).
+          <figure class="doc-figure"><img src="../../screenshots/20-properties.png" width="680" height="568" alt="Properties" loading="lazy" /><figcaption>Properties — name, location, size, dates and permissions in one dialog (view / edit)</figcaption></figure></li>
         <li class="f-item"><strong>Open with the OS default app</strong> (<code>Shift+Enter</code> or double-click): opens the file / directory with its associated application.</li>
       </ul>
     </section>
@@ -287,16 +285,15 @@
         <li class="f-item"><strong>Appearance</strong>: look-and-feel — theme, colors, cursor, row height, and so on.
           <figure class="doc-figure"><img src="../../screenshots/33-settings-appearance.png" width="1000" height="652" alt="Settings dialog (Appearance)" loading="lazy" /><figcaption>Settings → Appearance</figcaption></figure>
           <ul class="settings-detail">
-            <li>Appearance is split into sub-tabs: <strong>Main / Text Viewer / Binary Viewer / Image Viewer</strong>.</li>
-            <li>Theme: overall UI color preset.</li>
+            <li>Appearance now covers the app's own look (UI overall, file list, address bar, and so on). Each viewer's font, colors, image transparency, and associated extensions have moved to that viewer's settings under <strong>Settings → Plugins</strong> (see below).</li>
+            <li>Theme: overall UI color preset (Light / Dark; Auto follows the OS).</li>
             <li>UI overall: the app's base colors.</li>
             <li>Address bar: address-bar colors.</li>
-            <li>File list: per-category file colors, row height.</li>
+            <li>File list: per-category file colors (selected / unselected, active / inactive), bold, and row height. Font family / size and row height are shared between Light and Dark; colors and the directory bold setting are per theme.</li>
             <li>Cursor / active pane: cursor appearance, highlight for the active side.</li>
             <li>Directory compare: colors for diff rows.</li>
-            <li>Text / Binary / Image viewers: set each viewer's <strong>font, colors, associated extensions, and MIME patterns</strong> in its sub-tab (the Image viewer also chooses how transparent areas are shown — <strong>checkerboard / solid color</strong>). Associated extensions can also be changed from “Details” under <strong>Settings → Plugins</strong>.</li>
           </ul></li>
-        <li class="f-item"><strong>Plugins</strong>: lists the installed viewer plugins in per-type tabs. From each row's "Details..." you can review and change its category, plugin ID, path, enabled state, priority, associated extensions, and each viewer's defaults. User-built external viewer plugins (.dylib / .so / .dll) can also be loaded from a chosen plugins directory.
+        <li class="f-item"><strong>Plugins</strong>: lists the installed viewer plugins in per-type tabs. From each row's "Details..." you can review and change its category, plugin ID, path, enabled state, priority, and associated extensions, plus <strong>each viewer's display settings (font, colors, image transparency, and so on)</strong>. Font family / size are shared between Light and Dark, while <strong>colors are edited per theme via the Light / Dark toggle inside each page</strong> (the per-viewer settings that used to live in the "Appearance" tab were consolidated here). User-built external viewer plugins (.dylib / .so / .dll) can also be loaded from a chosen plugins directory.
           <figure class="doc-figure"><img src="../../screenshots/33-settings-plugins.png" width="1000" height="652" alt="Settings (Plugins)" loading="lazy" /><figcaption>Settings → Plugins (installed list and details)</figcaption></figure></li>
         <li class="f-item"><strong>External Apps</strong>: register launch commands for a terminal (<code>t</code>), editor (<code>e</code>), and so on. Placeholders pass the current path or selected files.
           <figure class="doc-figure"><img src="../../screenshots/33-settings-external-apps.png" width="1000" height="652" alt="Settings (External Apps)" loading="lazy" /><figcaption>Settings → External Apps</figcaption></figure></li>
@@ -327,7 +324,7 @@
       <div class="f-item viewer-block">
         <h3>Video / Audio</h3>
         <p class="viewer-meta"><strong>Supported formats</strong>: video: mp4, mov, webm, mkv, avi, wmv, mpeg, m2ts, ts, etc. / audio: mp3, flac, wav, aac, ogg, wma, etc.</p>
-        <p class="viewer-meta"><strong>Main features</strong>: playback, seek (click the bar to jump there), volume, loop, fullscreen, Info (metadata)</p>
+        <p class="viewer-meta"><strong>Main features</strong>: playback, seek (click the bar to jump there), volume, loop, fullscreen, video zoom / fit to window, Info (metadata — format / codec / resolution / duration)</p>
         <figure class="doc-figure"><img src="../../screenshots/10-media-viewer.png" width="1200" height="729" alt="Video / audio viewer" loading="lazy" /><figcaption>Video / audio viewer (seek / volume / loop / fullscreen)</figcaption></figure>
       </div>
 
@@ -389,7 +386,7 @@
     <p>
       <a href="../">farman home</a> ·
       <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a> ·
-      <a href="https://github.com/mashsoft-jp/farman/blob/main/CHANGELOG.md" rel="noopener">CHANGELOG</a>
+      <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">Releases</a>
     </p>
     <p class="copyright">© <a href="https://www.mashsoft.co.jp/" rel="noopener">Mashsoft Inc.</a></p>
   </footer>

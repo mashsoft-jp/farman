@@ -157,11 +157,10 @@
           <tr class="f-item"><td><kbd>r</kbd></td><td>リネーム</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+R</kbd></td><td>一括リネームダイアログ</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+C</kbd></td><td>カーソル / 選択ファイルの絶対パスをクリップボードへコピー</td></tr>
-          <tr class="f-item"><td><kbd>a</kbd></td><td>属性変更</td></tr>
+          <tr class="f-item"><td><kbd>a</kbd></td><td>プロパティ（名前・場所・サイズ・日時・パーミッションの確認 / 変更）</td></tr>
           <tr class="f-item"><td><kbd>p</kbd></td><td>選択ファイルをアーカイブ化（圧縮）</td></tr>
           <tr class="f-item"><td><kbd>u</kbd></td><td>カーソル位置のアーカイブを展開</td></tr>
           <tr class="f-item"><td><kbd>Shift+Enter</kbd></td><td>OS 既定アプリで開く / 実行（ダブルクリックも同じ）</td></tr>
-          <tr class="f-item"><td><kbd>Alt+Enter</kbd></td><td>プロパティダイアログ</td></tr>
         </tbody>
       </table>
 
@@ -170,7 +169,7 @@
         <thead><tr><th>キー</th><th>動作</th></tr></thead>
         <tbody>
           <tr class="f-item"><td><kbd>v</kbd></td><td>ビュアーで開く</td></tr>
-          <tr class="f-item"><td><kbd>Ctrl+Enter</kbd></td><td>任意のビュアー（Text / Image / Binary）を選んで開く</td></tr>
+          <tr class="f-item"><td><kbd>Ctrl+Enter</kbd></td><td>ビュアーを選んで開く（インストール済みプラグインから自動生成。動画・音声なども選択可）</td></tr>
           <tr class="f-item"><td><kbd>s</kbd></td><td>このペインのソート・フィルタ設定</td></tr>
           <tr class="f-item"><td><kbd>/</kbd></td><td>即時フィルタ（Quick Filter）の表示</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+O</kbd></td><td>シングル / デュアルペイン切替</td></tr>
@@ -219,9 +218,8 @@
             <figure class="doc-figure"><img src="../screenshots/29-create-file.png" width="1202" height="729" alt="新規作成（ファイル）" loading="lazy" /><figcaption>新規作成 — ファイル（<code>n</code>）</figcaption></figure>
           </div></li>
         <li class="f-item"><strong>パスのコピー</strong>（<code>Ctrl+C</code>）: カーソル / 選択ファイルの絶対パスをクリップボードへ（複数は改行区切り）。</li>
-        <li class="f-item"><strong>属性変更</strong>（<code>a</code>）/ <strong>プロパティ</strong>（<code>Alt+Enter</code>）: パーミッションや詳細情報の確認・変更。
-          <figure class="doc-figure"><img src="../screenshots/19-attributes.png" width="1201" height="728" alt="属性変更" loading="lazy" /><figcaption>属性変更（パーミッションなど）</figcaption></figure>
-          <figure class="doc-figure"><img src="../screenshots/20-properties.png" width="1199" height="728" alt="プロパティ" loading="lazy" /><figcaption>プロパティ（詳細情報）</figcaption></figure></li>
+        <li class="f-item"><strong>プロパティ</strong>（<code>a</code>）: 名前・場所・サイズ・更新日時・作成日時をまとめて確認できる単一のダイアログ。<strong>更新日時やパーミッション（属性）はその場で編集</strong>できます。複数選択時は合計サイズと項目数を集計表示し、所有者 / グループは名前と ID を併記します（名前は選択ファイル間で共通のときだけ編集可、Windows では非表示）。
+          <figure class="doc-figure"><img src="../screenshots/20-properties.png" width="680" height="568" alt="プロパティ" loading="lazy" /><figcaption>プロパティ（名前・場所・サイズ・日時・パーミッションを 1 つのダイアログで確認 / 編集）</figcaption></figure></li>
         <li class="f-item"><strong>OS 既定アプリで開く</strong>（<code>Shift+Enter</code> またはダブルクリック）: 関連付けられたアプリでファイル / ディレクトリを開きます。</li>
       </ul>
     </section>
@@ -286,16 +284,15 @@
         <li class="f-item"><strong>外観</strong>: テーマ・配色・カーソル・行高など、見た目に関する設定。
           <figure class="doc-figure"><img src="../screenshots/33-settings-appearance.png" width="1000" height="652" alt="設定ダイアログ（外観）" loading="lazy" /><figcaption>設定 → 外観</figcaption></figure>
           <ul class="settings-detail">
-            <li>外観は <strong>メイン / テキストビュアー / バイナリビュアー / 画像ビュアー</strong> のサブタブで構成されます。</li>
-            <li>テーマ: UI 全体の配色プリセット。</li>
+            <li>外観の設定は farman 本体の見た目（UI 全体・ファイルリスト・アドレスバーなど）に集約されました。各ビュアーのフォント・配色・画像の透過表示・対象拡張子は <strong>設定 → プラグイン</strong> の各ビュアー設定へ移動しています（下記参照）。</li>
+            <li>テーマ: UI 全体の配色プリセット（ライト / ダーク、Auto は OS 追従）。</li>
             <li>UI 全体: アプリ全体の基調色。</li>
             <li>アドレスバー: アドレスバーの配色。</li>
-            <li>ファイルリスト: カテゴリ別のファイル色、行高。</li>
+            <li>ファイルリスト: カテゴリ別のファイル色（選択中 / 非選択、アクティブ / 非アクティブ）、太字、行高。フォント種別・サイズ・行高はライト / ダーク共通、色とディレクトリの太字はテーマ別に設定できます。</li>
             <li>カーソル / アクティブペイン: カーソルの見た目、アクティブな側の強調表示。</li>
             <li>ディレクトリ比較: 差分行の配色。</li>
-            <li>テキスト / バイナリ / 画像ビュアー: 各ビュアーごとに <strong>フォント・配色・対象拡張子・MIME パターン</strong> をサブタブで設定（画像ビュアーは透過部分の表示を <strong>チェッカー柄 / 単色</strong> から選べます）。なお対象拡張子は <strong>設定 → プラグイン</strong> の「詳細」からも変更できます。</li>
           </ul></li>
-        <li class="f-item"><strong>プラグイン</strong>: インストール済みのビュアープラグインを種別タブで一覧表示します。各行の「詳細...」から、区分・プラグイン ID・パス・有効 / 無効・優先度・対象拡張子・各ビュアーの既定設定を確認・変更できます。ユーザー作成の外部ビュアープラグイン（.dylib / .so / .dll）も、指定したプラグインディレクトリから読み込めます。
+        <li class="f-item"><strong>プラグイン</strong>: インストール済みのビュアープラグインを種別タブで一覧表示します。各行の「詳細...」から、区分・プラグイン ID・パス・有効 / 無効・優先度・対象拡張子に加え、<strong>各ビュアーの表示設定（フォント・配色・画像の透過表示など）</strong>を確認・変更できます。フォント種別 / サイズはライト・ダーク共通、<strong>配色は各ページ内のライト / ダーク切替でテーマ別に編集</strong>できます（従来「外観」タブにあった各ビュアーの設定はここへ統合されました）。ユーザー作成の外部ビュアープラグイン（.dylib / .so / .dll）も、指定したプラグインディレクトリから読み込めます。
           <figure class="doc-figure"><img src="../screenshots/33-settings-plugins.png" width="1000" height="652" alt="設定（プラグイン）" loading="lazy" /><figcaption>設定 → プラグイン（インストール済み一覧・詳細）</figcaption></figure></li>
         <li class="f-item"><strong>外部アプリ</strong>: ターミナル（<code>t</code>）・エディタ（<code>e</code>）などの起動コマンドを登録。プレースホルダで現在のパスや選択ファイルを渡せます。
           <figure class="doc-figure"><img src="../screenshots/33-settings-external-apps.png" width="1000" height="652" alt="設定（外部アプリ）" loading="lazy" /><figcaption>設定 → 外部アプリ</figcaption></figure></li>
@@ -326,7 +323,7 @@
       <div class="f-item viewer-block">
         <h3>動画 / 音声</h3>
         <p class="viewer-meta"><strong>対応形式</strong>: 動画: mp4, mov, webm, mkv, avi, wmv, mpeg, m2ts, ts など／音声: mp3, flac, wav, aac, ogg, wma など</p>
-        <p class="viewer-meta"><strong>主な機能</strong>: 再生、シーク（バーのクリックでその位置へ即移動）、音量、ループ、フルスクリーン、Info（メタデータ）</p>
+        <p class="viewer-meta"><strong>主な機能</strong>: 再生、シーク（バーのクリックでその位置へ即移動）、音量、ループ、フルスクリーン、動画のズーム / ウィンドウにフィット、Info（メタデータ / 形式・コーデック・解像度・長さ）</p>
         <figure class="doc-figure"><img src="../screenshots/10-media-viewer.png" width="1200" height="729" alt="動画・音声ビュアー" loading="lazy" /><figcaption>動画・音声ビュアー（シーク / 音量 / ループ / 全画面）</figcaption></figure>
       </div>
 
@@ -388,7 +385,7 @@
     <p>
       <a href="../">farman トップ</a> ·
       <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a> ·
-      <a href="https://github.com/mashsoft-jp/farman/blob/main/CHANGELOG.md" rel="noopener">CHANGELOG</a>
+      <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">リリース</a>
     </p>
     <p class="copyright">© <a href="https://www.mashsoft.co.jp/" rel="noopener">Mashsoft Inc.</a></p>
   </footer>
