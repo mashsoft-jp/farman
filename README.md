@@ -104,6 +104,32 @@ Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
 > **Windows**: 現状 **Authenticode 未署名**です。署名対応は配布数の
 > 推移を見て検討します (第一候補は Azure Trusted Signing)。
 
+## 外部プラグイン
+
+farman はビュアーに加え、**アーカイブ形式を扱う外部プラグイン**を起動時に
+動的ロードできます (`IArchivePlugin` インターフェース)。本体に同梱しない
+形式は、必要なユーザーが対応プラグインを導入して有効化します。
+
+### LZH (LHA) アーカイブ
+
+`.lzh` / `.lha` の内部ブラウジングと展開は、別配布の外部プラグインで対応します
+(日本語 Shift-JIS ファイル名対応、読み取り専用)。
+
+- リポジトリ / ダウンロード: **farman-plugin-lzh**
+- 導入方法: OS 用のプラグイン (`.dylib` / `.so` / `.dll`) を、farman の外部
+  プラグインディレクトリの `archives/` サブフォルダに置いて再起動します。
+
+  | OS | 配置先 (既定) |
+  |----|--------------|
+  | macOS | `~/Library/Application Support/Farman/farman/plugins/archives/` |
+  | Linux | `~/.local/share/Farman/farman/plugins/archives/` |
+  | Windows | `%APPDATA%\Farman\farman\plugins\archives\` |
+
+  導入後、`.lzh` / `.lha` に Enter でアーカイブ内へ入り、展開もできます。
+
+> プラグインは farman 本体と同じ Qt / libarchive でビルドされたものを使って
+> ください (ABI 一致が必要)。詳細は farman-plugin-lzh の README を参照。
+
 ## デフォルトキーバインド (抜粋)
 
 | キー | 動作 |
