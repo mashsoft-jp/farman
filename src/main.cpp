@@ -13,6 +13,8 @@
 #include <QTranslator>
 #include "ui/MainWindow.h"
 #include "viewer/ViewerDispatcher.h"
+#include "core/ArchiveDispatcher.h"
+#include "utils/ArchivePath.h"
 #include "settings/Settings.h"
 
 #ifdef FARMAN_HAVE_HEIF
@@ -191,6 +193,23 @@ int main(int argc, char *argv[]) {
       Farman::ViewerDispatcher::currentAppearance());
   });
 
+  // アーカイブ (非ビュアー) プラグイン基盤を初期化。ビュアーと同じ外部プラグイン
+  // ディレクトリ配下の archives/ サブディレクトリから IArchivePlugin を読み込み、
+  // 名乗る拡張子 (例 .lzh) を ArchivePath へ登録して、その拡張子のアーカイブ
+  // ブラウジング / 展開を有効化する。
+  Farman::ArchivePluginContext archiveCtx;
+  archiveCtx.farmanVersion = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
+  Farman::ArchiveDispatcher::instance().setContext(archiveCtx);
+  Farman::ArchiveDispatcher::instance().registerBundledPlugins();
+  Farman::ArchiveDispatcher::instance().loadPlugins(
+    QDir((pluginsDir.isEmpty()
+            ? Farman::Settings::defaultPluginsDirectory()
+            : pluginsDir) + QStringLiteral("/archives")));
+  for (const QString& dotExt :
+       Farman::ArchiveDispatcher::instance().registeredDotExtensions()) {
+    Farman::ArchivePath::registerArchiveExtension(dotExt);
+  }
+
   int exitCode = 0;
   {
     // MainWindow はこのスコープで破棄する。プラグイン生成の QWidget
@@ -231,6 +250,7 @@ int main(int argc, char *argv[]) {
   // プラグイン契約: アンロード前に shutdown() を 1 回呼ぶ。MainWindow の
   // 破棄後・QApplication の生存中というこの位置が安全なタイミング。
   Farman::ViewerDispatcher::instance().shutdownPlugins();
+  Farman::ArchiveDispatcher::instance().shutdownPlugins();
 
   return exitCode;
 }

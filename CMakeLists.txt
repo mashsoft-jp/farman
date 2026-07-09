@@ -168,6 +168,8 @@ qt_add_executable(farman
   src/core/UserCommandManager.cpp
   src/core/AppPresets.cpp
   src/core/ArchiveContext.cpp
+  src/core/ArchiveDispatcher.cpp
+  src/core/IArchivePlugin.cpp
   src/core/ArchiveEntryName.cpp
   src/core/ThumbnailCache.cpp
   src/core/ThumbnailWorker.cpp
@@ -440,6 +442,15 @@ target_link_libraries(MediaViewerPlugin PRIVATE
   Qt6::Multimedia
   Qt6::MultimediaWidgets
 )
+
+# ── アーカイブ (非ビュアー) 外部プラグインについて ─────────────────
+# farman 本体は IArchivePlugin (src/core/IArchivePlugin.h) を「ABI」として公開し、
+# 起動時に外部プラグインディレクトリ <AppData>/plugins/archives/ から動的ロードする
+# (ArchiveDispatcher)。アーカイブプラグイン自体は本体に同梱せず、別リポジトリで
+# 配布・ビルドする。
+#   - LZH (lha) プラグイン: farman-plugin-lzh リポジトリ
+# 本体側はホスト基盤 (ArchiveDispatcher / ArchiveContext 委譲 / ArchivePath 登録) と
+# ABI ヘッダのみを持つ。
 
 add_dependencies(farman
   TextViewerPlugin

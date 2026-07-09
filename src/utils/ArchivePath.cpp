@@ -17,13 +17,51 @@ const QStringList& archiveExtensions() {
   return exts;
 }
 
+// プラグインが実行時に登録した拡張子 (先頭ドット付き)。registerArchiveExtension()
+// で追加される。組み込みリストと違い可変だが、登録は起動時 (プラグインロード直後)
+// に一度だけ行い、以後は読み取り専用として扱う想定。
+QStringList& pluginExtensions() {
+  static QStringList exts;
+  return exts;
+}
+
 } // namespace
+
+void registerArchiveExtension(const QString& dotExt) {
+  if (dotExt.isEmpty()) return;
+  const QString e =
+    dotExt.startsWith(QLatin1Char('.')) ? dotExt : (QLatin1Char('.') + dotExt);
+  if (!pluginExtensions().contains(e, Qt::CaseInsensitive)) {
+    pluginExtensions().append(e);
+  }
+}
 
 bool isArchiveExtension(const QString& path) {
   for (const QString& e : archiveExtensions()) {
     if (path.endsWith(e, Qt::CaseInsensitive)) return true;
   }
+  for (const QString& e : pluginExtensions()) {
+    if (path.endsWith(e, Qt::CaseInsensitive)) return true;
+  }
   return false;
+}
+
+QString archiveBaseName(const QString& fileName) {
+  // 組み込み + プラグイン登録の全拡張子から、末尾に一致する最長のものを剥がす
+  // (".tar.gz" を ".tar" より優先させるため、長さ降順で最初に一致したものを採用)。
+  QString best;
+  auto consider = [&](const QString& e) {
+    if (fileName.endsWith(e, Qt::CaseInsensitive) && e.size() > best.size()) {
+      best = e;
+    }
+  };
+  for (const QString& e : archiveExtensions()) consider(e);
+  for (const QString& e : pluginExtensions()) consider(e);
+
+  if (best.isEmpty() || best.size() >= fileName.size()) return fileName;
+  QString baseName = fileName;
+  baseName.chop(best.size());
+  return baseName;
 }
 
 Split splitArchivePath(const QString& path) {

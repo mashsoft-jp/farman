@@ -9,7 +9,21 @@ namespace Farman::ArchivePath {
 
 // 拡張子だけでアーカイブ判定 (実在チェックはしない)。
 // 対応: .zip / .tar / .tar.gz / .tgz / .tar.bz2 / .tbz2 / .tar.xz / .txz
+// これに加え、registerArchiveExtension() で登録された拡張子 (アーカイブプラグイン
+// が名乗るもの、例 .lzh) も合致する。
 bool isArchiveExtension(const QString& path);
+
+// アーカイブプラグインが扱う拡張子を実行時に登録する。dotExt は ".lzh" のように
+// 先頭ドット付きで渡す (無くても補う)。main() が ArchiveDispatcher からロードした
+// プラグインの拡張子を起動時に流し込む。utils 層がコア (ArchiveDispatcher) に
+// 依存しないよう、逆に main 側から注入する形をとる。
+void registerArchiveExtension(const QString& dotExt);
+
+// ファイル名からアーカイブ拡張子 (組み込み + registerArchiveExtension で登録した
+// プラグイン拡張子) を剥がしたベース名を返す。展開時の既定フォルダ名などに使う。
+// 最長一致を優先する (例 "x.tar.gz" → "x"、"x.lzh" → "x")。合致しなければ元の
+// fileName をそのまま返す。fileName はパスではなくファイル名部分を渡すこと。
+QString archiveBaseName(const QString& fileName);
 
 struct Split {
   // archivePath: アーカイブ自体のローカル FS 絶対パス

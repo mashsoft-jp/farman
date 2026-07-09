@@ -2457,20 +2457,10 @@ void FileManagerPanel::extractArchive() {
   const QString outputDir = dlg.outputDirectory();
   if (outputDir.isEmpty()) return;
 
-  // アーカイブ名から拡張子を剥がしてベース名を作る
-  QString baseName = QFileInfo(archivePath).fileName();
-  static const QStringList kKnownExts = {
-    QStringLiteral(".tar.gz"),  QStringLiteral(".tar.bz2"),
-    QStringLiteral(".tar.xz"),  QStringLiteral(".tgz"),
-    QStringLiteral(".tbz2"),    QStringLiteral(".txz"),
-    QStringLiteral(".tar"),     QStringLiteral(".zip"),
-  };
-  for (const QString& e : kKnownExts) {
-    if (baseName.endsWith(e, Qt::CaseInsensitive)) {
-      baseName.chop(e.size());
-      break;
-    }
-  }
+  // アーカイブ名から拡張子を剥がしてベース名を作る。組み込み (zip/tar 系) に加え、
+  // アーカイブプラグインが登録した拡張子 (.lzh 等) も ArchivePath 側で剥がす。
+  QString baseName =
+    ArchivePath::archiveBaseName(QFileInfo(archivePath).fileName());
   if (baseName.isEmpty()) baseName = QStringLiteral("extracted");
 
   // サブディレクトリを確定。既存ならリネーム入力、キャンセルで中止。

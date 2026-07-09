@@ -1,5 +1,7 @@
 #include "ArchiveExtractWorker.h"
+#include "core/ArchiveDispatcher.h"
 #include "core/ArchiveEntryName.h"
+#include "core/IArchivePlugin.h"
 #include "utils/ArchivePath.h"
 #include <QDir>
 #include <QFileInfo>
@@ -50,13 +52,63 @@ void ArchiveExtractWorker::run() {
   // 展開先ディレクトリを確保
   QDir().mkpath(m_outputDir);
 
-  // 出力ディレクトリの実体パスに解決する。macOS の `/tmp` (→ /private/tmp)
-  // のように上位コンポーネントが symlink だと、ARCHIVE_EXTRACT_SECURE_SYMLINKS
-  // が「出力パスの途中に symlink がある」として書き込みを全て拒否してしまう。
-  // canonicalFilePath は実在パスを実体に解決するので、`/private/tmp/...` まで
-  // 解決した上で libarchive に渡せばこの誤検知を避けられる。
+  // 出力ディレクトリの実体パス解決 (下の libarchive 経路と共通)。
   QString outputDir = QFileInfo(m_outputDir).canonicalFilePath();
   if (outputDir.isEmpty()) outputDir = m_outputDir;
+
+  // ── アーカイブプラグイン委譲 (全展開) ──────────
+  // 拡張子をアーカイブプラグイン (例 lzh) が所有していれば、エントリ列挙 →
+  // 1 件ずつ extractEntry で書き出す。Zip Slip 防御は safeJoinExtractPath
+  // (ホスト側) で担保する。
+  if (IArchivePlugin* plugin =
+        ArchiveDispatcher::instance().pluginForPath(m_archivePath)) {
+    ArchiveListResult res = plugin->listEntries(m_archivePath);
+    if (!res.ok) {
+      emit errorOccurred(m_archivePath,
+        res.error.isEmpty() ? tr("Failed to read archive") : res.error);
+      emit finished(false);
+      return;
+    }
+    int fileCount = 0;
+    for (const ArchiveEntry& e : res.entries) if (!e.isDir) ++fileCount;
+
+    WorkerProgress progress;
+    progress.filesDone  = 0;
+    progress.filesTotal = fileCount;
+    progress.processed  = 0;
+    progress.total      = -1;
+
+    bool success = true;
+    for (const ArchiveEntry& e : res.entries) {
+      if (isCancelled()) { success = false; break; }
+      const QString destPath =
+        ArchivePath::safeJoinExtractPath(outputDir, e.pathInArchive);
+      if (destPath.isEmpty()) {
+        emit errorOccurred(e.pathInArchive,
+          QStringLiteral("Refused unsafe archive entry path: %1")
+            .arg(e.pathInArchive));
+        success = false;
+        continue;
+      }
+      if (e.isDir) { QDir().mkpath(destPath); continue; }
+      progress.currentFile = destPath;
+      emit progressUpdated(progress);
+      if (!plugin->extractEntry(m_archivePath, e.pathInArchive, destPath,
+                                m_password)) {
+        emit errorOccurred(destPath, tr("Failed to extract: %1").arg(destPath));
+        success = false;
+        break;
+      }
+      ++progress.filesDone;
+      emit progressUpdated(progress);
+    }
+    emit finished(success && !isCancelled());
+    return;
+  }
+
+  // outputDir は上で canonicalFilePath 済み。macOS の `/tmp` (→ /private/tmp)
+  // のように上位コンポーネントが symlink だと ARCHIVE_EXTRACT_SECURE_SYMLINKS
+  // が書き込みを全拒否するため、実体パスに解決してから libarchive に渡す。
 
   struct archive* src = archive_read_new();
   archive_read_support_format_all(src);

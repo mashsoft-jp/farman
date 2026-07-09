@@ -1,5 +1,7 @@
 #include "ArchiveContext.h"
+#include "ArchiveDispatcher.h"
 #include "ArchiveEntryName.h"
+#include "IArchivePlugin.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -54,6 +56,43 @@ bool isSafeArchiveEntryName(const QString& path) {
   return true;
 }
 
+// アーカイブプラグインが返した raw エントリ一覧を ctx->entries に取り込む。
+// **セキュリティはここ (ホスト側) で担保**する: プラグインの実装品質に依存せず、
+// `..`/NUL を含む危険エントリを弾き、親ディレクトリが明示されていないアーカイブ
+// のために合成ディレクトリを補う。組み込み libarchive 経路 (load) の該当ロジック
+// と同じ防御・整形をプラグイン経路にも適用するためのヘルパ。
+void finalizeEntriesInto(ArchiveContext& ctx, const QList<ArchiveEntry>& raw) {
+  for (const ArchiveEntry& src : raw) {
+    // プラグインが末尾/先頭 '/' を残していても揃える。
+    QString path = src.pathInArchive;
+    while (path.size() > 0 && path.endsWith(QLatin1Char('/')))   path.chop(1);
+    while (path.size() > 0 && path.startsWith(QLatin1Char('/'))) path.remove(0, 1);
+    if (path.isEmpty()) continue;
+    if (!isSafeArchiveEntryName(path)) continue;
+
+    ArchiveEntry e = src;
+    e.pathInArchive  = path;
+    const int slash  = path.lastIndexOf(QLatin1Char('/'));
+    e.name           = (slash < 0) ? path : path.mid(slash + 1);
+    ctx.entries.insert(path, e);
+
+    // 親ディレクトリが明示されていない場合の合成ディレクトリ生成。
+    int cur = slash;
+    while (cur > 0) {
+      const QString dirPath = path.left(cur);
+      if (!ctx.entries.contains(dirPath)) {
+        ArchiveEntry d;
+        d.pathInArchive = dirPath;
+        const int s2    = dirPath.lastIndexOf(QLatin1Char('/'));
+        d.name          = (s2 < 0) ? dirPath : dirPath.mid(s2 + 1);
+        d.isDir         = true;
+        ctx.entries.insert(dirPath, d);
+      }
+      cur = dirPath.lastIndexOf(QLatin1Char('/'));
+    }
+  }
+}
+
 } // namespace
 
 QString ArchiveContext::normalizeDirKey(const QString& innerDir) {
@@ -72,6 +111,27 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
   auto ctx = std::make_shared<ArchiveContext>();
   ctx->archivePath  = archivePath;
   ctx->archiveMtime = QFileInfo(archivePath).lastModified();
+
+  // ── アーカイブプラグイン委譲 ──────────────────
+  // 拡張子をアーカイブプラグイン (例 lzh) が所有していれば、エントリ列挙を
+  // そのプラグインに委ねる。プラグインは raw な一覧を返すだけで、Zip Slip 防御・
+  // 合成ディレクトリ生成といったセキュリティ整形は finalizeEntriesInto (ホスト側)
+  // で行う。
+  if (IArchivePlugin* plugin =
+        ArchiveDispatcher::instance().pluginForPath(archivePath)) {
+    ArchiveListResult res = plugin->listEntries(archivePath, cancelFlag, entriesRead);
+    if (!res.ok) {
+      if (errorOut) {
+        *errorOut = res.error.isEmpty()
+          ? QObject::tr("Failed to read archive: %1").arg(archivePath)
+          : res.error;
+      }
+      return nullptr;
+    }
+    ctx->hasEncryptedEntries = res.hasEncryptedEntries;
+    finalizeEntriesInto(*ctx, res.entries);
+    return ctx;
+  }
 
   struct archive* a = archive_read_new();
   archive_read_support_format_all(a);
@@ -210,6 +270,13 @@ bool ArchiveContext::extractEntryTo(const QString& entryPath,
   QFileInfo destInfo(destPath);
   if (!QDir().mkpath(destInfo.absolutePath())) return false;
 
+  // アーカイブプラグインが所有する拡張子なら、1 エントリ展開もそこへ委譲する。
+  // entryPath の安全性 (`..`/NUL 拒否) は上で検査済み。
+  if (IArchivePlugin* plugin =
+        ArchiveDispatcher::instance().pluginForPath(archivePath)) {
+    return plugin->extractEntry(archivePath, entryPath, destPath, password);
+  }
+
   struct archive* a = archive_read_new();
   archive_read_support_format_all(a);
   archive_read_support_filter_all(a);
@@ -274,6 +341,12 @@ bool ArchiveContext::extractEntryTo(const QString& entryPath,
 
 bool ArchiveContext::verifyPassword(const QString& archivePath,
                                     const QString& password) {
+  // アーカイブプラグインが所有する拡張子なら、パスワード検証もそこへ委譲する。
+  if (IArchivePlugin* plugin =
+        ArchiveDispatcher::instance().pluginForPath(archivePath)) {
+    return plugin->verifyPassword(archivePath, password);
+  }
+
   // 暗号化エントリを 1 件だけ試し読みする。少しでも復号できれば true。
   // ARCHIVE_FATAL (-30) や負値が返れば失敗 (incorrect passphrase 等)。
   // 暗号化エントリが 1 件も無いアーカイブでは「password が要らない」ので

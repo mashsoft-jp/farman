@@ -1,5 +1,7 @@
 #include "ArchiveExtractEntriesWorker.h"
+#include "core/ArchiveDispatcher.h"
 #include "core/ArchiveEntryName.h"
+#include "core/IArchivePlugin.h"
 #include "utils/ArchivePath.h"
 #include <QDir>
 #include <QFile>
@@ -81,6 +83,87 @@ void ArchiveExtractEntriesWorker::run() {
   QStringList         dirPrefixes;
   for (const QString& d : m_selectedDirs) {
     dirPrefixes.append(d + QLatin1Char('/'));
+  }
+
+  // ── アーカイブプラグイン委譲 (選択展開) ────────
+  // 拡張子をアーカイブプラグイン (例 lzh) が所有していれば、エントリ列挙 →
+  // 選択判定 → 1 件ずつ extractEntry で書き出す。選択判定・相対化ロジックは
+  // libarchive 経路と同一。Zip Slip 防御は safeJoinExtractPath で担保する。
+  if (IArchivePlugin* plugin =
+        ArchiveDispatcher::instance().pluginForPath(m_archivePath)) {
+    ArchiveListResult res = plugin->listEntries(m_archivePath);
+    if (!res.ok) {
+      emit errorOccurred(m_archivePath,
+        res.error.isEmpty() ? tr("Failed to read archive") : res.error);
+      emit finished(false);
+      return;
+    }
+
+    WorkerProgress progress;
+    progress.filesDone  = 0;
+    progress.filesTotal = m_filesTotal;
+    progress.processed  = 0;
+    progress.total      = -1;
+
+    bool success = true;
+    for (const ArchiveEntry& e : res.entries) {
+      if (isCancelled()) { success = false; break; }
+      const QString entryPath = e.pathInArchive;
+      if (entryPath.isEmpty()) continue;
+
+      bool shouldExtract =
+        fileSet.contains(entryPath) || dirSet.contains(entryPath);
+      if (!shouldExtract) {
+        for (const QString& prefix : dirPrefixes) {
+          if (entryPath.startsWith(prefix)) { shouldExtract = true; break; }
+        }
+      }
+      if (!shouldExtract) continue;
+
+      // Zip Slip 対策: 選択範囲内でも `..`/NUL を含むエントリは操作全体を失敗に。
+      if (entryPath.contains(QStringLiteral("/../"))
+          || entryPath.startsWith(QStringLiteral("../"))
+          || entryPath == QStringLiteral("..")
+          || entryPath.endsWith(QStringLiteral("/.."))
+          || entryPath.contains(QChar(0))) {
+        emit errorOccurred(entryPath,
+          QStringLiteral("Refused unsafe archive entry path: %1").arg(entryPath));
+        success = false;
+        continue;
+      }
+
+      // カレントアーカイブ内ディレクトリ基準で相対化 (libarchive 経路と同じ)。
+      QString relative = entryPath;
+      if (!m_currentInnerDir.isEmpty()) {
+        const QString prefix = m_currentInnerDir + QLatin1Char('/');
+        if (relative.startsWith(prefix)) {
+          relative.remove(0, prefix.size());
+        } else if (relative == m_currentInnerDir) {
+          continue;  // カレントディレクトリ自身のエントリはスキップ
+        }
+      }
+      const QString destPath =
+        ArchivePath::safeJoinExtractPath(destDir, relative);
+      if (destPath.isEmpty()) {
+        emit errorOccurred(entryPath,
+          QStringLiteral("Refused unsafe archive entry path: %1").arg(entryPath));
+        success = false;
+        continue;
+      }
+      if (e.isDir) { QDir().mkpath(destPath); continue; }
+
+      progress.currentFile = destPath;
+      emit progressUpdated(progress);
+      if (!plugin->extractEntry(m_archivePath, entryPath, destPath, m_password)) {
+        emit errorOccurred(destPath, tr("Failed to extract: %1").arg(destPath));
+        success = false;
+        break;
+      }
+      ++progress.filesDone;
+      emit progressUpdated(progress);
+    }
+    emit finished(success && !isCancelled());
+    return;
   }
 
   // libarchive で読み込み準備
