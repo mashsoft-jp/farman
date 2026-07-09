@@ -103,12 +103,12 @@ code {
   letter-spacing: -.02em;
 }
 .hero h1 .pron {
+  display: block;
   font-size: .3em;
   font-weight: 400;
   color: var(--fg-muted);
   letter-spacing: 0;
-  vertical-align: middle;
-  margin-left: .4em;
+  margin: .35em 0 0;
   white-space: nowrap;
 }
 .tagline {

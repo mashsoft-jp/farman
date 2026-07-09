@@ -22,6 +22,7 @@
   var STR = {
     ja: {
       latest: "最新リリース: ",
+      changelog: "変更履歴",
       download: "ダウンロード",
       heroMac: "macOS 版をダウンロード",
       heroWin: "Windows 版をダウンロード",
@@ -39,6 +40,7 @@
     },
     en: {
       latest: "Latest release: ",
+      changelog: "Changelog",
       download: "Download",
       heroMac: "Download for macOS",
       heroWin: "Download for Windows",
@@ -178,7 +180,14 @@
     }
     var heroV = document.getElementById("hero-version");
     var dlV = document.getElementById("download-version");
-    if (heroV) heroV.textContent = L.latest + tag + date;
+    if (heroV) {
+      heroV.textContent = L.latest + tag + date + " · ";
+      var cl = document.createElement("a");
+      cl.href = RELEASES_PAGE;
+      cl.rel = "noopener";
+      cl.textContent = L.changelog;
+      heroV.appendChild(cl);
+    }
     if (dlV) dlV.textContent = L.latest + tag + date;
   }
 
