@@ -131,6 +131,7 @@ void BulkRenameDialog::setupUi() {
 
   // ── Preview ────────────────────
   m_previewTable = new QTableWidget(0, 2, this);
+  m_previewTable->setWordWrap(false);  // 折り返さず省略 (…) で 1 行表示
   m_previewTable->setHorizontalHeaderLabels({tr("Original"), tr("New")});
   m_previewTable->horizontalHeader()->setStretchLastSection(true);
   m_previewTable->horizontalHeader()->resizeSection(0, 320);
