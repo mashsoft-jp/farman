@@ -49,6 +49,10 @@ public:
   // エラーとなり使用不可)。authorUrl() は任意。
   virtual QString author()    const { return {}; }
   virtual QString authorUrl() const { return {}; }
+  // プラグイン自身の配布バージョン (例 "1.0.0")。ABI (IID) とは別物で、同じ
+  // インターフェースのままプラグインを更新配布したときに版を区別するためのもの。
+  // farman が Plugins 一覧やログで表示する。空文字なら「不明」として扱う。
+  virtual QString version()   const { return {}; }
   // 優先度: 0 が最優先で、数値が小さいほど優先される。同一拡張子を複数プラグイン
   // が名乗った場合の解決に使う。ユーザー作成の外部プラグインは 0〜9999、
   // 10000 以上は同梱公式用の予約域。

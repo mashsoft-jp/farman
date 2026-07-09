@@ -19,6 +19,7 @@ struct ArchivePluginRecord {
   QString     filePath;            // 動的ロード元 path
   QString     pluginId;            // 失敗時は取得できれば id、無理なら空
   QString     pluginName;
+  QString     version;             // プラグイン自身の配布バージョン (空 = 不明)
   QString     author;
   QString     authorUrl;
   QStringList supportedExtensions;

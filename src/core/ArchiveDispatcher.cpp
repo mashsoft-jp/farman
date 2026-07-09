@@ -111,6 +111,7 @@ void ArchiveDispatcher::loadPluginsFromDirectory(
 
     rec.pluginId            = plugin->pluginId();
     rec.pluginName          = plugin->pluginName();
+    rec.version             = plugin->version();
     rec.author              = plugin->author();
     rec.authorUrl           = plugin->authorUrl();
     rec.supportedExtensions = plugin->supportedExtensions();
@@ -168,8 +169,10 @@ void ArchiveDispatcher::loadPluginsFromDirectory(
     rec.loaded = true;
     m_records.append(rec);
     Logger::instance().info(
-      QStringLiteral("ArchivePlugins: loaded '%1' (%2) exts=[%3] prio=%4")
-        .arg(rec.pluginId, fileInfo.fileName(),
+      QStringLiteral("ArchivePlugins: loaded '%1' v%2 (%3) exts=[%4] prio=%5")
+        .arg(rec.pluginId,
+             rec.version.isEmpty() ? QStringLiteral("?") : rec.version,
+             fileInfo.fileName(),
              rec.supportedExtensions.join(QLatin1Char(',')))
         .arg(rec.priority));
   }
