@@ -111,11 +111,12 @@ void PluginsTab::setupUi() {
   // 行は名前の前に警告アイコンを出して知らせる。
   m_pluginTable = new QTableWidget(m_pluginTabs);
   m_pluginTable->setWordWrap(false);  // 折り返さず省略 (…) で 1 行表示
-  m_pluginTable->setColumnCount(5);
+  m_pluginTable->setColumnCount(6);
   m_pluginTable->setHorizontalHeaderLabels({
     tr("Enabled"),
     tr("Status"),
     tr("Name"),
+    tr("Version"),
     tr("Extensions"),
     QString()
   });
@@ -130,6 +131,26 @@ void PluginsTab::setupUi() {
   m_pluginTable->installEventFilter(this);
   updatePluginTablePalette(/*focused=*/false);  // 初期状態は非フォーカス
   m_pluginTabs->addTab(m_pluginTable, tr("Viewer"));
+
+  // Archive タブ: アーカイブプラグイン (IArchivePlugin) の一覧。ビュアーと違い
+  // 有効/無効や拡張子編集は無いので、状態・名前・バージョン・拡張子・作者を
+  // 表示するだけの読み取り専用テーブルにする。
+  m_archiveTable = new QTableWidget(m_pluginTabs);
+  m_archiveTable->setWordWrap(false);
+  m_archiveTable->setColumnCount(5);
+  m_archiveTable->setHorizontalHeaderLabels({
+    tr("Status"),
+    tr("Name"),
+    tr("Version"),
+    tr("Extensions"),
+    tr("Author"),
+  });
+  m_archiveTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  m_archiveTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+  m_archiveTable->setSelectionMode(QAbstractItemView::SingleSelection);
+  m_archiveTable->verticalHeader()->setVisible(false);
+  m_pluginTabs->addTab(m_archiveTable, tr("Archive"));
+
   listLayout->addWidget(m_pluginTabs, 1);
 
   connect(m_pluginTable, &QTableWidget::itemDoubleClicked, this,
@@ -214,6 +235,10 @@ void PluginsTab::loadSettings() {
   }
   loadExtensionState();  // 一覧の拡張子列が現在値を参照するので先に作る
   loadPluginList();
+
+  // Archive タブ (アーカイブプラグイン) の一覧も読み込む。
+  m_archiveRecords = ArchiveDispatcher::instance().pluginRecords();
+  loadArchivePluginList();
 }
 
 void PluginsTab::loadPluginList() {
@@ -274,9 +299,12 @@ void PluginsTab::loadPluginList() {
     }
     m_pluginTable->setItem(row, 2, nameItem);
 
+    // 配布バージョン (取得できたもの)。同梱公式は farman 本体と同じ版数。
+    setItem(row, 3, rec.version.isEmpty() ? QStringLiteral("-") : rec.version);
+
     // 紐付け中の拡張子 (現在値)。詳細ダイアログで編集すると更新される。
     // 編集対象外 (ID 不明) のプラグインは宣言された対応拡張子を見せる。
-    setItem(row, 3, extensionsDisplayText(rec));
+    setItem(row, 4, extensionsDisplayText(rec));
 
     auto* detailsButton = new QPushButton(tr("Details..."), m_pluginTable);
     detailsButton->setAutoDefault(false);
@@ -288,16 +316,64 @@ void PluginsTab::loadPluginList() {
       m_pluginTable->selectRow(row);
       showPluginDetails(row);
     });
-    m_pluginTable->setCellWidget(row, 4, detailsButton);
+    m_pluginTable->setCellWidget(row, 5, detailsButton);
   }
 
   m_pluginTable->resizeColumnsToContents();
   m_pluginTable->resizeRowsToContents();
   m_pluginTable->horizontalHeader()->setStretchLastSection(false);
-  m_pluginTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
-  if (auto* button = m_pluginTable->cellWidget(0, 4)) {
-    m_pluginTable->setColumnWidth(4, button->sizeHint().width() + 8);
+  // 拡張子列 (4) を伸縮させる。詳細ボタン列 (5) はボタン幅に固定。
+  m_pluginTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+  if (auto* button = m_pluginTable->cellWidget(0, 5)) {
+    m_pluginTable->setColumnWidth(5, button->sizeHint().width() + 8);
   }
+}
+
+void PluginsTab::loadArchivePluginList() {
+  const QList<ArchivePluginRecord>& records = m_archiveRecords;
+  m_archiveTable->setRowCount(records.size());
+
+  auto setItem = [this](int row, int col, const QString& text,
+                        const QString& toolTip = QString()) {
+    auto* item = new QTableWidgetItem(text);
+    item->setToolTip(toolTip.isEmpty() ? text : toolTip);
+    m_archiveTable->setItem(row, col, item);
+  };
+
+  for (int row = 0; row < records.size(); ++row) {
+    const ArchivePluginRecord& rec = records[row];
+
+    // 状態: ロード成功は ✅、失敗は ⛔ (理由はツールチップ)。
+    auto* statusItem = new QTableWidgetItem(
+      rec.loaded ? QStringLiteral("✅") : QStringLiteral("⛔"));
+    statusItem->setTextAlignment(Qt::AlignCenter);
+    statusItem->setToolTip(rec.loaded
+                             ? tr("Loaded")
+                             : (rec.errorReason.isEmpty() ? tr("Not loaded")
+                                                          : rec.errorReason));
+    m_archiveTable->setItem(row, 0, statusItem);
+
+    // 名前 (取得できなければファイル名)。パスはツールチップに。
+    const QString name = rec.pluginName.isEmpty()
+                           ? QFileInfo(rec.filePath).fileName()
+                           : rec.pluginName;
+    setItem(row, 1, name, rec.filePath);
+
+    setItem(row, 2, rec.version.isEmpty() ? QStringLiteral("-") : rec.version);
+
+    // 対応拡張子 (先頭ドット付きで見せる)。
+    QStringList dotted;
+    for (const QString& e : rec.supportedExtensions) {
+      dotted << (e.startsWith(QLatin1Char('.')) ? e : QLatin1Char('.') + e);
+    }
+    setItem(row, 3, dotted.join(QStringLiteral(", ")));
+
+    setItem(row, 4, rec.author);
+  }
+
+  m_archiveTable->resizeColumnsToContents();
+  m_archiveTable->resizeRowsToContents();
+  m_archiveTable->horizontalHeader()->setStretchLastSection(true);
 }
 
 // 一覧の「拡張子」列に出す文字列。編集中の現在値を優先し、編集対象外の
@@ -388,6 +464,7 @@ void PluginsTab::showPluginDetails(int row) {
                             : tr("External"));
   addField(tr("Plugin ID:"), rec.pluginId);
   addField(tr("Name:"), rec.pluginName);
+  addField(tr("Version:"), rec.version);
   addField(tr("Author:"), rec.author);
   // 制作者 URL はリンクとして表示し、クリックで既定ブラウザを開く。
   if (!rec.authorUrl.isEmpty()) {

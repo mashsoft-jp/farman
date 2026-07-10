@@ -17,6 +17,7 @@ struct PluginRecord {
   QString filePath;     // 動的ロード元 path。Bundled / External とも実 path。
   QString pluginId;     // 失敗時は (取得できれば) id、無理なら空
   QString pluginName;   // 同上
+  QString version;      // プラグイン自身の配布バージョン (取得できた場合のみ)
   QString author;       // 制作者名 / 組織名 (取得できた場合のみ)
   QString authorUrl;    // 制作者の URL (任意。取得できた場合のみ)
   QStringList supportedExtensions;  // 取得できた場合のみ。無効化行の表示にも使う。

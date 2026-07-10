@@ -1,6 +1,7 @@
 #pragma once
 
 #include "viewer/ViewerDispatcher.h"
+#include "core/ArchiveDispatcher.h"
 
 #include <QList>
 #include <QMap>
@@ -55,6 +56,7 @@ private:
   void setupUi();
   void loadSettings();
   void loadPluginList();
+  void loadArchivePluginList();  // Archive タブ (アーカイブプラグイン一覧)
   void loadExtensionState();
 
   // プラグイン一覧の「詳細...」ダイアログ。一覧には最低限の列しか出さない
@@ -89,8 +91,10 @@ private:
   // インストール済みプラグイン (種別ごとのタブ)
   QTabWidget*   m_pluginTabs  = nullptr;
   QTableWidget* m_pluginTable = nullptr;  // Viewer タブの一覧
+  QTableWidget* m_archiveTable = nullptr; // Archive タブの一覧 (読み取り専用)
   // 一覧の行番号 → レコード。詳細ダイアログの表示に使う。
   QList<PluginRecord> m_pluginRecords;
+  QList<ArchivePluginRecord> m_archiveRecords;
 
   // プラグインの有効 / 無効の編集状態 (無効化する pluginId の集合、
   // 小文字正規化済み)。詳細ダイアログで編集し、save() で Settings に書き戻す。

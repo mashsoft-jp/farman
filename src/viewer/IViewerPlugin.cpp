@@ -3,11 +3,23 @@
 #include <QFileInfo>
 #include <QMimeDatabase>
 #include <QMimeType>
+#include <QtGlobal>
 
 #include "core/Logger.h"
 #include "settings/Settings.h"
 
 namespace Farman {
+
+QString IViewerPlugin::version() const {
+  // 既定はビルド時に埋め込んだ FARMAN_VERSION。同梱公式プラグインは farman
+  // 本体と同じ版数を報告する。FARMAN_VERSION が未定義のビルド (外部プラグイン
+  // が自前でこの .cpp を含めていて版を渡していない等) では空を返す。
+#ifdef FARMAN_VERSION
+  return QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
+#else
+  return {};
+#endif
+}
 
 void syncPluginFromHostSettings() {
   Settings& settings = Settings::instance();

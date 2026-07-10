@@ -78,6 +78,11 @@ public:
   // や連絡先の URL を返すと詳細ダイアログにリンクとして表示される。
   virtual QString     author()    const { return {}; }  // "Mashsoft Inc."
   virtual QString     authorUrl() const { return {}; }  // "https://example.com"
+  // プラグイン自身の配布バージョン (例 "0.9.8")。既定実装はビルド時の
+  // FARMAN_VERSION を返す (同梱公式プラグインは farman 本体と同じ版数になる)。
+  // 外部プラグインは自前の版数を返すよう override してよい。Settings → Plugins
+  // で表示する。
+  virtual QString     version()   const;
   // 優先度: 0 が最優先で、数値が小さいほど優先される。
   // ユーザー作成の外部プラグインは 0〜9999 を指定する (範囲外はロード時に
   // エラーとなり使用不可)。10000 以上は同梱公式プラグイン用の予約域:

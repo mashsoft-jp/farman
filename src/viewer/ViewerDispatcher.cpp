@@ -182,6 +182,7 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
     }
     rec.pluginId = viewerPlugin->pluginId();
     rec.pluginName = viewerPlugin->pluginName();
+    rec.version = viewerPlugin->version();
     rec.author = viewerPlugin->author();
     rec.authorUrl = viewerPlugin->authorUrl();
     rec.supportedExtensions = viewerPlugin->supportedExtensions();
