@@ -97,8 +97,8 @@ void Settings::applyDefaults() {
   // defaultMonospaceFont) を既定にする。ユーザーが後で選び直せる。
   m_font             = defaultUiFont();
   m_addressFont      = defaultUiFont();
-  m_textViewerFont   = defaultMonospaceFont();
-  m_binaryViewerFont = defaultMonospaceFont();
+  m_textViewerFont   = defaultViewerMonospaceFont();
+  m_binaryViewerFont = defaultViewerMonospaceFont();
   m_csvViewerFont    = defaultMonospaceFont();
   m_markdownViewerFont = defaultUiFont();
 

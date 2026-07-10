@@ -24,6 +24,26 @@ QFont defaultMonospaceFont() {
   return f;
 }
 
+// テキスト / バイナリビュアー用の等幅既定フォント。16 進ダンプの桁揃えや
+// ソースコード表示のため、確実に等幅なフォントを選ぶ (defaultMonospaceFont は
+// macOS で Helvetica を返すため等幅にならない)。macOS = Menlo、Windows = MS
+// ゴシック (日本語も含む等幅)、Linux = DejaVu Sans Mono。ユーザーはプラグイン
+// 設定で選び直せる。
+QFont defaultViewerMonospaceFont() {
+  QFont f;
+#if defined(Q_OS_MAC)
+  f.setFamily(QStringLiteral("Menlo"));
+  f.setPointSize(12);
+#elif defined(Q_OS_WIN)
+  f.setFamily(QStringLiteral("MS Gothic"));
+  f.setPointSize(12);
+#else
+  f.setFamily(QStringLiteral("DejaVu Sans Mono"));
+  f.setPointSize(12);
+#endif
+  return f;
+}
+
 QFont defaultUiFont() {
   QFont f;
 #if defined(Q_OS_MAC)
@@ -155,7 +175,7 @@ ColorScheme defaultLightScheme() {
   s.compareOnlyHereBackground = QColor(0xC8, 0xE6, 0xB4);  // 薄い緑
 
   // テキストビュアー
-  s.textViewerFont          = defaultMonospaceFont();
+  s.textViewerFont          = defaultViewerMonospaceFont();
   s.textViewerNormalFg      = QColor(Qt::black);
   s.textViewerNormalBg      = QColor();  // パレット既定
   s.textViewerSelectedFg    = QColor(Qt::white);
@@ -167,7 +187,7 @@ ColorScheme defaultLightScheme() {
   s.imageViewerSolidColor   = QColor(Qt::white);
 
   // バイナリビュアー
-  s.binaryViewerFont        = defaultMonospaceFont();
+  s.binaryViewerFont        = defaultViewerMonospaceFont();
   s.binaryViewerNormalFg    = QColor(Qt::black);
   s.binaryViewerNormalBg    = QColor();  // パレット既定
   s.binaryViewerSelectedFg  = QColor(Qt::white);
@@ -212,7 +232,7 @@ ColorScheme defaultDarkScheme() {
   s.compareOnlyHereBackground = QColor(0x1F, 0x4A, 0x20);   // 暗い緑
 
   // テキストビュアー (Solarized Dark 寄りの色)
-  s.textViewerFont          = defaultMonospaceFont();
+  s.textViewerFont          = defaultViewerMonospaceFont();
   s.textViewerNormalFg      = QColor(0xE0, 0xE0, 0xE0);
   s.textViewerNormalBg      = QColor(0x1E, 0x1E, 0x1E);
   s.textViewerSelectedFg    = QColor(Qt::white);
@@ -224,7 +244,7 @@ ColorScheme defaultDarkScheme() {
   s.imageViewerSolidColor   = QColor(0x1E, 0x1E, 0x1E);
 
   // バイナリビュアー
-  s.binaryViewerFont        = defaultMonospaceFont();
+  s.binaryViewerFont        = defaultViewerMonospaceFont();
   s.binaryViewerNormalFg    = QColor(0xE0, 0xE0, 0xE0);
   s.binaryViewerNormalBg    = QColor(0x1E, 0x1E, 0x1E);
   s.binaryViewerSelectedFg  = QColor(Qt::white);

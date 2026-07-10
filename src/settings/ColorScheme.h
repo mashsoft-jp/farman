@@ -113,6 +113,8 @@ struct ColorScheme {
 // 既定フォント (QFontDialog に出る一般的な具体フォントを OS ごとに選ぶ)。
 QFont defaultUiFont();
 QFont defaultMonospaceFont();
+// テキスト / バイナリビュアー用の等幅既定フォント (macOS=Menlo / Windows=MS ゴシック)。
+QFont defaultViewerMonospaceFont();
 
 // 出荷時の Light テーマ (= これまでの farman の既定値そのまま)
 ColorScheme defaultLightScheme();
