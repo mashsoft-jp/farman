@@ -174,6 +174,7 @@ farman はビュアーに加え、**アーカイブ形式を扱う外部プラ�
 - [BUILD.md](BUILD.md) — ソースからのビルド手順、CI / リリースの運用、翻訳 (i18n)
 - [SPEC.md](SPEC.md) — 機能仕様書
 - [ARCHITECTURE.md](ARCHITECTURE.md) — コード構成
+- [PLUGIN_DEVELOPMENT.md](PLUGIN_DEVELOPMENT.md) — 外部プラグイン (ビュアー / アーカイブ) の開発・配布ガイド
 - [SIGNING.md](SIGNING.md) — macOS コード署名 (Developer ID + 公証) のセットアップ手順
 - [CLAUDE.md](CLAUDE.md) — Claude Code 用のガイダンス
 
