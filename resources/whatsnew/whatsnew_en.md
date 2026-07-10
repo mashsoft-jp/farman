@@ -31,6 +31,13 @@ DejaVu Sans Mono), so columns line up correctly.
   pick a font under each viewer's "Font" setting, or use "Restore
   defaults" to get the new default font.
 
+### Adjusted default fonts on Windows
+
+On Windows, the general UI font is now **MS UI Gothic**, and the overall
+font size is unified to **9pt** (the address bar, file list, and viewers
+keep their existing fonts, only resized to 9pt). This is the default for
+new installations.
+
 ### Other
 
 - Stability improvements and bug fixes

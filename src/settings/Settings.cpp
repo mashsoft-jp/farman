@@ -95,6 +95,7 @@ void Settings::applyDefaults() {
   // OS 標準の UI フォント (.AppleSystemUIFont 等) は QFontDialog に出ない隠し
   // フォントなので使わず、一覧に出る一般的な具体フォント (defaultUiFont /
   // defaultMonospaceFont) を既定にする。ユーザーが後で選び直せる。
+  m_uiFont           = defaultUiGeneralFont();  // UI 全般 (QApplication::setFont)
   m_font             = defaultUiFont();
   m_addressFont      = defaultUiFont();
   m_textViewerFont   = defaultViewerMonospaceFont();

@@ -112,6 +112,9 @@ struct ColorScheme {
 
 // 既定フォント (QFontDialog に出る一般的な具体フォントを OS ごとに選ぶ)。
 QFont defaultUiFont();
+// UI 全般 (QApplication::setFont) の既定。Windows のみ MS UI Gothic 9pt、
+// 他 OS は defaultUiFont と同じ。
+QFont defaultUiGeneralFont();
 QFont defaultMonospaceFont();
 // テキスト / バイナリビュアー用の等幅既定フォント (macOS=Menlo / Windows=MS ゴシック)。
 QFont defaultViewerMonospaceFont();

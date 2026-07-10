@@ -16,7 +16,7 @@ QFont defaultMonospaceFont() {
   f.setPointSize(12);
 #elif defined(Q_OS_WIN)
   f.setFamily(QStringLiteral("Consolas"));
-  f.setPointSize(12);
+  f.setPointSize(9);
 #else
   f.setFamily(QStringLiteral("DejaVu Sans Mono"));
   f.setPointSize(12);
@@ -36,7 +36,7 @@ QFont defaultViewerMonospaceFont() {
   f.setPointSize(12);
 #elif defined(Q_OS_WIN)
   f.setFamily(QStringLiteral("MS Gothic"));
-  f.setPointSize(12);
+  f.setPointSize(9);
 #else
   f.setFamily(QStringLiteral("DejaVu Sans Mono"));
   f.setPointSize(12);
@@ -51,8 +51,29 @@ QFont defaultUiFont() {
   f.setFamily(QStringLiteral("Helvetica"));
   f.setPointSize(12);
 #elif defined(Q_OS_WIN)
+  // アドレスバー / ファイルリスト / Markdown ビュアー等の既定。Windows は
+  // Segoe UI 9pt (家族は従来どおり、サイズを 9pt に統一)。
   f.setFamily(QStringLiteral("Segoe UI"));
+  f.setPointSize(9);
+#else
+  f.setFamily(QStringLiteral("Noto Sans"));
   f.setPointSize(11);
+#endif
+  return f;
+}
+
+// UI 全般 (QApplication::setFont に渡す汎用ウィジェットフォント) の既定。
+// Windows は従来の Windows 日本語 UI に馴染む MS UI Gothic 9pt にする
+// (アドレス / ファイルリスト / ビュアーは defaultUiFont / 各 monospace のまま)。
+// macOS / Linux は defaultUiFont と同じ (UI 全般だけ変える対象は Windows のみ)。
+QFont defaultUiGeneralFont() {
+  QFont f;
+#if defined(Q_OS_MAC)
+  f.setFamily(QStringLiteral("Helvetica"));
+  f.setPointSize(12);
+#elif defined(Q_OS_WIN)
+  f.setFamily(QStringLiteral("MS UI Gothic"));
+  f.setPointSize(9);
 #else
   f.setFamily(QStringLiteral("Noto Sans"));
   f.setPointSize(11);
@@ -149,7 +170,7 @@ ColorScheme defaultLightScheme() {
   // ベース色 (Light): 白背景 + 黒文字
   s.baseBackground     = QColor(Qt::white);
   s.baseForeground     = QColor(Qt::black);
-  s.uiFont             = defaultUiFont();
+  s.uiFont             = defaultUiGeneralFont();
 
   // フォント / 行高
   s.listFont           = defaultUiFont();
@@ -208,7 +229,7 @@ ColorScheme defaultDarkScheme() {
   // ベース色 (Dark): 暗背景 + 明文字
   s.baseBackground     = QColor(0x1E, 0x1E, 0x1E);
   s.baseForeground     = QColor(0xE0, 0xE0, 0xE0);
-  s.uiFont             = defaultUiFont();
+  s.uiFont             = defaultUiGeneralFont();
 
   s.listFont           = defaultUiFont();
   s.addressFont        = defaultUiFont();
