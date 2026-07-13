@@ -198,6 +198,11 @@ public:
   void setDisabledViewerPlugins(const QStringList& pluginIds);
   bool isViewerPluginDisabled(const QString& pluginId) const;
   void setViewerPluginDisabled(const QString& pluginId, bool disabled);
+  // アーカイブプラグインの無効化 (ビュアーと同じ仕組み)。
+  QStringList disabledArchivePlugins() const;
+  void setDisabledArchivePlugins(const QStringList& pluginIds);
+  bool isArchivePluginDisabled(const QString& pluginId) const;
+  void setArchivePluginDisabled(const QString& pluginId, bool disabled);
   // 既定のプラグインディレクトリを返す (= 上記の OS 別 path)。
   // pluginsDirectory() が空のとき loadPlugins に使う実体。
   static QString defaultPluginsDirectory();
@@ -622,6 +627,8 @@ private:
   QString          m_pluginsDirectory;
   // 起動時に登録しない外部ビュアープラグイン ID。
   QStringList      m_disabledViewerPlugins;
+  // 起動時に登録しないアーカイブプラグイン ID。
+  QStringList      m_disabledArchivePlugins;
   // 拡張子 -> viewer pluginId。空 / 未設定なら priority ベースで自動選択。
   QMap<QString, QString> m_viewerAssociations;
   // ビュアー表示モード。デフォルトは Inline (ビュアーパネルでの表示)。

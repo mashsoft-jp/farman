@@ -1,5 +1,6 @@
 #include "ArchiveDispatcher.h"
 #include "Logger.h"
+#include "settings/Settings.h"
 
 #include <QCoreApplication>
 #include <QFileInfo>
@@ -147,6 +148,19 @@ void ArchiveDispatcher::loadPluginsFromDirectory(
             .arg(rec.pluginId, fileInfo.fileName()));
         continue;
       }
+    }
+
+    // ユーザーが設定で無効化したプラグインは登録しない (ViewerDispatcher と同じ)。
+    if (Settings::instance().isArchivePluginDisabled(rec.pluginId)) {
+      rec.loaded         = false;
+      rec.disabledByUser = true;
+      rec.errorReason    = tr("Disabled by user");
+      m_records.append(rec);
+      loader->unload();
+      Logger::instance().info(
+        QStringLiteral("ArchivePlugins: disabled '%1' (%2)")
+          .arg(rec.pluginId, fileInfo.fileName()));
+      continue;
     }
 
     // initialize() を呼び、失敗したら登録を取り消す。

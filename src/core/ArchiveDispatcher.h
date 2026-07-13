@@ -25,6 +25,7 @@ struct ArchivePluginRecord {
   QStringList supportedExtensions;
   int         priority = -1;       // -1 = 不明。0 が最優先
   bool        loaded   = false;
+  bool        disabledByUser = false;  // ユーザーが設定で無効化した
   QString     errorReason;         // loaded == false のときだけ非空
 };
 

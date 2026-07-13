@@ -65,8 +65,15 @@ private:
   // 確認・変更もここで行う (一覧は表示のみ)。
   // 詳細ダイアログ。設定 UI を持つプラグインは設定ページをこの中に埋め込む。
   void showPluginDetails(int row);
+  // Archive タブの「詳細...」ダイアログ (Viewer と同趣旨)。
+  void showArchivePluginDetails(int row);
   QString pluginStatusText(const PluginRecord& record) const;
   QString pluginStatusEmoji(const PluginRecord& record) const;
+  QString archivePluginStatusText(const ArchivePluginRecord& record) const;
+  QString archivePluginStatusEmoji(const ArchivePluginRecord& record) const;
+  bool isArchivePluginDisabled(const QString& pluginId) const {
+    return m_disabledArchivePluginIds.contains(pluginId.trimmed().toLower());
+  }
   QString extensionsDisplayText(const PluginRecord& record) const;
   void updatePluginTablePalette(bool focused);
   // m_disabledPluginIds は小文字正規化済み。ロード側
@@ -99,6 +106,8 @@ private:
   // プラグインの有効 / 無効の編集状態 (無効化する pluginId の集合、
   // 小文字正規化済み)。詳細ダイアログで編集し、save() で Settings に書き戻す。
   QSet<QString> m_disabledPluginIds;
+  // アーカイブプラグインの有効 / 無効の編集状態 (無効化する pluginId、小文字正規化)。
+  QSet<QString> m_disabledArchivePluginIds;
 
   // ビュアーの拡張子紐付けの編集状態 (詳細ダイアログで編集し save() で保存)。
   // m_extensionOrder は save() の競合解決 (同じ拡張子は先勝ち) の優先順。

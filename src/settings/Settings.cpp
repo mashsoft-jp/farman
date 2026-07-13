@@ -149,6 +149,7 @@ void Settings::applyDefaults() {
   m_singleInstance = true;
   m_pluginsDirectory.clear();
   m_disabledViewerPlugins.clear();
+  m_disabledArchivePlugins.clear();
   m_viewerAssociations.clear();
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
@@ -961,6 +962,45 @@ void Settings::setViewerPluginDisabled(const QString& pluginId, bool disabled) {
     }
   }
   setDisabledViewerPlugins(ids);
+}
+
+// ── アーカイブプラグインの無効化 (ビュアーと同じ仕組み) ──────────
+QStringList Settings::disabledArchivePlugins() const {
+  return m_disabledArchivePlugins;
+}
+
+void Settings::setDisabledArchivePlugins(const QStringList& pluginIds) {
+  m_disabledArchivePlugins.clear();
+  for (const QString& id : pluginIds) {
+    const QString normalized = id.trimmed();
+    if (!normalized.isEmpty()
+        && !m_disabledArchivePlugins.contains(normalized, Qt::CaseInsensitive)) {
+      m_disabledArchivePlugins.append(normalized);
+    }
+  }
+  m_disabledArchivePlugins.sort(Qt::CaseInsensitive);
+}
+
+bool Settings::isArchivePluginDisabled(const QString& pluginId) const {
+  return m_disabledArchivePlugins.contains(pluginId.trimmed(), Qt::CaseInsensitive);
+}
+
+void Settings::setArchivePluginDisabled(const QString& pluginId, bool disabled) {
+  const QString normalized = pluginId.trimmed();
+  if (normalized.isEmpty()) return;
+  QStringList ids = m_disabledArchivePlugins;
+  if (disabled) {
+    if (!ids.contains(normalized, Qt::CaseInsensitive)) {
+      ids.append(normalized);
+    }
+  } else {
+    for (int i = ids.size() - 1; i >= 0; --i) {
+      if (ids.at(i).compare(normalized, Qt::CaseInsensitive) == 0) {
+        ids.removeAt(i);
+      }
+    }
+  }
+  setDisabledArchivePlugins(ids);
 }
 
 namespace {
@@ -1905,6 +1945,15 @@ void Settings::load() {
     }
     setDisabledViewerPlugins(disabled);
   }
+  m_disabledArchivePlugins.clear();
+  {
+    QStringList disabled;
+    const QJsonArray plugins = behavior.value("disabledArchivePlugins").toArray();
+    for (const QJsonValue& value : plugins) {
+      disabled.append(value.toString());
+    }
+    setDisabledArchivePlugins(disabled);
+  }
   m_viewerAssociations.clear();
   {
     const QJsonObject associations = behavior.value("viewerAssociations").toObject();
@@ -2592,6 +2641,13 @@ void Settings::save() const {
       disabled.append(pluginId);
     }
     behavior["disabledViewerPlugins"] = disabled;
+  }
+  {
+    QJsonArray disabled;
+    for (const QString& pluginId : m_disabledArchivePlugins) {
+      disabled.append(pluginId);
+    }
+    behavior["disabledArchivePlugins"] = disabled;
   }
   {
     QJsonObject associations;

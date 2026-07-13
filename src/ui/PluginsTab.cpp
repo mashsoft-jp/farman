@@ -132,23 +132,30 @@ void PluginsTab::setupUi() {
   updatePluginTablePalette(/*focused=*/false);  // 初期状態は非フォーカス
   m_pluginTabs->addTab(m_pluginTable, tr("Viewer"));
 
-  // Archive タブ: アーカイブプラグイン (IArchivePlugin) の一覧。ビュアーと違い
-  // 有効/無効や拡張子編集は無いので、状態・名前・バージョン・拡張子・作者を
-  // 表示するだけの読み取り専用テーブルにする。
+  // Archive タブ: アーカイブプラグイン (IArchivePlugin) の一覧。Viewer タブと
+  // 同じ列構成 (有効 / 状態 / 名前 / バージョン / 拡張子 / 詳細ボタン) にし、
+  // 有効 / 無効の切り替えと詳細ダイアログも Viewer と同様に持たせる。
   m_archiveTable = new QTableWidget(m_pluginTabs);
   m_archiveTable->setWordWrap(false);
-  m_archiveTable->setColumnCount(5);
+  m_archiveTable->setColumnCount(6);
   m_archiveTable->setHorizontalHeaderLabels({
+    tr("Enabled"),
     tr("Status"),
     tr("Name"),
     tr("Version"),
     tr("Extensions"),
-    tr("Author"),
+    QString()
   });
   m_archiveTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
   m_archiveTable->setSelectionBehavior(QAbstractItemView::SelectRows);
   m_archiveTable->setSelectionMode(QAbstractItemView::SingleSelection);
   m_archiveTable->verticalHeader()->setVisible(false);
+  m_archiveTable->setTabKeyNavigation(false);
+  m_archiveTable->installEventFilter(this);
+  connect(m_archiveTable, &QTableWidget::itemDoubleClicked, this,
+          [this](QTableWidgetItem* item) {
+    if (item) showArchivePluginDetails(item->row());
+  });
   m_pluginTabs->addTab(m_archiveTable, tr("Archive"));
 
   listLayout->addWidget(m_pluginTabs, 1);
@@ -162,18 +169,23 @@ void PluginsTab::setupUi() {
 }
 
 bool PluginsTab::eventFilter(QObject* watched, QEvent* event) {
-  if (watched != m_pluginTable) return QWidget::eventFilter(watched, event);
+  // Viewer / Archive どちらのテーブルでも同じキー操作 (Enter/Space で詳細、
+  // 行移動は ↑/↓ のみ、Tab は OK ボタンへ) を提供する。
+  QTableWidget* table = nullptr;
+  if (watched == m_pluginTable)       table = m_pluginTable;
+  else if (watched == m_archiveTable) table = m_archiveTable;
+  else return QWidget::eventFilter(watched, event);
 
   // フォーカスを得たとき行未選択なら先頭行を選び、すぐ ↑/↓ で動かせるようにする。
   if (event->type() == QEvent::FocusIn) {
-    updatePluginTablePalette(/*focused=*/true);
-    if (m_pluginTable->currentRow() < 0 && m_pluginTable->rowCount() > 0) {
-      m_pluginTable->selectRow(0);
+    if (table == m_pluginTable) updatePluginTablePalette(/*focused=*/true);
+    if (table->currentRow() < 0 && table->rowCount() > 0) {
+      table->selectRow(0);
     }
     return QWidget::eventFilter(watched, event);
   }
   if (event->type() == QEvent::FocusOut) {
-    updatePluginTablePalette(/*focused=*/false);
+    if (table == m_pluginTable) updatePluginTablePalette(/*focused=*/false);
     return QWidget::eventFilter(watched, event);
   }
 
@@ -188,7 +200,8 @@ bool PluginsTab::eventFilter(QObject* watched, QEvent* event) {
 
     // Enter / Space で選択行の詳細ダイアログを開く
     if (key == Qt::Key_Return || key == Qt::Key_Enter || key == Qt::Key_Space) {
-      showPluginDetails(m_pluginTable->currentRow());
+      if (table == m_archiveTable) showArchivePluginDetails(table->currentRow());
+      else                         showPluginDetails(table->currentRow());
       return true;
     }
     // 行移動は ↑/↓ のみ。←/→ での現在セル移動はさせない
@@ -238,6 +251,10 @@ void PluginsTab::loadSettings() {
 
   // Archive タブ (アーカイブプラグイン) の一覧も読み込む。
   m_archiveRecords = ArchiveDispatcher::instance().pluginRecords();
+  m_disabledArchivePluginIds.clear();
+  for (const QString& id : Settings::instance().disabledArchivePlugins()) {
+    m_disabledArchivePluginIds.insert(id.trimmed().toLower());
+  }
   loadArchivePluginList();
 }
 
@@ -329,6 +346,19 @@ void PluginsTab::loadPluginList() {
   }
 }
 
+// アーカイブプラグインの状態絵文字 / 文言 (Viewer の pluginStatusEmoji/Text 相当)。
+QString PluginsTab::archivePluginStatusEmoji(const ArchivePluginRecord& rec) const {
+  if (rec.disabledByUser) return QStringLiteral("🚫");
+  if (rec.loaded)         return QStringLiteral("✅");
+  return QStringLiteral("⚠️");
+}
+
+QString PluginsTab::archivePluginStatusText(const ArchivePluginRecord& rec) const {
+  if (rec.disabledByUser) return tr("Disabled by user");
+  if (rec.loaded)         return tr("Loaded");
+  return rec.errorReason.isEmpty() ? tr("Not loaded") : rec.errorReason;
+}
+
 void PluginsTab::loadArchivePluginList() {
   const QList<ArchivePluginRecord>& records = m_archiveRecords;
   m_archiveTable->setRowCount(records.size());
@@ -342,38 +372,143 @@ void PluginsTab::loadArchivePluginList() {
 
   for (int row = 0; row < records.size(); ++row) {
     const ArchivePluginRecord& rec = records[row];
+    // アーカイブプラグインは全て外部。ID が取れれば有効 / 無効を切り替えられる。
+    const bool toggleable = !rec.pluginId.isEmpty();
 
-    // 状態: ロード成功は ✅、失敗は ⛔ (理由はツールチップ)。
-    auto* statusItem = new QTableWidgetItem(
-      rec.loaded ? QStringLiteral("✅") : QStringLiteral("⛔"));
+    // 有効 / 無効 (表示のみ。切り替えは詳細ダイアログで行う)。
+    auto* enabledItem = new QTableWidgetItem();
+    enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    enabledItem->setCheckState(
+      toggleable && isArchivePluginDisabled(rec.pluginId) ? Qt::Unchecked
+                                                          : Qt::Checked);
+    enabledItem->setToolTip(
+      toggleable ? tr("Enable/disable can be changed in the Details dialog.")
+                 : tr("Plugin ID is unavailable, so this plugin cannot be toggled."));
+    m_archiveTable->setItem(row, 0, enabledItem);
+
+    // 状態 (絵文字)。文言はツールチップと詳細ダイアログで見せる。
+    auto* statusItem = new QTableWidgetItem(archivePluginStatusEmoji(rec));
+    statusItem->setToolTip(archivePluginStatusText(rec));
     statusItem->setTextAlignment(Qt::AlignCenter);
-    statusItem->setToolTip(rec.loaded
-                             ? tr("Loaded")
-                             : (rec.errorReason.isEmpty() ? tr("Not loaded")
-                                                          : rec.errorReason));
-    m_archiveTable->setItem(row, 0, statusItem);
+    m_archiveTable->setItem(row, 1, statusItem);
 
-    // 名前 (取得できなければファイル名)。パスはツールチップに。
+    // 名前 (取得できなければファイル名)。エラー時は警告アイコン。
     const QString name = rec.pluginName.isEmpty()
                            ? QFileInfo(rec.filePath).fileName()
                            : rec.pluginName;
-    setItem(row, 1, name, rec.filePath);
+    auto* nameItem = new QTableWidgetItem(name);
+    if (rec.errorReason.isEmpty() || rec.disabledByUser) {
+      nameItem->setToolTip(name);
+    } else {
+      nameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
+      nameItem->setToolTip(tr("Error: %1").arg(rec.errorReason));
+    }
+    m_archiveTable->setItem(row, 2, nameItem);
 
-    setItem(row, 2, rec.version.isEmpty() ? QStringLiteral("-") : rec.version);
+    setItem(row, 3, rec.version.isEmpty() ? QStringLiteral("-") : rec.version);
 
-    // 対応拡張子 (先頭ドット付きで見せる)。
+    // 対応拡張子 (先頭ドット付き)。
     QStringList dotted;
     for (const QString& e : rec.supportedExtensions) {
       dotted << (e.startsWith(QLatin1Char('.')) ? e : QLatin1Char('.') + e);
     }
-    setItem(row, 3, dotted.join(QStringLiteral(", ")));
+    setItem(row, 4, dotted.join(QStringLiteral(", ")));
 
-    setItem(row, 4, rec.author);
+    auto* detailsButton = new QPushButton(tr("Details..."), m_archiveTable);
+    detailsButton->setAutoDefault(false);
+    detailsButton->setToolTip(tr("Show all information about this plugin."));
+    detailsButton->setFocusPolicy(Qt::NoFocus);
+    connect(detailsButton, &QPushButton::clicked, this, [this, row]() {
+      m_archiveTable->selectRow(row);
+      showArchivePluginDetails(row);
+    });
+    m_archiveTable->setCellWidget(row, 5, detailsButton);
   }
 
   m_archiveTable->resizeColumnsToContents();
   m_archiveTable->resizeRowsToContents();
-  m_archiveTable->horizontalHeader()->setStretchLastSection(true);
+  m_archiveTable->horizontalHeader()->setStretchLastSection(false);
+  m_archiveTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+  if (auto* button = m_archiveTable->cellWidget(0, 5)) {
+    m_archiveTable->setColumnWidth(5, button->sizeHint().width() + 8);
+  }
+}
+
+void PluginsTab::showArchivePluginDetails(int row) {
+  if (row < 0 || row >= m_archiveRecords.size()) return;
+  const ArchivePluginRecord& rec = m_archiveRecords[row];
+
+  QDialog dialog(this);
+  dialog.setWindowTitle(tr("Plugin Details"));
+  auto* layout = new QVBoxLayout(&dialog);
+  auto* form = new QFormLayout();
+  form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+
+  auto addField = [&dialog, form](const QString& label, const QString& value) {
+    auto* v = new QLabel(value.isEmpty() ? QStringLiteral("-") : value, &dialog);
+    v->setWordWrap(true);
+    v->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    form->addRow(label, v);
+  };
+
+  // 有効 / 無効の切り替え (ID があれば可能)。
+  const bool enabledEditable = !rec.pluginId.isEmpty();
+  auto* enabledCheck = new QCheckBox(&dialog);
+  enabledCheck->setChecked(
+    !(enabledEditable && isArchivePluginDisabled(rec.pluginId)));
+  enabledCheck->setEnabled(enabledEditable);
+  enabledCheck->setToolTip(
+    enabledEditable ? tr("Changes take effect after restarting farman.")
+                    : tr("Plugin ID is unavailable, so this plugin cannot be toggled."));
+  form->addRow(tr("Enabled:"), enabledCheck);
+
+  addField(tr("Type:"), tr("Archive"));
+  addField(tr("Status:"), archivePluginStatusEmoji(rec) + QStringLiteral(" ")
+                            + archivePluginStatusText(rec));
+  addField(tr("Priority:"),
+           rec.priority >= 0 ? QString::number(rec.priority) : QString());
+  addField(tr("Origin:"), rec.origin == ArchivePluginRecord::Origin::Bundled
+                            ? tr("Bundled") : tr("External"));
+  addField(tr("Plugin ID:"), rec.pluginId);
+  addField(tr("Name:"), rec.pluginName);
+  addField(tr("Version:"), rec.version);
+  addField(tr("Author:"), rec.author);
+  if (!rec.authorUrl.isEmpty()) {
+    auto* urlLabel = new QLabel(
+      QStringLiteral("<a href=\"%1\">%1</a>").arg(rec.authorUrl.toHtmlEscaped()),
+      &dialog);
+    urlLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    urlLabel->setOpenExternalLinks(true);
+    urlLabel->setWordWrap(true);
+    form->addRow(tr("Author URL:"), urlLabel);
+  }
+  QStringList dotted;
+  for (const QString& e : rec.supportedExtensions) {
+    dotted << (e.startsWith(QLatin1Char('.')) ? e : QLatin1Char('.') + e);
+  }
+  addField(tr("Extensions:"), dotted.join(QStringLiteral(", ")));
+  addField(tr("Path:"), rec.filePath);
+
+  layout->addLayout(form);
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+                                       &dialog);
+  connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+  connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+  layout->addWidget(buttons);
+  dialog.resize(std::clamp(dialog.sizeHint().width(), 420, 560),
+                dialog.sizeHint().height());
+  if (dialog.exec() != QDialog::Accepted) return;
+
+  if (enabledEditable) {
+    if (enabledCheck->isChecked()) {
+      m_disabledArchivePluginIds.remove(rec.pluginId.trimmed().toLower());
+    } else {
+      m_disabledArchivePluginIds.insert(rec.pluginId.trimmed().toLower());
+    }
+    if (auto* item = m_archiveTable->item(row, 0)) {
+      item->setCheckState(enabledCheck->isChecked() ? Qt::Checked : Qt::Unchecked);
+    }
+  }
 }
 
 // 一覧の「拡張子」列に出す文字列。編集中の現在値を優先し、編集対象外の
@@ -572,8 +707,8 @@ void PluginsTab::showPluginDetails(int row) {
   }
   if (extensionsEdit) {
     m_extensions[rec.pluginId] = normalizedExtensions(extensionsEdit->text());
-    // 一覧の「拡張子」列にも編集後の値を反映する
-    if (auto* item = m_pluginTable->item(row, 3)) {
+    // 一覧の「拡張子」列 (col 4) にも編集後の値を反映する
+    if (auto* item = m_pluginTable->item(row, 4)) {
       const QString text = extensionsDisplayText(rec);
       item->setText(text);
       item->setToolTip(text);
@@ -766,6 +901,24 @@ void PluginsTab::save() {
   disabled.removeDuplicates();
   if (disabled != settings.disabledViewerPlugins()) {
     settings.setDisabledViewerPlugins(disabled);
+    m_restartRequiredOnSave = true;
+  }
+
+  // アーカイブプラグインの有効 / 無効 (次回起動から有効)。ビュアーと同じ扱い。
+  QStringList disabledArchive = settings.disabledArchivePlugins();
+  for (const ArchivePluginRecord& rec : m_archiveRecords) {
+    if (rec.pluginId.isEmpty()) continue;
+    disabledArchive.removeIf([&rec](const QString& id) {
+      return id.trimmed().compare(rec.pluginId, Qt::CaseInsensitive) == 0;
+    });
+    if (isArchivePluginDisabled(rec.pluginId)) {
+      disabledArchive.append(rec.pluginId);
+    }
+  }
+  disabledArchive.sort(Qt::CaseInsensitive);
+  disabledArchive.removeDuplicates();
+  if (disabledArchive != settings.disabledArchivePlugins()) {
+    settings.setDisabledArchivePlugins(disabledArchive);
     m_restartRequiredOnSave = true;
   }
 
