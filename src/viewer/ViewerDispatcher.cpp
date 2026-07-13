@@ -158,6 +158,24 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
       continue;
     }
 
+    // 外部プラグインは、設定「外部プラグインの読込みを許可する」が OFF のとき
+    // 実体化しない。instance() は dlopen 経由でプラグインの初期化コードを
+    // 実行してしまうため、無効時は呼ばず、ファイル名だけを「ブロック中」として
+    // 一覧に残す (名前/バージョンはロードしないと取れないので filePath のみ)。
+    if (origin == PluginRecord::Origin::External
+        && !Settings::instance().allowExternalPlugins()) {
+      rec.loaded = false;
+      rec.blockedExternalDisabled = true;
+      rec.pluginName = fileInfo.fileName();
+      rec.errorReason =
+        tr("External plugins are disabled (enable in Settings > Plugins)");
+      m_records.append(rec);
+      Logger::instance().info(
+        QStringLiteral("Plugins: external plugin not loaded (allowExternalPlugins=off): %1")
+          .arg(fileInfo.fileName()));
+      continue;
+    }
+
     QObject* plugin = loader->instance();
     if (!plugin) {
       rec.loaded      = false;

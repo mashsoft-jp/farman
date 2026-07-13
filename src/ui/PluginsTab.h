@@ -9,6 +9,7 @@
 #include <QStringList>
 #include <QWidget>
 
+class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
@@ -91,6 +92,7 @@ private:
   QStringList defaultExtensionsFromList(const QStringList& extensions) const;
 
   // プラグインディレクトリ
+  QCheckBox*   m_allowExternalPluginsCheck = nullptr;
   QLineEdit*   m_pluginsDirectoryEdit    = nullptr;
   QToolButton* m_pluginsDirectoryBrowse  = nullptr;
   QToolButton* m_pluginsDirectoryDefault = nullptr;

@@ -186,6 +186,13 @@ public:
   bool singleInstance()                 const;
   void setSingleInstance(bool enabled);
 
+  // 外部 (ユーザー配置) プラグインの読込みを許可するか。既定 OFF。
+  // OFF のとき、外部プラグインディレクトリの .dylib/.so/.dll は dlopen すら
+  // せず (初期化コードを実行させず) 読み込まない。同梱プラグインは常に有効。
+  // 変更は次回起動時に反映される (起動時に一括ロードするため)。
+  bool allowExternalPlugins()           const;
+  void setAllowExternalPlugins(bool allowed);
+
   // ビュアープラグインを探しに行くディレクトリ (空 = 既定のユーザー固有 path)。
   // ".dylib" / ".so" / ".dll" を起動時にロードする。
   // 既定: macOS = ~/Library/Application Support/farman/plugins,
@@ -614,6 +621,8 @@ private:
 
   bool             m_confirmOnExit   = false;
   bool             m_singleInstance  = true;
+  // 外部プラグインの読込み許可 (既定 OFF)。次回起動時に反映。
+  bool             m_allowExternalPlugins = false;
   bool             m_syncBrowseShowDisabledDialog = true;
   // 自動アップデート関連 (SPEC.md "自動アップデート" 節参照)。
   bool             m_autoUpdateCheckOnStartup = true;

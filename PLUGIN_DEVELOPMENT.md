@@ -137,12 +137,29 @@ farman-plugin-lzh の `.github/workflows/release.yml` が 3 OS 分をビルド�
 - macOS ジョブで上記 install_name 書き換え
 - 成果物を `<Plugin>-<tag>-<os>.{dylib,so,dll}` + `.sha256` で添付
 
+### 3.4 macOS のコード署名 (第三者プラグイン)
+
+配布版 farman.app は Hardened Runtime + 公証で署名され、**`com.apple.security.cs.disable-library-validation`**
+エンタイトルメントを持つ (`macos/farman.entitlements`)。このため farman 本体と異なる Team ID で
+署名された (あるいは未署名の) **第三者プラグインもロードできる**。
+
+ただし macOS の Gatekeeper は、**ダウンロードしたファイルに付く隔離属性 (`com.apple.quarantine`)**
+を別途チェックする。スムーズに導入させるには、いずれか:
+
+- **推奨: プラグイン作者自身の Developer ID で署名 + 公証する** (ユーザー無操作で通る)。
+- 署名しない場合、ユーザーが隔離属性を手動解除する必要がある
+  (`xattr -dr com.apple.quarantine <plugin>`)。README に明記すること。
+
+Linux / Windows に署名の必須要件はない (Windows は DL 時に SmartScreen 警告が出得る)。
+
 ---
 
 ## 4. 導入先 (ユーザー)
 
 ビルドした `.dylib` / `.so` / `.dll` を farman の外部プラグインディレクトリ配下の種別サブ
-フォルダに置いて farman を再起動する。既定のプラグインディレクトリは OS 依存
+フォルダに置き、farman を再起動する。**外部プラグインの読込みは既定でオフ**なので、
+設定 → プラグインの **「外部プラグインの読込みを許可する」** をオンにする必要がある
+(セキュリティのため。同梱プラグインは常に有効)。既定のプラグインディレクトリは OS 依存
 (Settings → Plugins で変更可):
 
 | OS | 既定のプラグインディレクトリ |

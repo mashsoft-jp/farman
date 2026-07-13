@@ -147,6 +147,7 @@ void Settings::applyDefaults() {
   m_customInitialPath[static_cast<int>(PaneType::Right)].clear();
   m_confirmOnExit = false;
   m_singleInstance = true;
+  m_allowExternalPlugins = false;
   m_pluginsDirectory.clear();
   m_disabledViewerPlugins.clear();
   m_disabledArchivePlugins.clear();
@@ -840,6 +841,14 @@ bool Settings::confirmOnExit() const {
 
 bool Settings::singleInstance() const {
   return m_singleInstance;
+}
+
+bool Settings::allowExternalPlugins() const {
+  return m_allowExternalPlugins;
+}
+
+void Settings::setAllowExternalPlugins(bool allowed) {
+  m_allowExternalPlugins = allowed;
 }
 
 ViewerMode Settings::viewerMode() const {
@@ -1935,6 +1944,7 @@ void Settings::load() {
   QJsonObject behavior = root.value("behavior").toObject();
   m_confirmOnExit = behavior.value("confirmOnExit").toBool(false);
   m_singleInstance = behavior.value("singleInstance").toBool(true);
+  m_allowExternalPlugins = behavior.value("allowExternalPlugins").toBool(false);
   m_pluginsDirectory = behavior.value("pluginsDirectory").toString();
   m_disabledViewerPlugins.clear();
   {
@@ -2634,6 +2644,7 @@ void Settings::save() const {
   QJsonObject behavior;
   behavior["confirmOnExit"] = m_confirmOnExit;
   behavior["singleInstance"] = m_singleInstance;
+  behavior["allowExternalPlugins"] = m_allowExternalPlugins;
   behavior["pluginsDirectory"] = m_pluginsDirectory;
   {
     QJsonArray disabled;

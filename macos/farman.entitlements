@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!--
+    外部 (第三者製) プラグインを notarized / Hardened Runtime の farman.app に
+    ロードできるようにするためのエンタイトルメント。
+
+    Hardened Runtime は既定で「library validation」を強制し、farman.app と同じ
+    Team ID で署名された dylib しかロードを許可しない。第三者が作成した
+    プラグイン (別の署名 / 未署名) をロード可能にするにはこれを無効化する必要が
+    ある。実際に外部プラグインを読み込むかどうかは farman 側の設定
+    「外部プラグインの読込みを許可する」(既定 OFF) で制御する。
+  -->
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+</dict>
+</plist>

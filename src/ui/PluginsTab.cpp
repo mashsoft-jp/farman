@@ -43,6 +43,24 @@ void PluginsTab::setupUi() {
   auto* dirGroup = new QGroupBox(tr("Plugins Directory"), this);
   auto* dirLayout = new QVBoxLayout(dirGroup);
 
+  // 外部プラグインの読込み許可トグル (既定 OFF)。OFF のとき外部プラグインは
+  // 一切ロードしない (同梱プラグインは常に有効)。変更は次回起動時に反映。
+  m_allowExternalPluginsCheck =
+    new QCheckBox(tr("Allow loading external plugins"), dirGroup);
+  m_allowExternalPluginsCheck->setToolTip(
+    tr("When enabled, plugins placed in the directory below are loaded at "
+       "startup. External plugins are third-party native code and run with "
+       "the same privileges as Farman — only enable this if you trust their "
+       "source. Changes take effect on next launch."));
+  dirLayout->addWidget(m_allowExternalPluginsCheck);
+
+  auto* securityHint = new QLabel(
+    tr("⚠ External plugins are native code and run with full application "
+       "privileges. Only enable plugins from sources you trust."), dirGroup);
+  securityHint->setWordWrap(true);
+  securityHint->setEnabled(false);
+  dirLayout->addWidget(securityHint);
+
   auto* dirHint = new QLabel(
     tr("External plugins are loaded on startup from this directory. "
        "Leave empty to use the default user plugins directory."), dirGroup);
@@ -227,6 +245,8 @@ bool PluginsTab::eventFilter(QObject* watched, QEvent* event) {
 }
 
 void PluginsTab::loadSettings() {
+  m_allowExternalPluginsCheck->setChecked(
+    Settings::instance().allowExternalPlugins());
   m_pluginsDirectoryEdit->setText(Settings::instance().pluginsDirectory());
   m_pluginRecords = ViewerDispatcher::instance().pluginRecords();
   // 優先度 (0 が最優先) の昇順に並べる。外部 (0〜9999) → PDF/CSV/Markdown
@@ -280,17 +300,25 @@ void PluginsTab::loadPluginList() {
     // 切り替えは詳細ダイアログで行う。
     auto* enabledItem = new QTableWidgetItem();
     enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    enabledItem->setCheckState(
-      toggleable && isPluginDisabled(rec.pluginId)
-        ? Qt::Unchecked
-        : Qt::Checked);
-    if (toggleable) {
+    if (rec.blockedExternalDisabled) {
+      // 外部プラグイン読込みが OFF のためロードしていない。未チェック表示。
+      enabledItem->setCheckState(Qt::Unchecked);
       enabledItem->setToolTip(
-        tr("Enable/disable can be changed in the Details dialog."));
+        tr("External plugin loading is off. Turn on \"Allow loading external "
+           "plugins\" above to load this plugin."));
     } else {
-      enabledItem->setToolTip(rec.pluginId.isEmpty()
-                                ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
-                                : tr("This core viewer plugin is always enabled."));
+      enabledItem->setCheckState(
+        toggleable && isPluginDisabled(rec.pluginId)
+          ? Qt::Unchecked
+          : Qt::Checked);
+      if (toggleable) {
+        enabledItem->setToolTip(
+          tr("Enable/disable can be changed in the Details dialog."));
+      } else {
+        enabledItem->setToolTip(rec.pluginId.isEmpty()
+                                  ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
+                                  : tr("This core viewer plugin is always enabled."));
+      }
     }
     m_pluginTable->setItem(row, 0, enabledItem);
 
@@ -307,8 +335,9 @@ void PluginsTab::loadPluginList() {
                            ? QFileInfo(rec.filePath).fileName()
                            : rec.pluginName;
     auto* nameItem = new QTableWidgetItem(name);
-    if (rec.errorReason.isEmpty() || rec.disabledByUser) {
-      // ユーザーによる無効化はエラーではないので警告アイコンは出さない
+    if (rec.errorReason.isEmpty() || rec.disabledByUser
+        || rec.blockedExternalDisabled) {
+      // ユーザーによる無効化や外部読込み OFF はエラーではないので警告を出さない
       nameItem->setToolTip(name);
     } else {
       nameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
@@ -350,12 +379,14 @@ void PluginsTab::loadPluginList() {
 QString PluginsTab::archivePluginStatusEmoji(const ArchivePluginRecord& rec) const {
   if (rec.disabledByUser) return QStringLiteral("🚫");
   if (rec.loaded)         return QStringLiteral("✅");
+  if (rec.blockedExternalDisabled) return QStringLiteral("🔒");
   return QStringLiteral("⚠️");
 }
 
 QString PluginsTab::archivePluginStatusText(const ArchivePluginRecord& rec) const {
   if (rec.disabledByUser) return tr("Disabled by user");
   if (rec.loaded)         return tr("Loaded");
+  if (rec.blockedExternalDisabled) return tr("Blocked (external plugins off)");
   return rec.errorReason.isEmpty() ? tr("Not loaded") : rec.errorReason;
 }
 
@@ -378,12 +409,19 @@ void PluginsTab::loadArchivePluginList() {
     // 有効 / 無効 (表示のみ。切り替えは詳細ダイアログで行う)。
     auto* enabledItem = new QTableWidgetItem();
     enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    enabledItem->setCheckState(
-      toggleable && isArchivePluginDisabled(rec.pluginId) ? Qt::Unchecked
-                                                          : Qt::Checked);
-    enabledItem->setToolTip(
-      toggleable ? tr("Enable/disable can be changed in the Details dialog.")
-                 : tr("Plugin ID is unavailable, so this plugin cannot be toggled."));
+    if (rec.blockedExternalDisabled) {
+      enabledItem->setCheckState(Qt::Unchecked);
+      enabledItem->setToolTip(
+        tr("External plugin loading is off. Turn on \"Allow loading external "
+           "plugins\" above to load this plugin."));
+    } else {
+      enabledItem->setCheckState(
+        toggleable && isArchivePluginDisabled(rec.pluginId) ? Qt::Unchecked
+                                                            : Qt::Checked);
+      enabledItem->setToolTip(
+        toggleable ? tr("Enable/disable can be changed in the Details dialog.")
+                   : tr("Plugin ID is unavailable, so this plugin cannot be toggled."));
+    }
     m_archiveTable->setItem(row, 0, enabledItem);
 
     // 状態 (絵文字)。文言はツールチップと詳細ダイアログで見せる。
@@ -397,7 +435,8 @@ void PluginsTab::loadArchivePluginList() {
                            ? QFileInfo(rec.filePath).fileName()
                            : rec.pluginName;
     auto* nameItem = new QTableWidgetItem(name);
-    if (rec.errorReason.isEmpty() || rec.disabledByUser) {
+    if (rec.errorReason.isEmpty() || rec.disabledByUser
+        || rec.blockedExternalDisabled) {
       nameItem->setToolTip(name);
     } else {
       nameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
@@ -543,11 +582,13 @@ void PluginsTab::updatePluginTablePalette(bool focused) {
 
 QString PluginsTab::pluginStatusText(const PluginRecord& record) const {
   if (record.loaded) return tr("Loaded");
+  if (record.blockedExternalDisabled) return tr("Blocked (external plugins off)");
   return record.disabledByUser ? tr("Disabled") : tr("Failed");
 }
 
 QString PluginsTab::pluginStatusEmoji(const PluginRecord& record) const {
   if (record.loaded) return QStringLiteral("✅");
+  if (record.blockedExternalDisabled) return QStringLiteral("🔒");
   return record.disabledByUser ? QStringLiteral("🚫") : QStringLiteral("❌");
 }
 
@@ -874,6 +915,14 @@ void PluginsTab::loadExtensionState() {
 void PluginsTab::save() {
   auto& settings = Settings::instance();
   m_restartRequiredOnSave = false;
+
+  // 外部プラグインの読込み許可 (次回起動から有効)。ここを切り替えると、
+  // 外部プラグインのロード有無が変わるため再起動が必要。
+  const bool allowExternal = m_allowExternalPluginsCheck->isChecked();
+  if (allowExternal != settings.allowExternalPlugins()) {
+    settings.setAllowExternalPlugins(allowExternal);
+    m_restartRequiredOnSave = true;
+  }
 
   // プラグインディレクトリ (次回起動から有効)
   const QString newDirectory = m_pluginsDirectoryEdit->text().trimmed();

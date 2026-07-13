@@ -86,6 +86,23 @@ void ArchiveDispatcher::loadPluginsFromDirectory(
       continue;
     }
 
+    // 外部プラグインは、設定「外部プラグインの読込みを許可する」が OFF のとき
+    // 実体化しない (dlopen による初期化コード実行を避ける)。ViewerDispatcher と
+    // 同様、ファイル名だけを「ブロック中」として一覧に残す。
+    if (origin == ArchivePluginRecord::Origin::External
+        && !Settings::instance().allowExternalPlugins()) {
+      rec.loaded = false;
+      rec.blockedExternalDisabled = true;
+      rec.pluginName = fileInfo.fileName();
+      rec.errorReason =
+        tr("External plugins are disabled (enable in Settings > Plugins)");
+      m_records.append(rec);
+      Logger::instance().info(
+        QStringLiteral("ArchivePlugins: external plugin not loaded (allowExternalPlugins=off): %1")
+          .arg(fileInfo.fileName()));
+      continue;
+    }
+
     QObject* obj = loader->instance();
     if (!obj) {
       rec.loaded      = false;

@@ -26,6 +26,9 @@ struct ArchivePluginRecord {
   int         priority = -1;       // -1 = 不明。0 が最優先
   bool        loaded   = false;
   bool        disabledByUser = false;  // ユーザーが設定で無効化した
+  // 外部プラグインだが設定「外部プラグインの読込みを許可する」が OFF のため
+  // ロードしなかった (dlopen もしていない) 場合に true。一覧表示用。
+  bool        blockedExternalDisabled = false;
   QString     errorReason;         // loaded == false のときだけ非空
 };
 

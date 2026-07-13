@@ -302,13 +302,19 @@ jobs:
           done
           macdeployqt build/farman.app -libpath=/opt/homebrew/lib "${plugin_exec_args[@]}"
 
+          # 外部 (第三者製) プラグインを Hardened Runtime の .app にロードできる
+          # ようにするエンタイトルメント (library validation を無効化)。実際に
+          # 外部プラグインを読むかは farman 側の設定でゲートする。
+          ENTITLEMENTS="macos/farman.entitlements"
           if [ "$SIGN_AVAILABLE" = "true" ]; then
             # 正式署名: Hardened Runtime (notarization 必須) + timestamp
             codesign --force --deep --options runtime --timestamp \
+              --entitlements "$ENTITLEMENTS" \
               --sign "$MACOS_IDENTITY_HASH" build/farman.app
           else
             # フォールバック: ad-hoc 署名のみ。配布先で Gatekeeper にブロックされる
-            # ので「右クリック → 開く」での起動を案内する想定。
+            # ので「右クリック → 開く」での起動を案内する想定。ad-hoc + Hardened
+            # Runtime 無しでは library validation は効かないので entitlements 不要。
             codesign --force --deep --sign - build/farman.app
           fi
           codesign --verify --deep --strict build/farman.app
