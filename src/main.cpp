@@ -39,6 +39,15 @@ public:
     if (hint == QStyle::SH_DialogButtonLayout) {
       return QDialogButtonBox::MacLayout;
     }
+#ifdef Q_OS_MAC
+    // macOS ではコンボボックスのポップアップが既定で「メニュー形式」で描画され、
+    // 項目テキストの縦位置がずれて日本語などが上側で見切れる。ポップアップを
+    // 「リスト形式」に切り替えると、項目テキストがデリゲートで正しく縦センタ
+    // リングされ見切れない (コンボのみに効き、通常メニューには影響しない)。
+    if (hint == QStyle::SH_ComboBox_Popup) {
+      return 0;
+    }
+#endif
     return QProxyStyle::styleHint(hint, option, widget, returnData);
   }
 };
