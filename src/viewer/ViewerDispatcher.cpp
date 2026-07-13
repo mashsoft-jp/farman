@@ -374,6 +374,7 @@ void ViewerDispatcher::registerPlugin(std::shared_ptr<IViewerPlugin> plugin,
   rec.filePath   = filePath;
   rec.pluginId   = plugin ? plugin->pluginId()   : QString();
   rec.pluginName = plugin ? plugin->pluginName() : QString();
+  rec.version    = plugin ? plugin->version()    : QString();
   rec.author     = plugin ? plugin->author()     : QString();
   rec.authorUrl  = plugin ? plugin->authorUrl()  : QString();
   rec.priority   = plugin ? plugin->priority()   : -1;
