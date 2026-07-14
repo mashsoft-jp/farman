@@ -14,6 +14,8 @@ class QAction;
 class QStackedWidget;
 class QLabel;
 class QToolBar;
+class QResizeEvent;
+class QTimer;
 
 namespace Farman {
 
@@ -31,6 +33,9 @@ protected:
   void keyPressEvent(QKeyEvent* event) override;
   bool eventFilter(QObject* obj, QEvent* event) override;
   void closeEvent(QCloseEvent* event) override;
+  // ウィンドウをドラッグでリサイズしている間、現在の幅 × 高さをオーバーレイ
+  // 表示する。リサイズが止まってしばらくすると自動的に消える。
+  void resizeEvent(QResizeEvent* event) override;
 
 private slots:
   void onFileActivated(const QString& filePath, const QString& displayPath);
@@ -94,6 +99,10 @@ private:
   ViewerPanel* m_viewerPanel;
   // ステータスバー (左: フォーカス中ファイルの絶対パス / 中央: Sync Browse 状態 /
   // 右: 件数・選択要約)
+  // ドラッグリサイズ中に「幅 × 高さ」を出すオーバーレイ (中央表示・自動消去)。
+  QLabel*      m_resizeSizeLabel        = nullptr;
+  QTimer*      m_resizeSizeHideTimer    = nullptr;
+
   QLabel*      m_statusPathLabel        = nullptr;
   QLabel*      m_statusSummaryLabel     = nullptr;
   QLabel*      m_statusSyncBrowseLabel  = nullptr;

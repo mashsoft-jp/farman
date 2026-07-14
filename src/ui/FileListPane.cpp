@@ -234,7 +234,10 @@ void FileListPane::setupUi() {
   // 設計だが、それ以前にビュー自身が Tab を握って外部 widget (アドレスバー /
   // 📁 / サイズボタン) に Tab で行けなくなるため、両ビューとも off にする。
   m_view->setTabKeyNavigation(false);
-  m_view->horizontalHeader()->setStretchLastSection(true);
+  // ウィンドウ幅の増減は先頭の「名前」列で吸収する。最後の列を伸ばす既定を
+  // OFF にし、Name 列を Stretch にする (実際の Stretch 設定は setModel() 後。
+  // setSectionResizeMode は per-section 設定でモデル差し替え時にリセットされる)。
+  m_view->horizontalHeader()->setStretchLastSection(false);
   m_view->horizontalHeader()->setSectionsClickable(true);
   m_view->horizontalHeader()->setSortIndicatorShown(true);
   m_view->verticalHeader()->setVisible(false);
@@ -287,6 +290,12 @@ void FileListPane::setupUi() {
   m_view->setColumnWidth(FileListModel::Owner,        100);
   m_view->setColumnWidth(FileListModel::Group,        100);
   m_view->setColumnWidth(FileListModel::LinkTarget,   200);
+
+  // 先頭の「名前」列をウィンドウ幅の可変列にする。setModel() 後に設定しないと
+  // モデル差し替えでリセットされるため、setColumnWidth 群と同じくここで行う。
+  // (Stretch にした Name 列は自動幅になり、上の setColumnWidth(Name) は無視される。)
+  m_view->horizontalHeader()->setSectionResizeMode(FileListModel::Name,
+                                                   QHeaderView::Stretch);
 
   // 列表示の初期適用 (デュアルペインモード)。
   // 後で setSinglePaneMode から呼ばれて切り替わる。

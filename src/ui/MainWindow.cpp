@@ -52,6 +52,7 @@
 #include <QVBoxLayout>
 #include <QKeyEvent>
 #include <QCloseEvent>
+#include <QResizeEvent>
 #include <QTableView>
 #include <QApplication>
 #include <QProgressDialog>
@@ -2276,6 +2277,41 @@ void MainWindow::onSettingsChanged() {
 
   // ツールバーの表示も Settings 側からのトグルに追従させる。
   applyToolbarVisibility();
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event) {
+  QMainWindow::resizeEvent(event);
+
+  // 構築時 (resize()) やジオメトリ復元時はまだ非表示。オーバーレイは
+  // ユーザーがウィンドウを操作している間 (= 表示済み) だけ出す。
+  if (!isVisible()) return;
+
+  if (!m_resizeSizeLabel) {
+    m_resizeSizeLabel = new QLabel(this);
+    m_resizeSizeLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_resizeSizeLabel->setAlignment(Qt::AlignCenter);
+    m_resizeSizeLabel->setStyleSheet(QStringLiteral(
+      "QLabel { background-color: rgba(0, 0, 0, 180); color: white; "
+      "border-radius: 6px; padding: 6px 12px; font-weight: bold; }"));
+    m_resizeSizeLabel->hide();
+
+    // リサイズが止まってしばらくしたら自動的に消す。
+    m_resizeSizeHideTimer = new QTimer(this);
+    m_resizeSizeHideTimer->setSingleShot(true);
+    connect(m_resizeSizeHideTimer, &QTimer::timeout, this, [this]() {
+      if (m_resizeSizeLabel) m_resizeSizeLabel->hide();
+    });
+  }
+
+  const QSize sz = event->size();
+  m_resizeSizeLabel->setText(
+    QStringLiteral("%1 × %2").arg(sz.width()).arg(sz.height()));
+  m_resizeSizeLabel->adjustSize();
+  m_resizeSizeLabel->move((width()  - m_resizeSizeLabel->width())  / 2,
+                          (height() - m_resizeSizeLabel->height()) / 2);
+  m_resizeSizeLabel->show();
+  m_resizeSizeLabel->raise();
+  m_resizeSizeHideTimer->start(900);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
