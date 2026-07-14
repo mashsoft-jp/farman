@@ -1644,7 +1644,7 @@ Used as the initial value in the Search dialog's Exclude dirs field.</source>
     <message>
         <location filename="../src/ui/BookmarkListDialog.cpp" line="111" />
         <source>Bookmarks</source>
-        <translation>パス</translation>
+        <translation>ブックマーク</translation>
     </message>
     <message>
         <location filename="../src/ui/BookmarkListDialog.cpp" line="126" />

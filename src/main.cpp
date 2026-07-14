@@ -50,6 +50,33 @@ public:
 #endif
     return QProxyStyle::styleHint(hint, option, widget, returnData);
   }
+
+#ifdef Q_OS_MAC
+  QSize sizeFromContents(ContentsType type, const QStyleOption* option,
+                         const QSize& contentsSize,
+                         const QWidget* widget = nullptr) const override {
+    QSize sz = QProxyStyle::sizeFromContents(type, option, contentsSize, widget);
+    // macOS の QMacStyle は push ボタンの高さが標準値 (既定ボタンと同じ) の
+    // ときだけ角丸 (pill) ベゼルを描き、1px でも高いと四角い bevel ベゼルに
+    // フォールバックする。farman のフォント下では非既定ボタンの高さが 33px に
+    // なり (既定ボタンは 32px)、同じダイアログ内でベゼルが不揃いになる。
+    // 既定ボタン相当の高さに揃えて、全 push ボタンを同じベゼルに統一する。
+    if (type == CT_PushButton) {
+      // 漢字を含むボタン (例: "移動" "編集" "削除") は CJK フォールバック
+      // フォントの影響でテキスト高さが 17px になり、QMacStyle が 32px の
+      // 角丸(pill)ベゼルを使えず 33px の四角ベゼルにフォールバックしてしまう
+      // (カタカナ "コピー" 等は 15px で 32px のまま)。content 高さがごく小さい
+      // ときの結果 = pill 高さ (32px) を基準に、それを上限としてクランプし、
+      // 全 push ボタンを pill ベゼルに揃える。
+      const int pillH =
+        QProxyStyle::sizeFromContents(CT_PushButton, option,
+                                      QSize(contentsSize.width(), 0),
+                                      widget).height();
+      if (pillH > 0 && sz.height() > pillH) sz.setHeight(pillH);
+    }
+    return sz;
+  }
+#endif
 };
 
 // Qt 標準ボタン (OK / Cancel / Apply など) の文言は本来 Qt 同梱の翻訳
