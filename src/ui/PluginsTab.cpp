@@ -6,6 +6,7 @@
 #include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDir>
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -94,6 +95,9 @@ void PluginsTab::setupUi() {
     const QString start = m_pluginsDirectoryEdit->text().isEmpty()
                           ? Settings::defaultPluginsDirectory()
                           : m_pluginsDirectoryEdit->text();
+    // 開始ディレクトリが無いとダイアログが別の場所 (作業ディレクトリ等) に
+    // フォールバックし、ユーザーが置き場所を誤解する。無ければ作っておく。
+    if (!QDir(start).exists()) QDir().mkpath(start);
     const QString selected = QFileDialog::getExistingDirectory(
       this, tr("Choose plugins directory"), start,
       QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);

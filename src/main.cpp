@@ -217,11 +217,19 @@ int main(int argc, char *argv[]) {
   pluginCtx.appearance = Farman::ViewerDispatcher::currentAppearance();
   Farman::ViewerDispatcher::instance().setContext(pluginCtx);
   Farman::ViewerDispatcher::instance().registerBundledPlugins();
+  // 外部プラグインディレクトリ。種別ごとのサブフォルダ (viewers/ / archives/)
+  // から読み込む。構成をあらかじめ作成しておく: 無いと設定ダイアログの
+  // 「ディレクトリを選ぶ」が既定位置を開けず別の場所 (作業ディレクトリ等) に
+  // フォールバックし、ユーザーが置き場所を誤解する (実際に Windows で
+  // Program Files 側と誤認する事例があった)。
   const QString pluginsDir = Farman::Settings::instance().pluginsDirectory();
+  const QString extPluginsRoot =
+    pluginsDir.isEmpty() ? Farman::Settings::defaultPluginsDirectory()
+                         : pluginsDir;
+  QDir().mkpath(extPluginsRoot + QStringLiteral("/viewers"));
+  QDir().mkpath(extPluginsRoot + QStringLiteral("/archives"));
   Farman::ViewerDispatcher::instance().loadPlugins(
-    QDir(pluginsDir.isEmpty()
-           ? Farman::Settings::defaultPluginsDirectory()
-           : pluginsDir));
+    QDir(extPluginsRoot + QStringLiteral("/viewers")));
 
   QObject::connect(&Farman::Settings::instance(), &Farman::Settings::settingsChanged,
                    &app, [] {
@@ -238,9 +246,7 @@ int main(int argc, char *argv[]) {
   Farman::ArchiveDispatcher::instance().setContext(archiveCtx);
   Farman::ArchiveDispatcher::instance().registerBundledPlugins();
   Farman::ArchiveDispatcher::instance().loadPlugins(
-    QDir((pluginsDir.isEmpty()
-            ? Farman::Settings::defaultPluginsDirectory()
-            : pluginsDir) + QStringLiteral("/archives")));
+    QDir(extPluginsRoot + QStringLiteral("/archives")));
   for (const QString& dotExt :
        Farman::ArchiveDispatcher::instance().registeredDotExtensions()) {
     Farman::ArchivePath::registerArchiveExtension(dotExt);

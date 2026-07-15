@@ -168,7 +168,13 @@ Linux / Windows に署名の必須要件はない (Windows は DL 時に SmartSc
 | Linux | `~/.local/share/Farman/farman/plugins/` |
 | Windows | `%APPDATA%\Farman\farman\plugins\` |
 
-その下の `viewers/` (ビュアー) または `archives/` (アーカイブ) に配置する。
+その下の `viewers/` (ビュアー) または `archives/` (アーカイブ) に配置する
+(このディレクトリ構成は farman が起動時に自動作成する)。
+
+なお、アプリ本体側の同梱プラグインディレクトリ (exe 隣の `plugins/` /
+macOS の `.app/Contents/PlugIns/`) に第三者製プラグインを置いても、優先度が
+外部域 (0〜9999) のものは External として扱われ、上記の許可設定の対象になる
+(置き場所で許可トグルは回避できない)。
 
 ---
 

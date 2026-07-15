@@ -205,9 +205,29 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
     rec.authorUrl = viewerPlugin->authorUrl();
     rec.supportedExtensions = viewerPlugin->supportedExtensions();
     rec.priority = viewerPlugin->priority();
+    // 同梱ディレクトリに置かれていても、外部優先度域 (0〜9999) を名乗る
+    // プラグインは第三者製とみなして External に再分類する (同梱公式は 10000+
+    // の予約域)。「同梱ディレクトリに置けば外部プラグイン許可トグルを回避
+    // できる」穴を塞ぐ (ArchiveDispatcher と同基準)。
+    if (origin == PluginRecord::Origin::Bundled
+        && rec.priority >= 0 && rec.priority <= 9999) {
+      rec.origin = PluginRecord::Origin::External;
+      if (!Settings::instance().allowExternalPlugins()) {
+        rec.loaded = false;
+        rec.blockedExternalDisabled = true;
+        rec.errorReason =
+          tr("External plugins are disabled (enable in Settings > Plugins)");
+        m_records.append(rec);
+        loader->unload();
+        Logger::instance().info(
+          QStringLiteral("Plugins: third-party plugin in bundled dir not loaded "
+                         "(allowExternalPlugins=off): %1").arg(fileInfo.fileName()));
+        continue;
+      }
+    }
     // ユーザー作成の外部プラグインの優先度は 0〜9999 のみ許可する。
     // 10000 以上は同梱公式プラグイン用の予約域、負の値は不正。
-    if (origin == PluginRecord::Origin::External
+    if (rec.origin == PluginRecord::Origin::External
         && (rec.priority < 0 || rec.priority > 9999)) {
       rec.loaded = false;
       rec.errorReason =
@@ -222,7 +242,7 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
       continue;
     }
     // 外部プラグインは制作者情報 (author) の提供を必須とする。
-    if (origin == PluginRecord::Origin::External
+    if (rec.origin == PluginRecord::Origin::External
         && rec.author.trimmed().isEmpty()) {
       rec.loaded = false;
       rec.errorReason =
@@ -249,9 +269,11 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
     // QPluginLoader が QObject (= IViewerPlugin の実体) のライフタイムを
     // 管理するので、shared_ptr 側は delete しない deleter を使う。
     // registerPlugin が成功・失敗ともに m_records に最終結果を追記する。
+    // origin は再分類 (同梱ディレクトリ内の第三者製 → External) を反映した
+    // rec.origin を渡す。
     registerPlugin(std::shared_ptr<IViewerPlugin>(viewerPlugin, [](IViewerPlugin*){}),
                    rec.filePath,
-                   origin);
+                   rec.origin);
     if (!m_records.isEmpty() && m_records.last().loaded) {
       // 登録成功した外部プラグインだけ loader を保持し、プラグイン実体を
       // アプリ終了まで生かす。

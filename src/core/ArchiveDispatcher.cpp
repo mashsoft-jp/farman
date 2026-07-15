@@ -135,10 +135,32 @@ void ArchiveDispatcher::loadPluginsFromDirectory(
     rec.supportedExtensions = plugin->supportedExtensions();
     rec.priority            = plugin->priority();
 
+    // 同梱ディレクトリ (exe 隣の plugins/archives 等) に置かれていても、外部
+    // 優先度域 (0〜9999) を名乗るプラグインは第三者製とみなして External に
+    // 再分類する。同梱公式は 10000+ の予約域を使う規約なので、これにより
+    // 「同梱ディレクトリに置けば外部プラグイン許可トグルを回避できる」穴を塞ぐ
+    // (トグル + author 必須が適用される)。
+    if (origin == ArchivePluginRecord::Origin::Bundled
+        && rec.priority >= 0 && rec.priority <= 9999) {
+      rec.origin = ArchivePluginRecord::Origin::External;
+      if (!Settings::instance().allowExternalPlugins()) {
+        rec.loaded = false;
+        rec.blockedExternalDisabled = true;
+        rec.errorReason =
+          tr("External plugins are disabled (enable in Settings > Plugins)");
+        m_records.append(rec);
+        loader->unload();
+        Logger::instance().info(
+          QStringLiteral("ArchivePlugins: third-party plugin in bundled dir not loaded "
+                         "(allowExternalPlugins=off): %1").arg(fileInfo.fileName()));
+        continue;
+      }
+    }
+
     // 外部プラグインのみ検証を強制する (ViewerDispatcher と同基準)。
     // バンドル公式プラグインは priority 10000+ の予約域を使うため、
     // 0〜9999 制限や author 必須の対象外とする。
-    if (origin == ArchivePluginRecord::Origin::External) {
+    if (rec.origin == ArchivePluginRecord::Origin::External) {
       // 外部プラグインの優先度は 0〜9999 のみ許可。
       if (rec.priority < 0 || rec.priority > 9999) {
         rec.loaded      = false;
