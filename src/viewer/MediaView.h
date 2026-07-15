@@ -8,14 +8,17 @@ class QAction;
 class QAudioOutput;
 class QComboBox;
 class QDialog;
+class QGraphicsScene;
+class QGraphicsVideoItem;
+class QGraphicsView;
 class QMediaMetaData;
 class QLabel;
-class QScrollArea;
 class QSlider;
 class QStackedWidget;
+class QTimer;
 class QToolBar;
 class QToolButton;
-class QVideoWidget;
+class QVBoxLayout;
 
 namespace Farman {
 
@@ -88,6 +91,15 @@ private:
   void seekBy(qint64 deltaMs);
   void adjustVolume(int delta);
   void setVideoFullScreen(bool on);
+  // 動画がフルスクリーン中か (同じシーンに載せたフルスクリーン用ビューが
+  // 生きているか)。
+  bool isVideoFullScreen() const { return m_fsView != nullptr; }
+  // 指定ビューを、動画アイテムがちょうど収まる倍率にフィットさせる
+  // (KeepAspectRatio でレターボックス)。ネイティブサイズ未確定時は何もしない。
+  void fitVideoView(QGraphicsView* view);
+  // フルスクリーン中の下部オーバーレイ操作パネルの表示 / 配置。
+  void showFsControls();                  // 表示して自動非表示タイマーを再始動
+  void layoutFsControlBar();              // フルスクリーンビュー下部へ配置
   void applyVolume();
   void notifyLoadResult(bool ok);
   void showMessage(const QString& text);
@@ -129,8 +141,20 @@ private:
   QAudioOutput* m_audioOutput = nullptr;
 
   QStackedWidget* m_stack           = nullptr;
-  QScrollArea*    m_videoScrollArea = nullptr;
-  QVideoWidget*   m_videoWidget     = nullptr;
+  // 動画は QGraphicsScene 上の QGraphicsVideoItem として描画する。QVideoWidget
+  // と違いネイティブ動画サーフェス (NSView) を持たないため、フルスクリーンは
+  // 「同じシーンを映す 2 つ目のビュー」を出すだけで済み、再ペアレントや出力
+  // 切替 (macOS でサーフェスが壊れる) が一切不要になる。
+  QGraphicsScene*     m_scene     = nullptr;
+  QGraphicsVideoItem* m_videoItem = nullptr;
+  QGraphicsView*      m_videoView = nullptr;  // 埋め込み表示 (m_stack 内)
+  QGraphicsView*      m_fsView    = nullptr;  // フルスクリーン用。非 null = FS 中
+  // 本体レイアウト (フルスクリーン時にツールバーを退避 / 復帰させるため保持)。
+  QVBoxLayout*        m_mainLayout   = nullptr;
+  // フルスクリーン中だけ生成する下部オーバーレイ操作パネル。既存ツールバーを
+  // ここへ移設し、マウス移動で表示・一定時間後に自動非表示する。
+  QWidget*            m_fsControlBar = nullptr;
+  QTimer*             m_fsControlHideTimer = nullptr;
   QWidget*        m_audioCard       = nullptr;
   QLabel*         m_coverLabel   = nullptr;
   QLabel*         m_titleLabel   = nullptr;

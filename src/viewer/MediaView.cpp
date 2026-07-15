@@ -11,7 +11,15 @@
 #include <QFileInfo>
 #include <QFont>
 #include <QFontDatabase>
+#include <QFile>
+#include <QGraphicsScene>
+#include <QGraphicsVideoItem>
+#include <QGraphicsView>
+#include <QHBoxLayout>
 #include <QHash>
+#include <QPainter>
+#include <QSvgRenderer>
+#include <QTimer>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLocale>
@@ -22,7 +30,6 @@
 #include <QMouseEvent>
 #include <QFrame>
 #include <QPalette>
-#include <QScrollArea>
 #include <QSlider>
 #include <QStackedWidget>
 #include <QStyle>
@@ -30,7 +37,6 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QVBoxLayout>
-#include <QVideoWidget>
 
 namespace Farman {
 
@@ -39,6 +45,23 @@ namespace {
 constexpr qint64 kSeekStepMs      = 5000;
 constexpr qint64 kSeekLargeStepMs = 30000;
 constexpr int    kVolumeStep      = 5;
+
+// ツールバー用 SVG アイコン (固定 #6a6a6a) を白系に差し替えて描画する。
+// フルスクリーンの暗い半透明パネル上ではグレーが沈んで見えないため。
+QIcon whiteToolbarIcon(const QString& resPath) {
+  QFile f(resPath);
+  if (!f.open(QIODevice::ReadOnly)) return QIcon(resPath);
+  QByteArray svg = f.readAll();
+  svg.replace("#6a6a6a", "#e8e8e8");
+  QSvgRenderer renderer(svg);
+  QPixmap pm(48, 48);  // 2x で描いて Retina でも滲まないように
+  pm.fill(Qt::transparent);
+  QPainter p(&pm);
+  renderer.render(&p);
+  p.end();
+  pm.setDevicePixelRatio(2.0);
+  return QIcon(pm);
+}
 
 // 溝の任意の位置をクリックしたら、その位置へ即移動するスライダー。
 // 既定の QSlider はクリックでページ単位送りになるだけで、シーク/音量バーでは
@@ -91,15 +114,17 @@ MediaView::MediaView(QWidget* parent)
 }
 
 MediaView::~MediaView() {
-  // フルスクリーン解除は生存中 (closeEvent / clearContent) に済ませておく方針。
-  // ここ (破棄途中) で setVideoFullScreen(false) を呼ぶと、QScrollArea 内の
-  // QVideoWidget を再ペアレントする過程で QWindowContainer 経由の createWinId が
-  // 無限再帰してクラッシュする (macOS)。破棄時はプレイヤーを止めるだけにして、
-  // QVideoWidget は通常の子ウィジェット破棄に任せる (フルスクリーン中でも
-  // ネイティブウィンドウごと破棄されるため残留しない)。
   if (m_player) {
     m_player->stop();
-    m_player->setVideoOutput(static_cast<QVideoWidget*>(nullptr));
+    m_player->setVideoOutput(static_cast<QObject*>(nullptr));
+  }
+  // フルスクリーン用ビューはトップレベル (MediaView の子ではない) なので明示的に
+  // 破棄する。QGraphicsView は通常のウィジェットで、動画はシーン側が描くため
+  // ネイティブサーフェスの後始末は不要 (QVideoWidget のような createWinId 再帰の
+  // 心配がない)。シーン / アイテムは MediaView の子として通常どおり破棄される。
+  if (m_fsView) {
+    delete m_fsView;
+    m_fsView = nullptr;
   }
 }
 
@@ -111,29 +136,27 @@ void MediaView::setupUi() {
   m_player->setAudioOutput(m_audioOutput);
 
   // ── 表示ページ (動画 / 音声カード / メッセージ) ──
-  m_videoWidget = new QVideoWidget;
-  m_videoWidget->setAspectRatioMode(Qt::KeepAspectRatio);
-  m_videoWidget->setFocusPolicy(Qt::StrongFocus);
-  m_videoWidget->installEventFilter(this);
-  m_player->setVideoOutput(m_videoWidget);
+  // 動画は QGraphicsScene 上の QGraphicsVideoItem として描画する。QVideoWidget
+  // (ネイティブ NSView) と違い、フルスクリーンは同じシーンを映す 2 つ目のビュー
+  // を出すだけで済む。出力先 (m_videoItem) は一度設定したら切り替えない。
+  m_scene     = new QGraphicsScene(this);
+  m_videoItem = new QGraphicsVideoItem;
+  m_videoItem->setAspectRatioMode(Qt::KeepAspectRatio);
+  m_scene->addItem(m_videoItem);
+  m_player->setVideoOutput(m_videoItem);
+  // ネイティブ解像度が判明したらアイテムサイズ / シーン矩形を確定し、
+  // ズーム / フィットを適用し直す。
+  connect(m_videoItem, &QGraphicsVideoItem::nativeSizeChanged,
+          this, [this](const QSizeF&) { updateNativeVideoSize(); });
 
-  // 拡大縮小に対応するため、QVideoWidget はスクロールエリアに入れる。
-  // Fit ON では viewport にフィット (widgetResizable=true)、手動ズーム時は
-  // 解像度×倍率に固定 (widgetResizable=false) してスクロールバーを出す。
-  // 余白は動画らしく黒で塗る。
-  m_videoScrollArea = new QScrollArea(this);
-  m_videoScrollArea->setWidget(m_videoWidget);
-  m_videoScrollArea->setWidgetResizable(true);
-  m_videoScrollArea->setAlignment(Qt::AlignCenter);
-  m_videoScrollArea->setFrameShape(QFrame::NoFrame);
-  m_videoScrollArea->viewport()->setAutoFillBackground(true);
-  {
-    QPalette pal = m_videoScrollArea->viewport()->palette();
-    pal.setColor(QPalette::Window, Qt::black);
-    m_videoScrollArea->viewport()->setPalette(pal);
-  }
-  // Fit 中はリサイズで実効倍率が変わるので、viewport のリサイズを監視する。
-  m_videoScrollArea->viewport()->installEventFilter(this);
+  m_videoView = new QGraphicsView(m_scene, this);
+  m_videoView->setFrameShape(QFrame::NoFrame);
+  m_videoView->setBackgroundBrush(Qt::black);
+  m_videoView->setAlignment(Qt::AlignCenter);
+  m_videoView->setDragMode(QGraphicsView::NoDrag);
+  m_videoView->setFocusPolicy(Qt::StrongFocus);
+  m_videoView->installEventFilter(this);            // キー / ダブルクリック
+  m_videoView->viewport()->installEventFilter(this);  // リサイズで再フィット
 
   m_audioCard = new QWidget(this);
   {
@@ -169,7 +192,7 @@ void MediaView::setupUi() {
   m_messageLabel->setWordWrap(true);
 
   m_stack = new QStackedWidget(this);
-  m_stack->addWidget(m_videoScrollArea);
+  m_stack->addWidget(m_videoView);
   m_stack->addWidget(m_audioCard);
   m_stack->addWidget(m_messageLabel);
   m_stack->setCurrentWidget(m_audioCard);
@@ -335,11 +358,11 @@ void MediaView::setupUi() {
           this,         &MediaView::toggleMediaInfoDialog);
   m_infoAction = m_toolbar->addWidget(m_infoButton);
 
-  auto* layout = new QVBoxLayout(this);
-  layout->setContentsMargins(0, 0, 0, 0);
-  layout->setSpacing(0);
-  layout->addWidget(m_toolbar);
-  layout->addWidget(m_stack, 1);
+  m_mainLayout = new QVBoxLayout(this);
+  m_mainLayout->setContentsMargins(0, 0, 0, 0);
+  m_mainLayout->setSpacing(0);
+  m_mainLayout->addWidget(m_toolbar);
+  m_mainLayout->addWidget(m_stack, 1);
 
   // Tab 順を明示 (ImageView と同じ作法。スライダは NoFocus なので含めない)。
   setTabOrder(m_playButton, m_stopButton);
@@ -444,19 +467,36 @@ void MediaView::keyPressEvent(QKeyEvent* event) {
 }
 
 bool MediaView::eventFilter(QObject* watched, QEvent* event) {
-  if (watched == m_videoWidget) {
+  // 埋め込み / フルスクリーン、どちらのビューでも同じキー / ダブルクリック処理。
+  if (watched == m_videoView || watched == m_fsView) {
     if (event->type() == QEvent::KeyPress) {
       if (handleViewerKey(static_cast<QKeyEvent*>(event))) {
         return true;
       }
     } else if (event->type() == QEvent::MouseButtonDblClick) {
-      setVideoFullScreen(!m_videoWidget->isFullScreen());
+      setVideoFullScreen(!isVideoFullScreen());
       return true;
+    } else if (event->type() == QEvent::Close && watched == m_fsView) {
+      // フルスクリーン窓を WM 経由で閉じられたら状態を解除する。
+      setVideoFullScreen(false);
+      return true;
+    } else if (event->type() == QEvent::Resize && watched == m_fsView) {
+      // フルスクリーンビューのリサイズ: 再フィット + 操作パネルを下部へ再配置。
+      fitVideoView(m_fsView);
+      layoutFsControlBar();
     }
-  } else if (m_videoScrollArea && watched == m_videoScrollArea->viewport()
+  } else if (m_videoView && watched == m_videoView->viewport()
              && event->type() == QEvent::Resize) {
-    // Fit 中はリサイズで実効倍率が変わるので、コンボ表示を追従させる。
-    if (m_fitToWindow) updateZoomComboText();
+    // 埋め込みビューのリサイズ: Fit 中は再フィットし、コンボ表示も追従させる。
+    if (m_fitToWindow) {
+      fitVideoView(m_videoView);
+      updateZoomComboText();
+    }
+  } else if (m_fsView
+             && (watched == m_fsView->viewport() || watched == m_fsControlBar)
+             && event->type() == QEvent::MouseMove) {
+    // マウスが動いたら操作パネルを出す (一定時間で自動的に消える)。
+    showFsControls();
   }
   return QWidget::eventFilter(watched, event);
 }
@@ -490,14 +530,14 @@ bool MediaView::handleViewerKey(QKeyEvent* event) {
       return true;
     case Qt::Key_F:
       if (m_player->hasVideo()) {
-        setVideoFullScreen(!m_videoWidget->isFullScreen());
+        setVideoFullScreen(!isVideoFullScreen());
         return true;
       }
       return false;
     case Qt::Key_Escape:
       // フルスクリーン解除のみここで消費。通常表示中の Esc は
       // 親 (ViewerPanel / ViewerWindow) の「閉じる」処理に流す。
-      if (m_videoWidget->isFullScreen()) {
+      if (isVideoFullScreen()) {
         setVideoFullScreen(false);
         return true;
       }
@@ -528,15 +568,199 @@ void MediaView::adjustVolume(int delta) {
 }
 
 void MediaView::setVideoFullScreen(bool on) {
-  if (!m_videoWidget || m_videoWidget->isFullScreen() == on) return;
-  m_videoWidget->setFullScreen(on);
+  if (!m_videoView || isVideoFullScreen() == on) return;
+
+  // 動画は QGraphicsScene 上のアイテムなので、フルスクリーンは「同じシーンを
+  // 映す 2 つ目のビュー」をトップレベルで全画面表示するだけでよい。出力先
+  // (m_videoItem) は一切変えず、ウィジェットの再ペアレントも起きないため、
+  // macOS でも映像が固まったり真っ黒になったりしない。
   if (on) {
-    // トップレベル化した QVideoWidget にキーが届くようフォーカスを移す。
-    // キーは eventFilter で MediaView と同じ処理に流れる。
-    m_videoWidget->setFocus(Qt::OtherFocusReason);
+    m_fsView = new QGraphicsView(m_scene, nullptr);
+    m_fsView->setWindowTitle(tr("Full Screen"));
+    m_fsView->setFrameShape(QFrame::NoFrame);
+    m_fsView->setBackgroundBrush(Qt::black);
+    m_fsView->setAlignment(Qt::AlignCenter);
+    m_fsView->setDragMode(QGraphicsView::NoDrag);
+    m_fsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_fsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_fsView->setFocusPolicy(Qt::StrongFocus);
+    m_fsView->installEventFilter(this);
+    m_fsView->viewport()->installEventFilter(this);  // リサイズで再フィット
+    // マウス移動でオーバーレイ操作パネルを出すため、常時ムーブイベントを拾う。
+    m_fsView->setMouseTracking(true);
+    m_fsView->viewport()->setMouseTracking(true);
+
+    // ── 下部オーバーレイ操作パネル (フルスクリーン専用 UI) ──
+    // 通常表示のツールバーは流用せず、必要な操作だけ (再生/一時停止・停止・
+    // シークバー・時間・リピート・音量) を暗い半透明の板に並べる。状態は
+    // 既存コントロール / プレイヤーと双方向に同期し、パネル破棄と同時に
+    // 接続も切れる (context = 各ウィジェット)。
+    m_fsControlBar = new QWidget(m_fsView);
+    m_fsControlBar->setObjectName(QStringLiteral("fsControlBar"));
+    m_fsControlBar->setStyleSheet(QStringLiteral(
+      "#fsControlBar { background-color: rgba(14, 14, 14, 200);"
+      "                border-radius: 10px; }"
+      "QToolButton { border: none; padding: 5px; border-radius: 5px; }"
+      "QToolButton:hover { background-color: rgba(255, 255, 255, 40); }"
+      "QToolButton:checked { background-color: rgba(255, 255, 255, 70); }"
+      "QLabel { color: #e8e8e8; }"));
+    {
+      auto* barLay = new QHBoxLayout(m_fsControlBar);
+      barLay->setContentsMargins(14, 8, 14, 8);
+      barLay->setSpacing(8);
+
+      const QSize iconSz(22, 22);
+      auto makeButton = [&](const QString& icon, const QString& tip) {
+        auto* b = new QToolButton(m_fsControlBar);
+        b->setIcon(whiteToolbarIcon(icon));
+        b->setIconSize(iconSz);
+        b->setToolTip(tip);
+        b->setFocusPolicy(Qt::NoFocus);  // キーは FS ビュー側で処理する
+        return b;
+      };
+
+      // 再生 / 一時停止 (状態でアイコンが切り替わる)
+      auto* fsPlay = makeButton(
+        m_player->playbackState() == QMediaPlayer::PlayingState
+          ? QStringLiteral(":/icons/toolbar/pause.svg")
+          : QStringLiteral(":/icons/toolbar/play.svg"),
+        tr("Play / Pause (Space)"));
+      connect(fsPlay, &QToolButton::clicked, this, &MediaView::togglePlayPause);
+      connect(m_player, &QMediaPlayer::playbackStateChanged, fsPlay,
+              [this, fsPlay](QMediaPlayer::PlaybackState st) {
+        fsPlay->setIcon(whiteToolbarIcon(st == QMediaPlayer::PlayingState
+          ? QStringLiteral(":/icons/toolbar/pause.svg")
+          : QStringLiteral(":/icons/toolbar/play.svg")));
+      });
+      barLay->addWidget(fsPlay);
+
+      // 停止
+      auto* fsStop = makeButton(QStringLiteral(":/icons/toolbar/stop.svg"),
+                                tr("Stop"));
+      connect(fsStop, &QToolButton::clicked, m_player, &QMediaPlayer::stop);
+      barLay->addWidget(fsStop);
+
+      // シークバー (クリック位置へ即シーク)
+      auto* fsSeek = new ClickSeekSlider(Qt::Horizontal, m_fsControlBar);
+      fsSeek->setFocusPolicy(Qt::NoFocus);
+      fsSeek->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+      fsSeek->setRange(0, int(m_player->duration()));
+      fsSeek->setValue(int(m_player->position()));
+      fsSeek->setEnabled(m_player->duration() > 0);
+      connect(fsSeek, &QSlider::sliderMoved, this, [this](int value) {
+        m_player->setPosition(value);
+      });
+      connect(m_player, &QMediaPlayer::positionChanged, fsSeek,
+              [fsSeek](qint64 pos) {
+        if (!fsSeek->isSliderDown()) fsSeek->setValue(int(pos));
+      });
+      connect(m_player, &QMediaPlayer::durationChanged, fsSeek,
+              [fsSeek](qint64 dur) {
+        fsSeek->setRange(0, int(dur));
+        fsSeek->setEnabled(dur > 0);
+      });
+      barLay->addWidget(fsSeek, 1);
+
+      // 時間表示
+      auto* fsTime = new QLabel(m_fsControlBar);
+      fsTime->setText(QStringLiteral("%1 / %2")
+        .arg(formatTime(m_player->position()), formatTime(m_player->duration())));
+      connect(m_player, &QMediaPlayer::positionChanged, fsTime,
+              [this, fsTime](qint64 pos) {
+        fsTime->setText(QStringLiteral("%1 / %2")
+          .arg(formatTime(pos), formatTime(m_player->duration())));
+      });
+      barLay->addWidget(fsTime);
+
+      // リピート (通常表示のループボタンと双方向同期)
+      auto* fsLoop = makeButton(QStringLiteral(":/icons/toolbar/loop.svg"),
+                                tr("Loop (L)"));
+      fsLoop->setCheckable(true);
+      fsLoop->setChecked(m_loopButton->isChecked());
+      connect(fsLoop, &QToolButton::toggled,
+              m_loopButton, &QToolButton::setChecked);
+      connect(m_loopButton, &QToolButton::toggled,
+              fsLoop, &QToolButton::setChecked);
+      barLay->addWidget(fsLoop);
+
+      // ミュート (通常表示のミュートボタンと双方向同期)
+      auto* fsMute = makeButton(
+        m_muteButton->isChecked()
+          ? QStringLiteral(":/icons/toolbar/volume-muted.svg")
+          : QStringLiteral(":/icons/toolbar/volume.svg"),
+        tr("Mute (M)"));
+      fsMute->setCheckable(true);
+      fsMute->setChecked(m_muteButton->isChecked());
+      connect(fsMute, &QToolButton::toggled,
+              m_muteButton, &QToolButton::setChecked);
+      connect(m_muteButton, &QToolButton::toggled, fsMute,
+              [fsMute](bool checked) {
+        fsMute->setChecked(checked);
+        fsMute->setIcon(whiteToolbarIcon(checked
+          ? QStringLiteral(":/icons/toolbar/volume-muted.svg")
+          : QStringLiteral(":/icons/toolbar/volume.svg")));
+      });
+      barLay->addWidget(fsMute);
+
+      // 音量 (通常表示の音量スライダと双方向同期。同値 setValue は無限ループ
+      // にならない)
+      auto* fsVolume = new QSlider(Qt::Horizontal, m_fsControlBar);
+      fsVolume->setFocusPolicy(Qt::NoFocus);
+      fsVolume->setRange(0, 100);
+      fsVolume->setFixedWidth(96);
+      fsVolume->setValue(m_volumeSlider->value());
+      connect(fsVolume, &QSlider::valueChanged,
+              m_volumeSlider, &QSlider::setValue);
+      connect(m_volumeSlider, &QSlider::valueChanged,
+              fsVolume, &QSlider::setValue);
+      barLay->addWidget(fsVolume);
+    }
+    m_fsControlBar->installEventFilter(this);  // ホバー中は消さない
+    m_fsControlBar->hide();
+
+    if (!m_fsControlHideTimer) {
+      m_fsControlHideTimer = new QTimer(this);
+      m_fsControlHideTimer->setSingleShot(true);
+      connect(m_fsControlHideTimer, &QTimer::timeout, this, [this]() {
+        // パネル上にカーソルがある間は消さない。
+        if (m_fsControlBar && !m_fsControlBar->underMouse()) {
+          m_fsControlBar->hide();
+        }
+      });
+    }
+
+    m_fsView->showFullScreen();
+    fitVideoView(m_fsView);
+    m_fsView->setFocus(Qt::OtherFocusReason);
+    showFsControls();  // 開始直後は一度出しておく (数秒で自動的に消える)
   } else {
+    if (m_fsControlHideTimer) m_fsControlHideTimer->stop();
+    m_fsControlBar = nullptr;  // m_fsView の子なので下の破棄で消える
+    QGraphicsView* v = m_fsView;
+    m_fsView = nullptr;
+    if (v) {
+      v->removeEventFilter(this);
+      v->deleteLater();
+    }
     setFocus(Qt::OtherFocusReason);
   }
+}
+
+void MediaView::showFsControls() {
+  if (!m_fsControlBar) return;
+  layoutFsControlBar();
+  m_fsControlBar->show();
+  m_fsControlBar->raise();
+  if (m_fsControlHideTimer) m_fsControlHideTimer->start(2500);
+}
+
+void MediaView::layoutFsControlBar() {
+  if (!m_fsView || !m_fsControlBar) return;
+  // 画面下部に少し浮かせた角丸の板として配置する (左右・下に余白)。
+  const int margin = 24;
+  const int h = m_fsControlBar->sizeHint().height();
+  const int w = m_fsView->width() - margin * 2;
+  m_fsControlBar->setGeometry(margin, m_fsView->height() - h - margin, w, h);
 }
 
 void MediaView::applyVolume() {
@@ -785,7 +1009,7 @@ void MediaView::updateCurrentPage() {
   // エラーメッセージ表示中はそのまま維持する。
   if (m_stack->currentWidget() == m_messageLabel) return;
   const bool hasVideo = m_player->hasVideo();
-  m_stack->setCurrentWidget(hasVideo ? static_cast<QWidget*>(m_videoScrollArea)
+  m_stack->setCurrentWidget(hasVideo ? static_cast<QWidget*>(m_videoView)
                                      : static_cast<QWidget*>(m_audioCard));
   // ズーム / フルスクリーンは動画のみ (音声では非表示)。
   m_fullScreenAction->setVisible(hasVideo);
@@ -797,44 +1021,49 @@ void MediaView::updateCurrentPage() {
   updateZoomComboText();
 }
 
+void MediaView::fitVideoView(QGraphicsView* view) {
+  if (!view || !m_videoItem) return;
+  if (m_videoItem->boundingRect().isEmpty()) return;  // ネイティブサイズ未確定
+  view->resetTransform();
+  view->fitInView(m_videoItem, Qt::KeepAspectRatio);
+}
+
 void MediaView::applyVideoZoom() {
-  if (!m_videoScrollArea) return;
+  if (!m_videoView) return;
   if (m_fitToWindow) {
-    // viewport にフィット (QVideoWidget の KeepAspectRatio でレターボックス)。
-    m_videoScrollArea->setWidgetResizable(true);
+    // 埋め込みビューを viewport にフィット (KeepAspectRatio でレターボックス)。
+    m_videoView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_videoView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    fitVideoView(m_videoView);
     return;
   }
-  // 手動ズーム: 100% = 動画の自然サイズ (実ピクセル等倍。ImageView と同義) を
-  // 基準に、× 倍率で固定してスクロールバーを出す。ネイティブ解像度はフレーム
-  // 描画後に確定するので、未確定の間だけ暫定で viewport を基準にし、確定後は
-  // updateNativeVideoSize() が実ピクセル基準で再適用する。
-  QSize base = m_nativeVideoSize;
-  if (base.isEmpty()) base = m_videoScrollArea->viewport()->size();
-  if (base.isEmpty()) return;
-  const QSize target = base * (m_zoomPercent / 100.0);
-  if (m_videoScrollArea->widgetResizable()) {
-    m_videoScrollArea->setWidgetResizable(false);
-  }
-  if (m_videoWidget->size() != target) {
-    m_videoWidget->resize(target);
-  }
+  // 手動ズーム: 100% = 動画の自然サイズ (実ピクセル等倍。ImageView と同義)。
+  // アイテムは実解像度サイズなので、ビューの変換を ×倍率にすれば実ピクセル基準
+  // になる。はみ出す分はスクロールバーを出す。
+  m_videoView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  m_videoView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  const double z = m_zoomPercent / 100.0;
+  m_videoView->resetTransform();
+  m_videoView->scale(z, z);
 }
 
 void MediaView::updateNativeVideoSize() {
-  if (!m_nativeVideoSize.isEmpty()) return;  // 既知なら以後は何もしない
-  const QSize s = videoResolution();
-  if (s.isValid() && !s.isEmpty()) {
-    m_nativeVideoSize = s;
-    // 暫定 (viewport) 基準で当てていた手動ズームを実ピクセル基準で当て直す。
-    if (!m_fitToWindow) applyVideoZoom();
-    // Fit 中は解像度が分かって初めて実効倍率を計算できるのでコンボへ反映。
-    else updateZoomComboText();
-  }
+  if (!m_videoItem) return;
+  const QSizeF ns = m_videoItem->nativeSize();
+  if (ns.isEmpty()) return;
+  m_nativeVideoSize = ns.toSize();
+  // アイテムを実解像度サイズにし、シーン矩形も合わせる。以後ズーム/フィットは
+  // このアイテム矩形を基準に計算される。
+  m_videoItem->setSize(ns);
+  if (m_scene) m_scene->setSceneRect(m_videoItem->boundingRect());
+  applyVideoZoom();
+  if (m_fsView) fitVideoView(m_fsView);
+  updateZoomComboText();
 }
 
 int MediaView::effectiveVideoZoomPercent() const {
-  if (m_nativeVideoSize.isEmpty() || !m_videoScrollArea) return m_zoomPercent;
-  const QSize vp = m_videoScrollArea->viewport()->size();
+  if (m_nativeVideoSize.isEmpty() || !m_videoView) return m_zoomPercent;
+  const QSize vp = m_videoView->viewport()->size();
   if (vp.isEmpty()) return m_zoomPercent;
   // KeepAspectRatio で viewport に収めたときの実倍率。
   const double rx = double(vp.width())  / m_nativeVideoSize.width();
@@ -867,7 +1096,7 @@ QSize MediaView::naturalVideoSize() const {
 }
 
 QSize MediaView::videoAreaSize() const {
-  return m_videoScrollArea ? m_videoScrollArea->viewport()->size() : QSize();
+  return m_videoView ? m_videoView->viewport()->size() : QSize();
 }
 
 void MediaView::updateZoomEnabled() {
@@ -885,18 +1114,17 @@ QSize MediaView::videoResolution() const {
     }
   }
   // メタデータに解像度が無いバックエンド (macOS/AVFoundation 等) でも、実際に
-  // 描画された動画の自然サイズ (QVideoWidget::sizeHint) からネイティブ解像度を
-  // 取得できる。これにより 100% = 実ピクセル等倍 を ImageView と揃えられる。
-  if ((!res.isValid() || res.isEmpty()) && m_videoWidget) {
-    const QSize hint = m_videoWidget->sizeHint();
-    if (hint.isValid() && !hint.isEmpty()) res = hint;
+  // 描画された動画の自然サイズ (QGraphicsVideoItem::nativeSize) からネイティブ
+  // 解像度を取得できる。これにより 100% = 実ピクセル等倍 を ImageView と揃える。
+  if ((!res.isValid() || res.isEmpty()) && m_videoItem) {
+    const QSize ns = m_videoItem->nativeSize().toSize();
+    if (ns.isValid() && !ns.isEmpty()) res = ns;
   }
   return res;
 }
 
 void MediaView::exitFullscreen() {
-  // 生存中 (closeEvent / clearContent) に呼ぶ。破棄途中に呼ぶと QScrollArea 内
-  // QVideoWidget の再ペアレントで createWinId 無限再帰クラッシュになるため。
+  // 表示を閉じる (closeEvent / clearContent) 際にフルスクリーンを解除する。
   setVideoFullScreen(false);
 }
 

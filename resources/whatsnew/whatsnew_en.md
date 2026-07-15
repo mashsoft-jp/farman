@@ -50,6 +50,16 @@ font size is unified to **9pt** (the address bar, file list, and viewers
 keep their existing fonts, only resized to 9pt). This is the default for
 new installations.
 
+### Improved video viewer full screen
+
+Fixed video full screen not working correctly (the video did not expand to
+the whole screen, and Esc did not exit). While in full screen, moving the
+mouse now shows a translucent control panel (play/pause, stop, seek, loop,
+volume) at the bottom of the screen.
+
 ### Other
 
+- Show "width × height" while resizing the window by dragging
+- The "Name" column of the file list now stretches with the window width
+- macOS: fixed buttons with kanji labels looking different from others
 - Stability improvements and bug fixes
