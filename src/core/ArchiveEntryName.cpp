@@ -38,21 +38,26 @@ QString decodeBytesBestEffort(const QByteArray& raw) {
 QString decodeArchiveEntryName(struct archive_entry* entry) {
   if (!entry) return QString();
 
+  // 生の格納バイト列を取得し、自前でエンコーディングを判定する
+  // (UTF-8 → Shift_JIS)。libarchive の _w / _utf8 変換は、UTF-8 フラグの無い
+  // CP932 (Shift-JIS) の zip / lzh 名をプロセスロケール依存で誤変換して文字化け
+  // させる。farman は日本語ロケールを設定していないため、特に Windows で
+  // archive_entry_pathname_w() が化ける。macOS / Linux で実績のあるこの生バイト
+  // 経路を全プラットフォームで使う (Windows の "C" ロケール下でも
+  // archive_entry_pathname() は生バイトを返す)。
+  if (const char* name = archive_entry_pathname(entry)) {
+    return decodeBytesBestEffort(QByteArray(name));
+  }
+  if (const char* uname = archive_entry_pathname_utf8(entry)) {
+    return decodeBytesBestEffort(QByteArray(uname));
+  }
 #ifdef Q_OS_WIN
-  // Windows では libarchive がワイド文字 (ACP 変換済み) を返せることが多い。
-  // 取れたらそれを優先する。取れなければ MBS 経路へフォールバック。
+  // 生バイトがどうしても取れないときだけワイド版にフォールバック。
   if (const wchar_t* wname = archive_entry_pathname_w(entry)) {
-    const QString s = QString::fromWCharArray(wname);
-    if (!s.isEmpty()) return s;
+    return QString::fromWCharArray(wname);
   }
 #endif
-
-  const char* name = archive_entry_pathname(entry);
-  if (!name) {
-    name = archive_entry_pathname_utf8(entry);
-  }
-  if (!name) return QString();
-  return decodeBytesBestEffort(QByteArray(name));
+  return QString();
 }
 
 } // namespace Farman

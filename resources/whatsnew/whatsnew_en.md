@@ -62,4 +62,5 @@ volume) at the bottom of the screen.
 - Show "width × height" while resizing the window by dragging
 - The "Name" column of the file list now stretches with the window width
 - macOS: fixed buttons with kanji labels looking different from others
+- Windows: fixed garbled Shift-JIS (CP932) Japanese file names inside zip / lzh archives
 - Stability improvements and bug fixes
