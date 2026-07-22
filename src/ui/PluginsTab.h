@@ -95,6 +95,7 @@ private:
   QCheckBox*   m_allowExternalPluginsCheck = nullptr;
   QLineEdit*   m_pluginsDirectoryEdit    = nullptr;
   QToolButton* m_pluginsDirectoryBrowse  = nullptr;
+  QToolButton* m_pluginsDirectoryOpen    = nullptr;
   QToolButton* m_pluginsDirectoryDefault = nullptr;
 
   // インストール済みプラグイン (種別ごとのタブ)

@@ -4,6 +4,8 @@
 #include "viewer/IViewerPlugin.h"
 #include "viewer/ViewerDispatcher.h"
 #include <QCheckBox>
+#include <QDesktopServices>
+#include <QUrl>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDir>
@@ -80,6 +82,12 @@ void PluginsTab::setupUi() {
   m_pluginsDirectoryBrowse = new QToolButton(dirGroup);
   m_pluginsDirectoryBrowse->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
   m_pluginsDirectoryBrowse->setToolTip(tr("Choose plugins directory..."));
+  m_pluginsDirectoryOpen = new QToolButton(dirGroup);
+  m_pluginsDirectoryOpen->setIcon(style()->standardIcon(QStyle::SP_DirOpenIcon));
+  m_pluginsDirectoryOpen->setText(tr("Open"));
+  m_pluginsDirectoryOpen->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  m_pluginsDirectoryOpen->setToolTip(
+    tr("Open the plugins directory in Finder / Explorer."));
   m_pluginsDirectoryDefault = new QToolButton(dirGroup);
   m_pluginsDirectoryDefault->setText(tr("Default"));
   m_pluginsDirectoryDefault->setToolTip(
@@ -88,8 +96,20 @@ void PluginsTab::setupUi() {
   dirRowLayout->addWidget(new QLabel(tr("Directory:"), dirGroup));
   dirRowLayout->addWidget(m_pluginsDirectoryEdit, 1);
   dirRowLayout->addWidget(m_pluginsDirectoryBrowse);
+  dirRowLayout->addWidget(m_pluginsDirectoryOpen);
   dirRowLayout->addWidget(m_pluginsDirectoryDefault);
   dirLayout->addWidget(dirRow);
+
+  // プラグインディレクトリを Finder / エクスプローラーで開く。空欄なら既定
+  // ディレクトリを開く。dll/dylib/so を手で置きに行くとき用。無ければ作る。
+  connect(m_pluginsDirectoryOpen, &QToolButton::clicked, this, [this]() {
+    QString dir = m_pluginsDirectoryEdit->text().trimmed();
+    if (dir.isEmpty()) dir = Settings::defaultPluginsDirectory();
+    QDir().mkpath(dir);
+    QDir().mkpath(dir + QStringLiteral("/viewers"));
+    QDir().mkpath(dir + QStringLiteral("/archives"));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+  });
 
   connect(m_pluginsDirectoryBrowse, &QToolButton::clicked, this, [this]() {
     const QString start = m_pluginsDirectoryEdit->text().isEmpty()
