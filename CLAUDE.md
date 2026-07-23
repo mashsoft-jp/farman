@@ -115,6 +115,13 @@ src/
    もこのリリースの内容に更新する。見出しのバージョンが VERSION と一致しないと
    release.yml の Pre-release checks (`tools/check_whatsnew.sh`) がビルド前に
    fail する。
+   さらに **Web サイトの新機能ページも更新する**: `docs/whatsnew/index.html` と
+   `docs/en/whatsnew/index.html` に新バージョンの節 (`.doc-section`、最新が上) を
+   追加し、見出しにリリース日を併記する。トップページ (`docs/index.html` /
+   `docs/en/index.html`) のヒーロー直下にある概要カード (`.wn-summary`) の
+   見出し・日付・主要項目も新バージョンに差し替える。内容はアップデート内容
+   ダイアログ (whatsnew) と揃える。docs/ は main へのマージ (手順 5) で GitHub
+   Pages に自動デプロイされる。
 2. **`vX.Y.Z-test` タグを `release/vX.Y.Z` の先端に直接打って push**。
    - main にはまだマージしない。テストで問題が見つかって release ブランチに修正を入れる場合、main を巻き戻す必要がない。
    - `git tag -a vX.Y.Z-test -m "..."; git push origin release/vX.Y.Z vX.Y.Z-test`
@@ -122,8 +129,15 @@ src/
 4. 問題が見つかったら `release/vX.Y.Z` に修正を追加コミット → `vX.Y.Z-test` を **force でリセット** (`git tag -f` + `git push --force origin vX.Y.Z-test`)。Draft Release が新しいビルドで上書き更新される。
 5. テストが完了したら、はじめて **`release/vX.Y.Z` を main に fast-forward マージ** + push。
 6. main の HEAD に `vX.Y.Z` 正式タグを打って push → 同じ `release.yml` が正式リリースの Draft を作る。
-7. Draft Release を確認してから手動で Publish。Publish された stable リリースを auto-update が検知する。
+7. 正式リリースの Draft ができたら、**GitHub リリースページの本文に更新内容を
+   記載する**。release.yml が自動生成するのは `**Full Changelog**` 行のみなので、
+   その前に whatsnew と同じ内容を **日本語 → `---` → `# English` → 英語** の順
+   (`##` 見出し) で追記する (v0.9.7 / v0.9.8 のリリース本文が手本。
+   `gh release edit vX.Y.Z --notes-file <file>` で反映)。本文を確認してから手動で
+   Publish。Publish された stable リリースを auto-update が検知する。
 
 注意:
 - `build.yml` は push trigger から `main` を外してある (PR は残してある)。main へのマージで CI が二重に走らないようになっている。`release.yml` のみがタグ push で走る。
 - **force push** は v\*-test タグに限る運用にする。`vX.Y.Z` 正式タグや main ブランチへの force push はしない。
+- 正式リリースを Publish したら、残っている `vX.Y.Z-test` の Draft Release とタグを
+  削除して片付ける (`gh release delete vX.Y.Z-test -R mashsoft-jp/farman --cleanup-tag`)。
