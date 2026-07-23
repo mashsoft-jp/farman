@@ -15,16 +15,12 @@
   <link rel="icon" type="image/png" href="../../farman-icon.png" />
   <link rel="stylesheet" href="../../style.css" />
   <style>
-    /* Docs-style page: left-align (override the landing's centered
-       .section h2 / .about-name — centered body text is hard to read). */
-    .section h2 { text-align: left; margin: 0 0 20px; }
-    .about-name { text-align: left; margin: 0; }
-    .download-note { text-align: left; }
+    /* Docs page: same single-column layout as the manual (.manual + .doc-section)
+       so headings and body share one left edge. */
     .btn-sm { padding: 7px 16px; font-size: .9rem; margin: 2px 4px 2px 0; }
     .plugin-meta { color: var(--fg-muted); font-size: .85rem; margin: 6px 0 12px; }
     .feature .btn-sm { margin-top: 4px; }
-    .doc-list { padding-left: 1.3em; }
-    .doc-list li { margin: 0 0 9px; }
+    .feature p { margin: 0 0 4px; }
   </style>
 </head>
 <body>
@@ -44,34 +40,35 @@
     </nav>
   </header>
 
-  <!-- ===== Intro ===== -->
-  <section class="section" id="top">
+  <!-- ===== Plugins ===== -->
+  <main class="manual">
     <h1>Plugins</h1>
-    <div class="about-name">
-      <p>farman supports <strong>external plugins</strong> that add viewers and archive formats after the fact. In addition to official plugins, third-party plugins are supported too.</p>
-      <p>External plugins are native code and run with the same privileges as farman. For safety, loading external plugins is off by default. <strong>Only enable plugins from sources you trust.</strong></p>
-    </div>
-  </section>
+    <p class="manual-lead">
+      farman supports <strong>external plugins</strong> that add viewers and archive formats after the fact.
+      In addition to official plugins, third-party plugins are supported too.
+    </p>
+    <p>
+      External plugins are native code and run with the same privileges as farman. For safety, loading external plugins is off by default. <strong>Only enable plugins from sources you trust.</strong>
+    </p>
 
-  <!-- ===== Plugin list ===== -->
-  <section class="section section-alt" id="list">
-    <h2>Available plugins</h2>
-    <div class="feature-grid">
-      <div class="feature">
-        <h3>LZH (LHA) archive</h3>
-        <p>Browse and extract <code>.lzh</code> / <code>.lha</code> archives, just like zip / tar. Japanese Shift-JIS file names are handled (read-only). The macOS build is signed with an Apple Developer ID and notarized.</p>
-        <p class="plugin-meta">Type: archive · Platforms: macOS / Windows / Linux</p>
-        <p><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">Download</a>
-           <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">Repository</a></p>
+    <!-- List -->
+    <section class="doc-section" id="list">
+      <h2>Available plugins</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <h3>LZH (LHA) archive</h3>
+          <p>Browse and extract <code>.lzh</code> / <code>.lha</code> archives, just like zip / tar. Japanese Shift-JIS file names are handled (read-only). The macOS build is signed with an Apple Developer ID and notarized.</p>
+          <p class="plugin-meta">Type: archive · Platforms: macOS / Windows / Linux</p>
+          <p><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">Download</a>
+             <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">Repository</a></p>
+        </div>
       </div>
-    </div>
-    <p class="download-note">More plugins will be added over time. Want to build one? See "Plugin development" below.</p>
-  </section>
+      <p class="doc-note">More plugins will be added over time. Want to build one? See "Plugin development" below.</p>
+    </section>
 
-  <!-- ===== Install ===== -->
-  <section class="section" id="install">
-    <h2>How to install</h2>
-    <div class="about-name">
+    <!-- Install -->
+    <section class="doc-section" id="install">
+      <h2>How to install</h2>
       <p>External plugins are loaded from farman's plugins directory. The steps are the same for any plugin.</p>
       <ol class="doc-list">
         <li>Download the file for your OS from the plugin's download page (macOS: <code>.dylib</code> / Windows: <code>.dll</code> / Linux: <code>.so</code>).</li>
@@ -79,21 +76,19 @@
         <li>On the same screen, turn on <strong>Allow loading external plugins</strong> (off by default).</li>
         <li>Restart farman. If the plugin appears in the list under Settings → Plugins, it's installed.</li>
       </ol>
-      <p class="download-note">macOS: official plugins are signed + notarized and load as-is. Unsigned third-party plugins may be blocked on first load by download quarantine (follow the provider's instructions). Windows: unsigned plugins may trigger a SmartScreen warning.</p>
-    </div>
-  </section>
+      <p class="doc-note">macOS: official plugins are signed + notarized and load as-is. Unsigned third-party plugins may be blocked on first load by download quarantine (follow the provider's instructions). Windows: unsigned plugins may trigger a SmartScreen warning.</p>
+    </section>
 
-  <!-- ===== Develop ===== -->
-  <section class="section section-alt" id="develop">
-    <h2>Plugin development</h2>
-    <div class="about-name">
+    <!-- Develop -->
+    <section class="doc-section" id="develop">
+      <h2>Plugin development</h2>
       <p>farman plugins are written in C++ / Qt. Implement the <code>IViewerPlugin</code> (viewers) or <code>IArchivePlugin</code> (archives) interface and build a dynamic library. The guide covers ABI (Qt version) matching, priority ranges, runtime linking on macOS, a CI template, and more.</p>
       <p>
         <a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman/blob/main/PLUGIN_DEVELOPMENT.md" rel="noopener">Plugin development guide</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">Reference (farman-plugin-lzh)</a>
       </p>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <!-- ===== Footer ===== -->
   <footer class="site-footer">

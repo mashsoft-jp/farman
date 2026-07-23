@@ -15,17 +15,12 @@
   <link rel="icon" type="image/png" href="../farman-icon.png" />
   <link rel="stylesheet" href="../style.css" />
   <style>
-    /* プラグインページはドキュメント系なので左寄せに統一 (ランディングの
-       中央寄せ .section h2 / .about-name を打ち消す。中央寄せ本文は読みづらい)。 */
-    .section h2 { text-align: left; margin: 0 0 20px; }
-    .about-name { text-align: left; margin: 0; }
-    .download-note { text-align: left; }
-    /* プラグインページ用の小物 */
+    /* プラグインページはマニュアルと同じ単一カラムのドキュメントレイアウト
+       (.manual + .doc-section)。見出し・本文がすべて同じ左端に揃う。 */
     .btn-sm { padding: 7px 16px; font-size: .9rem; margin: 2px 4px 2px 0; }
     .plugin-meta { color: var(--fg-muted); font-size: .85rem; margin: 6px 0 12px; }
     .feature .btn-sm { margin-top: 4px; }
-    .doc-list { padding-left: 1.3em; }
-    .doc-list li { margin: 0 0 9px; }
+    .feature p { margin: 0 0 4px; }
   </style>
 </head>
 <body>
@@ -45,34 +40,35 @@
     </nav>
   </header>
 
-  <!-- ===== Intro ===== -->
-  <section class="section" id="top">
+  <!-- ===== Plugins ===== -->
+  <main class="manual">
     <h1>プラグイン</h1>
-    <div class="about-name">
-      <p>farman は、ビュアーやアーカイブ形式を後から追加できる<strong>外部プラグイン</strong>に対応しています。公式プラグインのほか、第三者が作成したプラグインも導入できます。</p>
-      <p>外部プラグインはネイティブコードで、farman と同じ権限で動作します。安全のため、外部プラグインの読み込みは既定でオフです。<strong>信頼できる提供元のプラグインだけ</strong>を有効にしてください。</p>
-    </div>
-  </section>
+    <p class="manual-lead">
+      farman は、ビュアーやアーカイブ形式を後から追加できる<strong>外部プラグイン</strong>に対応しています。
+      公式プラグインのほか、第三者が作成したプラグインも導入できます。
+    </p>
+    <p>
+      外部プラグインはネイティブコードで、farman と同じ権限で動作します。安全のため、外部プラグインの読み込みは既定でオフです。<strong>信頼できる提供元のプラグインだけ</strong>を有効にしてください。
+    </p>
 
-  <!-- ===== Plugin list ===== -->
-  <section class="section section-alt" id="list">
-    <h2>プラグイン一覧</h2>
-    <div class="feature-grid">
-      <div class="feature">
-        <h3>LZH (LHA) アーカイブ</h3>
-        <p><code>.lzh</code> / <code>.lha</code> アーカイブを、zip / tar と同じようにブラウジング・展開。日本語 Shift-JIS のファイル名にも対応（読み取り専用）。macOS 版は Apple の Developer ID 署名 + 公証済み。</p>
-        <p class="plugin-meta">種別: アーカイブ ・ 対応 OS: macOS / Windows / Linux</p>
-        <p><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">ダウンロード</a>
-           <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">リポジトリ</a></p>
+    <!-- 一覧 -->
+    <section class="doc-section" id="list">
+      <h2>プラグイン一覧</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <h3>LZH (LHA) アーカイブ</h3>
+          <p><code>.lzh</code> / <code>.lha</code> アーカイブを、zip / tar と同じようにブラウジング・展開。日本語 Shift-JIS のファイル名にも対応（読み取り専用）。macOS 版は Apple の Developer ID 署名 + 公証済み。</p>
+          <p class="plugin-meta">種別: アーカイブ ・ 対応 OS: macOS / Windows / Linux</p>
+          <p><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">ダウンロード</a>
+             <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">リポジトリ</a></p>
+        </div>
       </div>
-    </div>
-    <p class="download-note">プラグインは順次追加予定です。作ってみたい方は下の「プラグイン開発」を参照してください。</p>
-  </section>
+      <p class="doc-note">プラグインは順次追加予定です。作ってみたい方は下の「プラグイン開発」を参照してください。</p>
+    </section>
 
-  <!-- ===== Install ===== -->
-  <section class="section" id="install">
-    <h2>導入手順</h2>
-    <div class="about-name">
+    <!-- 導入手順 -->
+    <section class="doc-section" id="install">
+      <h2>導入手順</h2>
       <p>外部プラグインは、farman のプラグインディレクトリに置いて読み込みます。手順はどのプラグインでも共通です。</p>
       <ol class="doc-list">
         <li>お使いの OS 用のファイルを、そのプラグインの配布ページからダウンロードします（macOS: <code>.dylib</code> / Windows: <code>.dll</code> / Linux: <code>.so</code>）。</li>
@@ -80,21 +76,19 @@
         <li>同じ画面で「<strong>外部プラグインの読込みを許可する</strong>」をオンにします（既定はオフ）。</li>
         <li>farman を再起動します。設定 → プラグインの一覧に読み込まれたプラグインが表示されれば導入完了です。</li>
       </ol>
-      <p class="download-note">macOS: 公式プラグインは署名 + 公証済みでそのまま読み込めます。未署名の第三者プラグインはダウンロード時の隔離により初回ロードがブロックされることがあります（提供元の案内に従ってください）。Windows: 未署名のプラグインは SmartScreen の警告が出ることがあります。</p>
-    </div>
-  </section>
+      <p class="doc-note">macOS: 公式プラグインは署名 + 公証済みでそのまま読み込めます。未署名の第三者プラグインはダウンロード時の隔離により初回ロードがブロックされることがあります（提供元の案内に従ってください）。Windows: 未署名のプラグインは SmartScreen の警告が出ることがあります。</p>
+    </section>
 
-  <!-- ===== Develop ===== -->
-  <section class="section section-alt" id="develop">
-    <h2>プラグイン開発</h2>
-    <div class="about-name">
+    <!-- 開発 -->
+    <section class="doc-section" id="develop">
+      <h2>プラグイン開発</h2>
       <p>farman のプラグインは C++ / Qt で作成できます。ビュアー用の <code>IViewerPlugin</code>、アーカイブ用の <code>IArchivePlugin</code> インターフェースを実装し、動的ライブラリとしてビルドします。ABI（Qt バージョン）の一致、優先度の割り当て、macOS の実行時リンク、CI テンプレートなどをガイドにまとめています。</p>
       <p>
         <a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman/blob/main/PLUGIN_DEVELOPMENT.md" rel="noopener">プラグイン開発ガイド</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">参照実装 (farman-plugin-lzh)</a>
       </p>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <!-- ===== Footer ===== -->
   <footer class="site-footer">
