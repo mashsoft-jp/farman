@@ -15,6 +15,11 @@
   <link rel="icon" type="image/png" href="../farman-icon.png" />
   <link rel="stylesheet" href="../style.css" />
   <style>
+    /* プラグインページはドキュメント系なので左寄せに統一 (ランディングの
+       中央寄せ .section h2 / .about-name を打ち消す。中央寄せ本文は読みづらい)。 */
+    .section h2 { text-align: left; margin: 0 0 20px; }
+    .about-name { text-align: left; margin: 0; }
+    .download-note { text-align: left; }
     /* プラグインページ用の小物 */
     .btn-sm { padding: 7px 16px; font-size: .9rem; margin: 2px 4px 2px 0; }
     .plugin-meta { color: var(--fg-muted); font-size: .85rem; margin: 6px 0 12px; }
