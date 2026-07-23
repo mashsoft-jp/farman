@@ -27,7 +27,7 @@
       <a href="#features">Features</a>
       <a href="#screenshots">Screenshots</a>
       <a href="#download">Download</a>
-      <a href="#plugins">Plugins</a>
+      <a href="plugins/">Plugins</a>
       <a href="manual/">Manual</a>
       <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">Changelog</a>
       <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a>
@@ -101,7 +101,7 @@
       </div>
       <div class="feature">
         <h3>Plugins</h3>
-        <p>Add viewers and archive formats via external plugins. The official <a href="#plugins">LZH (LHA) plugin</a> is available, and third-party plugins are supported too.</p>
+        <p>Add viewers and archive formats via <a href="plugins/">external plugins</a>. The official LZH (LHA) plugin is available, and third-party plugins are supported too.</p>
       </div>
     </div>
   </section>
@@ -161,29 +161,8 @@
     </p>
   </section>
 
-  <!-- ===== Plugins ===== -->
-  <section class="section section-alt" id="plugins">
-    <h2>Plugins</h2>
-    <div class="about-name">
-      <p>farman supports <strong>external plugins</strong> that add viewers and archive formats after the fact (third-party plugins are supported too). The first official plugin opens <code>.lzh</code> / <code>.lha</code> archives.</p>
-
-      <h3>LZH (LHA) archive plugin</h3>
-      <p>Browse inside the archive and extract files, just like zip / tar (Japanese Shift-JIS file names are handled; read-only). The macOS build is signed with an Apple Developer ID and notarized, so it loads without extra steps.</p>
-
-      <p><strong>How to install</strong></p>
-      <ol class="doc-list">
-        <li>Download the file for your OS from the <a href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">LZH plugin Releases</a> (macOS: <code>.dylib</code> / Windows: <code>.dll</code> / Linux: <code>.so</code>).</li>
-        <li>In farman, go to <strong>Settings → Plugins</strong>, click <strong>Open</strong> to open the plugins directory, and put the file into the <code>archives</code> subfolder.</li>
-        <li>On the same screen, turn on <strong>Allow loading external plugins</strong> (off by default for safety — only enable plugins from sources you trust).</li>
-        <li>Restart farman. Press Enter on a <code>.lzh</code> / <code>.lha</code> file to browse and extract it.</li>
-      </ol>
-
-      <p class="download-note">The Windows build is unsigned, so SmartScreen may warn on download. Developers who want to build a plugin can read the <a href="https://github.com/mashsoft-jp/farman/blob/main/PLUGIN_DEVELOPMENT.md" rel="noopener">plugin development guide</a>.</p>
-    </div>
-  </section>
-
   <!-- ===== About the name ===== -->
-  <section class="section" id="about-name">
+  <section class="section section-alt" id="about-name">
     <h2>About the name</h2>
     <div class="about-name">
       <p>farman is named after <strong>Henri Farman</strong>, a pioneering aviator of the biplane era.</p>
