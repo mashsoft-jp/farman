@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>farman What's New / Release Notes</title>
+  <meta name="description" content="What's new in each version of farman — the same notes shown in the app's update dialog, newest first." />
+
+  <meta property="og:title" content="farman What's New" />
+  <meta property="og:description" content="What's new in each version of farman." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://farman.mashsoft.co.jp/farman-icon.png" />
+  <meta name="twitter:card" content="summary" />
+
+  <link rel="icon" type="image/png" href="../../farman-icon.png" />
+  <link rel="stylesheet" href="../../style.css" />
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="site-header">
+    <a class="brand" href="../">
+      <img src="../../farman-icon.png" alt="farman" width="32" height="32" />
+      <span>farman</span>
+    </a>
+    <nav class="nav">
+      <a href="../#features">Features</a>
+      <a href="../#download">Download</a>
+      <a href="../plugins/">Plugins</a>
+      <a href="../manual/">Manual</a>
+      <a href="../">Top</a>
+      <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a>
+      <a class="lang-switch" href="../../whatsnew/">日本語</a>
+    </nav>
+  </header>
+
+  <!-- ===== What's new ===== -->
+  <main class="manual">
+    <h1>What's New</h1>
+    <p class="manual-lead">
+      What's new in each version. These are the same notes shown in the app under "Help → What's New...", listed newest first.
+    </p>
+
+    <!-- 0.9.8 -->
+    <section class="doc-section" id="v0-9-8">
+      <h2>farman 0.9.8 <span class="wn-date">2026-07-23</span></h2>
+      <div class="whatsnew">
+        <h3>Archive plugin support</h3>
+        <p>farman can now load external plugins beyond viewers. The archive formats farman can open can be extended later through external plugins, including plugins written by third parties.</p>
+        <ul>
+          <li>Archives in an added format can be browsed and extracted just like zip / tar: you can step inside them and take files out.</li>
+          <li>These plugins are not bundled with farman; users who need them download and install them separately.</li>
+        </ul>
+
+        <h3>External plugin loading is now opt-in</h3>
+        <p>External plugins are native code and run with the same privileges as farman. For safety, external plugin loading is now <strong>off</strong> by default.</p>
+        <ul>
+          <li>Turn on <strong>"Allow loading external plugins"</strong> under Settings &gt; Plugins to load plugins from the external plugin directory on the next launch (bundled plugins are always enabled).</li>
+          <li>Only enable plugins from sources you trust.</li>
+        </ul>
+
+        <h3>LZH (LHA) archive plugin released</h3>
+        <p>As the first one, a separate external plugin for opening <code>.lzh</code> / <code>.lha</code> archives is now available.</p>
+        <ul>
+          <li>Browse inside the archive and extract files (Japanese Shift-JIS file names are handled; read-only).</li>
+          <li>Download the plugin for your OS and place it in the <code>archives/</code> folder of farman's external plugin directory, turn on "Allow loading external plugins" under Settings &gt; Plugins, then restart farman. See the <a href="../plugins/">plugins page</a> for details.</li>
+        </ul>
+
+        <h3>Monospace default font for the binary and text viewers</h3>
+        <p>The default font of the binary viewer (hex dump) and the text viewer is now a true monospace font (macOS = Menlo, Windows = MS Gothic, Linux = DejaVu Sans Mono), so columns line up correctly.</p>
+        <ul>
+          <li>This is the default for new installations. If you already use farman, pick a font under each viewer's "Font" setting, or use "Restore defaults" to get the new default font.</li>
+        </ul>
+
+        <h3>Adjusted default fonts on Windows</h3>
+        <p>On Windows, the general UI font is now <strong>MS UI Gothic</strong>, and the overall font size is unified to <strong>9pt</strong> (the address bar, file list, and viewers keep their existing fonts, only resized to 9pt). This is the default for new installations.</p>
+
+        <h3>Improved video viewer full screen</h3>
+        <p>Fixed video full screen not working correctly (the video did not expand to the whole screen, and Esc did not exit). While in full screen, moving the mouse now shows a translucent control panel (play/pause, stop, seek, loop, volume) at the bottom of the screen.</p>
+
+        <h3>Other</h3>
+        <ul>
+          <li>Show "width × height" while resizing the window by dragging</li>
+          <li>The "Name" column of the file list now stretches with the window width</li>
+          <li>macOS: fixed buttons with kanji labels looking different from others</li>
+          <li>Windows: fixed garbled Shift-JIS (CP932) Japanese file names inside zip / lzh archives</li>
+          <li>Stability improvements and bug fixes</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 0.9.7 -->
+    <section class="doc-section" id="v0-9-7">
+      <h2>farman 0.9.7 <span class="wn-date">2026-07-08</span></h2>
+      <div class="whatsnew">
+        <h3>Redesigned Properties Dialog</h3>
+        <p>File / folder properties are now consolidated into a single dialog.</p>
+        <ul>
+          <li>Review name, location, size, modified date, and created date together</li>
+          <li>Multi-selection shows aggregated total size and item count</li>
+          <li>Edit the modified date and attributes (permissions) in place</li>
+          <li>Owner / group are shown with both name and ID; the name is editable only when it is common across the selected files (hidden on Windows)</li>
+        </ul>
+
+        <h3>"Open With Viewer..." Built from Plugins</h3>
+        <p>The "Open With Viewer..." menu is now generated automatically from the registered plugins. Viewers that previously didn't appear in the list, such as the video / audio viewer, can now be chosen from all installed viewers.</p>
+
+        <h3>Status Bar in External Viewers</h3>
+        <p>Viewers opened in a separate window now show the same status information as the inline view. The media viewer shows a summary of the format / codec / resolution / duration.</p>
+
+        <h3>Other Changes</h3>
+        <ul>
+          <li>Fixed Markdown documents containing raw HTML being truncated partway</li>
+          <li>On network / removable drives, where the Trash is unavailable, "Move to Trash" is now disabled so only permanent deletion is offered</li>
+          <li>Fixed the delete-confirmation dialog layout breaking with long file names</li>
+          <li>Fall back to home / root when the initial startup directory does not exist</li>
+          <li>Fixed 0-byte files getting stuck on "Loading" in the binary viewer</li>
+          <li>Stability improvements and bug fixes</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 0.9.6 -->
+    <section class="doc-section" id="v0-9-6">
+      <h2>farman 0.9.6 <span class="wn-date">2026-06-24</span></h2>
+      <div class="whatsnew">
+        <h3>Video / Audio Viewer</h3>
+        <p>Play videos (mp4 / mov / webm / mkv, etc.) and audio files (mp3 / flac / wav, etc.) directly inside farman with the <code>V</code> key. Seeking, volume, looping, and fullscreen are supported.</p>
+
+        <h3>Viewers Are Now Plugins</h3>
+        <p>The bundled viewers (Text / Image / PDF / CSV / Markdown / Binary / Media) have been migrated to dynamically loaded official plugins.</p>
+        <ul>
+          <li>User-built external viewer plugins (.dylib / .so / .dll) can be loaded</li>
+          <li>Per-extension Viewer Associations now also apply in Inline mode</li>
+        </ul>
+
+        <h3>New "Plugins" Settings Page</h3>
+        <p>Everything plugin-related now lives in one place: the plugins directory, the installed plugin list (load status) with enable/disable toggles, and Viewer Associations. Help → Plugins... (toolbar button / shortcut available) opens the page directly.</p>
+
+        <h3>What's New Dialog</h3>
+        <p>After an update, farman shows this dialog once on first launch. You can reopen it any time via Help → What's New...</p>
+
+        <h3>Other Changes</h3>
+        <ul>
+          <li>Removed the SHA-256 hash option from directory compare in favor of the fast default comparison</li>
+          <li>Stability improvements and bug fixes</li>
+        </ul>
+      </div>
+    </section>
+
+    <p class="wn-note">For changes in farman 0.9.5 and earlier, see <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">GitHub Releases</a>.</p>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <p>
+      <a href="../">farman Home</a> ·
+      <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a> ·
+      <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">Releases</a>
+    </p>
+    <p class="copyright">© <a href="https://www.mashsoft.co.jp/" rel="noopener">Mashsoft Inc.</a></p>
+  </footer>
+
+  <script src="../../site.js"></script>
+</body>
+</html>

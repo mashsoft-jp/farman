@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>farman 新機能・更新履歴</title>
+  <meta name="description" content="farman のバージョンごとの新機能・更新内容。アプリのアップデート内容ダイアログと同じ内容を、最新版から順に掲載しています。" />
+
+  <meta property="og:title" content="farman 新機能・更新履歴" />
+  <meta property="og:description" content="farman のバージョンごとの新機能・更新内容。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://farman.mashsoft.co.jp/farman-icon.png" />
+  <meta name="twitter:card" content="summary" />
+
+  <link rel="icon" type="image/png" href="../farman-icon.png" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="site-header">
+    <a class="brand" href="../">
+      <img src="../farman-icon.png" alt="farman" width="32" height="32" />
+      <span>farman</span>
+    </a>
+    <nav class="nav">
+      <a href="../#features">機能</a>
+      <a href="../#download">ダウンロード</a>
+      <a href="../plugins/">プラグイン</a>
+      <a href="../manual/">マニュアル</a>
+      <a href="../">トップ</a>
+      <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a>
+      <a class="lang-switch" href="../en/whatsnew/">English</a>
+    </nav>
+  </header>
+
+  <!-- ===== What's new ===== -->
+  <main class="manual">
+    <h1>新機能・更新履歴</h1>
+    <p class="manual-lead">
+      バージョンごとの新機能・更新内容です。アプリの「ヘルプ → アップデート内容...」で表示される内容と同じものを、最新版から順に掲載しています。
+    </p>
+
+    <!-- 0.9.8 -->
+    <section class="doc-section" id="v0-9-8">
+      <h2>farman 0.9.8 <span class="wn-date">2026-07-23</span></h2>
+      <div class="whatsnew">
+        <h3>アーカイブ外部プラグインに対応</h3>
+        <p>ビュアー以外の外部プラグインを読み込める仕組みを追加しました。farman が扱えるアーカイブ形式を、外部プラグインで後から増やせます。第三者が作成したプラグインも導入できます。</p>
+        <ul>
+          <li>追加した形式のアーカイブも、zip / tar と同じように中に入ってブラウジングでき、ファイルを取り出せます。</li>
+          <li>プラグインは farman 本体には同梱せず、必要な方が別途ダウンロードして導入する形です。</li>
+        </ul>
+
+        <h3>外部プラグインの読込みは明示的な許可制に</h3>
+        <p>外部プラグインはネイティブコードで、farman と同じ権限で動作します。安全のため、外部プラグインの読込みは既定で <strong>オフ</strong> にしました。</p>
+        <ul>
+          <li>設定 → プラグイン の <strong>「外部プラグインの読込みを許可する」</strong> をオンにすると、外部プラグインディレクトリのプラグインを次回起動時から読み込みます（同梱プラグインは常に有効）。</li>
+          <li>信頼できる提供元のプラグインだけを有効にしてください。</li>
+        </ul>
+
+        <h3>LZH (LHA) アーカイブ対応プラグインを公開</h3>
+        <p>第一弾として、<code>.lzh</code> / <code>.lha</code> を開くための外部プラグインを別途公開しました。</p>
+        <ul>
+          <li>アーカイブの中に入ってのブラウジングと、ファイルの展開ができます（日本語 Shift-JIS のファイル名にも対応。読み取り専用）。</li>
+          <li>お使いの OS 用のプラグインをダウンロードし、farman の外部プラグインディレクトリの <code>archives/</code> フォルダに置き、設定 → プラグインで「外部プラグインの読込みを許可する」をオンにして再起動すると有効になります。導入手順は <a href="../plugins/">プラグインページ</a>を参照してください。</li>
+        </ul>
+
+        <h3>バイナリ / テキストビュアーの既定フォントを等幅に</h3>
+        <p>バイナリビュアー (16 進ダンプ) とテキストビュアーの既定フォントを、確実に等幅なフォントにしました（macOS = Menlo、Windows = MS ゴシック、Linux = DejaVu Sans Mono）。桁がずれずに読めるようになります。</p>
+        <ul>
+          <li>これは新規インストール時の既定値です。すでに farman をお使いの場合は、設定ダイアログの各ビュアーの「フォント」で選び直すか「既定に戻す」で新しい既定フォントになります。</li>
+        </ul>
+
+        <h3>Windows の既定フォントを調整</h3>
+        <p>Windows では、UI 全般のフォントを <strong>MS UI Gothic</strong> にし、全体のフォントサイズを <strong>9pt</strong> に統一しました（アドレスバー・ファイルリスト・各ビュアーは従来のフォントのままサイズのみ 9pt）。新規インストール時の既定値です。</p>
+
+        <h3>動画ビュアーのフルスクリーンを改善</h3>
+        <p>動画のフルスクリーンが正常に動作しない問題（全画面に拡大されない・Esc で戻れない）を修正しました。あわせて、フルスクリーン中にマウスを動かすと画面下部に半透明の操作パネル（再生/一時停止・停止・シーク・リピート・音量）を表示するようにしました。</p>
+
+        <h3>その他</h3>
+        <ul>
+          <li>ウィンドウをドラッグでリサイズ中に「幅 × 高さ」を表示</li>
+          <li>ファイルリストの「名前」列がウィンドウ幅に合わせて伸縮するように変更</li>
+          <li>macOS: 漢字ラベルのボタンだけ形状が違って見える問題を修正</li>
+          <li>Windows: zip / lzh 内の Shift-JIS (CP932) の日本語ファイル名が文字化けする問題を修正</li>
+          <li>安定性の改善とバグ修正</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 0.9.7 -->
+    <section class="doc-section" id="v0-9-7">
+      <h2>farman 0.9.7 <span class="wn-date">2026-07-08</span></h2>
+      <div class="whatsnew">
+        <h3>プロパティダイアログを一新</h3>
+        <p>ファイル / フォルダのプロパティを 1 つのダイアログに統合しました。</p>
+        <ul>
+          <li>名前・場所・サイズ・更新日時・作成日時などをまとめて確認できます</li>
+          <li>複数選択時は合計サイズや個数を集計表示します</li>
+          <li>更新日時・属性 (パーミッション) をその場で編集できます</li>
+          <li>所有者 / グループは名前と ID を表示し、選択したファイルで共通のときだけ名前を変更できます (Windows では非表示)</li>
+        </ul>
+
+        <h3>「ビュアーで開く...」をプラグインから生成</h3>
+        <p>「ビュアーで開く...」のメニューを、登録済みプラグインから自動生成するようにしました。これまで一覧に出なかった動画 / 音声ビュアーなども、インストール済みのすべてのビュアーから選べます。</p>
+
+        <h3>外部ビュアーにステータスバーを追加</h3>
+        <p>別ウィンドウで開いたビュアーにも、内部表示と同じステータス情報を表示するようにしました。動画ビュアーではフォーマット / コーデック / 解像度 / 再生時間の要約を表示します。</p>
+
+        <h3>その他の改善・修正</h3>
+        <ul>
+          <li>Markdown ビュアーで、生 HTML を含む文書が途中で切れて表示される問題を修正しました</li>
+          <li>ネットワーク / リムーバブルドライブ上のファイルは、ゴミ箱が使えないため「ゴミ箱へ移動」を無効化し、完全削除のみを選べるようにしました</li>
+          <li>長いファイル名のときに削除確認ダイアログのレイアウトが崩れる問題を修正しました</li>
+          <li>起動時の初期ディレクトリが存在しない場合に、ホーム / ルートへフォールバックするようにしました</li>
+          <li>0 バイトのファイルがバイナリビュアーで「読み込み中」のまま止まる問題を修正しました</li>
+          <li>安定性の改善とバグ修正</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 0.9.6 -->
+    <section class="doc-section" id="v0-9-6">
+      <h2>farman 0.9.6 <span class="wn-date">2026-06-24</span></h2>
+      <div class="whatsnew">
+        <h3>動画 / 音声ビュアーを追加</h3>
+        <p>mp4 / mov / webm / mkv などの動画と、mp3 / flac / wav などの音声を farman 内で直接再生できるようになりました (<code>V</code> キー)。シーク / 音量 / ループ / フルスクリーンに対応しています。</p>
+
+        <h3>ビュアーのプラグイン化</h3>
+        <p>同梱ビュアー (テキスト / 画像 / PDF / CSV / Markdown / バイナリ / メディア) を動的ロードされる公式プラグインに移行しました。</p>
+        <ul>
+          <li>ユーザー作成の外部ビュアープラグイン (.dylib / .so / .dll) のロードに対応しました</li>
+          <li>拡張子ごとのビュアー関連付けが Inline 表示でも有効になりました</li>
+        </ul>
+
+        <h3>設定に「プラグイン」ページを追加</h3>
+        <p>プラグイン関連の設定を 1 箇所に集約しました: ディレクトリ指定、インストール済みプラグインの一覧 (ロード状況) と有効 / 無効の切替、ビュアーの拡張子関連付け。ヘルプ → プラグイン... (ツールバーボタン / ショートカットあり) からも直接開けます。</p>
+
+        <h3>アップデート内容の表示</h3>
+        <p>アップデート後の初回起動時に、このダイアログでアップデート内容をお知らせします。ヘルプ → アップデート内容... からいつでも再表示できます。</p>
+
+        <h3>その他</h3>
+        <ul>
+          <li>ディレクトリ比較の SHA-256 ハッシュ比較オプションを削除し、高速な既定比較に一本化しました</li>
+          <li>安定性の改善とバグ修正</li>
+        </ul>
+      </div>
+    </section>
+
+    <p class="wn-note">farman 0.9.5 以前の変更内容は、<a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">GitHub Releases</a> を参照してください。</p>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <p>
+      <a href="../">farman トップ</a> ·
+      <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a> ·
+      <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">リリース</a>
+    </p>
+    <p class="copyright">© <a href="https://www.mashsoft.co.jp/" rel="noopener">Mashsoft Inc.</a></p>
+  </footer>
+
+  <script src="../site.js"></script>
+</body>
+</html>

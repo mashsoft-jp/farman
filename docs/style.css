@@ -326,15 +326,30 @@ code {
 }
 .download-note { font-size: .9rem; margin-top: 8px; }
 
-/* ===== What's new (アップデート内容) ===== */
-.whatsnew { max-width: 820px; margin: 0 auto; text-align: left; }
-.whatsnew h3 { font-size: 1.12rem; margin: 26px 0 8px; }
-.whatsnew h3:first-child { margin-top: 0; }
+/* ===== What's new — 概要カード (トップページ、ヒーロー直下) ===== */
+.wn-summary {
+  max-width: 860px;
+  margin: 0 auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  text-align: left;
+}
+.wn-summary-head { font-weight: 600; font-size: 1.05rem; margin: 0 0 10px; }
+.wn-summary-date { color: var(--fg-muted); font-weight: 400; font-size: .82rem; margin-left: 8px; }
+.wn-summary-list { margin: 0 0 16px; padding-left: 1.2em; }
+.wn-summary-list li { margin: 0 0 5px; color: var(--fg-muted); }
+.wn-summary-list li strong { color: var(--fg); font-weight: 600; }
+
+/* ===== What's new — 履歴ページ本文 (.manual 内、バージョンごと) ===== */
+.whatsnew h3 { font-size: 1.08rem; margin: 22px 0 8px; }
 .whatsnew p { margin: 0 0 10px; }
 .whatsnew ul { margin: 0 0 14px; padding-left: 1.3em; color: var(--fg-muted); }
 .whatsnew li { margin: 0 0 6px; }
 .whatsnew strong { color: var(--fg); font-weight: 600; }
-.whatsnew .wn-note { margin: 24px 0 0; color: var(--fg-muted); font-size: .9rem; }
+.wn-date { color: var(--fg-muted); font-weight: 400; font-size: .62em; margin-left: 10px; letter-spacing: 0; }
+.wn-note { margin: 24px 0 0; color: var(--fg-muted); font-size: .9rem; }
 
 /* ===== About the name ===== */
 .about-name {
