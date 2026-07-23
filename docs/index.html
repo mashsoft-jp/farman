@@ -27,6 +27,7 @@
       <a href="#features">機能</a>
       <a href="#screenshots">スクリーンショット</a>
       <a href="#download">ダウンロード</a>
+      <a href="#plugins">プラグイン</a>
       <a href="manual/">マニュアル</a>
       <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">変更履歴</a>
       <a href="https://github.com/mashsoft-jp/farman" rel="noopener">GitHub</a>
@@ -98,6 +99,10 @@
         <h3>自動アップデート</h3>
         <p>起動時に最新版をチェックし、ワンクリックでダウンロード + 検証 + インストール。</p>
       </div>
+      <div class="feature">
+        <h3>プラグイン</h3>
+        <p>ビュアーやアーカイブ形式を外部プラグインで追加。公式の <a href="#plugins">LZH (LHA) プラグイン</a> ほか、第三者製プラグインにも対応。</p>
+      </div>
     </div>
   </section>
 
@@ -155,8 +160,29 @@
     </p>
   </section>
 
+  <!-- ===== Plugins ===== -->
+  <section class="section section-alt" id="plugins">
+    <h2>プラグイン</h2>
+    <div class="about-name">
+      <p>farman は、ビュアーやアーカイブ形式を後から追加できる<strong>外部プラグイン</strong>に対応しています（第三者製プラグインも導入可）。第一弾の公式プラグインとして、<code>.lzh</code> / <code>.lha</code> を開くプラグインを公開しています。</p>
+
+      <h3>LZH (LHA) アーカイブプラグイン</h3>
+      <p>zip / tar と同じようにアーカイブ内をブラウジングし、ファイルを取り出せます（日本語 Shift-JIS のファイル名にも対応、読み取り専用）。macOS 版は Apple の Developer ID 署名 + 公証済みで、そのまま読み込めます。</p>
+
+      <p><strong>導入手順</strong></p>
+      <ol class="doc-list">
+        <li>お使いの OS 用のファイルを <a href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">LZH プラグインの Releases</a> からダウンロードします（macOS: <code>.dylib</code> / Windows: <code>.dll</code> / Linux: <code>.so</code>）。</li>
+        <li>farman の <strong>設定 → プラグイン</strong> で「<strong>開く</strong>」ボタンを押してプラグインディレクトリを開き、その中の <code>archives</code> フォルダにダウンロードしたファイルを置きます。</li>
+        <li>同じ画面で「<strong>外部プラグインの読込みを許可する</strong>」をオンにします（安全のため既定はオフです。信頼できる提供元のものだけを有効にしてください）。</li>
+        <li>farman を再起動します。<code>.lzh</code> / <code>.lha</code> を Enter で開くと、中に入ってブラウジング・展開できます。</li>
+      </ol>
+
+      <p class="download-note">Windows 版は未署名のため、ダウンロード時に SmartScreen の警告が出ることがあります。プラグインを自作したい開発者は <a href="https://github.com/mashsoft-jp/farman/blob/main/PLUGIN_DEVELOPMENT.md" rel="noopener">プラグイン開発ガイド</a> を参照してください。</p>
+    </div>
+  </section>
+
   <!-- ===== About the name ===== -->
-  <section class="section section-alt" id="about-name">
+  <section class="section" id="about-name">
     <h2>名前の由来</h2>
     <div class="about-name">
       <p>farman は、複葉機の時代を切り拓いた航空のパイオニア <strong>アンリ・ファルマン (Henri Farman)</strong> にちなんで名付けました。読みは由来どおり「<strong>ファルマン</strong>」です（「ファーマン」ではありません）。</p>
