@@ -27,6 +27,7 @@
       <a href="#features">機能</a>
       <a href="#screenshots">スクリーンショット</a>
       <a href="#download">ダウンロード</a>
+      <a href="#whatsnew">新機能</a>
       <a href="plugins/">プラグイン</a>
       <a href="manual/">マニュアル</a>
       <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">変更履歴</a>
@@ -133,6 +134,56 @@
       <figure><img src="screenshots/08-image-viewer.png" alt="画像ビュアー" loading="lazy" /><figcaption>画像</figcaption></figure>
       <figure><img src="screenshots/10-media-viewer.png" alt="動画・音声ビュアー" loading="lazy" /><figcaption>動画・音声</figcaption></figure>
       <figure><img src="screenshots/09-binary-viewer.png" alt="バイナリビュアー" loading="lazy" /><figcaption>バイナリ</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- ===== What's new (アップデート内容ダイアログと同じ内容) ===== -->
+  <section class="section section-alt" id="whatsnew">
+    <h2>farman 0.9.8 の新機能</h2>
+    <div class="whatsnew">
+      <h3>アーカイブ外部プラグインに対応</h3>
+      <p>ビュアー以外の外部プラグインを読み込める仕組みを追加しました。farman が扱えるアーカイブ形式を、外部プラグインで後から増やせます。第三者が作成したプラグインも導入できます。</p>
+      <ul>
+        <li>追加した形式のアーカイブも、zip / tar と同じように中に入ってブラウジングでき、ファイルを取り出せます。</li>
+        <li>プラグインは farman 本体には同梱せず、必要な方が別途ダウンロードして導入する形です。</li>
+      </ul>
+
+      <h3>外部プラグインの読込みは明示的な許可制に</h3>
+      <p>外部プラグインはネイティブコードで、farman と同じ権限で動作します。安全のため、外部プラグインの読込みは既定で <strong>オフ</strong> にしました。</p>
+      <ul>
+        <li>設定 → プラグイン の <strong>「外部プラグインの読込みを許可する」</strong> をオンにすると、外部プラグインディレクトリのプラグインを次回起動時から読み込みます（同梱プラグインは常に有効）。</li>
+        <li>信頼できる提供元のプラグインだけを有効にしてください。</li>
+      </ul>
+
+      <h3>LZH (LHA) アーカイブ対応プラグインを公開</h3>
+      <p>第一弾として、<code>.lzh</code> / <code>.lha</code> を開くための外部プラグインを別途公開しました。</p>
+      <ul>
+        <li>アーカイブの中に入ってのブラウジングと、ファイルの展開ができます（日本語 Shift-JIS のファイル名にも対応。読み取り専用）。</li>
+        <li>お使いの OS 用のプラグインをダウンロードし、farman の外部プラグインディレクトリの <code>archives/</code> フォルダに置き、設定 → プラグインで「外部プラグインの読込みを許可する」をオンにして再起動すると有効になります。導入手順は <a href="plugins/">プラグインページ</a>を参照してください。</li>
+      </ul>
+
+      <h3>バイナリ / テキストビュアーの既定フォントを等幅に</h3>
+      <p>バイナリビュアー (16 進ダンプ) とテキストビュアーの既定フォントを、確実に等幅なフォントにしました（macOS = Menlo、Windows = MS ゴシック、Linux = DejaVu Sans Mono）。桁がずれずに読めるようになります。</p>
+      <ul>
+        <li>これは新規インストール時の既定値です。すでに farman をお使いの場合は、設定ダイアログの各ビュアーの「フォント」で選び直すか「既定に戻す」で新しい既定フォントになります。</li>
+      </ul>
+
+      <h3>Windows の既定フォントを調整</h3>
+      <p>Windows では、UI 全般のフォントを <strong>MS UI Gothic</strong> にし、全体のフォントサイズを <strong>9pt</strong> に統一しました（アドレスバー・ファイルリスト・各ビュアーは従来のフォントのままサイズのみ 9pt）。新規インストール時の既定値です。</p>
+
+      <h3>動画ビュアーのフルスクリーンを改善</h3>
+      <p>動画のフルスクリーンが正常に動作しない問題（全画面に拡大されない・Esc で戻れない）を修正しました。あわせて、フルスクリーン中にマウスを動かすと画面下部に半透明の操作パネル（再生/一時停止・停止・シーク・リピート・音量）を表示するようにしました。</p>
+
+      <h3>その他</h3>
+      <ul>
+        <li>ウィンドウをドラッグでリサイズ中に「幅 × 高さ」を表示</li>
+        <li>ファイルリストの「名前」列がウィンドウ幅に合わせて伸縮するように変更</li>
+        <li>macOS: 漢字ラベルのボタンだけ形状が違って見える問題を修正</li>
+        <li>Windows: zip / lzh 内の Shift-JIS (CP932) の日本語ファイル名が文字化けする問題を修正</li>
+        <li>安定性の改善とバグ修正</li>
+      </ul>
+
+      <p class="wn-note">過去バージョンを含むすべての変更履歴は <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">GitHub Releases</a> を参照してください。</p>
     </div>
   </section>
 

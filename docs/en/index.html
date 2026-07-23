@@ -27,6 +27,7 @@
       <a href="#features">Features</a>
       <a href="#screenshots">Screenshots</a>
       <a href="#download">Download</a>
+      <a href="#whatsnew">What's New</a>
       <a href="plugins/">Plugins</a>
       <a href="manual/">Manual</a>
       <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">Changelog</a>
@@ -135,6 +136,56 @@
       <figure><img src="../screenshots/09-binary-viewer.png" alt="Binary viewer" loading="lazy" /><figcaption>Binary</figcaption></figure>
     </div>
     <p class="download-note">Screenshots show the Japanese UI; the app ships with an English interface too.</p>
+  </section>
+
+  <!-- ===== What's new (same content as the in-app update dialog) ===== -->
+  <section class="section section-alt" id="whatsnew">
+    <h2>What's New in farman 0.9.8</h2>
+    <div class="whatsnew">
+      <h3>Archive plugin support</h3>
+      <p>farman can now load external plugins beyond viewers. The archive formats farman can open can be extended later through external plugins, including plugins written by third parties.</p>
+      <ul>
+        <li>Archives in an added format can be browsed and extracted just like zip / tar: you can step inside them and take files out.</li>
+        <li>These plugins are not bundled with farman; users who need them download and install them separately.</li>
+      </ul>
+
+      <h3>External plugin loading is now opt-in</h3>
+      <p>External plugins are native code and run with the same privileges as farman. For safety, external plugin loading is now <strong>off</strong> by default.</p>
+      <ul>
+        <li>Turn on <strong>"Allow loading external plugins"</strong> under Settings &gt; Plugins to load plugins from the external plugin directory on the next launch (bundled plugins are always enabled).</li>
+        <li>Only enable plugins from sources you trust.</li>
+      </ul>
+
+      <h3>LZH (LHA) archive plugin released</h3>
+      <p>As the first one, a separate external plugin for opening <code>.lzh</code> / <code>.lha</code> archives is now available.</p>
+      <ul>
+        <li>Browse inside the archive and extract files (Japanese Shift-JIS file names are handled; read-only).</li>
+        <li>Download the plugin for your OS and place it in the <code>archives/</code> folder of farman's external plugin directory, turn on "Allow loading external plugins" under Settings &gt; Plugins, then restart farman. See the <a href="plugins/">plugins page</a> for details.</li>
+      </ul>
+
+      <h3>Monospace default font for the binary and text viewers</h3>
+      <p>The default font of the binary viewer (hex dump) and the text viewer is now a true monospace font (macOS = Menlo, Windows = MS Gothic, Linux = DejaVu Sans Mono), so columns line up correctly.</p>
+      <ul>
+        <li>This is the default for new installations. If you already use farman, pick a font under each viewer's "Font" setting, or use "Restore defaults" to get the new default font.</li>
+      </ul>
+
+      <h3>Adjusted default fonts on Windows</h3>
+      <p>On Windows, the general UI font is now <strong>MS UI Gothic</strong>, and the overall font size is unified to <strong>9pt</strong> (the address bar, file list, and viewers keep their existing fonts, only resized to 9pt). This is the default for new installations.</p>
+
+      <h3>Improved video viewer full screen</h3>
+      <p>Fixed video full screen not working correctly (the video did not expand to the whole screen, and Esc did not exit). While in full screen, moving the mouse now shows a translucent control panel (play/pause, stop, seek, loop, volume) at the bottom of the screen.</p>
+
+      <h3>Other</h3>
+      <ul>
+        <li>Show "width × height" while resizing the window by dragging</li>
+        <li>The "Name" column of the file list now stretches with the window width</li>
+        <li>macOS: fixed buttons with kanji labels looking different from others</li>
+        <li>Windows: fixed garbled Shift-JIS (CP932) Japanese file names inside zip / lzh archives</li>
+        <li>Stability improvements and bug fixes</li>
+      </ul>
+
+      <p class="wn-note">For the full changelog including past versions, see <a href="https://github.com/mashsoft-jp/farman/releases" rel="noopener">GitHub Releases</a>.</p>
+    </div>
   </section>
 
   <!-- ===== Download ===== -->
