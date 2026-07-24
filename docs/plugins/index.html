@@ -19,6 +19,7 @@
        (.manual + .doc-section)。見出し・本文がすべて同じ左端に揃う。 */
     .btn-sm { padding: 7px 16px; font-size: .9rem; margin: 2px 4px 2px 0; }
     .plugin-meta { color: var(--fg-muted); font-size: .85rem; margin: 6px 0 12px; }
+    .plugin-ver { color: var(--fg-muted); font-size: .85rem; margin-left: 6px; white-space: nowrap; }
     .feature .btn-sm { margin-top: 4px; }
     .feature p { margin: 0 0 4px; }
   </style>
@@ -57,11 +58,11 @@
     <section class="doc-section" id="list">
       <h2>プラグイン一覧</h2>
       <div class="feature-grid">
-        <div class="feature">
+        <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
           <h3>LZH (LHA) アーカイブ</h3>
           <p><code>.lzh</code> / <code>.lha</code> アーカイブを、zip / tar と同じようにブラウジング・展開。日本語 Shift-JIS のファイル名にも対応（読み取り専用）。macOS 版は Apple の Developer ID 署名 + 公証済み。</p>
           <p class="plugin-meta">種別: アーカイブ ・ 対応 OS: macOS / Windows / Linux</p>
-          <p><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">ダウンロード</a>
+          <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">ダウンロード</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">リポジトリ</a></p>
         </div>
       </div>
@@ -103,5 +104,6 @@
   </footer>
 
   <script src="../site.js"></script>
+  <script src="../plugins.js"></script>
 </body>
 </html>
