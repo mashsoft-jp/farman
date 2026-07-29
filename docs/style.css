@@ -78,6 +78,7 @@ code {
   color: var(--fg);
 }
 .brand:hover { text-decoration: none; }
+.brand-wordmark { height: 22px; width: auto; display: block; }
 .nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .nav a { color: var(--fg-muted); font-size: .95rem; }
 .nav a:hover { color: var(--fg); text-decoration: none; }
