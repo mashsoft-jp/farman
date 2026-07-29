@@ -98,6 +98,7 @@ code {
 }
 .hero-inner { max-width: var(--maxw); margin: 0 auto; }
 .hero-logo { margin-bottom: 8px; }
+.hero-wordmark { height: clamp(52px, 13vw, 88px); width: auto; display: block; margin: 0 auto; color: var(--fg); }
 .hero h1 {
   font-size: clamp(2.4rem, 6vw, 3.6rem);
   margin: 0 0 12px;
