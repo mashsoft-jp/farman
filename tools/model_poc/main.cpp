@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
       view->setAnimationTime(t);
       qInfo("shot time: %.2f s", t);
     }
-    const QImage img = view->grabFramebuffer();
+    const QImage img = view->renderToImage();
     const bool   ok  = img.save(shotPath);
     qInfo("shot %s: %s (%dx%d)", ok ? "saved" : "FAILED", qPrintable(shotPath), img.width(),
           img.height());

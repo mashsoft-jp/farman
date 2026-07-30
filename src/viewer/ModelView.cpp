@@ -4,7 +4,14 @@
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QOpenGLFramebufferObject>
 #include <QOpenGLTexture>
+#include <QPainter>
+#include <QPaintEvent>
+#include <QResizeEvent>
+#include <QShowEvent>
 #include <QTimer>
 #include <QWheelEvent>
 #include <QtMath>
@@ -77,10 +84,7 @@ layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aColor;
 uniform mat4 uMVP;
 out vec3 vColor;
-void main() {
-  vColor = aColor;
-  gl_Position = uMVP * vec4(aPos, 1.0);
-}
+void main() { vColor = aColor; gl_Position = uMVP * vec4(aPos, 1.0); }
 )";
 
 const char* kLineFragmentShader = R"(#version 330 core
@@ -124,26 +128,31 @@ Val interpKeys(const std::vector<Key>& keys, double t, Val fallback) {
 
 } // namespace
 
-ModelView::ModelView(QWidget* parent) : QOpenGLWidget(parent) {
+ModelView::ModelView(QWidget* parent) : QWidget(parent) {
   setFocusPolicy(Qt::StrongFocus);
+  setMinimumSize(64, 64);
   m_animTimer = new QTimer(this);
   m_animTimer->setInterval(16);
   connect(m_animTimer, &QTimer::timeout, this, [this] {
-    if (m_hasAnim && m_playing) update();
+    if (m_hasAnim && m_playing) renderFrame();
   });
 }
 
 ModelView::~ModelView() {
-  if (m_glReady) {
-    makeCurrent();
+  if (m_ctx) {
+    m_ctx->makeCurrent(m_surface);
     for (auto& m : m_materials) m.tex.reset();
     m_vbo.destroy();
     m_ibo.destroy();
     m_vao.destroy();
     m_lineVbo.destroy();
     m_lineVao.destroy();
-    doneCurrent();
+    delete m_fbo;
+    m_fbo = nullptr;
+    m_ctx->doneCurrent();
   }
+  delete m_surface;
+  delete m_ctx;
 }
 
 bool ModelView::hasTexture() const {
@@ -222,7 +231,7 @@ bool ModelView::loadModel(const QString& path, QString* error) {
     if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &tp) == AI_SUCCESS && tp.length > 0) {
       out.hasTexture   = true;
       out.recordedPath = QString::fromUtf8(tp.C_Str());
-      if (out.recordedPath.startsWith('*')) {  // 埋め込み
+      if (out.recordedPath.startsWith('*')) {
         out.embedded  = true;
         const int idx = out.recordedPath.mid(1).toInt();
         if (idx >= 0 && idx < int(scene->mNumTextures)) {
@@ -236,13 +245,13 @@ bool ModelView::loadModel(const QString& path, QString* error) {
                             .copy();
           out.resolved = !out.image.isNull();
         }
-      } else {  // 外部参照
+      } else {
         out.resolvedPath = resolveTexturePath(path, out.recordedPath);
         if (!out.resolvedPath.isEmpty() && out.image.load(out.resolvedPath)) out.resolved = true;
       }
     }
   }
-  if (m_materials.empty()) m_materials.resize(1);  // マテリアル無しでも 1 つ用意
+  if (m_materials.empty()) m_materials.resize(1);
 
   // ── ジオメトリ + サブメッシュ + スキンウェイト ──
   std::vector<float>        verts;
@@ -415,13 +424,13 @@ bool ModelView::loadModel(const QString& path, QString* error) {
                      .arg(animationDuration(), 0, 'f', 1)
                      .arg(m_boneOffset.size());
 
-  if (m_hasAnim && m_playing) m_animTimer->start();
-  update();
+  if (m_hasAnim && m_playing && isVisible()) m_animTimer->start();
+  if (isVisible()) renderFrame();
   return true;
 }
 
 void ModelView::computeBoneMatrices(double timeTicks, bool bindPose) {
-  const size_t n = m_nodes.size();
+  const size_t            n = m_nodes.size();
   std::vector<QMatrix4x4> global(n);
   for (size_t i = 0; i < n; ++i) {
     QMatrix4x4 local = m_nodes[i].bind;
@@ -461,25 +470,24 @@ void ModelView::computeBoneMatrices(double timeTicks, bool bindPose) {
 
 void ModelView::buildGrid() {
   m_lineVerts.clear();
-  const float  y    = m_bboxMin.y();                    // 床の高さ
-  const float  half = std::max(m_radius * 1.2f, 1e-3f); // グリッド半径
-  const int    div  = 20;
-  const float  step = (half * 2.0f) / div;
+  const float     y    = m_bboxMin.y();
+  const float     half = std::max(m_radius * 1.2f, 1e-3f);
+  const int       div  = 20;
+  const float     step = (half * 2.0f) / div;
   const QVector3D c(m_center.x(), y, m_center.z());
   const QVector3D gcol(0.32f, 0.34f, 0.38f);
-  const QVector3D gcol2(0.42f, 0.44f, 0.48f);  // 中央線
-  auto line = [&](QVector3D a, QVector3D b, QVector3D col) {
+  const QVector3D gcol2(0.42f, 0.44f, 0.48f);
+  auto            line = [&](QVector3D a, QVector3D b, QVector3D col) {
     m_lineVerts.insert(m_lineVerts.end(),
                        {a.x(), a.y(), a.z(), col.x(), col.y(), col.z(), b.x(), b.y(), b.z(),
                         col.x(), col.y(), col.z()});
   };
   for (int i = -div / 2; i <= div / 2; ++i) {
-    const float o   = i * step;
+    const float     o   = i * step;
     const QVector3D col = (i == 0) ? gcol2 : gcol;
-    line({c.x() - half, y, c.z() + o}, {c.x() + half, y, c.z() + o}, col);  // X 方向
-    line({c.x() + o, y, c.z() - half}, {c.x() + o, y, c.z() + half}, col);  // Z 方向
+    line({c.x() - half, y, c.z() + o}, {c.x() + half, y, c.z() + o}, col);
+    line({c.x() + o, y, c.z() - half}, {c.x() + o, y, c.z() + half}, col);
   }
-  // 座標軸 (X=赤 / Y=緑 / Z=青)
   const float al = m_radius * 0.6f;
   line({c.x(), y, c.z()}, {c.x() + al, y, c.z()}, {0.85f, 0.30f, 0.30f});
   line({c.x(), y, c.z()}, {c.x(), y + al, c.z()}, {0.35f, 0.80f, 0.40f});
@@ -487,108 +495,114 @@ void ModelView::buildGrid() {
   m_lineCount = int(m_lineVerts.size() / 6);
 }
 
+void ModelView::setTextureEnabled(bool on) {
+  m_texEnabled = on;
+  renderFrame();
+}
 void ModelView::setShowGrid(bool on) {
   m_showGrid = on;
-  update();
+  renderFrame();
 }
-
 void ModelView::setWireframe(bool on) {
   m_wireframe = on;
-  update();
+  renderFrame();
 }
-
 void ModelView::resetView() {
   m_yaw   = 0.7f;
   m_pitch = 0.35f;
   m_dist  = 2.6f;
-  update();
+  renderFrame();
 }
-
-void ModelView::keyPressEvent(QKeyEvent* e) {
-  if (e->key() == Qt::Key_R) {
-    resetView();
-    return;
-  }
-  QOpenGLWidget::keyPressEvent(e);
-}
-
-void ModelView::setTextureEnabled(bool on) {
-  m_texEnabled = on;
-  update();
-}
-
 void ModelView::setAnimationPlaying(bool on) {
   m_playing = on;
   if (on) {
     m_lastMs = m_clock.isValid() ? m_clock.elapsed() : 0;
-    m_animTimer->start();
+    if (isVisible()) m_animTimer->start();
   } else {
     m_animTimer->stop();
   }
-  update();
+  renderFrame();
 }
-
 void ModelView::setAnimationTime(double sec) {
   m_playing = false;
   m_animTimer->stop();
   m_animTimeSec = sec;
-  update();
+  renderFrame();
 }
 
-void ModelView::initializeGL() {
+bool ModelView::ensureContext() {
+  if (m_ctx && m_ctx->isValid()) return m_surface && m_surface->isValid();
+  QSurfaceFormat fmt;
+  fmt.setVersion(3, 3);
+  fmt.setProfile(QSurfaceFormat::CoreProfile);
+  fmt.setDepthBufferSize(24);
+  if (!m_ctx) {
+    m_ctx = new QOpenGLContext;
+    m_ctx->setFormat(fmt);
+    if (!m_ctx->create()) {
+      delete m_ctx;
+      m_ctx = nullptr;
+      return false;
+    }
+  }
+  if (!m_surface) {
+    m_surface = new QOffscreenSurface;
+    m_surface->setFormat(m_ctx->format());
+    m_surface->create();
+  }
+  return m_surface->isValid();
+}
+
+void ModelView::ensureGLResources() {
+  if (m_glResourcesReady) return;
   initializeOpenGLFunctions();
-  m_glReady = true;
-  m_clock.start();
-  m_lastMs = 0;
-  glEnable(GL_DEPTH_TEST);
   if (!m_prog.addShaderFromSourceCode(QOpenGLShader::Vertex, kVertexShader) ||
       !m_prog.addShaderFromSourceCode(QOpenGLShader::Fragment, kFragmentShader) ||
-      !m_prog.link()) {
+      !m_prog.link())
     qWarning("ModelView: shader error: %s", qPrintable(m_prog.log()));
-  }
-  m_vao.create();
-
   if (!m_lineProg.addShaderFromSourceCode(QOpenGLShader::Vertex, kLineVertexShader) ||
       !m_lineProg.addShaderFromSourceCode(QOpenGLShader::Fragment, kLineFragmentShader) ||
-      !m_lineProg.link()) {
+      !m_lineProg.link())
     qWarning("ModelView: line shader error: %s", qPrintable(m_lineProg.log()));
-  }
+  m_vao.create();
   m_lineVao.create();
+  m_glResourcesReady = true;
 }
 
 void ModelView::uploadIfNeeded() {
-  if (m_uploaded || m_vertices.empty()) return;
-  m_vao.bind();
-  if (!m_vbo.isCreated()) m_vbo.create();
-  m_vbo.bind();
-  m_vbo.allocate(m_vertices.data(), int(m_vertices.size() * sizeof(float)));
-  if (!m_ibo.isCreated()) m_ibo.create();
-  m_ibo.bind();
-  m_ibo.allocate(m_indices.data(), int(m_indices.size() * sizeof(unsigned int)));
-  const int stride = ModelView::kFloatsPerVertex * sizeof(float);
-  auto attr = [&](int loc, int size, int offsetFloats) {
-    glEnableVertexAttribArray(loc);
-    glVertexAttribPointer(loc, size, GL_FLOAT, GL_FALSE, stride,
-                          reinterpret_cast<void*>(offsetFloats * sizeof(float)));
-  };
-  attr(0, 3, 0);
-  attr(1, 3, 3);
-  attr(2, 2, 6);
-  attr(3, 4, 8);
-  attr(4, 4, 12);
-  m_vao.release();
+  if (!m_uploaded && !m_vertices.empty()) {
+    m_vao.bind();
+    if (!m_vbo.isCreated()) m_vbo.create();
+    m_vbo.bind();
+    m_vbo.allocate(m_vertices.data(), int(m_vertices.size() * sizeof(float)));
+    if (!m_ibo.isCreated()) m_ibo.create();
+    m_ibo.bind();
+    m_ibo.allocate(m_indices.data(), int(m_indices.size() * sizeof(unsigned int)));
+    const int stride = ModelView::kFloatsPerVertex * sizeof(float);
+    auto      attr   = [&](int loc, int size, int offsetFloats) {
+      glEnableVertexAttribArray(loc);
+      glVertexAttribPointer(loc, size, GL_FLOAT, GL_FALSE, stride,
+                            reinterpret_cast<void*>(offsetFloats * sizeof(float)));
+    };
+    attr(0, 3, 0);
+    attr(1, 3, 3);
+    attr(2, 2, 6);
+    attr(3, 4, 8);
+    attr(4, 4, 12);
+    m_vao.release();
 
-  for (auto& mat : m_materials) {
-    if (mat.resolved && !mat.image.isNull() && !mat.tex) {
-      mat.tex = std::make_unique<QOpenGLTexture>(mat.image, QOpenGLTexture::GenerateMipMaps);
-      mat.tex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-      mat.tex->setMagnificationFilter(QOpenGLTexture::Linear);
-      mat.tex->setWrapMode(QOpenGLTexture::Repeat);
+    for (auto& mat : m_materials) {
+      if (mat.resolved && !mat.image.isNull() && !mat.tex) {
+        mat.tex = std::make_unique<QOpenGLTexture>(mat.image, QOpenGLTexture::GenerateMipMaps);
+        mat.tex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+        mat.tex->setMagnificationFilter(QOpenGLTexture::Linear);
+        mat.tex->setWrapMode(QOpenGLTexture::Repeat);
+      }
     }
+    m_uploaded = true;
   }
 
-  // グリッド + 軸のライン
-  if (!m_lineVerts.empty()) {
+  if (!m_linesUploaded && !m_lineVerts.empty()) {
     m_lineVao.bind();
     if (!m_lineVbo.isCreated()) m_lineVbo.create();
     m_lineVbo.bind();
@@ -602,23 +616,34 @@ void ModelView::uploadIfNeeded() {
     m_lineVao.release();
     m_linesUploaded = true;
   }
-
-  m_uploaded = true;
 }
 
-void ModelView::resizeGL(int, int) {}
+void ModelView::renderFrame() {
+  if (!m_hasModel || width() <= 0 || height() <= 0) return;
+  if (!ensureContext()) return;
+  if (!m_ctx->makeCurrent(m_surface)) return;
+  ensureGLResources();
 
-void ModelView::paintGL() {
-  const qreal dpr = devicePixelRatioF();
-  glViewport(0, 0, GLint(width() * dpr), GLint(height() * dpr));
+  const int w = std::max(1, int(width() * devicePixelRatioF()));
+  const int h = std::max(1, int(height() * devicePixelRatioF()));
+  if (!m_fbo || m_fbo->width() != w || m_fbo->height() != h) {
+    delete m_fbo;
+    QOpenGLFramebufferObjectFormat f;
+    f.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+    f.setSamples(4);
+    m_fbo = new QOpenGLFramebufferObject(w, h, f);
+  }
+  m_fbo->bind();
+  glViewport(0, 0, w, h);
+  glEnable(GL_DEPTH_TEST);
   glClearColor(0.12f, 0.13f, 0.15f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  if (!m_hasModel) return;
   uploadIfNeeded();
 
   if (m_hasAnim) {
     if (m_playing) {
+      if (!m_clock.isValid()) m_clock.start();
       const qint64 now = m_clock.elapsed();
       m_animTimeSec += double(now - m_lastMs) / 1000.0;
       m_lastMs = now;
@@ -627,8 +652,6 @@ void ModelView::paintGL() {
     if (m_animDurationTicks > 0.0)
       timeTicks = std::fmod(m_animTimeSec * m_ticksPerSec, m_animDurationTicks);
     computeBoneMatrices(timeTicks, /*bindPose=*/false);
-  } else {
-    m_lastMs = m_clock.elapsed();
   }
 
   const float     r    = m_radius;
@@ -639,7 +662,7 @@ void ModelView::paintGL() {
 
   QMatrix4x4 view;
   view.lookAt(eye, m_center, QVector3D(0, 1, 0));
-  QMatrix4x4 proj;
+  QMatrix4x4  proj;
   const float aspect = height() > 0 ? float(width()) / float(height()) : 1.0f;
   proj.perspective(45.0f, aspect, r * 0.01f, dist + r * 10.0f);
 
@@ -672,7 +695,6 @@ void ModelView::paintGL() {
   m_prog.release();
   if (m_wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-  // グリッド + 座標軸
   if (m_showGrid && m_linesUploaded && m_lineCount > 0) {
     m_lineProg.bind();
     m_lineProg.setUniformValue("uMVP", mvp);
@@ -681,6 +703,36 @@ void ModelView::paintGL() {
     m_lineVao.release();
     m_lineProg.release();
   }
+
+  m_fbo->release();
+  m_frame = m_fbo->toImage();
+  m_frame.setDevicePixelRatio(devicePixelRatioF());
+  m_ctx->doneCurrent();
+  update();
+}
+
+QImage ModelView::renderToImage() {
+  renderFrame();
+  return m_frame;
+}
+
+void ModelView::paintEvent(QPaintEvent*) {
+  QPainter p(this);
+  p.fillRect(rect(), QColor(30, 33, 38));
+  if (!m_frame.isNull())
+    p.drawImage(QRectF(0, 0, width(), height()), m_frame,
+                QRectF(0, 0, m_frame.width(), m_frame.height()));
+}
+
+void ModelView::resizeEvent(QResizeEvent* e) {
+  QWidget::resizeEvent(e);
+  renderFrame();
+}
+
+void ModelView::showEvent(QShowEvent* e) {
+  QWidget::showEvent(e);
+  if (m_hasAnim && m_playing) m_animTimer->start();
+  renderFrame();
 }
 
 void ModelView::mousePressEvent(QMouseEvent* e) { m_lastPos = e->pos(); }
@@ -692,13 +744,30 @@ void ModelView::mouseMoveEvent(QMouseEvent* e) {
   m_yaw -= d.x() * 0.01f;
   m_pitch += d.y() * 0.01f;
   m_pitch = std::clamp(m_pitch, -1.53f, 1.53f);
-  update();
+  renderFrame();
 }
 
 void ModelView::wheelEvent(QWheelEvent* e) {
   const float f = e->angleDelta().y() > 0 ? 0.9f : 1.1f;
   m_dist        = std::clamp(m_dist * f, 0.2f, 40.0f);
-  update();
+  renderFrame();
+}
+
+void ModelView::keyPressEvent(QKeyEvent* e) {
+  switch (e->key()) {
+    case Qt::Key_R: resetView(); return;
+    case Qt::Key_T: setTextureEnabled(!m_texEnabled); return;
+    case Qt::Key_G: setShowGrid(!m_showGrid); return;
+    case Qt::Key_W: setWireframe(!m_wireframe); return;
+    case Qt::Key_Space:
+      if (m_hasAnim) {
+        setAnimationPlaying(!m_playing);
+        return;
+      }
+      break;
+    default: break;
+  }
+  QWidget::keyPressEvent(e);
 }
 
 } // namespace Farman

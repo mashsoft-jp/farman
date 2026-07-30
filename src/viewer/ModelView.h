@@ -1,13 +1,16 @@
 #pragma once
 
-// 3D モデルビュアーの描画ウィジェット (PoC)。
-// Assimp で読み込んだメッシュを QOpenGLWidget + OpenGL 3.3 Core で表示する。
-//  - 複数マテリアル / メッシュ (サブメッシュごとにマテリアル・テクスチャ)
-//  - ディフューズテクスチャ (外部参照 / 埋め込み) と UV
-//  - スケルタルアニメーション (ボーンスキニング。GPU で 4 ボーン加重変形)
-//  - オービットカメラ / 自動フィット / テクスチャ ON/OFF
-// 静的モデルもスキニング用の頂点フォーマットで統一して扱う (weight=0 → 素通し)。
-// 将来的にはこのクラスを外部ビュアープラグイン (IViewerPlugin) の中核に流用する。
+// 3D モデルビュアーの描画ウィジェット。
+//  - Assimp 読み込み / ディフューズテクスチャ (外部・埋め込み) / UV
+//  - スケルタルアニメーション (GPU スキニング, 4 ボーン加重)
+//  - 複数マテリアル・メッシュ (サブメッシュ単位)
+//  - グリッド + 座標軸 / ワイヤーフレーム / オービット・自動フィット
+//
+// 描画は「隠し QOpenGLContext + QOffscreenSurface + FBO にオフスクリーン描画し、
+// 得た QImage を paintEvent で表示する」方式。ネイティブ GL 面 (QOpenGLWidget)
+// を使わないため、macOS で QStackedWidget 等に埋め込んでも黒くならず正しく合成
+// される (farman の動画ビュアーが QVideoWidget → QGraphicsVideoItem にした理由と
+// 同じ問題への対処)。単体では farman-plugin-3d の中核として流用する。
 
 #include <QElapsedTimer>
 #include <QImage>
@@ -16,22 +19,25 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
-#include <QOpenGLWidget>
-#include <QPoint>
 #include <QQuaternion>
+#include <QSize>
 #include <QString>
 #include <QStringList>
 #include <QVector3D>
+#include <QWidget>
 
 #include <memory>
 #include <vector>
 
+class QOpenGLContext;
+class QOffscreenSurface;
+class QOpenGLFramebufferObject;
 class QOpenGLTexture;
 class QTimer;
 
 namespace Farman {
 
-class ModelView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
+class ModelView : public QWidget, protected QOpenGLFunctions_3_3_Core {
   Q_OBJECT
 
 public:
@@ -40,16 +46,19 @@ public:
 
   bool loadModel(const QString& path, QString* error = nullptr);
 
+  // 強制的に 1 フレーム描画して画像を返す (オフスクリーン検証 / スナップショット用)。
+  QImage renderToImage();
+
   QString summary() const { return m_summary; }
 
-  // ── テクスチャ情報 (複数マテリアル対応) ──
+  // ── テクスチャ情報 ──
   bool        hasUV() const { return m_hasUV; }
   int         materialCount() const { return int(m_materials.size()); }
-  bool        hasTexture() const;             // いずれかのマテリアルがテクスチャ参照を持つ
-  bool        hasEmbeddedTexture() const;     // 埋め込みが 1 つでもあるか
-  QStringList recordedTexturePaths() const;   // FBX 記録値 (外部参照ぶん)
-  QStringList resolvedTexturePaths() const;   // 実ファイル (解決できたぶん)
-  QStringList unresolvedTexturePaths() const; // 見つからなかった記録値
+  bool        hasTexture() const;
+  bool        hasEmbeddedTexture() const;
+  QStringList recordedTexturePaths() const;
+  QStringList resolvedTexturePaths() const;
+  QStringList unresolvedTexturePaths() const;
 
   // ── アニメーション ──
   bool   hasAnimation() const { return m_hasAnim; }
@@ -64,17 +73,20 @@ public slots:
   void resetView();
 
 protected:
-  void initializeGL() override;
-  void resizeGL(int w, int h) override;
-  void paintGL() override;
+  void paintEvent(QPaintEvent* e) override;
+  void resizeEvent(QResizeEvent* e) override;
+  void showEvent(QShowEvent* e) override;
   void mousePressEvent(QMouseEvent* e) override;
   void mouseMoveEvent(QMouseEvent* e) override;
   void wheelEvent(QWheelEvent* e) override;
   void keyPressEvent(QKeyEvent* e) override;
 
 private:
+  bool ensureContext();
+  void ensureGLResources();
   void uploadIfNeeded();
   void buildGrid();
+  void renderFrame();  // makeCurrent → FBO 描画 → toImage → update()
   void computeBoneMatrices(double timeTicks, bool bindPose);
 
   // 頂点: 位置3 + 法線3 + UV2 + boneID4 + weight4 = 16 float
@@ -94,12 +106,9 @@ private:
   QString                   m_summary;
 
   // グリッド + 座標軸 (unlit ライン)
-  std::vector<float>       m_lineVerts;  // pos3 + color3
+  std::vector<float>       m_lineVerts;
   int                      m_lineCount = 0;
   bool                     m_linesUploaded = false;
-  QOpenGLShaderProgram     m_lineProg;
-  QOpenGLBuffer            m_lineVbo{QOpenGLBuffer::VertexBuffer};
-  QOpenGLVertexArrayObject m_lineVao;
 
   // ── マテリアル / サブメッシュ ──
   struct Material {
@@ -109,13 +118,13 @@ private:
     bool                            resolved   = false;
     QString                         recordedPath;
     QString                         resolvedPath;
-    QImage                          image;  // GL アップロード待ち
+    QImage                          image;
     std::unique_ptr<QOpenGLTexture> tex;
   };
   struct SubMesh {
-    int indexOffset = 0;  // m_indices 内のオフセット (要素数)
+    int indexOffset = 0;
     int indexCount  = 0;
-    int material    = 0;  // m_materials の index
+    int material    = 0;
   };
   std::vector<Material> m_materials;
   std::vector<SubMesh>  m_submeshes;
@@ -149,12 +158,20 @@ private:
   QElapsedTimer           m_clock;
   QTimer*                 m_animTimer = nullptr;
 
-  // GL リソース
+  // ── オフスクリーン GL ──
+  QOpenGLContext*           m_ctx     = nullptr;
+  QOffscreenSurface*        m_surface = nullptr;
+  QOpenGLFramebufferObject* m_fbo     = nullptr;
+  bool                      m_glResourcesReady = false;
+  QImage                    m_frame;
+
   QOpenGLShaderProgram     m_prog;
+  QOpenGLShaderProgram     m_lineProg;
   QOpenGLBuffer            m_vbo{QOpenGLBuffer::VertexBuffer};
   QOpenGLBuffer            m_ibo{QOpenGLBuffer::IndexBuffer};
   QOpenGLVertexArrayObject m_vao;
-  bool                     m_glReady = false;
+  QOpenGLBuffer            m_lineVbo{QOpenGLBuffer::VertexBuffer};
+  QOpenGLVertexArrayObject m_lineVao;
 
   // オービットカメラ
   float  m_yaw   = 0.7f;
