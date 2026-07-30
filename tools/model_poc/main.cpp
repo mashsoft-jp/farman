@@ -11,6 +11,7 @@
 #include <QApplication>
 #include <QImage>
 #include <QMainWindow>
+#include <QPixmap>
 #include <QStatusBar>
 #include <QStringList>
 #include <QSurfaceFormat>
@@ -41,13 +42,15 @@ int main(int argc, char** argv) {
   fmt.setSamples(4);
   QSurfaceFormat::setDefaultFormat(fmt);
 
-  QString modelPath, shotPath;
+  QString modelPath, shotPath, uishotPath;
   bool    noTexture = false;
   double  timeOpt   = -1.0;
   const QStringList args = app.arguments();
   for (int i = 1; i < args.size(); ++i) {
     if (args[i] == QLatin1String("--shot") && i + 1 < args.size())
       shotPath = args[++i];
+    else if (args[i] == QLatin1String("--uishot") && i + 1 < args.size())
+      uishotPath = args[++i];
     else if (args[i] == QLatin1String("--time") && i + 1 < args.size())
       timeOpt = args[++i].toDouble();
     else if (args[i] == QLatin1String("--no-texture"))
@@ -78,6 +81,16 @@ int main(int argc, char** argv) {
     qInfo("  解決パス              : %s", qPrintable(p));
   if (view->hasAnimation())
     qInfo("animation: %.2f s", view->animationDuration());
+
+  if (!uishotPath.isEmpty()) {
+    // ウィジェット全体 (オフスクリーン画像 + オーバーレイ + 子ウィジェット) を取り込む
+    view->resize(1000, 780);
+    view->renderToImage();  // m_frame / m_lastMVP を用意
+    const QPixmap pm = view->grab();
+    const bool    ok = pm.save(uishotPath);
+    qInfo("uishot %s: %s", ok ? "saved" : "FAILED", qPrintable(uishotPath));
+    return ok ? 0 : 1;
+  }
 
   if (!shotPath.isEmpty()) {
     if (view->hasAnimation()) {

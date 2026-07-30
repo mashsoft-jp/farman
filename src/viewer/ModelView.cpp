@@ -1,8 +1,11 @@
 #include "viewer/ModelView.h"
 
+#include <QCheckBox>
 #include <QDir>
 #include <QFileInfo>
+#include <QFont>
 #include <QKeyEvent>
+#include <QLabel>
 #include <QMouseEvent>
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
@@ -13,6 +16,8 @@
 #include <QResizeEvent>
 #include <QShowEvent>
 #include <QTimer>
+#include <QVBoxLayout>
+#include <QVector4D>
 #include <QWheelEvent>
 #include <QtMath>
 
@@ -136,6 +141,30 @@ ModelView::ModelView(QWidget* parent) : QWidget(parent) {
   connect(m_animTimer, &QTimer::timeout, this, [this] {
     if (m_hasAnim && m_playing) renderFrame();
   });
+
+  // 画面内 UI: テクスチャ ON/OFF + 外部テクスチャパス (左上に半透明で重ねる)。
+  m_overlay = new QWidget(this);
+  m_overlay->setObjectName(QStringLiteral("modelOverlay"));
+  m_overlay->setStyleSheet(QStringLiteral(
+      "#modelOverlay{background:rgba(24,26,30,190);border-radius:6px;}"
+      "#modelOverlay QCheckBox{color:#e6e9ee;}"
+      "#modelOverlay QLabel{color:#aab2bd;}"));
+  auto* ol = new QVBoxLayout(m_overlay);
+  ol->setContentsMargins(10, 8, 10, 8);
+  ol->setSpacing(4);
+  m_texToggle = new QCheckBox(QStringLiteral("テクスチャ"), m_overlay);
+  m_texToggle->setChecked(true);
+  m_texToggle->setFocusPolicy(Qt::NoFocus);  // 矢印/WASD をビューに残す
+  connect(m_texToggle, &QCheckBox::toggled, this, &ModelView::setTextureEnabled);
+  ol->addWidget(m_texToggle);
+  m_texPathLabel = new QLabel(m_overlay);
+  m_texPathLabel->setStyleSheet(QStringLiteral("font-size:11px;"));
+  m_texPathLabel->setWordWrap(true);
+  m_texPathLabel->setMaximumWidth(360);
+  m_texPathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  m_texPathLabel->hide();
+  ol->addWidget(m_texPathLabel);
+  m_overlay->hide();
 }
 
 ModelView::~ModelView() {
@@ -424,6 +453,25 @@ bool ModelView::loadModel(const QString& path, QString* error) {
                      .arg(animationDuration(), 0, 'f', 1)
                      .arg(m_boneOffset.size());
 
+  // 画面内 UI 更新: テクスチャトグルと外部テクスチャパス表示。
+  m_filePath = path;
+  buildInfoText();
+  if (m_texToggle) {
+    m_texToggle->setEnabled(hasTexture());
+    QSignalBlocker block(m_texToggle);
+    m_texToggle->setChecked(hasTexture() && m_texEnabled);
+  }
+  if (m_texPathLabel) {
+    const QStringList ext = resolvedTexturePaths() + unresolvedTexturePaths();
+    if (!ext.isEmpty()) {  // 外部テクスチャがあるときだけ表示
+      m_texPathLabel->setText(ext.join(QStringLiteral("\n")));
+      m_texPathLabel->show();
+    } else {
+      m_texPathLabel->hide();
+    }
+  }
+  positionOverlay();
+
   if (m_hasAnim && m_playing && isVisible()) m_animTimer->start();
   if (isVisible()) renderFrame();
   return true;
@@ -475,24 +523,56 @@ void ModelView::buildGrid() {
   const int       div  = 20;
   const float     step = (half * 2.0f) / div;
   const QVector3D c(m_center.x(), y, m_center.z());
-  const QVector3D gcol(0.32f, 0.34f, 0.38f);
-  const QVector3D gcol2(0.42f, 0.44f, 0.48f);
   auto            line = [&](QVector3D a, QVector3D b, QVector3D col) {
     m_lineVerts.insert(m_lineVerts.end(),
                        {a.x(), a.y(), a.z(), col.x(), col.y(), col.z(), b.x(), b.y(), b.z(),
                         col.x(), col.y(), col.z()});
   };
+
+  // 座標軸 (X=赤 / Y=緑 / Z=青) を先頭に。常時表示するため先に置く。
+  const float al = m_radius * 0.7f;
+  m_axisOrigin   = c;
+  m_axisTip[0]   = {c.x() + al, y, c.z()};
+  m_axisTip[1]   = {c.x(), y + al, c.z()};
+  m_axisTip[2]   = {c.x(), y, c.z() + al};
+  line(c, m_axisTip[0], {0.88f, 0.32f, 0.32f});
+  line(c, m_axisTip[1], {0.40f, 0.82f, 0.45f});
+  line(c, m_axisTip[2], {0.38f, 0.58f, 0.96f});
+  m_axisVertCount = 6;  // 3 本 × 2 頂点
+
+  // 床グリッド (トグル可)
+  const QVector3D gcol(0.32f, 0.34f, 0.38f);
+  const QVector3D gcol2(0.42f, 0.44f, 0.48f);
   for (int i = -div / 2; i <= div / 2; ++i) {
     const float     o   = i * step;
     const QVector3D col = (i == 0) ? gcol2 : gcol;
     line({c.x() - half, y, c.z() + o}, {c.x() + half, y, c.z() + o}, col);
     line({c.x() + o, y, c.z() - half}, {c.x() + o, y, c.z() + half}, col);
   }
-  const float al = m_radius * 0.6f;
-  line({c.x(), y, c.z()}, {c.x() + al, y, c.z()}, {0.85f, 0.30f, 0.30f});
-  line({c.x(), y, c.z()}, {c.x(), y + al, c.z()}, {0.35f, 0.80f, 0.40f});
-  line({c.x(), y, c.z()}, {c.x(), y, c.z() + al}, {0.35f, 0.55f, 0.95f});
   m_lineCount = int(m_lineVerts.size() / 6);
+}
+
+void ModelView::buildInfoText() {
+  m_infoLines.clear();
+  m_infoLines << QFileInfo(m_filePath).fileName();
+  m_infoLines << m_summary;
+  if (hasTexture()) {
+    for (const QString& p : resolvedTexturePaths()) m_infoLines << QStringLiteral("tex: ") + p;
+    if (hasEmbeddedTexture()) m_infoLines << QStringLiteral("tex: 埋め込み");
+    for (const QString& p : unresolvedTexturePaths())
+      m_infoLines << QStringLiteral("tex: ") + p + QStringLiteral(" (見つからず)");
+  } else {
+    m_infoLines << QStringLiteral("テクスチャ: なし");
+  }
+  if (!m_hasUV && hasTexture()) m_infoLines << QStringLiteral("※メッシュに UV なし");
+  m_infoLines << QStringLiteral("[i]情報  [矢印]回転  [WASD]移動  [U/J]拡縮  [R]リセット");
+}
+
+void ModelView::positionOverlay() {
+  if (!m_overlay) return;
+  m_overlay->adjustSize();
+  m_overlay->move(10, 10);
+  m_overlay->setVisible(m_hasModel);
 }
 
 void ModelView::setTextureEnabled(bool on) {
@@ -511,6 +591,7 @@ void ModelView::resetView() {
   m_yaw   = 0.7f;
   m_pitch = 0.35f;
   m_dist  = 2.6f;
+  m_pan   = QVector3D(0, 0, 0);
   renderFrame();
 }
 void ModelView::setAnimationPlaying(bool on) {
@@ -654,19 +735,21 @@ void ModelView::renderFrame() {
     computeBoneMatrices(timeTicks, /*bindPose=*/false);
   }
 
-  const float     r    = m_radius;
-  const float     dist = m_dist * r;
+  const float     r      = m_radius;
+  const float     dist   = m_dist * r;
   const QVector3D dir(std::cos(m_pitch) * std::sin(m_yaw), std::sin(m_pitch),
                       std::cos(m_pitch) * std::cos(m_yaw));
-  const QVector3D eye = m_center + dir * dist;
+  const QVector3D target = m_center + m_pan;
+  const QVector3D eye    = target + dir * dist;
 
   QMatrix4x4 view;
-  view.lookAt(eye, m_center, QVector3D(0, 1, 0));
+  view.lookAt(eye, target, QVector3D(0, 1, 0));
   QMatrix4x4  proj;
   const float aspect = height() > 0 ? float(width()) / float(height()) : 1.0f;
   proj.perspective(45.0f, aspect, r * 0.01f, dist + r * 10.0f);
 
   const QMatrix4x4 mvp     = proj * view;
+  m_lastMVP                = mvp;
   const QMatrix3x3 normal  = view.normalMatrix();
   const bool       skinned = m_hasAnim && !m_boneMatrices.empty();
 
@@ -695,11 +778,13 @@ void ModelView::renderFrame() {
   m_prog.release();
   if (m_wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-  if (m_showGrid && m_linesUploaded && m_lineCount > 0) {
+  if (m_linesUploaded && m_lineCount > 0) {
     m_lineProg.bind();
     m_lineProg.setUniformValue("uMVP", mvp);
     m_lineVao.bind();
-    glDrawArrays(GL_LINES, 0, m_lineCount);
+    glDrawArrays(GL_LINES, 0, m_axisVertCount);  // 座標軸は常時
+    if (m_showGrid && m_lineCount > m_axisVertCount)
+      glDrawArrays(GL_LINES, m_axisVertCount, m_lineCount - m_axisVertCount);  // グリッド
     m_lineVao.release();
     m_lineProg.release();
   }
@@ -722,10 +807,62 @@ void ModelView::paintEvent(QPaintEvent*) {
   if (!m_frame.isNull())
     p.drawImage(QRectF(0, 0, width(), height()), m_frame,
                 QRectF(0, 0, m_frame.width(), m_frame.height()));
+
+  if (!m_hasModel) return;
+  p.setRenderHint(QPainter::Antialiasing, true);
+
+  // 座標軸ラベル (X/Y/Z を先端に投影)
+  auto project = [&](const QVector3D& w, QPointF& out) -> bool {
+    const QVector4D clip = m_lastMVP * QVector4D(w, 1.0f);
+    if (clip.w() <= 0.0001f) return false;
+    const float nx = clip.x() / clip.w();
+    const float ny = clip.y() / clip.w();
+    out = QPointF((nx * 0.5f + 0.5f) * width(), (1.0f - (ny * 0.5f + 0.5f)) * height());
+    return true;
+  };
+  QFont axisFont = p.font();
+  axisFont.setBold(true);
+  axisFont.setPointSize(12);
+  p.setFont(axisFont);
+  const char*  names[3]  = {"X", "Y", "Z"};
+  const QColor colors[3] = {QColor(226, 92, 92), QColor(102, 209, 115), QColor(97, 148, 245)};
+  for (int i = 0; i < 3; ++i) {
+    QPointF pt;
+    if (project(m_axisTip[i], pt)) {
+      p.setPen(colors[i]);
+      p.drawText(pt + QPointF(-4, 5), QString::fromLatin1(names[i]));
+    }
+  }
+
+  // FBX 情報オーバーレイ (i キー)
+  if (m_showInfo && !m_infoLines.isEmpty()) {
+    QFont info = p.font();
+    info.setBold(false);
+    info.setPointSize(11);
+    p.setFont(info);
+    const QFontMetrics fm(info);
+    int w = 0;
+    for (const QString& s : m_infoLines) w = std::max(w, fm.horizontalAdvance(s));
+    const int pad = 10;
+    const int lh  = fm.height() + 2;
+    const int bw  = w + pad * 2;
+    const int bh  = int(m_infoLines.size()) * lh + pad * 2;
+    const QRect box(width() - bw - 10, 10, bw, bh);
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(20, 22, 26, 200));
+    p.drawRoundedRect(box, 6, 6);
+    p.setPen(QColor(226, 229, 234));
+    int y = box.top() + pad + fm.ascent();
+    for (const QString& s : m_infoLines) {
+      p.drawText(box.left() + pad, y, s);
+      y += lh;
+    }
+  }
 }
 
 void ModelView::resizeEvent(QResizeEvent* e) {
   QWidget::resizeEvent(e);
+  positionOverlay();
   renderFrame();
 }
 
@@ -754,11 +891,33 @@ void ModelView::wheelEvent(QWheelEvent* e) {
 }
 
 void ModelView::keyPressEvent(QKeyEvent* e) {
+  const float rot = 0.10f;                          // 回転ステップ (rad)
+  const float pan = std::max(m_radius, 1e-3f) * 0.06f;  // 平行移動ステップ (world)
+  // カメラの右 / 上ベクトル (平行移動用)
+  const QVector3D dir(std::cos(m_pitch) * std::sin(m_yaw), std::sin(m_pitch),
+                      std::cos(m_pitch) * std::cos(m_yaw));
+  const QVector3D fwd   = -dir;
+  const QVector3D right = QVector3D::crossProduct(fwd, QVector3D(0, 1, 0)).normalized();
+  const QVector3D up    = QVector3D::crossProduct(right, fwd).normalized();
+
   switch (e->key()) {
+    // 回転 (矢印)
+    case Qt::Key_Left:  m_yaw -= rot; renderFrame(); return;
+    case Qt::Key_Right: m_yaw += rot; renderFrame(); return;
+    case Qt::Key_Up:    m_pitch = std::clamp(m_pitch + rot, -1.53f, 1.53f); renderFrame(); return;
+    case Qt::Key_Down:  m_pitch = std::clamp(m_pitch - rot, -1.53f, 1.53f); renderFrame(); return;
+    // 平行移動 (WASD)
+    case Qt::Key_W: m_pan += up * pan; renderFrame(); return;
+    case Qt::Key_S: m_pan -= up * pan; renderFrame(); return;
+    case Qt::Key_A: m_pan -= right * pan; renderFrame(); return;
+    case Qt::Key_D: m_pan += right * pan; renderFrame(); return;
+    // 拡大縮小 (U/J)
+    case Qt::Key_U: m_dist = std::clamp(m_dist * 0.9f, 0.2f, 40.0f); renderFrame(); return;
+    case Qt::Key_J: m_dist = std::clamp(m_dist * 1.1f, 0.2f, 40.0f); renderFrame(); return;
+    // リセット / 情報 / その他トグル
     case Qt::Key_R: resetView(); return;
-    case Qt::Key_T: setTextureEnabled(!m_texEnabled); return;
+    case Qt::Key_I: m_showInfo = !m_showInfo; update(); return;
     case Qt::Key_G: setShowGrid(!m_showGrid); return;
-    case Qt::Key_W: setWireframe(!m_wireframe); return;
     case Qt::Key_Space:
       if (m_hasAnim) {
         setAnimationPlaying(!m_playing);

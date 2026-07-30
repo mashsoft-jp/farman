@@ -34,6 +34,8 @@ class QOffscreenSurface;
 class QOpenGLFramebufferObject;
 class QOpenGLTexture;
 class QTimer;
+class QCheckBox;
+class QLabel;
 
 namespace Farman {
 
@@ -86,6 +88,8 @@ private:
   void ensureGLResources();
   void uploadIfNeeded();
   void buildGrid();
+  void buildInfoText();
+  void positionOverlay();
   void renderFrame();  // makeCurrent → FBO 描画 → toImage → update()
   void computeBoneMatrices(double timeTicks, bool bindPose);
 
@@ -174,10 +178,25 @@ private:
   QOpenGLVertexArrayObject m_lineVao;
 
   // オービットカメラ
-  float  m_yaw   = 0.7f;
-  float  m_pitch = 0.35f;
-  float  m_dist  = 2.6f;
-  QPoint m_lastPos;
+  float     m_yaw   = 0.7f;
+  float     m_pitch = 0.35f;
+  float     m_dist  = 2.6f;
+  QVector3D m_pan{0, 0, 0};  // 平行移動 (ワールド)
+  QPoint    m_lastPos;
+
+  // 表示補助オーバーレイ
+  QMatrix4x4  m_lastMVP;         // 軸ラベル投影用
+  QVector3D   m_axisOrigin{0, 0, 0};
+  QVector3D   m_axisTip[3];      // X / Y / Z 先端 (ワールド)
+  int         m_axisVertCount = 0;  // ライン頂点のうち軸ぶん (先頭)
+  bool        m_showInfo = false;
+  QStringList m_infoLines;
+  QString     m_filePath;
+
+  // 画面内 UI (テクスチャ ON/OFF + 外部テクスチャパス)
+  QWidget*   m_overlay      = nullptr;
+  QCheckBox* m_texToggle    = nullptr;
+  QLabel*    m_texPathLabel = nullptr;
 };
 
 } // namespace Farman
