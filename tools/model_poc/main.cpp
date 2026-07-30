@@ -20,13 +20,11 @@ namespace {
 
 QString textureInfo(const Farman::ModelView& v) {
   if (!v.hasTexture()) return QStringLiteral("テクスチャ: なし");
-  QString s;
-  if (v.textureEmbedded())
-    s = QStringLiteral("テクスチャ: 埋め込み");
-  else if (v.textureResolved())
-    s = QStringLiteral("テクスチャ: %1").arg(v.textureResolvedPath());
-  else
-    s = QStringLiteral("テクスチャ: %1 (見つからず)").arg(v.textureRecordedPath());
+  QStringList parts;
+  if (v.hasEmbeddedTexture()) parts << QStringLiteral("埋め込み");
+  parts << v.resolvedTexturePaths();
+  for (const QString& p : v.unresolvedTexturePaths()) parts << (p + QStringLiteral(" (見つからず)"));
+  QString s = QStringLiteral("テクスチャ: ") + parts.join(QStringLiteral(" / "));
   if (!v.hasUV()) s += QStringLiteral("  ※メッシュに UV なし");
   return s;
 }
@@ -74,12 +72,10 @@ int main(int argc, char** argv) {
 
   qInfo("loaded: %s", qPrintable(view->summary()));
   qInfo("%s", qPrintable(textureInfo(*view)));
-  if (view->hasTexture() && !view->textureEmbedded()) {
-    qInfo("  FBX 記録パス: %s", qPrintable(view->textureRecordedPath()));
-    qInfo("  解決パス    : %s",
-          qPrintable(view->textureResolved() ? view->textureResolvedPath()
-                                             : QStringLiteral("(見つからず)")));
-  }
+  for (const QString& p : view->recordedTexturePaths())
+    qInfo("  外部テクスチャ記録パス: %s", qPrintable(p));
+  for (const QString& p : view->resolvedTexturePaths())
+    qInfo("  解決パス              : %s", qPrintable(p));
   if (view->hasAnimation())
     qInfo("animation: %.2f s", view->animationDuration());
 

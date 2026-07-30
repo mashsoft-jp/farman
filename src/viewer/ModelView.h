@@ -2,6 +2,7 @@
 
 // 3D モデルビュアーの描画ウィジェット (PoC)。
 // Assimp で読み込んだメッシュを QOpenGLWidget + OpenGL 3.3 Core で表示する。
+//  - 複数マテリアル / メッシュ (サブメッシュごとにマテリアル・テクスチャ)
 //  - ディフューズテクスチャ (外部参照 / 埋め込み) と UV
 //  - スケルタルアニメーション (ボーンスキニング。GPU で 4 ボーン加重変形)
 //  - オービットカメラ / 自動フィット / テクスチャ ON/OFF
@@ -19,6 +20,7 @@
 #include <QPoint>
 #include <QQuaternion>
 #include <QString>
+#include <QStringList>
 #include <QVector3D>
 
 #include <memory>
@@ -40,13 +42,14 @@ public:
 
   QString summary() const { return m_summary; }
 
-  // ── テクスチャ情報 ──
-  bool    hasTexture() const { return m_hasTexture; }
-  bool    hasUV() const { return m_hasUV; }
-  bool    textureEmbedded() const { return m_texEmbedded; }
-  bool    textureResolved() const { return m_texResolved; }
-  QString textureRecordedPath() const { return m_texRecordedPath; }
-  QString textureResolvedPath() const { return m_texResolvedPath; }
+  // ── テクスチャ情報 (複数マテリアル対応) ──
+  bool        hasUV() const { return m_hasUV; }
+  int         materialCount() const { return int(m_materials.size()); }
+  bool        hasTexture() const;             // いずれかのマテリアルがテクスチャ参照を持つ
+  bool        hasEmbeddedTexture() const;     // 埋め込みが 1 つでもあるか
+  QStringList recordedTexturePaths() const;   // FBX 記録値 (外部参照ぶん)
+  QStringList resolvedTexturePaths() const;   // 実ファイル (解決できたぶん)
+  QStringList unresolvedTexturePaths() const; // 見つからなかった記録値
 
   // ── アニメーション ──
   bool   hasAnimation() const { return m_hasAnim; }
@@ -55,7 +58,7 @@ public:
 public slots:
   void setTextureEnabled(bool on);
   void setAnimationPlaying(bool on);
-  void setAnimationTime(double sec);  // シーク / 静止フレーム用 (自動再生を止める)
+  void setAnimationTime(double sec);
 
 protected:
   void initializeGL() override;
@@ -77,24 +80,33 @@ private:
   float                     m_radius   = 1.0f;
   bool                      m_hasModel = false;
   bool                      m_uploaded = false;
+  bool                      m_hasUV    = false;
+  bool                      m_texEnabled = true;
   QString                   m_summary;
 
-  // テクスチャ / マテリアル
-  bool                            m_hasTexture = false;
-  bool                            m_hasUV      = false;
-  bool                            m_texEmbedded = false;
-  bool                            m_texResolved = false;
-  bool                            m_texEnabled  = true;
-  QString                         m_texRecordedPath;
-  QString                         m_texResolvedPath;
-  QImage                          m_texImage;
-  std::unique_ptr<QOpenGLTexture> m_tex;
-  QVector3D                       m_baseColor{0.72f, 0.74f, 0.78f};
+  // ── マテリアル / サブメッシュ ──
+  struct Material {
+    QVector3D                       baseColor{0.72f, 0.74f, 0.78f};
+    bool                            hasTexture = false;
+    bool                            embedded   = false;
+    bool                            resolved   = false;
+    QString                         recordedPath;
+    QString                         resolvedPath;
+    QImage                          image;  // GL アップロード待ち
+    std::unique_ptr<QOpenGLTexture> tex;
+  };
+  struct SubMesh {
+    int indexOffset = 0;  // m_indices 内のオフセット (要素数)
+    int indexCount  = 0;
+    int material    = 0;  // m_materials の index
+  };
+  std::vector<Material> m_materials;
+  std::vector<SubMesh>  m_submeshes;
 
   // ── スケルトン / アニメーション ──
   struct Node {
     QString    name;
-    QMatrix4x4 bind;       // ノードのバインドローカル変換
+    QMatrix4x4 bind;
     int        parent = -1;
   };
   struct Vec3Key { double t; QVector3D v; };
@@ -105,12 +117,12 @@ private:
     std::vector<QuatKey> rot;
     std::vector<Vec3Key> scale;
   };
-  std::vector<Node>       m_nodes;        // DFS 前順 (parent index < 自 index)
-  std::vector<Channel>    m_channels;     // m_nodes と同サイズ
-  std::vector<QMatrix4x4> m_boneOffset;   // ボーンごとのオフセット行列
-  std::vector<int>        m_boneNode;     // ボーン → ノード index
+  std::vector<Node>       m_nodes;
+  std::vector<Channel>    m_channels;
+  std::vector<QMatrix4x4> m_boneOffset;
+  std::vector<int>        m_boneNode;
   QMatrix4x4              m_globalInverse;
-  std::vector<QMatrix4x4> m_boneMatrices; // 現フレームの最終ボーン行列 (uniform 送信用)
+  std::vector<QMatrix4x4> m_boneMatrices;
   double                  m_animDurationTicks = 0.0;
   double                  m_ticksPerSec       = 25.0;
   bool                    m_hasAnim   = false;

@@ -118,7 +118,7 @@ ModelView::ModelView(QWidget* parent) : QOpenGLWidget(parent) {
 ModelView::~ModelView() {
   if (m_glReady) {
     makeCurrent();
-    m_tex.reset();
+    for (auto& m : m_materials) m.tex.reset();
     m_vbo.destroy();
     m_ibo.destroy();
     m_vao.destroy();
@@ -126,10 +126,39 @@ ModelView::~ModelView() {
   }
 }
 
+bool ModelView::hasTexture() const {
+  for (const auto& m : m_materials)
+    if (m.hasTexture) return true;
+  return false;
+}
+bool ModelView::hasEmbeddedTexture() const {
+  for (const auto& m : m_materials)
+    if (m.embedded) return true;
+  return false;
+}
+QStringList ModelView::recordedTexturePaths() const {
+  QStringList out;
+  for (const auto& m : m_materials)
+    if (m.hasTexture && !m.embedded && !out.contains(m.recordedPath)) out << m.recordedPath;
+  return out;
+}
+QStringList ModelView::resolvedTexturePaths() const {
+  QStringList out;
+  for (const auto& m : m_materials)
+    if (m.resolved && !m.resolvedPath.isEmpty() && !out.contains(m.resolvedPath))
+      out << m.resolvedPath;
+  return out;
+}
+QStringList ModelView::unresolvedTexturePaths() const {
+  QStringList out;
+  for (const auto& m : m_materials)
+    if (m.hasTexture && !m.embedded && !m.resolved && !out.contains(m.recordedPath))
+      out << m.recordedPath;
+  return out;
+}
+
 bool ModelView::loadModel(const QString& path, QString* error) {
   Assimp::Importer importer;
-  // アニメがある場合はスキニングのためノード階層/ボーンを保持する。
-  // (PreTransformVertices はボーンを壊すので使わない)
   const unsigned int flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals |
                              aiProcess_JoinIdenticalVertices | aiProcess_LimitBoneWeights |
                              aiProcess_ImproveCacheLocality;
@@ -154,16 +183,51 @@ bool ModelView::loadModel(const QString& path, QString* error) {
       m_nodes.push_back({QString::fromUtf8(it.n->mName.C_Str()), toQM(it.n->mTransformation),
                          it.parent});
       nodeIndex[it.n->mName.C_Str()] = idx;
-      // 子は逆順に積んで前順を保つ
       for (int c = int(it.n->mNumChildren) - 1; c >= 0; --c)
         stack.push_back({it.n->mChildren[c], idx});
     }
   }
   m_globalInverse = toQM(scene->mRootNode->mTransformation).inverted();
 
-  // ── ジオメトリ + スキンウェイト ──
+  // ── マテリアル ──
+  m_materials.clear();
+  m_materials.resize(scene->mNumMaterials);
+  for (unsigned int mi = 0; mi < scene->mNumMaterials; ++mi) {
+    const aiMaterial* mat = scene->mMaterials[mi];
+    Material&         out = m_materials[mi];
+    aiColor3D         col(0, 0, 0);
+    if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, col) == AI_SUCCESS && (col.r + col.g + col.b) > 0.05f)
+      out.baseColor = QVector3D(col.r, col.g, col.b);
+    aiString tp;
+    if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &tp) == AI_SUCCESS && tp.length > 0) {
+      out.hasTexture   = true;
+      out.recordedPath = QString::fromUtf8(tp.C_Str());
+      if (out.recordedPath.startsWith('*')) {  // 埋め込み
+        out.embedded  = true;
+        const int idx = out.recordedPath.mid(1).toInt();
+        if (idx >= 0 && idx < int(scene->mNumTextures)) {
+          const aiTexture* t = scene->mTextures[idx];
+          if (t->mHeight == 0)
+            out.image.loadFromData(reinterpret_cast<const uchar*>(t->pcData), int(t->mWidth));
+          else
+            out.image = QImage(reinterpret_cast<const uchar*>(t->pcData), int(t->mWidth),
+                               int(t->mHeight), QImage::Format_ARGB32)
+                            .rgbSwapped()
+                            .copy();
+          out.resolved = !out.image.isNull();
+        }
+      } else {  // 外部参照
+        out.resolvedPath = resolveTexturePath(path, out.recordedPath);
+        if (!out.resolvedPath.isEmpty() && out.image.load(out.resolvedPath)) out.resolved = true;
+      }
+    }
+  }
+  if (m_materials.empty()) m_materials.resize(1);  // マテリアル無しでも 1 つ用意
+
+  // ── ジオメトリ + サブメッシュ + スキンウェイト ──
   std::vector<float>        verts;
   std::vector<unsigned int> indices;
+  m_submeshes.clear();
   QVector3D lo(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
               std::numeric_limits<float>::max());
   QVector3D hi(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(),
@@ -180,8 +244,8 @@ bool ModelView::loadModel(const QString& path, QString* error) {
     const bool    meshUV = mesh->HasTextureCoords(0);
     anyUV                = anyUV || meshUV;
     const unsigned int base = static_cast<unsigned int>(verts.size() / ModelView::kFloatsPerVertex);
+    const int          subStart = int(indices.size());
 
-    // このメッシュのボーンウェイト (頂点ごと上位4)
     std::vector<std::array<float, 4>> vid(mesh->mNumVertices, {0, 0, 0, 0});
     std::vector<std::array<float, 4>> vwt(mesh->mNumVertices, {0, 0, 0, 0});
     std::vector<int>                  cnt(mesh->mNumVertices, 0);
@@ -191,8 +255,8 @@ bool ModelView::loadModel(const QString& path, QString* error) {
       int               id;
       auto              it = boneId.find(name);
       if (it == boneId.end()) {
-        id            = int(m_boneOffset.size());
-        boneId[name]  = id;
+        id           = int(m_boneOffset.size());
+        boneId[name] = id;
         m_boneOffset.push_back(toQM(bone->mOffsetMatrix));
         auto ni = nodeIndex.find(name);
         m_boneNode.push_back(ni == nodeIndex.end() ? -1 : ni->second);
@@ -214,7 +278,6 @@ bool ModelView::loadModel(const QString& path, QString* error) {
       const aiVector3D& p = mesh->mVertices[v];
       const aiVector3D  n = mesh->HasNormals() ? mesh->mNormals[v] : aiVector3D(0, 0, 1);
       const aiVector3D  t = meshUV ? mesh->mTextureCoords[0][v] : aiVector3D(0, 0, 0);
-      // ウェイト正規化
       std::array<float, 4> w = vwt[v];
       const float          s = w[0] + w[1] + w[2] + w[3];
       if (s > 0.0f)
@@ -232,6 +295,11 @@ bool ModelView::loadModel(const QString& path, QString* error) {
       indices.push_back(base + face.mIndices[2]);
       ++triCount;
     }
+    SubMesh sm;
+    sm.indexOffset = subStart;
+    sm.indexCount  = int(indices.size()) - subStart;
+    sm.material    = std::min<int>(mesh->mMaterialIndex, int(m_materials.size()) - 1);
+    if (sm.indexCount > 0) m_submeshes.push_back(sm);
   }
 
   if (verts.empty() || indices.empty()) {
@@ -270,47 +338,9 @@ bool ModelView::loadModel(const QString& path, QString* error) {
     m_hasAnim = !m_boneOffset.empty() && m_animDurationTicks > 0.0;
   }
 
-  // ── マテリアル / テクスチャ ──
-  m_hasTexture = m_texEmbedded = m_texResolved = false;
-  m_texRecordedPath.clear();
-  m_texResolvedPath.clear();
-  m_texImage  = QImage();
-  m_baseColor = QVector3D(0.72f, 0.74f, 0.78f);
-  if (scene->mNumMaterials > 0) {
-    const aiMaterial* mat = scene->mMaterials[scene->mMeshes[0]->mMaterialIndex];
-    aiColor3D         col(0, 0, 0);
-    if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, col) == AI_SUCCESS &&
-        (col.r + col.g + col.b) > 0.05f)
-      m_baseColor = QVector3D(col.r, col.g, col.b);
-    aiString tp;
-    if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &tp) == AI_SUCCESS && tp.length > 0) {
-      m_hasTexture      = true;
-      m_texRecordedPath = QString::fromUtf8(tp.C_Str());
-      if (m_texRecordedPath.startsWith('*')) {
-        m_texEmbedded = true;
-        const int idx = m_texRecordedPath.mid(1).toInt();
-        if (idx >= 0 && idx < int(scene->mNumTextures)) {
-          const aiTexture* t = scene->mTextures[idx];
-          if (t->mHeight == 0)
-            m_texImage.loadFromData(reinterpret_cast<const uchar*>(t->pcData), int(t->mWidth));
-          else
-            m_texImage = QImage(reinterpret_cast<const uchar*>(t->pcData), int(t->mWidth),
-                                int(t->mHeight), QImage::Format_ARGB32)
-                             .rgbSwapped()
-                             .copy();
-          m_texResolved = !m_texImage.isNull();
-        }
-      } else {
-        m_texResolvedPath = resolveTexturePath(path, m_texRecordedPath);
-        if (!m_texResolvedPath.isEmpty() && m_texImage.load(m_texResolvedPath)) m_texResolved = true;
-      }
-    }
-  }
-
   m_vertices = std::move(verts);
   m_indices  = std::move(indices);
 
-  // アニメ時はバインドポーズのスキン後座標で bbox を取る (フレーミング用)
   if (m_hasAnim) {
     computeBoneMatrices(0.0, /*bindPose=*/true);
     lo = QVector3D(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
@@ -319,11 +349,11 @@ bool ModelView::loadModel(const QString& path, QString* error) {
     const int stride = ModelView::kFloatsPerVertex;
     for (size_t i = 0; i + stride <= m_vertices.size(); i += stride) {
       const QVector3D p(m_vertices[i], m_vertices[i + 1], m_vertices[i + 2]);
-      const float     w0 = m_vertices[i + 12], w1 = m_vertices[i + 13], w2 = m_vertices[i + 14],
+      const float w0 = m_vertices[i + 12], w1 = m_vertices[i + 13], w2 = m_vertices[i + 14],
                   w3 = m_vertices[i + 15];
       QVector3D sp = p;
       if (w0 + w1 + w2 + w3 > 0.0001f) {
-        const int id0 = int(m_vertices[i + 8]), id1 = int(m_vertices[i + 9]),
+        const int  id0 = int(m_vertices[i + 8]), id1 = int(m_vertices[i + 9]),
                   id2 = int(m_vertices[i + 10]), id3 = int(m_vertices[i + 11]);
         QMatrix4x4 skin;
         skin.fill(0);
@@ -348,12 +378,12 @@ bool ModelView::loadModel(const QString& path, QString* error) {
   m_hasModel = true;
   m_hasUV    = anyUV;
   m_uploaded = false;
-  m_tex.reset();
   m_animTimeSec = 0.0;
   m_lastMs      = 0;
 
-  m_summary = QStringLiteral("%1 メッシュ · %2 頂点 · %3 三角形")
-                  .arg(scene->mNumMeshes)
+  m_summary = QStringLiteral("%1 メッシュ · %2 マテリアル · %3 頂点 · %4 三角形")
+                  .arg(m_submeshes.size())
+                  .arg(m_materials.size())
                   .arg(m_vertices.size() / ModelView::kFloatsPerVertex)
                   .arg(triCount);
   if (m_hasAnim)
@@ -373,23 +403,22 @@ void ModelView::computeBoneMatrices(double timeTicks, bool bindPose) {
     QMatrix4x4 local = m_nodes[i].bind;
     if (!bindPose && i < m_channels.size() && m_channels[i].used) {
       const QVector3D   bindT = m_nodes[i].bind.column(3).toVector3D();
-      const QVector3D   p = interpKeys(m_channels[i].pos, timeTicks, bindT);
-      const QQuaternion q = m_channels[i].rot.empty()
-                                ? QQuaternion()
-                                : [&] {
-                                    // 最近傍のスラープ
-                                    const auto& keys = m_channels[i].rot;
-                                    if (keys.size() == 1 || timeTicks <= keys.front().t)
-                                      return keys.front().q;
-                                    if (timeTicks >= keys.back().t) return keys.back().q;
-                                    for (size_t k = 0; k + 1 < keys.size(); ++k)
-                                      if (timeTicks < keys[k + 1].t) {
-                                        const float f = float((timeTicks - keys[k].t) /
-                                                              (keys[k + 1].t - keys[k].t));
-                                        return QQuaternion::slerp(keys[k].q, keys[k + 1].q, f);
-                                      }
-                                    return keys.back().q;
-                                  }();
+      const QVector3D   p     = interpKeys(m_channels[i].pos, timeTicks, bindT);
+      const QQuaternion q =
+          m_channels[i].rot.empty()
+              ? QQuaternion()
+              : [&] {
+                  const auto& keys = m_channels[i].rot;
+                  if (keys.size() == 1 || timeTicks <= keys.front().t) return keys.front().q;
+                  if (timeTicks >= keys.back().t) return keys.back().q;
+                  for (size_t k = 0; k + 1 < keys.size(); ++k)
+                    if (timeTicks < keys[k + 1].t) {
+                      const float f =
+                          float((timeTicks - keys[k].t) / (keys[k + 1].t - keys[k].t));
+                      return QQuaternion::slerp(keys[k].q, keys[k + 1].q, f);
+                    }
+                  return keys.back().q;
+                }();
       const QVector3D s = interpKeys(m_channels[i].scale, timeTicks, QVector3D(1, 1, 1));
       local.setToIdentity();
       local.translate(p);
@@ -400,9 +429,9 @@ void ModelView::computeBoneMatrices(double timeTicks, bool bindPose) {
   }
   m_boneMatrices.resize(m_boneOffset.size());
   for (size_t b = 0; b < m_boneOffset.size(); ++b) {
-    const int      node = m_boneNode[b];
-    const QMatrix4x4 g  = (node >= 0) ? global[node] : QMatrix4x4();
-    m_boneMatrices[b]   = m_globalInverse * g * m_boneOffset[b];
+    const int        node = m_boneNode[b];
+    const QMatrix4x4 g    = (node >= 0) ? global[node] : QMatrix4x4();
+    m_boneMatrices[b]     = m_globalInverse * g * m_boneOffset[b];
   }
 }
 
@@ -458,18 +487,20 @@ void ModelView::uploadIfNeeded() {
     glVertexAttribPointer(loc, size, GL_FLOAT, GL_FALSE, stride,
                           reinterpret_cast<void*>(offsetFloats * sizeof(float)));
   };
-  attr(0, 3, 0);   // pos
-  attr(1, 3, 3);   // normal
-  attr(2, 2, 6);   // uv
-  attr(3, 4, 8);   // bone ids
-  attr(4, 4, 12);  // weights
+  attr(0, 3, 0);
+  attr(1, 3, 3);
+  attr(2, 2, 6);
+  attr(3, 4, 8);
+  attr(4, 4, 12);
   m_vao.release();
 
-  if (m_texResolved && !m_texImage.isNull() && !m_tex) {
-    m_tex = std::make_unique<QOpenGLTexture>(m_texImage, QOpenGLTexture::GenerateMipMaps);
-    m_tex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-    m_tex->setMagnificationFilter(QOpenGLTexture::Linear);
-    m_tex->setWrapMode(QOpenGLTexture::Repeat);
+  for (auto& mat : m_materials) {
+    if (mat.resolved && !mat.image.isNull() && !mat.tex) {
+      mat.tex = std::make_unique<QOpenGLTexture>(mat.image, QOpenGLTexture::GenerateMipMaps);
+      mat.tex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+      mat.tex->setMagnificationFilter(QOpenGLTexture::Linear);
+      mat.tex->setWrapMode(QOpenGLTexture::Repeat);
+    }
   }
   m_uploaded = true;
 }
@@ -485,7 +516,6 @@ void ModelView::paintGL() {
   if (!m_hasModel) return;
   uploadIfNeeded();
 
-  // アニメ時間を進める
   if (m_hasAnim) {
     if (m_playing) {
       const qint64 now = m_clock.elapsed();
@@ -512,29 +542,31 @@ void ModelView::paintGL() {
   const float aspect = height() > 0 ? float(width()) / float(height()) : 1.0f;
   proj.perspective(45.0f, aspect, r * 0.01f, dist + r * 10.0f);
 
-  const QMatrix4x4 mvp    = proj * view;
-  const QMatrix3x3 normal = view.normalMatrix();
-  const bool       useTex = m_texEnabled && m_tex;
+  const QMatrix4x4 mvp     = proj * view;
+  const QMatrix3x3 normal  = view.normalMatrix();
   const bool       skinned = m_hasAnim && !m_boneMatrices.empty();
 
   m_prog.bind();
   m_prog.setUniformValue("uMVP", mvp);
   m_prog.setUniformValue("uNormalView", normal);
-  m_prog.setUniformValue("uUseTexture", useTex);
-  m_prog.setUniformValue("uBaseColor", m_baseColor);
   m_prog.setUniformValue("uSkinned", skinned);
-  if (skinned) {
-    const int count = std::min<int>(int(m_boneMatrices.size()), 128);
-    m_prog.setUniformValueArray("uBones", m_boneMatrices.data(), count);
-  }
-  if (useTex) {
-    m_tex->bind(0);
-    m_prog.setUniformValue("uTex", 0);
-  }
+  if (skinned)
+    m_prog.setUniformValueArray("uBones", m_boneMatrices.data(),
+                                std::min<int>(int(m_boneMatrices.size()), 128));
+  m_prog.setUniformValue("uTex", 0);
+
   m_vao.bind();
-  glDrawElements(GL_TRIANGLES, GLsizei(m_indices.size()), GL_UNSIGNED_INT, nullptr);
+  for (const SubMesh& sm : m_submeshes) {
+    const Material& mat    = m_materials[std::clamp(sm.material, 0, int(m_materials.size()) - 1)];
+    const bool      useTex = m_texEnabled && mat.tex;
+    m_prog.setUniformValue("uUseTexture", useTex);
+    m_prog.setUniformValue("uBaseColor", mat.baseColor);
+    if (useTex) mat.tex->bind(0);
+    glDrawElements(GL_TRIANGLES, sm.indexCount, GL_UNSIGNED_INT,
+                   reinterpret_cast<void*>(intptr_t(sm.indexOffset) * sizeof(unsigned int)));
+    if (useTex) mat.tex->release(0);
+  }
   m_vao.release();
-  if (useTex) m_tex->release(0);
   m_prog.release();
 }
 
