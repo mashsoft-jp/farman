@@ -19,3 +19,4 @@ cmake-build-*/
 moc_*.cpp
 ui_*.h
 qrc_*.cpp
+tmp-3d/

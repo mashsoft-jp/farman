@@ -110,6 +110,18 @@ int main(int argc, char** argv) {
     QObject::connect(actPlay, &QAction::toggled, view, &Farman::ModelView::setAnimationPlaying);
   }
 
+  QAction* actGrid = tb->addAction(QStringLiteral("グリッド"));
+  actGrid->setCheckable(true);
+  actGrid->setChecked(true);
+  QObject::connect(actGrid, &QAction::toggled, view, &Farman::ModelView::setShowGrid);
+
+  QAction* actWire = tb->addAction(QStringLiteral("ワイヤーフレーム"));
+  actWire->setCheckable(true);
+  QObject::connect(actWire, &QAction::toggled, view, &Farman::ModelView::setWireframe);
+
+  QAction* actReset = tb->addAction(QStringLiteral("ビューをリセット"));
+  QObject::connect(actReset, &QAction::triggered, view, &Farman::ModelView::resetView);
+
   win.setCentralWidget(view);
   win.statusBar()->showMessage(view->summary() + QStringLiteral("  |  ") + textureInfo(*view));
   win.resize(1000, 820);

@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QOpenGLTexture>
 #include <QTimer>
@@ -71,6 +72,23 @@ void main() {
 }
 )";
 
+const char* kLineVertexShader = R"(#version 330 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aColor;
+uniform mat4 uMVP;
+out vec3 vColor;
+void main() {
+  vColor = aColor;
+  gl_Position = uMVP * vec4(aPos, 1.0);
+}
+)";
+
+const char* kLineFragmentShader = R"(#version 330 core
+in vec3 vColor;
+out vec4 fragColor;
+void main() { fragColor = vec4(vColor, 1.0); }
+)";
+
 QMatrix4x4 toQM(const aiMatrix4x4& m) {
   return QMatrix4x4(m.a1, m.a2, m.a3, m.a4, m.b1, m.b2, m.b3, m.b4, m.c1, m.c2, m.c3, m.c4,
                     m.d1, m.d2, m.d3, m.d4);
@@ -122,6 +140,8 @@ ModelView::~ModelView() {
     m_vbo.destroy();
     m_ibo.destroy();
     m_vao.destroy();
+    m_lineVbo.destroy();
+    m_lineVao.destroy();
     doneCurrent();
   }
 }
@@ -375,11 +395,15 @@ bool ModelView::loadModel(const QString& path, QString* error) {
 
   m_center   = (lo + hi) * 0.5f;
   m_radius   = std::max((hi - lo).length() * 0.5f, 1e-4f);
+  m_bboxMin  = lo;
+  m_bboxMax  = hi;
   m_hasModel = true;
   m_hasUV    = anyUV;
   m_uploaded = false;
+  m_linesUploaded = false;
   m_animTimeSec = 0.0;
   m_lastMs      = 0;
+  buildGrid();
 
   m_summary = QStringLiteral("%1 メッシュ · %2 マテリアル · %3 頂点 · %4 三角形")
                   .arg(m_submeshes.size())
@@ -435,6 +459,59 @@ void ModelView::computeBoneMatrices(double timeTicks, bool bindPose) {
   }
 }
 
+void ModelView::buildGrid() {
+  m_lineVerts.clear();
+  const float  y    = m_bboxMin.y();                    // 床の高さ
+  const float  half = std::max(m_radius * 1.2f, 1e-3f); // グリッド半径
+  const int    div  = 20;
+  const float  step = (half * 2.0f) / div;
+  const QVector3D c(m_center.x(), y, m_center.z());
+  const QVector3D gcol(0.32f, 0.34f, 0.38f);
+  const QVector3D gcol2(0.42f, 0.44f, 0.48f);  // 中央線
+  auto line = [&](QVector3D a, QVector3D b, QVector3D col) {
+    m_lineVerts.insert(m_lineVerts.end(),
+                       {a.x(), a.y(), a.z(), col.x(), col.y(), col.z(), b.x(), b.y(), b.z(),
+                        col.x(), col.y(), col.z()});
+  };
+  for (int i = -div / 2; i <= div / 2; ++i) {
+    const float o   = i * step;
+    const QVector3D col = (i == 0) ? gcol2 : gcol;
+    line({c.x() - half, y, c.z() + o}, {c.x() + half, y, c.z() + o}, col);  // X 方向
+    line({c.x() + o, y, c.z() - half}, {c.x() + o, y, c.z() + half}, col);  // Z 方向
+  }
+  // 座標軸 (X=赤 / Y=緑 / Z=青)
+  const float al = m_radius * 0.6f;
+  line({c.x(), y, c.z()}, {c.x() + al, y, c.z()}, {0.85f, 0.30f, 0.30f});
+  line({c.x(), y, c.z()}, {c.x(), y + al, c.z()}, {0.35f, 0.80f, 0.40f});
+  line({c.x(), y, c.z()}, {c.x(), y, c.z() + al}, {0.35f, 0.55f, 0.95f});
+  m_lineCount = int(m_lineVerts.size() / 6);
+}
+
+void ModelView::setShowGrid(bool on) {
+  m_showGrid = on;
+  update();
+}
+
+void ModelView::setWireframe(bool on) {
+  m_wireframe = on;
+  update();
+}
+
+void ModelView::resetView() {
+  m_yaw   = 0.7f;
+  m_pitch = 0.35f;
+  m_dist  = 2.6f;
+  update();
+}
+
+void ModelView::keyPressEvent(QKeyEvent* e) {
+  if (e->key() == Qt::Key_R) {
+    resetView();
+    return;
+  }
+  QOpenGLWidget::keyPressEvent(e);
+}
+
 void ModelView::setTextureEnabled(bool on) {
   m_texEnabled = on;
   update();
@@ -470,6 +547,13 @@ void ModelView::initializeGL() {
     qWarning("ModelView: shader error: %s", qPrintable(m_prog.log()));
   }
   m_vao.create();
+
+  if (!m_lineProg.addShaderFromSourceCode(QOpenGLShader::Vertex, kLineVertexShader) ||
+      !m_lineProg.addShaderFromSourceCode(QOpenGLShader::Fragment, kLineFragmentShader) ||
+      !m_lineProg.link()) {
+    qWarning("ModelView: line shader error: %s", qPrintable(m_lineProg.log()));
+  }
+  m_lineVao.create();
 }
 
 void ModelView::uploadIfNeeded() {
@@ -502,6 +586,23 @@ void ModelView::uploadIfNeeded() {
       mat.tex->setWrapMode(QOpenGLTexture::Repeat);
     }
   }
+
+  // グリッド + 軸のライン
+  if (!m_lineVerts.empty()) {
+    m_lineVao.bind();
+    if (!m_lineVbo.isCreated()) m_lineVbo.create();
+    m_lineVbo.bind();
+    m_lineVbo.allocate(m_lineVerts.data(), int(m_lineVerts.size() * sizeof(float)));
+    const int lstride = 6 * sizeof(float);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, lstride, reinterpret_cast<void*>(0));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, lstride,
+                          reinterpret_cast<void*>(3 * sizeof(float)));
+    m_lineVao.release();
+    m_linesUploaded = true;
+  }
+
   m_uploaded = true;
 }
 
@@ -555,10 +656,11 @@ void ModelView::paintGL() {
                                 std::min<int>(int(m_boneMatrices.size()), 128));
   m_prog.setUniformValue("uTex", 0);
 
+  if (m_wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   m_vao.bind();
   for (const SubMesh& sm : m_submeshes) {
     const Material& mat    = m_materials[std::clamp(sm.material, 0, int(m_materials.size()) - 1)];
-    const bool      useTex = m_texEnabled && mat.tex;
+    const bool      useTex = m_texEnabled && mat.tex && !m_wireframe;
     m_prog.setUniformValue("uUseTexture", useTex);
     m_prog.setUniformValue("uBaseColor", mat.baseColor);
     if (useTex) mat.tex->bind(0);
@@ -568,6 +670,17 @@ void ModelView::paintGL() {
   }
   m_vao.release();
   m_prog.release();
+  if (m_wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+  // グリッド + 座標軸
+  if (m_showGrid && m_linesUploaded && m_lineCount > 0) {
+    m_lineProg.bind();
+    m_lineProg.setUniformValue("uMVP", mvp);
+    m_lineVao.bind();
+    glDrawArrays(GL_LINES, 0, m_lineCount);
+    m_lineVao.release();
+    m_lineProg.release();
+  }
 }
 
 void ModelView::mousePressEvent(QMouseEvent* e) { m_lastPos = e->pos(); }

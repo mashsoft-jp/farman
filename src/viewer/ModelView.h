@@ -59,6 +59,9 @@ public slots:
   void setTextureEnabled(bool on);
   void setAnimationPlaying(bool on);
   void setAnimationTime(double sec);
+  void setShowGrid(bool on);
+  void setWireframe(bool on);
+  void resetView();
 
 protected:
   void initializeGL() override;
@@ -67,9 +70,11 @@ protected:
   void mousePressEvent(QMouseEvent* e) override;
   void mouseMoveEvent(QMouseEvent* e) override;
   void wheelEvent(QWheelEvent* e) override;
+  void keyPressEvent(QKeyEvent* e) override;
 
 private:
   void uploadIfNeeded();
+  void buildGrid();
   void computeBoneMatrices(double timeTicks, bool bindPose);
 
   // 頂点: 位置3 + 法線3 + UV2 + boneID4 + weight4 = 16 float
@@ -82,7 +87,19 @@ private:
   bool                      m_uploaded = false;
   bool                      m_hasUV    = false;
   bool                      m_texEnabled = true;
+  bool                      m_showGrid   = true;
+  bool                      m_wireframe  = false;
+  QVector3D                 m_bboxMin{0, 0, 0};
+  QVector3D                 m_bboxMax{0, 0, 0};
   QString                   m_summary;
+
+  // グリッド + 座標軸 (unlit ライン)
+  std::vector<float>       m_lineVerts;  // pos3 + color3
+  int                      m_lineCount = 0;
+  bool                     m_linesUploaded = false;
+  QOpenGLShaderProgram     m_lineProg;
+  QOpenGLBuffer            m_lineVbo{QOpenGLBuffer::VertexBuffer};
+  QOpenGLVertexArrayObject m_lineVao;
 
   // ── マテリアル / サブメッシュ ──
   struct Material {
