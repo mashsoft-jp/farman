@@ -34,8 +34,6 @@ class QOffscreenSurface;
 class QOpenGLFramebufferObject;
 class QOpenGLTexture;
 class QTimer;
-class QCheckBox;
-class QLabel;
 
 namespace Farman {
 
@@ -71,8 +69,15 @@ public slots:
   void setAnimationPlaying(bool on);
   void setAnimationTime(double sec);
   void setShowGrid(bool on);
+  void setShowInfo(bool on);
   void setWireframe(bool on);
   void resetView();
+
+signals:
+  void textureEnabledChanged(bool on);
+  void showGridChanged(bool on);
+  void showInfoChanged(bool on);
+  void animationPlayingChanged(bool on);
 
 protected:
   void paintEvent(QPaintEvent* e) override;
@@ -89,7 +94,6 @@ private:
   void uploadIfNeeded();
   void buildGrid();
   void buildInfoText();
-  void positionOverlay();
   void renderFrame();  // makeCurrent → FBO 描画 → toImage → update()
   void computeBoneMatrices(double timeTicks, bool bindPose);
 
@@ -184,19 +188,10 @@ private:
   QVector3D m_pan{0, 0, 0};  // 平行移動 (ワールド)
   QPoint    m_lastPos;
 
-  // 表示補助オーバーレイ
-  QMatrix4x4  m_lastMVP;         // 軸ラベル投影用
-  QVector3D   m_axisOrigin{0, 0, 0};
-  QVector3D   m_axisTip[3];      // X / Y / Z 先端 (ワールド)
-  int         m_axisVertCount = 0;  // ライン頂点のうち軸ぶん (先頭)
+  // 表示補助 (右上ギズモ / 情報オーバーレイ)
   bool        m_showInfo = false;
   QStringList m_infoLines;
   QString     m_filePath;
-
-  // 画面内 UI (テクスチャ ON/OFF + 外部テクスチャパス)
-  QWidget*   m_overlay      = nullptr;
-  QCheckBox* m_texToggle    = nullptr;
-  QLabel*    m_texPathLabel = nullptr;
 };
 
 } // namespace Farman

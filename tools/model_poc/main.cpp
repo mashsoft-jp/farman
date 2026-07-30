@@ -1,25 +1,22 @@
 // farman 3D モデルビュアー PoC。
-// Assimp で読み込んだモデルを ModelView (QOpenGLWidget) で表示する検証用アプリ。
+// ModelViewerWidget (ツールバー + ModelView) を表示する検証用アプリ。
 //   farman_model_poc <model file>                       … ウィンドウ表示
-//   farman_model_poc <model file> --shot <png>          … オフスクリーンで PNG 出力
-//   farman_model_poc <model file> --shot <png> --time <s> … 指定アニメ時刻で PNG
+//   farman_model_poc <model file> --shot <png>          … 3D をオフスクリーン PNG
+//   farman_model_poc <model file> --shot <png> --time <s> … 指定アニメ時刻で
+//   farman_model_poc <model file> --uishot <png>        … UI 込みの見た目を PNG
 //   ... --no-texture                                    … テクスチャ OFF
 
-#include "viewer/ModelView.h"
+#include "viewer/ModelViewerWidget.h"
 
-#include <QAction>
 #include <QApplication>
 #include <QImage>
-#include <QMainWindow>
 #include <QPixmap>
-#include <QStatusBar>
 #include <QStringList>
 #include <QSurfaceFormat>
-#include <QToolBar>
 
 namespace {
 
-QString textureInfo(const Farman::ModelView& v) {
+QString textureInfo(const Farman::ModelViewerWidget& v) {
   if (!v.hasTexture()) return QStringLiteral("テクスチャ: なし");
   QStringList parts;
   if (v.hasEmbeddedTexture()) parts << QStringLiteral("埋め込み");
@@ -39,7 +36,6 @@ int main(int argc, char** argv) {
   fmt.setVersion(3, 3);
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   fmt.setDepthBufferSize(24);
-  fmt.setSamples(4);
   QSurfaceFormat::setDefaultFormat(fmt);
 
   QString modelPath, shotPath, uishotPath;
@@ -59,19 +55,20 @@ int main(int argc, char** argv) {
       modelPath = args[i];
   }
   if (modelPath.isEmpty()) {
-    qWarning("usage: farman_model_poc <model file> [--shot <out.png>] [--time <sec>] [--no-texture]");
+    qWarning("usage: farman_model_poc <model file> [--shot <png>] [--uishot <png>] "
+             "[--time <sec>] [--no-texture]");
     return 2;
   }
 
-  auto* view = new Farman::ModelView;
-  view->resize(1000, 780);
+  auto* view = new Farman::ModelViewerWidget;
+  view->resize(1000, 800);
 
   QString err;
   if (!view->loadModel(modelPath, &err)) {
     qWarning("load failed: %s", qPrintable(err));
     return 1;
   }
-  view->setTextureEnabled(!noTexture);
+  if (noTexture) view->setTextureEnabled(false);
 
   qInfo("loaded: %s", qPrintable(view->summary()));
   qInfo("%s", qPrintable(textureInfo(*view)));
@@ -79,24 +76,19 @@ int main(int argc, char** argv) {
     qInfo("  外部テクスチャ記録パス: %s", qPrintable(p));
   for (const QString& p : view->resolvedTexturePaths())
     qInfo("  解決パス              : %s", qPrintable(p));
-  if (view->hasAnimation())
-    qInfo("animation: %.2f s", view->animationDuration());
+  if (view->hasAnimation()) qInfo("animation: %.2f s", view->animationDuration());
 
   if (!uishotPath.isEmpty()) {
-    // ウィジェット全体 (オフスクリーン画像 + オーバーレイ + 子ウィジェット) を取り込む
-    view->resize(1000, 780);
-    view->renderToImage();  // m_frame / m_lastMVP を用意
+    view->renderToImage();  // 3D フレームを用意
     const QPixmap pm = view->grab();
     const bool    ok = pm.save(uishotPath);
     qInfo("uishot %s: %s", ok ? "saved" : "FAILED", qPrintable(uishotPath));
     return ok ? 0 : 1;
   }
-
   if (!shotPath.isEmpty()) {
     if (view->hasAnimation()) {
       const double t = timeOpt >= 0 ? timeOpt : view->animationDuration() * 0.5;
       view->setAnimationTime(t);
-      qInfo("shot time: %.2f s", t);
     }
     const QImage img = view->renderToImage();
     const bool   ok  = img.save(shotPath);
@@ -105,39 +97,7 @@ int main(int argc, char** argv) {
     return ok ? 0 : 1;
   }
 
-  QMainWindow win;
-  win.setWindowTitle(QStringLiteral("farman 3D PoC"));
-  QToolBar* tb = win.addToolBar(QStringLiteral("Tools"));
-
-  QAction* actTex = tb->addAction(QStringLiteral("テクスチャ"));
-  actTex->setCheckable(true);
-  actTex->setChecked(view->hasTexture() && !noTexture);
-  actTex->setEnabled(view->hasTexture());
-  actTex->setToolTip(QStringLiteral("テクスチャ表示の ON/OFF"));
-  QObject::connect(actTex, &QAction::toggled, view, &Farman::ModelView::setTextureEnabled);
-
-  if (view->hasAnimation()) {
-    QAction* actPlay = tb->addAction(QStringLiteral("再生 / 一時停止"));
-    actPlay->setCheckable(true);
-    actPlay->setChecked(true);
-    QObject::connect(actPlay, &QAction::toggled, view, &Farman::ModelView::setAnimationPlaying);
-  }
-
-  QAction* actGrid = tb->addAction(QStringLiteral("グリッド"));
-  actGrid->setCheckable(true);
-  actGrid->setChecked(true);
-  QObject::connect(actGrid, &QAction::toggled, view, &Farman::ModelView::setShowGrid);
-
-  QAction* actWire = tb->addAction(QStringLiteral("ワイヤーフレーム"));
-  actWire->setCheckable(true);
-  QObject::connect(actWire, &QAction::toggled, view, &Farman::ModelView::setWireframe);
-
-  QAction* actReset = tb->addAction(QStringLiteral("ビューをリセット"));
-  QObject::connect(actReset, &QAction::triggered, view, &Farman::ModelView::resetView);
-
-  win.setCentralWidget(view);
-  win.statusBar()->showMessage(view->summary() + QStringLiteral("  |  ") + textureInfo(*view));
-  win.resize(1000, 820);
-  win.show();
+  view->setWindowTitle(QStringLiteral("farman 3D PoC — ") + view->summary());
+  view->show();
   return app.exec();
 }

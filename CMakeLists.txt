@@ -515,6 +515,7 @@ if(assimp_FOUND OR ASSIMP_FOUND)
   qt_add_executable(farman_model_poc
     tools/model_poc/main.cpp
     src/viewer/ModelView.cpp
+    src/viewer/ModelViewerWidget.cpp
   )
   target_include_directories(farman_model_poc PRIVATE ${CMAKE_SOURCE_DIR}/src)
   target_link_libraries(farman_model_poc PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets)
