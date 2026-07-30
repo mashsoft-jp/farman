@@ -1,7 +1,14 @@
-# farman
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/wordmark-white.png" />
+    <img alt="farman" src="images/wordmark-charcoal.png" width="300" />
+  </picture>
+</h1>
 
-[![Build](https://github.com/mashsoft-jp/farman/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/mashsoft-jp/farman/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/mashsoft-jp/farman/actions/workflows/build.yml"><img src="https://github.com/mashsoft-jp/farman/actions/workflows/build.yml/badge.svg?branch=main" alt="Build" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
+</p>
 
 Qt6 / C++20 製のクロスプラットフォーム 2 画面ファイラ。
 キーボードのみで全ての操作を完結できる、使い勝手の良いファイラを目指してます。
