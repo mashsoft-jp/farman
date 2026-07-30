@@ -2,9 +2,11 @@
 
 // 3D モデルビュアーの描画ウィジェット (PoC)。
 // Assimp で読み込んだメッシュを QOpenGLWidget + OpenGL 3.3 Core で表示する。
-// オービットカメラ (ドラッグで回転 / ホイールでズーム) と自動フィット付き。
+// ディフューズテクスチャ (外部参照 / 埋め込み) と UV に対応し、テクスチャ表示は
+// ON/OFF できる。オービットカメラ (ドラッグで回転 / ホイールでズーム) と自動フィット付き。
 // 将来的にはこのクラスを外部ビュアープラグイン (IViewerPlugin) の中核に流用する。
 
+#include <QImage>
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_3_3_Core>
@@ -15,7 +17,10 @@
 #include <QString>
 #include <QVector3D>
 
+#include <memory>
 #include <vector>
+
+class QOpenGLTexture;
 
 namespace Farman {
 
@@ -27,11 +32,20 @@ public:
   ~ModelView() override;
 
   // Assimp でモデルを読み込む。失敗時 false（error に理由）。
-  // GL リソースへのアップロードは次の paintGL で遅延実行する。
   bool loadModel(const QString& path, QString* error = nullptr);
 
-  // 読み込んだモデルの概要（ステータス表示用）。
   QString summary() const { return m_summary; }
+
+  // ── テクスチャ情報 ──
+  bool    hasTexture() const { return m_hasTexture; }        // マテリアルが参照を持つ
+  bool    hasUV() const { return m_hasUV; }                  // メッシュに UV がある
+  bool    textureEmbedded() const { return m_texEmbedded; }  // FBX 埋め込みか
+  bool    textureResolved() const { return m_texResolved; }  // 実体を解決して読めたか
+  QString textureRecordedPath() const { return m_texRecordedPath; }  // FBX 記録値
+  QString textureResolvedPath() const { return m_texResolvedPath; }  // 実ファイルパス
+
+public slots:
+  void setTextureEnabled(bool on);
 
 protected:
   void initializeGL() override;
@@ -44,7 +58,7 @@ protected:
 private:
   void uploadIfNeeded();
 
-  // CPU 側メッシュ（インターリーブ: 位置3 + 法線3）
+  // CPU 側メッシュ（インターリーブ: 位置3 + 法線3 + UV2）
   std::vector<float>        m_vertices;
   std::vector<unsigned int> m_indices;
   QVector3D                 m_center{0, 0, 0};
@@ -52,6 +66,18 @@ private:
   bool                      m_hasModel = false;
   bool                      m_uploaded = false;
   QString                   m_summary;
+
+  // テクスチャ / マテリアル
+  bool                            m_hasTexture = false;
+  bool                            m_hasUV      = false;
+  bool                            m_texEmbedded = false;
+  bool                            m_texResolved = false;
+  bool                            m_texEnabled  = true;
+  QString                         m_texRecordedPath;
+  QString                         m_texResolvedPath;
+  QImage                          m_texImage;
+  std::unique_ptr<QOpenGLTexture> m_tex;
+  QVector3D                       m_baseColor{0.72f, 0.74f, 0.78f};
 
   // GL リソース
   QOpenGLShaderProgram     m_prog;
@@ -61,9 +87,9 @@ private:
   bool                     m_glReady = false;
 
   // オービットカメラ
-  float  m_yaw   = 0.7f;   // rad
-  float  m_pitch = 0.35f;  // rad
-  float  m_dist  = 2.6f;   // 半径倍率
+  float  m_yaw   = 0.7f;
+  float  m_pitch = 0.35f;
+  float  m_dist  = 2.6f;
   QPoint m_lastPos;
 };
 
