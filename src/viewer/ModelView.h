@@ -75,11 +75,13 @@ public slots:
   void resetView();
 
   bool showHelp() const { return m_showHelp; }
+  bool wireframe() const { return m_wireframe; }
 
 signals:
   void textureEnabledChanged(bool on);
   void showGridChanged(bool on);
   void showHelpChanged(bool on);
+  void wireframeChanged(bool on);
   void animationPlayingChanged(bool on);
   void infoRequested();  // i キー / ツールバーの情報ボタン相当
 

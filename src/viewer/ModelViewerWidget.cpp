@@ -21,7 +21,7 @@ namespace Farman {
 
 namespace {
 
-enum class Glyph { Texture, Grid, Play, Pause, Reset, Help, Info };
+enum class Glyph { Texture, Grid, Wire, Play, Pause, Reset, Help, Info };
 
 void drawGlyph(QPainter& p, Glyph g, const QColor& c) {
   p.setRenderHint(QPainter::Antialiasing, true);
@@ -46,6 +46,16 @@ void drawGlyph(QPainter& p, Glyph g, const QColor& c) {
       p.drawLine(QPointF(11, 3), QPointF(11, 15));
       p.drawLine(QPointF(3, 7), QPointF(15, 7));
       p.drawLine(QPointF(3, 11), QPointF(15, 11));
+      break;
+    }
+    case Glyph::Wire: {  // 三角形をワイヤーフレーム (稜線 + 内部の分割線) で
+      p.setPen(pen);
+      p.setBrush(Qt::NoBrush);
+      const QPointF a(9, 3), b(3, 15), c(15, 15);
+      p.drawLine(a, b);
+      p.drawLine(b, c);
+      p.drawLine(c, a);
+      p.drawLine(a, QPointF(9, 15));  // 内部分割線でメッシュ感を出す
       break;
     }
     case Glyph::Play: {
@@ -149,6 +159,16 @@ ModelViewerWidget::ModelViewerWidget(QWidget* parent) : QWidget(parent) {
   connect(m_view, &ModelView::showGridChanged, this, [this](bool on) {
     QSignalBlocker b(m_actGrid);
     m_actGrid->setChecked(on);
+  });
+
+  m_actWire = m_toolbar->addAction(makeIcon(Glyph::Wire, ic), QString());
+  m_actWire->setCheckable(true);
+  m_actWire->setChecked(false);
+  m_actWire->setToolTip(QStringLiteral("ワイヤーフレーム表示 (陰影なし) (F)"));
+  connect(m_actWire, &QAction::toggled, m_view, &ModelView::setWireframe);
+  connect(m_view, &ModelView::wireframeChanged, this, [this](bool on) {
+    QSignalBlocker b(m_actWire);
+    m_actWire->setChecked(on);
   });
 
   m_actHelp = m_toolbar->addAction(makeIcon(Glyph::Help, ic), QString());

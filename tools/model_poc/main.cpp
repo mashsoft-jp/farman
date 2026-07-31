@@ -6,6 +6,7 @@
 //   farman_model_poc <model file> --uishot <png>        … UI 込みの見た目を PNG
 //   ... --no-texture                                    … テクスチャ OFF
 
+#include "viewer/ModelView.h"
 #include "viewer/ModelViewerWidget.h"
 
 #include <QApplication>
@@ -40,6 +41,7 @@ int main(int argc, char** argv) {
 
   QString modelPath, shotPath, uishotPath;
   bool    noTexture = false;
+  bool    wire      = false;
   double  timeOpt   = -1.0;
   const QStringList args = app.arguments();
   for (int i = 1; i < args.size(); ++i) {
@@ -51,6 +53,8 @@ int main(int argc, char** argv) {
       timeOpt = args[++i].toDouble();
     else if (args[i] == QLatin1String("--no-texture"))
       noTexture = true;
+    else if (args[i] == QLatin1String("--wire"))
+      wire = true;
     else if (modelPath.isEmpty())
       modelPath = args[i];
   }
@@ -69,6 +73,7 @@ int main(int argc, char** argv) {
     return 1;
   }
   if (noTexture) view->setTextureEnabled(false);
+  if (wire) view->view()->setWireframe(true);
 
   qInfo("loaded: %s", qPrintable(view->summary()));
   qInfo("%s", qPrintable(textureInfo(*view)));

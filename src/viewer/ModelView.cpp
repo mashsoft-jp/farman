@@ -72,15 +72,17 @@ in vec3 vNormalView;
 in vec2 vUV;
 uniform sampler2D uTex;
 uniform bool uUseTexture;
+uniform bool uUnlit;      // シェーディングを無くす (ワイヤーフレーム用)
 uniform vec3 uBaseColor;
 out vec4 fragColor;
 void main() {
+  vec3  base = uUseTexture ? texture(uTex, vec2(vUV.x, 1.0 - vUV.y)).rgb : uBaseColor;
+  if (uUnlit) { fragColor = vec4(base, 1.0); return; }
   vec3 N = normalize(vNormalView);
   if (N.z < 0.0) N = -N;
   float head = max(N.z, 0.0);
   float fill = max(dot(N, normalize(vec3(0.3, 0.6, 0.5))), 0.0) * 0.35;
   float lit  = 0.28 + 0.72 * head + fill;
-  vec3  base = uUseTexture ? texture(uTex, vec2(vUV.x, 1.0 - vUV.y)).rgb : uBaseColor;
   fragColor  = vec4(base * lit, 1.0);
 }
 )";
@@ -536,7 +538,9 @@ void ModelView::setShowHelp(bool on) {
   update();  // オーバーレイのみ再描画 (再レンダリング不要)
 }
 void ModelView::setWireframe(bool on) {
+  if (m_wireframe == on) return;
   m_wireframe = on;
+  emit wireframeChanged(on);
   renderFrame();
 }
 void ModelView::resetView() {
@@ -715,6 +719,7 @@ void ModelView::renderFrame() {
     m_prog.setUniformValueArray("uBones", m_boneMatrices.data(),
                                 std::min<int>(int(m_boneMatrices.size()), 128));
   m_prog.setUniformValue("uTex", 0);
+  m_prog.setUniformValue("uUnlit", m_wireframe);  // ワイヤーフレームは陰影なし
 
   if (m_wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   m_vao.bind();
@@ -722,7 +727,9 @@ void ModelView::renderFrame() {
     const Material& mat    = m_materials[std::clamp(sm.material, 0, int(m_materials.size()) - 1)];
     const bool      useTex = m_texEnabled && mat.tex && !m_wireframe;
     m_prog.setUniformValue("uUseTexture", useTex);
-    m_prog.setUniformValue("uBaseColor", mat.baseColor);
+    // ワイヤーフレーム時はマテリアル色に依らず見やすい一定色で線を描く。
+    m_prog.setUniformValue("uBaseColor",
+                           m_wireframe ? QVector3D(0.55f, 0.85f, 0.65f) : mat.baseColor);
     if (useTex) mat.tex->bind(0);
     glDrawElements(GL_TRIANGLES, sm.indexCount, GL_UNSIGNED_INT,
                    reinterpret_cast<void*>(intptr_t(sm.indexOffset) * sizeof(unsigned int)));
@@ -803,7 +810,8 @@ void ModelView::paintEvent(QPaintEvent*) {
          << QStringLiteral("U / J : 拡大 / 縮小")
          << QStringLiteral("R : 視点リセット")
          << QStringLiteral("T : テクスチャ")
-         << QStringLiteral("G : グリッド");
+         << QStringLiteral("G : グリッド")
+         << QStringLiteral("F : ワイヤーフレーム");
     if (m_hasAnim) rows << QStringLiteral("Space : 再生 / 停止");
     rows << QStringLiteral("H : 操作の表示")
          << QStringLiteral("i : モデル情報");
@@ -889,6 +897,7 @@ void ModelView::keyPressEvent(QKeyEvent* e) {
     case Qt::Key_I: emit infoRequested(); return;
     case Qt::Key_T: setTextureEnabled(!m_texEnabled); return;
     case Qt::Key_G: setShowGrid(!m_showGrid); return;
+    case Qt::Key_F: setWireframe(!m_wireframe); return;
     case Qt::Key_H: setShowHelp(!m_showHelp); return;
     case Qt::Key_Space:
       if (m_hasAnim) {
