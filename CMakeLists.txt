@@ -33,7 +33,7 @@ set(CMAKE_AUTOUIC ON)
 # (Qt 側はその結果を見て該当機能を無効化するだけで実害はない)。
 set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets Multimedia MultimediaWidgets LinguistTools OpenGLWidgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets Multimedia MultimediaWidgets LinguistTools OpenGL)
 
 # Homebrew の libarchive は keg-only なので明示的にパスを通す。
 # Apple Silicon は /opt/homebrew、Intel Mac は /usr/local が Homebrew prefix。
@@ -505,31 +505,7 @@ target_link_libraries(test_worker PRIVATE
   Qt6::Widgets
 )
 
-# ===== 3D model viewer PoC (Assimp + QOpenGLWidget) =====
-# 汎用 3D モデルビュアー (将来は外部ビュアープラグイン) の描画検証用の単体アプリ。
-# 使い方: ./build/farman_model_poc <model.fbx>
-# assimp の prefix を CMAKE_PREFIX_PATH に含めること (例: /opt/homebrew/opt/assimp)。
-find_package(assimp CONFIG QUIET)
-if(NOT assimp_FOUND)
-  find_package(PkgConfig QUIET)
-  if(PkgConfig_FOUND)
-    pkg_check_modules(ASSIMP IMPORTED_TARGET assimp)
-  endif()
-endif()
-
-if(assimp_FOUND OR ASSIMP_FOUND)
-  qt_add_executable(farman_model_poc
-    tools/model_poc/main.cpp
-    src/viewer/ModelView.cpp
-    src/viewer/ModelViewerWidget.cpp
-  )
-  target_include_directories(farman_model_poc PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  target_link_libraries(farman_model_poc PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets)
-  if(assimp_FOUND)
-    target_link_libraries(farman_model_poc PRIVATE assimp::assimp)
-  else()
-    target_link_libraries(farman_model_poc PRIVATE PkgConfig::ASSIMP)
-  endif()
-else()
-  message(STATUS "assimp not found; skipping farman_model_poc (3D viewer PoC)")
-endif()
+# 3D モデルビュアーは外部プラグイン farman-plugin-3d に一元化した (描画本体
+# ModelView / ModelViewerWidget と検証用 PoC はそちらに移設)。本体は Assimp に
+# 依存しない。ただしプラグインがロード時に libQt6OpenGL を必要とするため、本体は
+# Qt6::OpenGL をリンクして配布物へ同梱する (上の target_link_libraries(farman ...))。
