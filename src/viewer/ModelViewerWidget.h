@@ -13,6 +13,8 @@
 class QToolBar;
 class QAction;
 class QLabel;
+class QDialog;
+class QPlainTextEdit;
 
 namespace Farman {
 
@@ -44,14 +46,17 @@ public:
 
 private:
   void refreshToolbar();
+  void openInfoDialog();
 
-  ModelView* m_view    = nullptr;
-  QToolBar*  m_toolbar = nullptr;
-  QAction*   m_actTexture = nullptr;
-  QAction*   m_actGrid    = nullptr;
-  QAction*   m_actInfo    = nullptr;
-  QAction*   m_actPlay    = nullptr;
-  QLabel*    m_pathLabel  = nullptr;
+  ModelView*      m_view       = nullptr;
+  QToolBar*       m_toolbar    = nullptr;
+  QAction*        m_actTexture = nullptr;
+  QAction*        m_actGrid    = nullptr;
+  QAction*        m_actInfo    = nullptr;
+  QAction*        m_actPlay    = nullptr;
+  QLabel*         m_pathLabel  = nullptr;
+  QDialog*        m_infoDialog = nullptr;
+  QPlainTextEdit* m_infoText   = nullptr;
 };
 
 } // namespace Farman

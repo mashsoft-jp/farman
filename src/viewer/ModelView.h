@@ -49,7 +49,8 @@ public:
   // 強制的に 1 フレーム描画して画像を返す (オフスクリーン検証 / スナップショット用)。
   QImage renderToImage();
 
-  QString summary() const { return m_summary; }
+  QString     summary() const { return m_summary; }
+  QStringList infoLines() const { return m_infoLines; }  // 情報ダイアログ用
 
   // ── テクスチャ情報 ──
   bool        hasUV() const { return m_hasUV; }
@@ -69,15 +70,14 @@ public slots:
   void setAnimationPlaying(bool on);
   void setAnimationTime(double sec);
   void setShowGrid(bool on);
-  void setShowInfo(bool on);
   void setWireframe(bool on);
   void resetView();
 
 signals:
   void textureEnabledChanged(bool on);
   void showGridChanged(bool on);
-  void showInfoChanged(bool on);
   void animationPlayingChanged(bool on);
+  void infoRequested();  // i キー / ツールバーの情報ボタン相当
 
 protected:
   void paintEvent(QPaintEvent* e) override;
@@ -188,8 +188,7 @@ private:
   QVector3D m_pan{0, 0, 0};  // 平行移動 (ワールド)
   QPoint    m_lastPos;
 
-  // 表示補助 (右上ギズモ / 情報オーバーレイ)
-  bool        m_showInfo = false;
+  // 表示補助 (右上ギズモ / 情報テキスト)
   QStringList m_infoLines;
   QString     m_filePath;
 };

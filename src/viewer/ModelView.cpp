@@ -529,12 +529,6 @@ void ModelView::setShowGrid(bool on) {
   emit showGridChanged(on);
   renderFrame();
 }
-void ModelView::setShowInfo(bool on) {
-  if (m_showInfo == on) return;
-  m_showInfo = on;
-  emit showInfoChanged(on);
-  update();
-}
 void ModelView::setWireframe(bool on) {
   m_wireframe = on;
   renderFrame();
@@ -794,31 +788,6 @@ void ModelView::paintEvent(QPaintEvent*) {
       p.drawText(tip + QPointF(-3, 4), QString::fromLatin1(a.name));
     }
   }
-
-  // FBX 情報オーバーレイ (i キー)
-  if (m_showInfo && !m_infoLines.isEmpty()) {
-    QFont info = p.font();
-    info.setBold(false);
-    info.setPointSize(11);
-    p.setFont(info);
-    const QFontMetrics fm(info);
-    int w = 0;
-    for (const QString& s : m_infoLines) w = std::max(w, fm.horizontalAdvance(s));
-    const int pad = 10;
-    const int lh  = fm.height() + 2;
-    const int bw  = w + pad * 2;
-    const int bh  = int(m_infoLines.size()) * lh + pad * 2;
-    const QRect box(width() - bw - 10, 10, bw, bh);
-    p.setPen(Qt::NoPen);
-    p.setBrush(QColor(20, 22, 26, 200));
-    p.drawRoundedRect(box, 6, 6);
-    p.setPen(QColor(226, 229, 234));
-    int y = box.top() + pad + fm.ascent();
-    for (const QString& s : m_infoLines) {
-      p.drawText(box.left() + pad, y, s);
-      y += lh;
-    }
-  }
 }
 
 void ModelView::resizeEvent(QResizeEvent* e) {
@@ -876,7 +845,7 @@ void ModelView::keyPressEvent(QKeyEvent* e) {
     case Qt::Key_J: m_dist = std::clamp(m_dist * 1.1f, 0.2f, 40.0f); renderFrame(); return;
     // リセット / 情報 / その他トグル
     case Qt::Key_R: resetView(); return;
-    case Qt::Key_I: setShowInfo(!m_showInfo); return;
+    case Qt::Key_I: emit infoRequested(); return;
     case Qt::Key_T: setTextureEnabled(!m_texEnabled); return;
     case Qt::Key_G: setShowGrid(!m_showGrid); return;
     case Qt::Key_Space:

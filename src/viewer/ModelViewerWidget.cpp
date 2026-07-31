@@ -3,11 +3,102 @@
 #include "viewer/ModelView.h"
 
 #include <QAction>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QGuiApplication>
+#include <QIcon>
 #include <QLabel>
+#include <QPainter>
+#include <QPixmap>
+#include <QPlainTextEdit>
+#include <QSizePolicy>
 #include <QToolBar>
 #include <QVBoxLayout>
 
 namespace Farman {
+
+namespace {
+
+enum class Glyph { Texture, Grid, Play, Pause, Reset, Info };
+
+void drawGlyph(QPainter& p, Glyph g, const QColor& c) {
+  p.setRenderHint(QPainter::Antialiasing, true);
+  QPen pen(c, 1.6);
+  pen.setJoinStyle(Qt::RoundJoin);
+  pen.setCapStyle(Qt::RoundCap);
+  switch (g) {
+    case Glyph::Texture: {  // 角丸 + チェッカー
+      p.setPen(pen);
+      p.setBrush(Qt::NoBrush);
+      p.drawRoundedRect(QRectF(3, 3, 12, 12), 2, 2);
+      p.setPen(Qt::NoPen);
+      p.setBrush(c);
+      p.drawRect(QRectF(3.5, 3.5, 5.5, 5.5));
+      p.drawRect(QRectF(9, 9, 5.5, 5.5));
+      break;
+    }
+    case Glyph::Grid: {
+      p.setPen(pen);
+      p.drawRect(QRectF(3, 3, 12, 12));
+      p.drawLine(QPointF(7, 3), QPointF(7, 15));
+      p.drawLine(QPointF(11, 3), QPointF(11, 15));
+      p.drawLine(QPointF(3, 7), QPointF(15, 7));
+      p.drawLine(QPointF(3, 11), QPointF(15, 11));
+      break;
+    }
+    case Glyph::Play: {
+      p.setPen(Qt::NoPen);
+      p.setBrush(c);
+      QPolygonF tri;
+      tri << QPointF(6, 4) << QPointF(6, 14) << QPointF(14, 9);
+      p.drawPolygon(tri);
+      break;
+    }
+    case Glyph::Pause: {
+      p.setPen(Qt::NoPen);
+      p.setBrush(c);
+      p.drawRoundedRect(QRectF(5, 4, 3, 10), 1, 1);
+      p.drawRoundedRect(QRectF(10, 4, 3, 10), 1, 1);
+      break;
+    }
+    case Glyph::Reset: {  // 円弧 + 矢じり (リロード風)
+      p.setPen(pen);
+      p.setBrush(Qt::NoBrush);
+      const QRectF r(4, 4, 10, 10);
+      p.drawArc(r, 60 * 16, 280 * 16);
+      // 矢じり (弧の始点付近)
+      p.setPen(Qt::NoPen);
+      p.setBrush(c);
+      QPolygonF ah;
+      ah << QPointF(11.5, 3.2) << QPointF(13.6, 6.2) << QPointF(10.0, 6.0);
+      p.drawPolygon(ah);
+      break;
+    }
+    case Glyph::Info: {
+      p.setPen(pen);
+      p.setBrush(Qt::NoBrush);
+      p.drawEllipse(QRectF(3, 3, 12, 12));
+      p.setPen(Qt::NoPen);
+      p.setBrush(c);
+      p.drawEllipse(QPointF(9, 6.3), 1.1, 1.1);
+      p.drawRoundedRect(QRectF(8.1, 8.2, 1.8, 5.0), 0.8, 0.8);
+      break;
+    }
+  }
+}
+
+QIcon makeIcon(Glyph g, const QColor& c) {
+  const qreal dpr = qApp ? qApp->devicePixelRatio() : 2.0;
+  QPixmap     pm(QSize(18, 18) * dpr);
+  pm.setDevicePixelRatio(dpr);
+  pm.fill(Qt::transparent);
+  QPainter p(&pm);
+  drawGlyph(p, g, c);
+  p.end();
+  return QIcon(pm);
+}
+
+} // namespace
 
 ModelViewerWidget::ModelViewerWidget(QWidget* parent) : QWidget(parent) {
   auto* lay = new QVBoxLayout(this);
@@ -17,49 +108,49 @@ ModelViewerWidget::ModelViewerWidget(QWidget* parent) : QWidget(parent) {
   m_toolbar = new QToolBar(this);
   m_toolbar->setMovable(false);
   m_toolbar->setFloatable(false);
+  m_toolbar->setIconSize(QSize(20, 20));
   m_view = new ModelView(this);
 
   lay->addWidget(m_toolbar);
   lay->addWidget(m_view, 1);
   setFocusProxy(m_view);
 
-  auto sync = [this](QAction* a, bool on) {
-    QSignalBlocker b(a);
-    a->setChecked(on);
-  };
+  const QColor ic = palette().color(QPalette::ButtonText);
 
-  m_actTexture = m_toolbar->addAction(QStringLiteral("テクスチャ"));
+  m_actTexture = m_toolbar->addAction(makeIcon(Glyph::Texture, ic), QString());
   m_actTexture->setCheckable(true);
   m_actTexture->setChecked(true);
-  m_actTexture->setToolTip(QStringLiteral("テクスチャ表示の ON/OFF (T)"));
+  m_actTexture->setToolTip(QStringLiteral("テクスチャ表示 (T)"));
   connect(m_actTexture, &QAction::toggled, m_view, &ModelView::setTextureEnabled);
-  connect(m_view, &ModelView::textureEnabledChanged, this,
-          [this, sync](bool on) { sync(m_actTexture, on); });
+  connect(m_view, &ModelView::textureEnabledChanged, this, [this](bool on) {
+    QSignalBlocker b(m_actTexture);
+    m_actTexture->setChecked(on);
+  });
 
-  m_actGrid = m_toolbar->addAction(QStringLiteral("グリッド"));
+  m_actGrid = m_toolbar->addAction(makeIcon(Glyph::Grid, ic), QString());
   m_actGrid->setCheckable(true);
   m_actGrid->setChecked(true);
   m_actGrid->setToolTip(QStringLiteral("床グリッド (G)"));
   connect(m_actGrid, &QAction::toggled, m_view, &ModelView::setShowGrid);
-  connect(m_view, &ModelView::showGridChanged, this,
-          [this, sync](bool on) { sync(m_actGrid, on); });
+  connect(m_view, &ModelView::showGridChanged, this, [this](bool on) {
+    QSignalBlocker b(m_actGrid);
+    m_actGrid->setChecked(on);
+  });
 
-  m_actInfo = m_toolbar->addAction(QStringLiteral("情報"));
-  m_actInfo->setCheckable(true);
-  m_actInfo->setToolTip(QStringLiteral("モデル情報の表示 (i)"));
-  connect(m_actInfo, &QAction::toggled, m_view, &ModelView::setShowInfo);
-  connect(m_view, &ModelView::showInfoChanged, this,
-          [this, sync](bool on) { sync(m_actInfo, on); });
-
-  m_actPlay = m_toolbar->addAction(QStringLiteral("再生"));
+  m_actPlay = m_toolbar->addAction(makeIcon(Glyph::Pause, ic), QString());
   m_actPlay->setCheckable(true);
   m_actPlay->setChecked(true);
   m_actPlay->setToolTip(QStringLiteral("アニメ再生 / 一時停止 (Space)"));
   connect(m_actPlay, &QAction::toggled, m_view, &ModelView::setAnimationPlaying);
-  connect(m_view, &ModelView::animationPlayingChanged, this,
-          [this, sync](bool on) { sync(m_actPlay, on); });
+  connect(m_actPlay, &QAction::toggled, this,
+          [this, ic](bool on) { m_actPlay->setIcon(makeIcon(on ? Glyph::Pause : Glyph::Play, ic)); });
+  connect(m_view, &ModelView::animationPlayingChanged, this, [this, ic](bool on) {
+    QSignalBlocker b(m_actPlay);
+    m_actPlay->setChecked(on);
+    m_actPlay->setIcon(makeIcon(on ? Glyph::Pause : Glyph::Play, ic));
+  });
 
-  QAction* actReset = m_toolbar->addAction(QStringLiteral("リセット"));
+  QAction* actReset = m_toolbar->addAction(makeIcon(Glyph::Reset, ic), QString());
   actReset->setToolTip(QStringLiteral("視点をリセット (R)"));
   connect(actReset, &QAction::triggered, m_view, &ModelView::resetView);
 
@@ -68,6 +159,35 @@ ModelViewerWidget::ModelViewerWidget(QWidget* parent) : QWidget(parent) {
   m_pathLabel->setStyleSheet(QStringLiteral("color:#8a929c; padding:0 8px;"));
   m_pathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
   m_toolbar->addWidget(m_pathLabel);
+
+  // 右端に情報ボタンを寄せるためのスペーサー。
+  auto* spacer = new QWidget(m_toolbar);
+  spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  m_toolbar->addWidget(spacer);
+
+  m_actInfo = m_toolbar->addAction(makeIcon(Glyph::Info, ic), QString());
+  m_actInfo->setToolTip(QStringLiteral("モデル情報を別ウィンドウで表示 (i)"));
+  connect(m_actInfo, &QAction::triggered, this, &ModelViewerWidget::openInfoDialog);
+  connect(m_view, &ModelView::infoRequested, this, &ModelViewerWidget::openInfoDialog);
+}
+
+void ModelViewerWidget::openInfoDialog() {
+  if (!m_infoDialog) {
+    m_infoDialog = new QDialog(this);
+    m_infoDialog->setWindowTitle(QStringLiteral("モデル情報"));
+    auto* dl = new QVBoxLayout(m_infoDialog);
+    m_infoText = new QPlainTextEdit(m_infoDialog);
+    m_infoText->setReadOnly(true);
+    dl->addWidget(m_infoText);
+    auto* bb = new QDialogButtonBox(QDialogButtonBox::Close, m_infoDialog);
+    connect(bb, &QDialogButtonBox::rejected, m_infoDialog, &QDialog::close);
+    dl->addWidget(bb);
+    m_infoDialog->resize(480, 260);
+  }
+  m_infoText->setPlainText(m_view->infoLines().join(QStringLiteral("\n")));
+  m_infoDialog->show();
+  m_infoDialog->raise();
+  m_infoDialog->activateWindow();
 }
 
 void ModelViewerWidget::refreshToolbar() {
@@ -79,7 +199,6 @@ void ModelViewerWidget::refreshToolbar() {
   }
   m_actPlay->setVisible(m_view->hasAnimation());
 
-  // 外部テクスチャのパスをツールバーに表示 (外部参照時のみ)。埋め込みは種別のみ。
   const QStringList ext = m_view->resolvedTexturePaths() + m_view->unresolvedTexturePaths();
   if (!ext.isEmpty()) {
     m_pathLabel->setText(QStringLiteral("テクスチャ: ") + ext.join(QStringLiteral("  /  ")));
@@ -96,6 +215,8 @@ void ModelViewerWidget::refreshToolbar() {
 bool ModelViewerWidget::loadModel(const QString& path, QString* error) {
   const bool ok = m_view->loadModel(path, error);
   refreshToolbar();
+  if (m_infoDialog && m_infoDialog->isVisible())
+    m_infoText->setPlainText(m_view->infoLines().join(QStringLiteral("\n")));
   return ok;
 }
 
