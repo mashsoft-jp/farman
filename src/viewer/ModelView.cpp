@@ -375,6 +375,18 @@ bool ModelView::loadModel(const QString& path, QString* error) {
     m_hasAnim = !m_boneOffset.empty() && m_animDurationTicks > 0.0;
   }
 
+  // スケルトン描画用: ボーンに対応するノード集合と、各ノードの最近ボーン祖先。
+  m_isBoneNode.assign(m_nodes.size(), 0);
+  for (int bn : m_boneNode)
+    if (bn >= 0) m_isBoneNode[bn] = 1;
+  m_boneAncestor.assign(m_nodes.size(), -1);
+  for (size_t i = 0; i < m_nodes.size(); ++i) {
+    int p = m_nodes[i].parent;
+    while (p >= 0 && !m_isBoneNode[p]) p = m_nodes[p].parent;
+    m_boneAncestor[i] = p;
+  }
+  m_jointWorld.clear();
+
   m_vertices = std::move(verts);
   m_indices  = std::move(indices);
 
@@ -409,6 +421,9 @@ bool ModelView::loadModel(const QString& path, QString* error) {
       hi = QVector3D(std::max(hi.x(), sp.x()), std::max(hi.y(), sp.y()), std::max(hi.z(), sp.z()));
     }
   }
+
+  // アニメ無しでもボーンがあれば、バインドポーズの関節位置を用意しておく。
+  if (!m_boneOffset.empty() && !m_hasAnim) computeBoneMatrices(0.0, /*bindPose=*/true);
 
   m_center   = (lo + hi) * 0.5f;
   m_radius   = std::max((hi - lo).length() * 0.5f, 1e-4f);
@@ -471,6 +486,10 @@ void ModelView::computeBoneMatrices(double timeTicks, bool bindPose) {
     }
     global[i] = (m_nodes[i].parent < 0) ? local : global[m_nodes[i].parent] * local;
   }
+  // スケルトン描画用にノードのワールド座標を保存。
+  m_jointWorld.resize(n);
+  for (size_t i = 0; i < n; ++i)
+    m_jointWorld[i] = (m_globalInverse * global[i]).column(3).toVector3D();
   m_boneMatrices.resize(m_boneOffset.size());
   for (size_t b = 0; b < m_boneOffset.size(); ++b) {
     const int        node = m_boneNode[b];
@@ -536,6 +555,12 @@ void ModelView::setShowHelp(bool on) {
   m_showHelp = on;
   emit showHelpChanged(on);
   update();  // オーバーレイのみ再描画 (再レンダリング不要)
+}
+void ModelView::setShowBones(bool on) {
+  if (m_showBones == on) return;
+  m_showBones = on;
+  emit showBonesChanged(on);
+  update();  // オーバーレイのみ再描画
 }
 void ModelView::setWireframe(bool on) {
   if (m_wireframe == on) return;
@@ -708,6 +733,7 @@ void ModelView::renderFrame() {
   proj.perspective(45.0f, aspect, r * 0.01f, dist + r * 10.0f);
 
   const QMatrix4x4 mvp     = proj * view;
+  m_lastMvp                = mvp;  // スケルトンの 2D 投影に使う
   const QMatrix3x3 normal  = view.normalMatrix();
   const bool       skinned = m_hasAnim && !m_boneMatrices.empty();
 
@@ -802,6 +828,32 @@ void ModelView::paintEvent(QPaintEvent*) {
     }
   }
 
+  // スケルトン (ボーン) を関節線 + 関節点で重ねる (B キー / ツールバーで ON/OFF)。
+  if (m_showBones && !m_boneOffset.empty() && !m_jointWorld.empty()) {
+    auto project = [&](const QVector3D& wp, QPointF& out) -> bool {
+      const QVector4D clip = m_lastMvp * QVector4D(wp, 1.0f);
+      if (clip.w() <= 1e-6f) return false;
+      const float x = clip.x() / clip.w(), y = clip.y() / clip.w();
+      out = QPointF((x * 0.5f + 0.5f) * width(), (1.0f - (y * 0.5f + 0.5f)) * height());
+      return true;
+    };
+    p.setPen(QPen(QColor(255, 170, 60, 220), 1.6));
+    for (size_t i = 0; i < m_jointWorld.size(); ++i) {
+      if (!m_isBoneNode[i]) continue;
+      const int a = m_boneAncestor[i];
+      if (a < 0) continue;
+      QPointF p0, p1;
+      if (project(m_jointWorld[a], p0) && project(m_jointWorld[i], p1)) p.drawLine(p0, p1);
+    }
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(255, 220, 120, 235));
+    for (size_t i = 0; i < m_jointWorld.size(); ++i) {
+      if (!m_isBoneNode[i]) continue;
+      QPointF c;
+      if (project(m_jointWorld[i], c)) p.drawEllipse(c, 2.8, 2.8);
+    }
+  }
+
   // 左端に操作方法を列挙 (H キー / ツールバーで ON/OFF)。
   if (m_showHelp) {
     QStringList rows;
@@ -812,6 +864,7 @@ void ModelView::paintEvent(QPaintEvent*) {
          << QStringLiteral("T : テクスチャ")
          << QStringLiteral("G : グリッド")
          << QStringLiteral("F : ワイヤーフレーム");
+    if (!m_boneOffset.empty()) rows << QStringLiteral("B : ボーン");
     if (m_hasAnim) rows << QStringLiteral("Space : 再生 / 停止");
     rows << QStringLiteral("H : 操作の表示")
          << QStringLiteral("i : モデル情報");
@@ -898,6 +951,7 @@ void ModelView::keyPressEvent(QKeyEvent* e) {
     case Qt::Key_T: setTextureEnabled(!m_texEnabled); return;
     case Qt::Key_G: setShowGrid(!m_showGrid); return;
     case Qt::Key_F: setWireframe(!m_wireframe); return;
+    case Qt::Key_B: if (!m_boneOffset.empty()) setShowBones(!m_showBones); return;
     case Qt::Key_H: setShowHelp(!m_showHelp); return;
     case Qt::Key_Space:
       if (m_hasAnim) {

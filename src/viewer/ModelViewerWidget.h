@@ -54,6 +54,7 @@ private:
   QAction*        m_actTexture = nullptr;
   QAction*        m_actGrid    = nullptr;
   QAction*        m_actWire    = nullptr;
+  QAction*        m_actBones   = nullptr;
   QAction*        m_actHelp    = nullptr;
   QAction*        m_actPlay    = nullptr;
   QToolButton*    m_infoButton = nullptr;

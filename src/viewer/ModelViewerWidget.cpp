@@ -21,7 +21,7 @@ namespace Farman {
 
 namespace {
 
-enum class Glyph { Texture, Grid, Wire, Play, Pause, Reset, Help, Info };
+enum class Glyph { Texture, Grid, Wire, Bones, Play, Pause, Reset, Help, Info };
 
 void drawGlyph(QPainter& p, Glyph g, const QColor& c) {
   p.setRenderHint(QPainter::Antialiasing, true);
@@ -56,6 +56,18 @@ void drawGlyph(QPainter& p, Glyph g, const QColor& c) {
       p.drawLine(b, c);
       p.drawLine(c, a);
       p.drawLine(a, QPointF(9, 15));  // 内部分割線でメッシュ感を出す
+      break;
+    }
+    case Glyph::Bones: {  // 関節線 + 関節点 (スケルトン)
+      p.setPen(pen);
+      const QPointF j0(5, 14), j1(9, 8), j2(13, 4);
+      p.drawLine(j0, j1);
+      p.drawLine(j1, j2);
+      p.setPen(Qt::NoPen);
+      p.setBrush(c);
+      p.drawEllipse(j0, 1.7, 1.7);
+      p.drawEllipse(j1, 1.7, 1.7);
+      p.drawEllipse(j2, 1.7, 1.7);
       break;
     }
     case Glyph::Play: {
@@ -171,6 +183,16 @@ ModelViewerWidget::ModelViewerWidget(QWidget* parent) : QWidget(parent) {
     m_actWire->setChecked(on);
   });
 
+  m_actBones = m_toolbar->addAction(makeIcon(Glyph::Bones, ic), QString());
+  m_actBones->setCheckable(true);
+  m_actBones->setChecked(false);
+  m_actBones->setToolTip(QStringLiteral("ボーン (スケルトン) 表示 (B)"));
+  connect(m_actBones, &QAction::toggled, m_view, &ModelView::setShowBones);
+  connect(m_view, &ModelView::showBonesChanged, this, [this](bool on) {
+    QSignalBlocker b(m_actBones);
+    m_actBones->setChecked(on);
+  });
+
   m_actHelp = m_toolbar->addAction(makeIcon(Glyph::Help, ic), QString());
   m_actHelp->setCheckable(true);
   m_actHelp->setChecked(true);
@@ -250,6 +272,7 @@ void ModelViewerWidget::refreshToolbar() {
     m_actTexture->setChecked(hasTex);
   }
   m_actPlay->setVisible(m_view->hasAnimation());
+  m_actBones->setVisible(m_view->hasSkeleton());
 
   const QStringList ext = m_view->resolvedTexturePaths() + m_view->unresolvedTexturePaths();
   if (!ext.isEmpty()) {

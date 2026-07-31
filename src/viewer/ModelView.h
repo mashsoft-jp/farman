@@ -71,16 +71,19 @@ public slots:
   void setAnimationTime(double sec);
   void setShowGrid(bool on);
   void setShowHelp(bool on);
+  void setShowBones(bool on);
   void setWireframe(bool on);
   void resetView();
 
   bool showHelp() const { return m_showHelp; }
   bool wireframe() const { return m_wireframe; }
+  bool hasSkeleton() const { return !m_boneOffset.empty(); }
 
 signals:
   void textureEnabledChanged(bool on);
   void showGridChanged(bool on);
   void showHelpChanged(bool on);
+  void showBonesChanged(bool on);
   void wireframeChanged(bool on);
   void animationPlayingChanged(bool on);
   void infoRequested();  // i キー / ツールバーの情報ボタン相当
@@ -115,6 +118,7 @@ private:
   bool                      m_texEnabled = true;
   bool                      m_showGrid   = true;
   bool                      m_showHelp   = true;
+  bool                      m_showBones  = false;
   bool                      m_wireframe  = false;
   QVector3D                 m_bboxMin{0, 0, 0};
   QVector3D                 m_bboxMax{0, 0, 0};
@@ -162,6 +166,12 @@ private:
   std::vector<Channel>    m_channels;
   std::vector<QMatrix4x4> m_boneOffset;
   std::vector<int>        m_boneNode;
+
+  // ── スケルトン可視化 (関節を 2D 投影して paintEvent で重ねる) ──
+  std::vector<char>       m_isBoneNode;    // ノードがボーンか
+  std::vector<int>        m_boneAncestor;  // 各ノードの最近ボーン祖先ノード (無ければ -1)
+  std::vector<QVector3D>  m_jointWorld;    // ノードのワールド座標 (computeBoneMatrices で更新)
+  QMatrix4x4              m_lastMvp;        // 直近フレームの MVP (投影用)
   QMatrix4x4              m_globalInverse;
   std::vector<QMatrix4x4> m_boneMatrices;
   double                  m_animDurationTicks = 0.0;

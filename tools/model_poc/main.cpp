@@ -42,6 +42,7 @@ int main(int argc, char** argv) {
   QString modelPath, shotPath, uishotPath;
   bool    noTexture = false;
   bool    wire      = false;
+  bool    bones     = false;
   double  timeOpt   = -1.0;
   const QStringList args = app.arguments();
   for (int i = 1; i < args.size(); ++i) {
@@ -55,6 +56,8 @@ int main(int argc, char** argv) {
       noTexture = true;
     else if (args[i] == QLatin1String("--wire"))
       wire = true;
+    else if (args[i] == QLatin1String("--bones"))
+      bones = true;
     else if (modelPath.isEmpty())
       modelPath = args[i];
   }
@@ -74,6 +77,7 @@ int main(int argc, char** argv) {
   }
   if (noTexture) view->setTextureEnabled(false);
   if (wire) view->view()->setWireframe(true);
+  if (bones) view->view()->setShowBones(true);
 
   qInfo("loaded: %s", qPrintable(view->summary()));
   qInfo("%s", qPrintable(textureInfo(*view)));
