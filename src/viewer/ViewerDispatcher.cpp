@@ -1,6 +1,7 @@
 #include "ViewerDispatcher.h"
 #include "core/Logger.h"
 #include "settings/Settings.h"
+#include "utils/PluginCompat.h"
 #include <QApplication>
 #include <QCoreApplication>
 #include <QDebug>
@@ -12,6 +13,17 @@
 #include <limits>
 
 namespace Farman {
+
+namespace {
+// ビルド時に埋め込まれた farman 本体のバージョン文字列 (例 "0.9.9")。
+QString hostVersion() {
+#ifdef FARMAN_VERSION
+  return QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
+#else
+  return QString();
+#endif
+}
+} // namespace
 
 ViewerDispatcher& ViewerDispatcher::instance() {
   static ViewerDispatcher instance;
@@ -173,6 +185,26 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
       Logger::instance().info(
         QStringLiteral("Plugins: external plugin not loaded (allowExternalPlugins=off): %1")
           .arg(fileInfo.fileName()));
+      continue;
+    }
+
+    // 必要本体バージョンのゲート (ロード前)。プラグインがメタデータに
+    // "MinHostVersion" を宣言していて、本体がそれ未満なら instance() を呼ばずに
+    // スキップし、実用的な理由を残す (dlopen 失敗の難解なメッセージを避ける)。
+    const QString minHostVersion = loader->metaData()
+                                       .value(QStringLiteral("MetaData"))
+                                       .toObject()
+                                       .value(QStringLiteral("MinHostVersion"))
+                                       .toString();
+    if (!hostSatisfiesMinVersion(hostVersion(), minHostVersion)) {
+      rec.loaded      = false;
+      rec.pluginName  = fileInfo.fileName();
+      rec.errorReason = tr("This plugin requires farman %1 or later (current %2).")
+                            .arg(minHostVersion, hostVersion());
+      m_records.append(rec);
+      Logger::instance().warn(
+        QStringLiteral("Plugins: %1 requires farman >= %2 (current %3); skipped")
+          .arg(fileInfo.fileName(), minHostVersion, hostVersion()));
       continue;
     }
 
