@@ -304,8 +304,14 @@ target_link_libraries(farman PRIVATE
   Qt6::Svg
   Qt6::Pdf
   Qt6::PdfWidgets
+  Qt6::OpenGL
   LibArchive::LibArchive
 )
+# Qt6::OpenGL は farman 本体では直接使わないが、外部 3D ビュアープラグイン
+# (farman-plugin-3d) がロード時に libQt6OpenGL を必要とする。本体にリンクして
+# おくことで、macdeployqt / windeployqt / linuxdeployqt が配布物へ同梱し、
+# 別ディレクトリに置かれたプラグインからも解決できるようにする。
+# (assimp は本体では使わないため、プラグイン側で静的リンクして自己完結させる。)
 
 # HEIF/HEIC 画像プラグイン (libheif が見つかったときのみ)。静的 Qt プラグイン
 # として本体へリンクし、Q_IMPORT_PLUGIN で取り込む (main.cpp 側、
