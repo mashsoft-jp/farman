@@ -33,7 +33,7 @@ set(CMAKE_AUTOUIC ON)
 # (Qt 側はその結果を見て該当機能を無効化するだけで実害はない)。
 set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets Multimedia MultimediaWidgets LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Core5Compat Concurrent Network Svg Pdf PdfWidgets Multimedia MultimediaWidgets LinguistTools OpenGL)
 
 # Homebrew の libarchive は keg-only なので明示的にパスを通す。
 # Apple Silicon は /opt/homebrew、Intel Mac は /usr/local が Homebrew prefix。
@@ -304,8 +304,14 @@ target_link_libraries(farman PRIVATE
   Qt6::Svg
   Qt6::Pdf
   Qt6::PdfWidgets
+  Qt6::OpenGL
   LibArchive::LibArchive
 )
+# Qt6::OpenGL は farman 本体では直接使わないが、外部 3D ビュアープラグイン
+# (farman-plugin-3d) がロード時に libQt6OpenGL を必要とする。本体にリンクして
+# おくことで、macdeployqt / windeployqt / linuxdeployqt が配布物へ同梱し、
+# 別ディレクトリに置かれたプラグインからも解決できるようにする。
+# (assimp は本体では使わないため、プラグイン側で静的リンクして自己完結させる。)
 
 # HEIF/HEIC 画像プラグイン (libheif が見つかったときのみ)。静的 Qt プラグイン
 # として本体へリンクし、Q_IMPORT_PLUGIN で取り込む (main.cpp 側、
@@ -498,3 +504,8 @@ target_link_libraries(test_worker PRIVATE
   Qt6::Core
   Qt6::Widgets
 )
+
+# 3D モデルビュアーは外部プラグイン farman-plugin-3d として提供する (描画本体・
+# Assimp 依存はすべてプラグイン側)。本体は Assimp に依存しないが、プラグインが
+# ロード時に libQt6OpenGL を必要とするため、本体は Qt6::OpenGL をリンクして
+# 配布物へ同梱する (上の target_link_libraries(farman ...))。
