@@ -20,6 +20,14 @@
     <file alias="farman.png">../images/icon.ico</file>
   </qresource>
   <!--
+    farman ワードマーク (About ダイアログ用)。Web サイト / README と同じ意匠。
+    テーマ別に色を焼き込んだ 2 種 (透過 PNG, 2278x518)。ダーク=白, ライト=チャコール。
+  -->
+  <qresource prefix="/images">
+    <file alias="wordmark-white.png">../images/wordmark-white.png</file>
+    <file alias="wordmark-charcoal.png">../images/wordmark-charcoal.png</file>
+  </qresource>
+  <!--
     メインツールバー用のアイコン (Lucide スタイル / monochrome 24x24 SVG)。
     ストロークは #555 固定。ライトテーマでもダークテーマでも視認可能な中間色を採用。
     QToolBar からは ":/icons/toolbar/<name>.svg" で参照する。

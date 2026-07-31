@@ -60,6 +60,7 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QPalette>
+#include <QPixmap>
 #include <QToolButton>
 #include <QAction>
 #include <QToolBar>
@@ -1971,10 +1972,27 @@ void MainWindow::applyToolbarVisibility() {
 void MainWindow::showAboutDialog() {
   const QString version = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
   FarmanMessageBox box(this);
-  box.setIcon(QMessageBox::Information);
   box.setWindowTitle(tr("About farman"));
+
+  // アイコンは farman ワードマーク (Web サイト / README と同じ意匠) を使う。
+  // テーマに合わせて白 / チャコールを選び、devicePixelRatio を考慮して縮小。
+  const bool dark = box.palette().color(QPalette::Base).lightness() < 128;
+  const QString wmPath = dark ? QStringLiteral(":/images/wordmark-white.png")
+                              : QStringLiteral(":/images/wordmark-charcoal.png");
+  QPixmap wordmark(wmPath);
+  if (!wordmark.isNull()) {
+    const qreal dpr    = devicePixelRatioF() > 0 ? devicePixelRatioF() : 1.0;
+    const int   height = 44;  // 論理ピクセル高さ
+    QPixmap     scaled = wordmark.scaledToHeight(int(height * dpr), Qt::SmoothTransformation);
+    scaled.setDevicePixelRatio(dpr);
+    box.setIconPixmap(scaled);
+  } else {
+    box.setIcon(QMessageBox::Information);
+  }
+
   box.setTextFormat(Qt::RichText);
-  box.setText(tr("<b>farman</b> %1<br><br>"
+  // ワードマークで名称を示すため、本文は版数以降のみ。
+  box.setText(tr("Version %1<br><br>"
                  "Copyright &copy; Mashsoft Inc.<br>"
                  "<a href=\"https://www.mashsoft.co.jp\">https://www.mashsoft.co.jp</a>")
                 .arg(version));
