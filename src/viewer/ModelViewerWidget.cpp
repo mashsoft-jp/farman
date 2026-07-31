@@ -5,6 +5,7 @@
 #include <QAction>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QFont>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QLabel>
@@ -13,6 +14,7 @@
 #include <QPlainTextEdit>
 #include <QSizePolicy>
 #include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 namespace Farman {
@@ -165,9 +167,17 @@ ModelViewerWidget::ModelViewerWidget(QWidget* parent) : QWidget(parent) {
   spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   m_toolbar->addWidget(spacer);
 
-  m_actInfo = m_toolbar->addAction(makeIcon(Glyph::Info, ic), QString());
-  m_actInfo->setToolTip(QStringLiteral("モデル情報を別ウィンドウで表示 (i)"));
-  connect(m_actInfo, &QAction::triggered, this, &ModelViewerWidget::openInfoDialog);
+  // 情報ボタン: 画像ビュアーと同じデザイン (太字イタリックの「i」テキスト)。
+  m_infoButton = new QToolButton(m_toolbar);
+  m_infoButton->setText(QStringLiteral("i"));
+  QFont infoFont = m_infoButton->font();
+  infoFont.setItalic(true);
+  infoFont.setBold(true);
+  m_infoButton->setFont(infoFont);
+  m_infoButton->setToolTip(QStringLiteral("モデル情報を別ウィンドウで表示 (i)"));
+  m_infoButton->setFocusPolicy(Qt::NoFocus);
+  connect(m_infoButton, &QToolButton::clicked, this, &ModelViewerWidget::openInfoDialog);
+  m_toolbar->addWidget(m_infoButton);
   connect(m_view, &ModelView::infoRequested, this, &ModelViewerWidget::openInfoDialog);
 }
 

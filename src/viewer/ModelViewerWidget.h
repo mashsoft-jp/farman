@@ -12,6 +12,7 @@
 
 class QToolBar;
 class QAction;
+class QToolButton;
 class QLabel;
 class QDialog;
 class QPlainTextEdit;
@@ -52,8 +53,8 @@ private:
   QToolBar*       m_toolbar    = nullptr;
   QAction*        m_actTexture = nullptr;
   QAction*        m_actGrid    = nullptr;
-  QAction*        m_actInfo    = nullptr;
   QAction*        m_actPlay    = nullptr;
+  QToolButton*    m_infoButton = nullptr;
   QLabel*         m_pathLabel  = nullptr;
   QDialog*        m_infoDialog = nullptr;
   QPlainTextEdit* m_infoText   = nullptr;
