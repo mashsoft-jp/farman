@@ -70,12 +70,16 @@ public slots:
   void setAnimationPlaying(bool on);
   void setAnimationTime(double sec);
   void setShowGrid(bool on);
+  void setShowHelp(bool on);
   void setWireframe(bool on);
   void resetView();
+
+  bool showHelp() const { return m_showHelp; }
 
 signals:
   void textureEnabledChanged(bool on);
   void showGridChanged(bool on);
+  void showHelpChanged(bool on);
   void animationPlayingChanged(bool on);
   void infoRequested();  // i キー / ツールバーの情報ボタン相当
 
@@ -108,6 +112,7 @@ private:
   bool                      m_hasUV    = false;
   bool                      m_texEnabled = true;
   bool                      m_showGrid   = true;
+  bool                      m_showHelp   = true;
   bool                      m_wireframe  = false;
   QVector3D                 m_bboxMin{0, 0, 0};
   QVector3D                 m_bboxMax{0, 0, 0};

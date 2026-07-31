@@ -21,7 +21,7 @@ namespace Farman {
 
 namespace {
 
-enum class Glyph { Texture, Grid, Play, Pause, Reset, Info };
+enum class Glyph { Texture, Grid, Play, Pause, Reset, Help, Info };
 
 void drawGlyph(QPainter& p, Glyph g, const QColor& c) {
   p.setRenderHint(QPainter::Antialiasing, true);
@@ -74,6 +74,18 @@ void drawGlyph(QPainter& p, Glyph g, const QColor& c) {
       QPolygonF ah;
       ah << QPointF(11.5, 3.2) << QPointF(13.6, 6.2) << QPointF(10.0, 6.0);
       p.drawPolygon(ah);
+      break;
+    }
+    case Glyph::Help: {  // 角丸 + 「?」
+      p.setPen(pen);
+      p.setBrush(Qt::NoBrush);
+      p.drawRoundedRect(QRectF(3, 3, 12, 12), 3, 3);
+      QFont f = p.font();
+      f.setBold(true);
+      f.setPixelSize(11);
+      p.setFont(f);
+      p.setPen(QPen(c));
+      p.drawText(QRectF(3, 3, 12, 12), Qt::AlignCenter, QStringLiteral("?"));
       break;
     }
     case Glyph::Info: {
@@ -137,6 +149,16 @@ ModelViewerWidget::ModelViewerWidget(QWidget* parent) : QWidget(parent) {
   connect(m_view, &ModelView::showGridChanged, this, [this](bool on) {
     QSignalBlocker b(m_actGrid);
     m_actGrid->setChecked(on);
+  });
+
+  m_actHelp = m_toolbar->addAction(makeIcon(Glyph::Help, ic), QString());
+  m_actHelp->setCheckable(true);
+  m_actHelp->setChecked(true);
+  m_actHelp->setToolTip(QStringLiteral("操作方法の表示 (H)"));
+  connect(m_actHelp, &QAction::toggled, m_view, &ModelView::setShowHelp);
+  connect(m_view, &ModelView::showHelpChanged, this, [this](bool on) {
+    QSignalBlocker b(m_actHelp);
+    m_actHelp->setChecked(on);
   });
 
   m_actPlay = m_toolbar->addAction(makeIcon(Glyph::Pause, ic), QString());

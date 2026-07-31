@@ -53,6 +53,7 @@ private:
   QToolBar*       m_toolbar    = nullptr;
   QAction*        m_actTexture = nullptr;
   QAction*        m_actGrid    = nullptr;
+  QAction*        m_actHelp    = nullptr;
   QAction*        m_actPlay    = nullptr;
   QToolButton*    m_infoButton = nullptr;
   QLabel*         m_pathLabel  = nullptr;

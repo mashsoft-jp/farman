@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QFont>
+#include <QFontMetrics>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QMouseEvent>
@@ -514,7 +515,6 @@ void ModelView::buildInfoText() {
     m_infoLines << QStringLiteral("テクスチャ: なし");
   }
   if (!m_hasUV && hasTexture()) m_infoLines << QStringLiteral("※メッシュに UV なし");
-  m_infoLines << QStringLiteral("[矢印]回転 [WASD]移動 [U/J]拡縮 [R]リセット [i]情報");
 }
 
 void ModelView::setTextureEnabled(bool on) {
@@ -528,6 +528,12 @@ void ModelView::setShowGrid(bool on) {
   m_showGrid = on;
   emit showGridChanged(on);
   renderFrame();
+}
+void ModelView::setShowHelp(bool on) {
+  if (m_showHelp == on) return;
+  m_showHelp = on;
+  emit showHelpChanged(on);
+  update();  // オーバーレイのみ再描画 (再レンダリング不要)
 }
 void ModelView::setWireframe(bool on) {
   m_wireframe = on;
@@ -788,6 +794,41 @@ void ModelView::paintEvent(QPaintEvent*) {
       p.drawText(tip + QPointF(-3, 4), QString::fromLatin1(a.name));
     }
   }
+
+  // 左端に操作方法を列挙 (H キー / ツールバーで ON/OFF)。
+  if (m_showHelp) {
+    QStringList rows;
+    rows << QStringLiteral("矢印 : 回転")
+         << QStringLiteral("WASD : 平行移動")
+         << QStringLiteral("U / J : 拡大 / 縮小")
+         << QStringLiteral("R : 視点リセット")
+         << QStringLiteral("T : テクスチャ")
+         << QStringLiteral("G : グリッド");
+    if (m_hasAnim) rows << QStringLiteral("Space : 再生 / 停止");
+    rows << QStringLiteral("H : 操作の表示")
+         << QStringLiteral("i : モデル情報");
+
+    QFont hf = p.font();
+    hf.setPointSizeF(10.0);
+    p.setFont(hf);
+    const QFontMetrics fm(hf);
+    const int lh   = fm.height() + 3;
+    int       maxW = 0;
+    for (const QString& r : rows) maxW = std::max(maxW, fm.horizontalAdvance(r));
+    const int padX = 10, padY = 8;
+    const int boxW = maxW + padX * 2;
+    const int boxH = int(rows.size()) * lh + padY * 2 - 3;
+    const QRectF box(10, 10, boxW, boxH);
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(20, 22, 26, 150));
+    p.drawRoundedRect(box, 6, 6);
+    p.setPen(QColor(210, 214, 220));
+    int y = int(box.top()) + padY + fm.ascent();
+    for (const QString& r : rows) {
+      p.drawText(int(box.left()) + padX, y, r);
+      y += lh;
+    }
+  }
 }
 
 void ModelView::resizeEvent(QResizeEvent* e) {
@@ -848,6 +889,7 @@ void ModelView::keyPressEvent(QKeyEvent* e) {
     case Qt::Key_I: emit infoRequested(); return;
     case Qt::Key_T: setTextureEnabled(!m_texEnabled); return;
     case Qt::Key_G: setShowGrid(!m_showGrid); return;
+    case Qt::Key_H: setShowHelp(!m_showHelp); return;
     case Qt::Key_Space:
       if (m_hasAnim) {
         setAnimationPlaying(!m_playing);
