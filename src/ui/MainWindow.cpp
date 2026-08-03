@@ -8,6 +8,7 @@
 #include "BookmarkListDialog.h"
 #include "HistoryDialog.h"
 #include "SearchDialog.h"
+#include "ExternalPluginViewerWindow.h"
 #include "../core/FileItem.h"
 #include "../core/Logger.h"
 #include "../core/UpdateChecker.h"
@@ -521,6 +522,9 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
     }
 
     QWidget* w = nullptr;
+    // Auto で外部プラグインが解決したときのプラグイン名 (External ラッパの
+    // ステータスバー表示用 / ラップ要否の判定用)。
+    QString pluginNameForExternal;
     if (kind == ViewerPanel::ViewerKind::Auto) {
       // Inline (ViewerPanel::openFile) と同じ判定にするため resolvePlugin()
       // を使う。ViewerDispatcher::createViewer() は未解決時にバイナリ
@@ -530,6 +534,9 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       auto& dispatcher = ViewerDispatcher::instance();
       if (IViewerPlugin* plugin = dispatcher.resolvePlugin(filePath)) {
         w = plugin->createViewer(filePath, this, dispatcher.pluginContext());
+        if (w) {
+          pluginNameForExternal = plugin->pluginName();
+        }
       }
     }
 
@@ -573,6 +580,14 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       Logger::instance().warn(
         QStringLiteral("Viewer load failed (external): %1").arg(shownPath));
       return;
+    }
+    // Auto で解決した外部プラグインの生 QWidget は、内蔵ビュアーウィンドウと挙動を
+    // 揃えるためラッパ QMainWindow (ExternalPluginViewerWindow) に載せる。これで
+    // Esc/Enter で閉じる・既定サイズ・ステータスバー(プラグイン名) が付く。プラグインが
+    // 自前で QMainWindow を返した場合 (media など) はそのまま使う。
+    if (w && !pluginNameForExternal.isEmpty() && !qobject_cast<QMainWindow*>(w)) {
+      w = new ExternalPluginViewerWindow(w, QFileInfo(shownPath).fileName(),
+                                         pluginNameForExternal);
     }
     if (w) {
       // 閉じたら自前で破棄。MainWindow を親にしておくのは、明示的に閉じずに
@@ -671,14 +686,13 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
       win->setAttribute(Qt::WA_DeleteOnClose);
       win->setWindowFlag(Qt::Window, true);
     } else {
-      // 埋め込み QWidget は QMainWindow でラップし、Inline と同じプラグイン名を
-      // ステータスバーに右寄せで出す。
-      auto* wrap = new QMainWindow();
+      // 埋め込み QWidget は ExternalPluginViewerWindow でラップする。内蔵ビュアー
+      // ウィンドウと挙動を揃える (Esc/Enter で閉じる + 既定サイズ + プラグイン名の
+      // ステータスバー)。showViewerWith() の Auto 経路と同じラッパを使う。
+      auto* wrap = new ExternalPluginViewerWindow(inner, QFileInfo(filePath).fileName(),
+                                                  plugin->pluginName());
       wrap->setAttribute(Qt::WA_DeleteOnClose);
       wrap->setWindowFlag(Qt::Window, true);
-      wrap->setCentralWidget(inner);
-      wrap->setWindowTitle(QFileInfo(filePath).fileName());
-      wrap->statusBar()->addPermanentWidget(new QLabel(plugin->pluginName(), wrap));
       win = wrap;
     }
     if (hasSavedGeom) win->setGeometry(savedGeom);
