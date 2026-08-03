@@ -59,6 +59,7 @@
 #include <QClipboard>
 #include <QMenuBar>
 #include <QMenu>
+#include <QIcon>
 #include <QPalette>
 #include <QPixmap>
 #include <QToolButton>
@@ -1974,28 +1975,35 @@ void MainWindow::showAboutDialog() {
   FarmanMessageBox box(this);
   box.setWindowTitle(tr("About farman"));
 
-  // アイコンは farman ワードマーク (Web サイト / README と同じ意匠) を使う。
-  // テーマに合わせて白 / チャコールを選び、devicePixelRatio を考慮して縮小。
-  const bool dark = box.palette().color(QPalette::Base).lightness() < 128;
-  const QString wmPath = dark ? QStringLiteral(":/images/wordmark-white.png")
-                              : QStringLiteral(":/images/wordmark-charcoal.png");
-  QPixmap wordmark(wmPath);
-  if (!wordmark.isNull()) {
-    const qreal dpr    = devicePixelRatioF() > 0 ? devicePixelRatioF() : 1.0;
-    const int   height = 44;  // 論理ピクセル高さ
-    QPixmap     scaled = wordmark.scaledToHeight(int(height * dpr), Qt::SmoothTransformation);
-    scaled.setDevicePixelRatio(dpr);
-    box.setIconPixmap(scaled);
+  const qreal dpr = devicePixelRatioF() > 0 ? devicePixelRatioF() : 1.0;
+
+  // 左側のアイコンは farman アプリアイコン (Dock 等と同じ意匠)。
+  const QIcon appIcon(QStringLiteral(":/icons/farman.png"));
+  if (!appIcon.isNull()) {
+    box.setIconPixmap(appIcon.pixmap(QSize(64, 64), dpr));
   } else {
     box.setIcon(QMessageBox::Information);
   }
 
+  // 本文の先頭に farman ワードマーク (Web サイト / README と同じ意匠) を置き、
+  // その下にバージョン等を表示する。テーマに合わせて白 / チャコールを選ぶ。
+  const bool    dark = box.palette().color(QPalette::Base).lightness() < 128;
+  const QString wmPath = dark ? QStringLiteral(":/images/wordmark-white.png")
+                              : QStringLiteral(":/images/wordmark-charcoal.png");
+  // ワードマークは 2278x518 (約 4.4:1)。表示高さ 34 に合わせて幅を算出。
+  const int wmH = 34;
+  const int wmW = qRound(wmH * 2278.0 / 518.0);  // ≈ 150
+
   box.setTextFormat(Qt::RichText);
-  // ワードマークで名称を示すため、本文は版数以降のみ。
-  box.setText(tr("Version %1<br><br>"
-                 "Copyright &copy; Mashsoft Inc.<br>"
-                 "<a href=\"https://www.mashsoft.co.jp\">https://www.mashsoft.co.jp</a>")
-                .arg(version));
+  const QString body = tr("Version %1<br><br>"
+                          "Copyright &copy; Mashsoft Inc.<br>"
+                          "<a href=\"https://www.mashsoft.co.jp\">https://www.mashsoft.co.jp</a>")
+                           .arg(version);
+  box.setText(QStringLiteral("<img src=\"%1\" width=\"%2\" height=\"%3\"><br><br>%4")
+                  .arg(wmPath)
+                  .arg(wmW)
+                  .arg(wmH)
+                  .arg(body));
   auto* okBtn = box.addButton(QMessageBox::Ok);
   // farman は Qt (LGPL v3) / libarchive (BSD) / uchardet (MPL 1.1) を利用して
   // おり、これらは配布バイナリへのライセンス通知が必要。GitHub の README だけ
