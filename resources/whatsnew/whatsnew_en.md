@@ -1,66 +1,24 @@
-# What's New in farman 0.9.8
+# What's New in farman 0.9.9
 
-### Archive plugin support
+### 3D model viewer (FBX) support
 
-farman can now load external plugins beyond viewers. The archive formats
-farman can open can be extended later through external plugins, including
-plugins written by third parties.
+With the external plugin **farman-plugin-3d**, farman can now display
+`.fbx` 3D models inside the app.
 
-- Archives in an added format can be browsed and extracted just like
-  zip / tar: you can step inside them and take files out.
-- These plugins are not bundled with farman; users who need them download
-  and install them separately.
+- Supports textures (external and embedded), skeletal animation, multiple
+  materials, a floor grid, wireframe display, and bone (skeleton) display.
+- Rotate, pan, and zoom with the mouse or keyboard.
+- The plugin is not bundled with farman. Download the build for your OS,
+  place it in the `viewers/` folder of farman's external plugin directory,
+  turn on "Allow loading external plugins" under Settings > Plugins, then
+  restart farman.
+- FBX is supported first; other formats such as obj / glTF are planned.
 
-### External plugin loading is now opt-in
+### Bug fixes
 
-External plugins are native code and run with the same privileges as
-farman. For safety, external plugin loading is now **off** by default.
-
-- Turn on **"Allow loading external plugins"** under Settings > Plugins to
-  load plugins from the external plugin directory on the next launch
-  (bundled plugins are always enabled).
-- Only enable plugins from sources you trust.
-
-### LZH (LHA) archive plugin released
-
-As the first one, a separate external plugin for opening `.lzh` / `.lha`
-archives is now available.
-
-- Browse inside the archive and extract files (Japanese Shift-JIS file
-  names are handled; read-only).
-- Download the plugin for your OS and place it in the `archives/` folder
-  of farman's external plugin directory, turn on "Allow loading external
-  plugins" under Settings > Plugins, then restart farman. See the
-  README / download page for details.
-
-### Monospace default font for the binary and text viewers
-
-The default font of the binary viewer (hex dump) and the text viewer is
-now a true monospace font (macOS = Menlo, Windows = MS Gothic, Linux =
-DejaVu Sans Mono), so columns line up correctly.
-
-- This is the default for new installations. If you already use farman,
-  pick a font under each viewer's "Font" setting, or use "Restore
-  defaults" to get the new default font.
-
-### Adjusted default fonts on Windows
-
-On Windows, the general UI font is now **MS UI Gothic**, and the overall
-font size is unified to **9pt** (the address bar, file list, and viewers
-keep their existing fonts, only resized to 9pt). This is the default for
-new installations.
-
-### Improved video viewer full screen
-
-Fixed video full screen not working correctly (the video did not expand to
-the whole screen, and Esc did not exit). While in full screen, moving the
-mouse now shows a translucent control panel (play/pause, stop, seek, loop,
-volume) at the bottom of the screen.
+- Fixed an issue where the cursor on the last file could be scrolled out of
+  view after returning from an inline viewer to the file list.
 
 ### Other
 
-- Show "width × height" while resizing the window by dragging
-- The "Name" column of the file list now stretches with the window width
-- macOS: fixed buttons with kanji labels looking different from others
-- Windows: fixed garbled Shift-JIS (CP932) Japanese file names inside zip / lzh archives
 - Stability improvements and bug fixes
