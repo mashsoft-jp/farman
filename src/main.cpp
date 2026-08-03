@@ -7,7 +7,6 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QLocale>
-#include <QOpenGLVertexArrayObject>
 #include <QProxyStyle>
 #include <QStandardPaths>
 #include <QStyleHints>
@@ -115,16 +114,6 @@ QString singleInstanceServerName() {
 
 int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
-
-  // 外部 3D ビュアープラグイン (farman-plugin-3d) はロード時に Qt6OpenGL を必要と
-  // する。farman 本体は Qt6OpenGL を直接使わないため、CMake でリンクするだけでは
-  // Windows の MSVC リンカが「未使用依存」として import を落とし、windeployqt が
-  // Qt6OpenGL.dll を同梱しない (macOS/Linux は同梱される)。ここで Qt6OpenGL の
-  // シンボルを 1 つ実参照して依存を確実に残し、配布物へ同梱させる。
-  {
-    volatile const void* keepQtOpenGL = &QOpenGLVertexArrayObject::staticMetaObject;
-    Q_UNUSED(keepQtOpenGL);
-  }
 
   // この実行ファイルが「本体」であることを Settings に伝える。以降、本体の
   // Settings だけが applyThemeFields で qApp パレット/フォントを適用する

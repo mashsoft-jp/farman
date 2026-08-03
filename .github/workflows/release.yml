@@ -382,6 +382,14 @@ jobs:
           # 1. windeployqt + vcpkg DLL コピーで Release ディレクトリを self-contained 化
           windeployqt --release --no-translations build/Release/farman.exe
 
+          # farman.exe は Qt6::OpenGL をリンクしているが、そのシンボルを直接使わない
+          # ため MSVC リンカが未使用 import を落とし、windeployqt が Qt6OpenGL.dll を
+          # 取り込まない (macOS/Linux はリンクだけで配布物に含まれる)。外部 3D
+          # ビュアープラグイン (farman-plugin-3d) がロード時に Qt6OpenGL.dll を必要と
+          # するため、Qt の bin から明示的にコピーする。
+          $qtBin = Split-Path (Get-Command windeployqt).Source
+          Copy-Item "$qtBin/Qt6OpenGL.dll" -Destination build/Release/ -Force
+
           # 同梱公式ビュアープラグインの Qt 依存も deploy する。farman.exe 自体が
           # リンクしない Qt モジュール (例: MediaViewerPlugin の Qt6Multimedia +
           # ffmpeg バックエンド) は exe への windeployqt では取り込まれないため、
