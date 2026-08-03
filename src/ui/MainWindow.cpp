@@ -466,6 +466,28 @@ void MainWindow::showFileManager() {
 
     // フォーカスをアクティブペインに戻す
     m_fileManagerPanel->activePane()->view()->setFocus();
+
+    // インラインビュアーへの往復では、ツールバーの一時非表示/再表示に伴う
+    // ファイルリストのリサイズで、最下段付近のカーソル (currentIndex) が
+    // スクロールにより可視域外へ押し出されることがある。カレントを可視域へ
+    // 戻して見失わないようにする (既に見えている場合は EnsureVisible なので
+    // スクロールは動かない)。List / Thumbnail 両モードに効くよう activeView() を使う。
+    // ツールバー再表示のレイアウト (LayoutRequest) は非同期なので、ビューポートの
+    // サイズが確定してから実行するよう singleShot(0) で遅延する (その場で呼ぶと
+    // 旧サイズで計算され、直後の縮小で再びずれる)。
+    QTimer::singleShot(0, this, [this] {
+      if (m_stack->currentWidget() != m_fileManagerPanel) {
+        return;
+      }
+      QAbstractItemView* av = m_fileManagerPanel->activePane()->activeView();
+      if (!av) {
+        return;
+      }
+      const QModelIndex cur = av->currentIndex();
+      if (cur.isValid()) {
+        av->scrollTo(cur, QAbstractItemView::EnsureVisible);
+      }
+    });
     updateStatusBar();
   }
 }
