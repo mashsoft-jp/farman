@@ -71,6 +71,12 @@ public:
   void setThumbnailPixelSize(int sizePx);
   int  thumbnailPixelSize() const { return m_thumbnailPixelSize; }
 
+  // ファイル種別アイコン (Name 列) の表示 ON/OFF。OFF のとき data(DecorationRole)
+  // はアイコンを返さない (サムネイル表示モードの実画像プレビューには影響しない)。
+  // 変更時は Name 列の DecorationRole を再描画させる。
+  void setShowFileIcons(bool show);
+  bool showFileIcons() const { return m_showFileIcons; }
+
   // ── パス操作 ──────────────────────────────
   QString currentPath() const;
   bool    setPath(const QString& path);  // false = アクセス不可
@@ -210,6 +216,7 @@ private:
   // 一度取得したアイコンをパス単位でキャッシュし、再フェッチを防ぐ。ディレクトリ
   // 再読込 (beginResetModel) 時にクリアする。const な data() から使うため mutable。
   mutable QHash<QString, QIcon>    m_iconCache;
+  bool                             m_showFileIcons = true;  // 種別アイコンの表示
 
   // ソート設定
   SortKey             m_sortKey    = SortKey::Name;

@@ -110,6 +110,8 @@ private:
 
   // ファイルリスト 1 行の縦幅 (0 = Auto)
   QSpinBox*      m_rowHeightSpin = nullptr;
+  // ファイル種別アイコンの表示 (グローバル・テーマ非依存)
+  QCheckBox*     m_showFileIconsCheck = nullptr;
 
   // Category colors (Normal / Hidden / Directory)
   CategoryRow m_categoryRows[static_cast<int>(FileCategory::Count)];

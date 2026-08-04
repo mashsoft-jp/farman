@@ -496,6 +496,12 @@ void FileListPane::refreshAppearance() {
     m_view->viewport()->update();  // cursor 再描画
   }
 
+  // ファイル種別アイコンの表示設定をモデルへ反映 (初期化・設定変更・パス変更で
+  // refreshAppearance が呼ばれるので、ここ 1 箇所で追従できる)。
+  if (m_model) {
+    m_model->setShowFileIcons(Settings::instance().showFileIcons());
+  }
+
   // ブックマークボタンは登録状態で色が変わるため、実スタイル適用は
   // refreshBookmarkIndicator() 側で行う。背景色だけは揃えておきたいので
   // ここで呼び出しておく。

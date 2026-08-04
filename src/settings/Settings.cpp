@@ -154,6 +154,7 @@ void Settings::applyDefaults() {
   m_viewerAssociations.clear();
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
+  m_showFileIcons = true;
   m_language      = LanguageMode::Auto;
 
   // ── ログ ─────────────────────────
@@ -887,6 +888,14 @@ bool Settings::showToolbar() const {
 
 void Settings::setShowToolbar(bool show) {
   m_showToolbar = show;
+}
+
+bool Settings::showFileIcons() const {
+  return m_showFileIcons;
+}
+
+void Settings::setShowFileIcons(bool show) {
+  m_showFileIcons = show;
 }
 
 LayoutMode Settings::layoutMode() const { return m_layoutMode; }
@@ -1979,6 +1988,7 @@ void Settings::load() {
                      : ViewerMode::Inline;
   }
   m_showToolbar = behavior.value("showToolbar").toBool(true);
+  m_showFileIcons = behavior.value("showFileIcons").toBool(true);
   // レイアウト (dual / single / preview)。未指定は dual。
   m_layoutMode = layoutModeFromKey(behavior.value("layoutMode").toString());
   // プレビュー動作パラメタ
@@ -2672,6 +2682,7 @@ void Settings::save() const {
                              ? QStringLiteral("external")
                              : QStringLiteral("inline");
   behavior["showToolbar"] = m_showToolbar;
+  behavior["showFileIcons"] = m_showFileIcons;
   behavior["layoutMode"]  = QString::fromLatin1(layoutModeKey(m_layoutMode));
   {
     QJsonObject preview;

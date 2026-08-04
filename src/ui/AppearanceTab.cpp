@@ -315,6 +315,14 @@ void AppearanceTab::buildMainSections(QVBoxLayout* mainLayout) {
   fileListRow->addSpacing(16);
   addPair(fileListRow, tr("Row Height:"), m_rowHeightSpin);
 
+  // ファイル種別アイコンの表示 ON/OFF (グローバル・テーマ非依存)。
+  // フォント / 行高と同じ行に並べる。
+  m_showFileIconsCheck = new QCheckBox(tr("Show file icons"), this);
+  m_showFileIconsCheck->setToolTip(
+    tr("Show file-type icons in the Name column (off = no icons)"));
+  fileListRow->addSpacing(16);
+  fileListRow->addWidget(m_showFileIconsCheck);
+
   fileListRow->addStretch();
   fileListOuter->addLayout(fileListRow);
 
@@ -432,6 +440,10 @@ void AppearanceTab::loadSettings() {
   // 一致) に備え、内部 grid の enable 状態は明示的にも反映しておく。
   const bool useInactive = settings.useInactivePaneColors();
   m_inactivePaneCheck->setChecked(useInactive);
+
+  if (m_showFileIconsCheck) {
+    m_showFileIconsCheck->setChecked(settings.showFileIcons());
+  }
   if (m_inactiveNormalGrid)   m_inactiveNormalGrid->setEnabled(useInactive);
   if (m_inactiveSelectedGrid) m_inactiveSelectedGrid->setEnabled(useInactive);
 
@@ -844,6 +856,9 @@ void AppearanceTab::save() {
 
   // 4. テーマ非依存のグローバル設定
   settings.setUseInactivePaneColors(m_inactivePaneCheck->isChecked());
+  if (m_showFileIconsCheck) {
+    settings.setShowFileIcons(m_showFileIconsCheck->isChecked());
+  }
   settings.setCursorShape(
     static_cast<CursorShape>(m_cursorShapeCombo->currentData().toInt()));
   settings.setCursorThickness(m_cursorThicknessSpin->value());

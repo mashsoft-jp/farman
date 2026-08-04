@@ -82,6 +82,17 @@ void FileListModel::setThumbnailPixelSize(int sizePx) {
   }
 }
 
+void FileListModel::setShowFileIcons(bool show) {
+  if (m_showFileIcons == show) return;
+  m_showFileIcons = show;
+  if (!m_entries.isEmpty()) {
+    emit dataChanged(
+      index(0, Name),
+      index(m_entries.size() - 1, Name),
+      { Qt::DecorationRole });
+  }
+}
+
 void FileListModel::onThumbnailReady(const ThumbnailKey& key,
                                       const QPixmap& /*pixmap*/) {
   if (!m_thumbnailEnabled) return;
@@ -761,6 +772,11 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
           }
           cache.request(key);
         }
+      }
+      // 種別アイコン非表示設定なら、ここでアイコンを返さない (サムネイル表示
+      // モードの実画像プレビューは上で既に返しているので影響しない)。
+      if (!m_showFileIcons) {
+        return QVariant();
       }
       // ファイルアイコンはパス単位でキャッシュして再フェッチを防ぐ (macOS の
       // QFileIconProvider は遅く、カーソル移動の再描画ごとに取り直すと重い)。

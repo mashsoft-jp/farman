@@ -243,6 +243,12 @@ public:
   bool showToolbar()                    const;
   void setShowToolbar(bool show);
 
+  // ファイルリストのファイルアイコン (種別アイコン) の表示/非表示。既定 ON。
+  // OFF にすると Name 列のアイコンを描画しない (サムネイル表示モードの
+  // 実画像プレビューには影響しない)。
+  bool showFileIcons()                  const;
+  void setShowFileIcons(bool show);
+
   // ファイルマネージャパネルのレイアウト (Dual / Single / Preview)。
   // View メニュー / ツールバー / Ctrl+O (Single) / Ctrl+P (Preview) で切替。
   // 起動時の復元に使うため永続化する。
@@ -651,6 +657,8 @@ private:
   // メニュー下のツールバーの表示。デフォルトは ON (新機能を見つけてもらう)。
   // 不要なら View → Toolbar / Settings → General からオフにできる。
   bool             m_showToolbar     = true;
+  // ファイルリストのファイルアイコン表示。既定 ON。
+  bool             m_showFileIcons   = true;
   // ファイルマネージャパネルのレイアウト。Dual がデフォルト。Preview / Single
   // は永続化されるので、終了時に Preview なら次回も Preview で起動する。
   LayoutMode       m_layoutMode      = LayoutMode::Dual;

@@ -583,6 +583,16 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>行高:</translation>
     </message>
     <message>
+        <location filename="../src/ui/AppearanceTab.cpp" line="322"/>
+        <source>Show file icons</source>
+        <translation>ファイルアイコンを表示</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/AppearanceTab.cpp" line="324"/>
+        <source>Show file-type icons in the Name column (off = no icons)</source>
+        <translation>名前列にファイル種別アイコンを表示 (オフでアイコン非表示)</translation>
+    </message>
+    <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="330"/>
         <source>Category</source>
         <translation>カテゴリ</translation>
