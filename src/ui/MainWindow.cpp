@@ -456,10 +456,30 @@ void MainWindow::updateDiskStatus() {
            QString::fromUtf8(storage.fileSystemType())));
 }
 
+void MainWindow::setPaneMenuActionsEnabled(bool enabled) {
+  for (QAction* a : m_paneMenuActions) {
+    if (a) a->setEnabled(enabled);
+  }
+  // Tools メニュー (外部コマンド) もまとめて無効化する。
+  if (m_toolsMenu) {
+    m_toolsMenu->menuAction()->setEnabled(enabled);
+  }
+}
+
+void MainWindow::updatePaneMenuActionsEnabled() {
+  // インラインビュアー表示中、または外部ビュアーウィンドウが開いている間は、
+  // ファイル操作等のメニューを無効化する。
+  const bool viewerActive = (m_stack->currentWidget() == m_viewerPanel)
+                            || (m_externalViewerWindow != nullptr);
+  setPaneMenuActionsEnabled(!viewerActive);
+}
+
 void MainWindow::showFileManager() {
   if (m_stack->currentWidget() != m_fileManagerPanel) {
     m_stack->setCurrentWidget(m_fileManagerPanel);
     m_viewerPanel->clear();
+    // ファイラに戻ったのでメニューの有効/無効を再計算 (外部ビュアーが無ければ有効化)。
+    updatePaneMenuActionsEnabled();
 
     // ファイルマネージャに戻ったので、Settings に従ってツールバーを再表示。
     // (Inline ビュアーで強制非表示にしたものを復元)
@@ -607,6 +627,10 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       w->raise();
       w->activateWindow();
       m_externalViewerWindow = w;
+      // 外部ビュアーが開いている間はファイル操作等のメニューを無効化し、閉じたら
+      // (destroyed) 再計算して復帰させる。
+      updatePaneMenuActionsEnabled();
+      connect(w, &QObject::destroyed, this, [this] { updatePaneMenuActionsEnabled(); });
     }
     // External モードではメインウィンドウのレイアウトは触らない (= ファイル
     // マネージャパネルのまま)。ビュアーパネルへの切替は行わない。
@@ -620,7 +644,9 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   // 見えており、ロードが終わってからスタックが切り替わるため、
   // 「ロード中の表示」が無いように見えてしまう)。
   m_stack->setCurrentWidget(m_viewerPanel);
-  // ビュアー表示中はツールバーの操作対象が無い (= ファイラ用のボタン群が
+  // インラインビュアー表示中は、ファイラのペイン用メニュー (ファイル操作等) を
+  // 無効化する。背後の隠れたファイルリストに効いてしまうのを防ぐ。
+  updatePaneMenuActionsEnabled();
   // 並んでいる) ので、表示領域を画面いっぱい使えるよう一時的に非表示にする。
   // ファイラに戻る showFileManager() で Settings::showToolbar() に従って復元。
   if (m_toolbar) m_toolbar->setVisible(false);
@@ -701,11 +727,15 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
     win->raise();
     win->activateWindow();
     m_externalViewerWindow = win;
+    // 外部ビュアーが開いている間はファイル操作等のメニューを無効化し、閉じたら復帰。
+    updatePaneMenuActionsEnabled();
+    connect(win, &QObject::destroyed, this, [this] { updatePaneMenuActionsEnabled(); });
     return;
   }
 
   // Inline
   m_stack->setCurrentWidget(m_viewerPanel);
+  updatePaneMenuActionsEnabled();
   if (m_toolbar) m_toolbar->setVisible(false);
   updateStatusBar();
   if (!m_viewerPanel->openWithPlugin(filePath, pluginId)) {
@@ -1532,6 +1562,11 @@ void MainWindow::createMenus() {
         action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
         m_fileManagerPanel->addAction(action);
       }
+    }
+    // 非 global (ペイン用) コマンドは、インラインビュアー表示中に無効化できるよう
+    // 収集しておく (メニュークリックが隠れたファイルリストに効かないように)。
+    if (!global) {
+      m_paneMenuActions.append(action);
     }
     connect(action, &QAction::triggered, this, [id]() {
       CommandRegistry::instance().execute(id);

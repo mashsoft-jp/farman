@@ -44,6 +44,13 @@ private slots:
 private:
   void setupUi();
   void showFileManager();
+  // ファイラのペイン用コマンド (ファイル操作・選択・ナビゲーション等) と Tools
+  // メニューの有効/無効をまとめて切り替える。ショートカットは元々ペインスコープ
+  // だが、メニュークリックは背後のファイルリストに効いてしまうため。
+  void setPaneMenuActionsEnabled(bool enabled);
+  // 現在の状態 (インラインビュアー表示中 or 外部ビュアーウィンドウが開いている)
+  // から、上記メニューの有効/無効を計算して適用する。
+  void updatePaneMenuActionsEnabled();
   // displayPath: 空ならステータス・タイトルに filePath をそのまま使う。
   // アーカイブ内エントリ一時展開時のみ別物 (= "<archive>!/<inner>") を渡す。
   void showViewer(const QString& filePath, const QString& displayPath = {});
@@ -145,6 +152,9 @@ private:
   // CommandRegistry の既存コマンドを呼び出すボタンを並べる。表示/非表示は
   // Settings::showToolbar() に同期する。
   QToolBar* m_toolbar = nullptr;
+  // ペインスコープ (非 global) のメニューアクション。インラインビュアー表示中に
+  // まとめて無効化するため保持する。
+  QList<QAction*> m_paneMenuActions;
   // ツールバー上の "Toolbar" メニュー項目をチェック付きで追跡する。
   // Settings 側からトグルが入ったときも aboutToShow / 直接呼び出し経由で
   // 同期させる。
