@@ -369,6 +369,59 @@ void BehaviorTab::setupUi() {
 
   mainLayout->addWidget(listDisplayGroup);
 
+  // ─── Directory Size グループ ───────────────────
+  // ファイル一覧でディレクトリの再帰合計サイズを Size 列に表示する。
+  QGroupBox* dirSizeGroup = new QGroupBox(tr("Directory Size"), this);
+  QVBoxLayout* dirSizeLayout = new QVBoxLayout(dirSizeGroup);
+
+  m_computeDirSizesCheck = new QCheckBox(
+    tr("Show directory sizes in the Size column"), this);
+  m_computeDirSizesCheck->setToolTip(tr(
+    "Compute the recursive total size of directories in the background and "
+    "show it in the Size column (\"<DIR>\" moves to the Type column). Not "
+    "computed while the Size column is hidden."));
+  dirSizeLayout->addWidget(m_computeDirSizesCheck);
+
+  QFormLayout* dirSizeForm = new QFormLayout();
+  dirSizeForm->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+
+  m_dirSizeCacheModeCombo = new QComboBox(this);
+  m_dirSizeCacheModeCombo->addItem(tr("Recompute every time"),
+                                   static_cast<int>(DirSizeCacheMode::Always));
+  m_dirSizeCacheModeCombo->addItem(tr("Cache for a period"),
+                                   static_cast<int>(DirSizeCacheMode::Cached));
+  m_dirSizeCacheModeCombo->setToolTip(tr(
+    "Recompute every time the listing is shown, or reuse a cached value for a "
+    "period. A change to a directory's timestamp always invalidates its "
+    "cached size."));
+  dirSizeForm->addRow(tr("Calculation:"), m_dirSizeCacheModeCombo);
+
+  m_dirSizeCacheSecondsSpin = new QSpinBox(this);
+  m_dirSizeCacheSecondsSpin->setRange(10, 86400);
+  m_dirSizeCacheSecondsSpin->setSuffix(tr(" sec"));
+  m_dirSizeCacheSecondsSpin->setToolTip(tr(
+    "How long a computed size stays valid when \"Cache for a period\" is "
+    "selected."));
+  dirSizeForm->addRow(tr("Cache duration:"), m_dirSizeCacheSecondsSpin);
+
+  dirSizeLayout->addLayout(dirSizeForm);
+
+  // 算出 OFF のときはキャッシュ設定を無効化、Cached 以外なら保持時間を無効化する。
+  auto updateDirSizeEnabled = [this]() {
+    const bool on = m_computeDirSizesCheck->isChecked();
+    const bool cached = on &&
+      m_dirSizeCacheModeCombo->currentData().toInt() ==
+        static_cast<int>(DirSizeCacheMode::Cached);
+    m_dirSizeCacheModeCombo->setEnabled(on);
+    m_dirSizeCacheSecondsSpin->setEnabled(cached);
+  };
+  connect(m_computeDirSizesCheck, &QCheckBox::toggled,
+          this, [updateDirSizeEnabled](bool) { updateDirSizeEnabled(); });
+  connect(m_dirSizeCacheModeCombo, &QComboBox::currentIndexChanged,
+          this, [updateDirSizeEnabled](int) { updateDirSizeEnabled(); });
+
+  mainLayout->addWidget(dirSizeGroup);
+
   // ─── Viewer Display グループ (旧 Viewers タブから移設) ───
   // ビュアーを本体内に表示 (Inline) するか別ウィンドウ (External) で開くか。
   QGroupBox* viewerGroup = new QGroupBox(tr("Viewer Display"), this);
@@ -489,6 +542,26 @@ void BehaviorTab::loadSettings() {
     if (m_listColumnDualCheck[i])   m_listColumnDualCheck[i]->setChecked(dArr[i]);
     if (m_listColumnSingleCheck[i]) m_listColumnSingleCheck[i]->setChecked(sArr[i]);
   }
+
+  // ディレクトリサイズ
+  if (m_computeDirSizesCheck) {
+    m_computeDirSizesCheck->setChecked(settings.computeDirectorySizes());
+    const int modeData = static_cast<int>(settings.directorySizeCacheMode());
+    for (int i = 0; i < m_dirSizeCacheModeCombo->count(); ++i) {
+      if (m_dirSizeCacheModeCombo->itemData(i).toInt() == modeData) {
+        m_dirSizeCacheModeCombo->setCurrentIndex(i);
+        break;
+      }
+    }
+    m_dirSizeCacheSecondsSpin->setValue(settings.directorySizeCacheSeconds());
+    // 有効/無効の初期状態を反映する。
+    const bool on = m_computeDirSizesCheck->isChecked();
+    const bool cached = on &&
+      m_dirSizeCacheModeCombo->currentData().toInt() ==
+        static_cast<int>(DirSizeCacheMode::Cached);
+    m_dirSizeCacheModeCombo->setEnabled(on);
+    m_dirSizeCacheSecondsSpin->setEnabled(cached);
+  }
 }
 
 void BehaviorTab::save() {
@@ -581,6 +654,14 @@ void BehaviorTab::save() {
   }
   settings.setListColumnVisibilityDual(colsD);
   settings.setListColumnVisibilitySingle(colsS);
+
+  // ディレクトリサイズ
+  if (m_computeDirSizesCheck) {
+    settings.setComputeDirectorySizes(m_computeDirSizesCheck->isChecked());
+    settings.setDirectorySizeCacheMode(static_cast<DirSizeCacheMode>(
+      m_dirSizeCacheModeCombo->currentData().toInt()));
+    settings.setDirectorySizeCacheSeconds(m_dirSizeCacheSecondsSpin->value());
+  }
 }
 
 } // namespace Farman

@@ -22,12 +22,12 @@
         <translation>ファイル操作</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/CommandLayout.cpp" line="48"/>
+        <location filename="../src/keybinding/CommandLayout.cpp" line="49"/>
         <source>Viewers, view &amp; panes</source>
         <translation>ビュアー・表示・ペイン</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/CommandLayout.cpp" line="58"/>
+        <location filename="../src/keybinding/CommandLayout.cpp" line="59"/>
         <source>Bookmarks, history &amp; app</source>
         <translation>ブックマーク・履歴・アプリ</translation>
     </message>
@@ -60,7 +60,7 @@
         <translation type="vanished">ヘルプ</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/CommandLayout.cpp" line="66"/>
+        <location filename="../src/keybinding/CommandLayout.cpp" line="67"/>
         <source>Other</source>
         <translation>その他</translation>
     </message>
@@ -345,12 +345,12 @@
         <translation>Auto は OS の外観設定に追従する。編集対象は現在アクティブな側に自動で切り替わる。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="623"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="635"/>
         <source>(currently applying: Light)</source>
         <translation>(現在の適用先: Light)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="622"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="634"/>
         <source>(currently applying: Dark)</source>
         <translation>(現在の適用先: Dark)</translation>
     </message>
@@ -369,8 +369,8 @@
         <translation>テーマ JSON ファイルを読み込む。片側だけのファイルは該当側のみ更新する。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="729"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="734"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="741"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="746"/>
         <source>Apply Theme Preset</source>
         <translation>テーマプリセット適用</translation>
     </message>
@@ -379,20 +379,20 @@
         <translation type="vanished">現在のテーマ色を「%1」プリセットで全置換しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="756"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="762"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="768"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="774"/>
         <source>Export Theme</source>
         <translation>テーマをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="758"/>
         <location filename="../src/ui/AppearanceTab.cpp" line="770"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="782"/>
         <source>JSON Files (*.json)</source>
         <translation>JSON ファイル (*.json)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="769"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="775"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="781"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="787"/>
         <source>Import Theme</source>
         <translation>テーマをインポート</translation>
     </message>
@@ -583,74 +583,74 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>行高:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="322"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="320"/>
         <source>Show file icons</source>
         <translation>ファイルアイコンを表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="324"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="322"/>
         <source>Show file-type icons in the Name column (off = no icons)</source>
         <translation>名前列にファイル種別アイコンを表示 (オフでアイコン非表示)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="330"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="338"/>
         <source>Category</source>
         <translation>カテゴリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="331"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="339"/>
         <source>Foreground</source>
         <translation>文字色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="332"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="340"/>
         <source>Background</source>
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="333"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="341"/>
         <source>Bold</source>
         <translation>太字</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="334"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="342"/>
         <source>Normal</source>
         <translation>通常</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="335"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="343"/>
         <source>Hidden</source>
         <translation>隠し</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="336"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="344"/>
         <source>Directory</source>
         <translation>ディレクトリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="342"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="350"/>
         <source>Active Pane</source>
         <translation>アクティブパネル</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="344"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="364"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="352"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="372"/>
         <source>Normal State</source>
         <translation>通常</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="345"/>
-        <location filename="../src/ui/AppearanceTab.cpp" line="365"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="353"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="373"/>
         <source>Selected State</source>
         <translation>選択中</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="360"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="368"/>
         <source>Enable separate colors for the non-active pane. When off, the active colors are used for both panes.</source>
         <translation>非アクティブパネルに別カラーを使うかどうか。オフのときは両方のパネルでアクティブカラーが使われます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="358"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="366"/>
         <source>Inactive Pane</source>
         <translation>非アクティブパネル</translation>
     </message>
@@ -921,27 +921,27 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">色:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="588"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="600"/>
         <source>(Choose a preset...)</source>
         <translation>(プリセットを選択...)</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="632"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="644"/>
         <source>Select Font</source>
         <translation>フォントを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="662"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="674"/>
         <source>Select Foreground Color</source>
         <translation>文字色を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="680"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="692"/>
         <source>Select Background Color</source>
         <translation>背景色を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/AppearanceTab.cpp" line="703"/>
+        <location filename="../src/ui/AppearanceTab.cpp" line="715"/>
         <source>(none)</source>
         <translation>(なし)</translation>
     </message>
@@ -949,33 +949,38 @@ Row Background: fill the entire row with the cursor color.</source>
 <context>
     <name>Farman::ArchiveDispatcher</name>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="98"/>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="150"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="111"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="183"/>
         <source>External plugins are disabled (enable in Settings &gt; Plugins)</source>
         <translation>外部プラグインは無効です (設定 &gt; プラグイン で有効化してください)</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="121"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="130"/>
+        <source>This plugin requires farman %1 or later (current %2).</source>
+        <translation>このプラグインには farman %1 以降が必要です (現在 %2)。</translation>
+    </message>
+    <message>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="154"/>
         <source>Not an IArchivePlugin (wrong IID?)</source>
         <translation>IArchivePlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="168"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="201"/>
         <source>Invalid priority %1 (external plugins must use 0-9999)</source>
         <translation>優先度 %1 は不正です (外部プラグインは 0〜9999 を指定してください)</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="182"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="215"/>
         <source>Missing author information (external plugins must declare author())</source>
         <translation>制作者情報がありません (外部プラグインは author() を宣言する必要があります)</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="196"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="229"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="208"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="241"/>
         <source>initialize() failed</source>
         <translation>initialize() に失敗しました</translation>
     </message>
@@ -1328,28 +1333,78 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="374"/>
+        <source>Directory Size</source>
+        <translation>ディレクトリサイズ</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="378"/>
+        <source>Show directory sizes in the Size column</source>
+        <translation>サイズ列にディレクトリのサイズを表示</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="379"/>
+        <source>Compute the recursive total size of directories in the background and show it in the Size column (&quot;&lt;DIR&gt;&quot; moves to the Type column). Not computed while the Size column is hidden.</source>
+        <translation>ディレクトリの再帰合計サイズをバックグラウンドで算出し、サイズ列に表示します (「&lt;DIR&gt;」は種別列へ移動)。サイズ列が非表示のときは算出しません。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="389"/>
+        <source>Recompute every time</source>
+        <translation>毎回算出</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="391"/>
+        <source>Cache for a period</source>
+        <translation>一定時間キャッシュ</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="393"/>
+        <source>Recompute every time the listing is shown, or reuse a cached value for a period. A change to a directory&apos;s timestamp always invalidates its cached size.</source>
+        <translation>一覧を表示するたびに再算出するか、一定時間キャッシュ値を再利用します。ディレクトリの更新日時が変わった場合は、キャッシュを必ず無効化して再算出します。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="397"/>
+        <source>Calculation:</source>
+        <translation>算出方法:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="401"/>
+        <source> sec</source>
+        <translation> 秒</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="402"/>
+        <source>How long a computed size stays valid when &quot;Cache for a period&quot; is selected.</source>
+        <translation>「一定時間キャッシュ」を選んだとき、算出したサイズを有効とみなす時間です。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="405"/>
+        <source>Cache duration:</source>
+        <translation>キャッシュ保持時間:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="427"/>
         <source>Viewer Display</source>
         <translation>ビュアー表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/BehaviorTab.cpp" line="379"/>
+        <location filename="../src/ui/BehaviorTab.cpp" line="432"/>
         <source>Inline (in main window)</source>
         <translation>Inline (メインウィンドウ内)</translation>
     </message>
     <message>
-        <location filename="../src/ui/BehaviorTab.cpp" line="381"/>
+        <location filename="../src/ui/BehaviorTab.cpp" line="434"/>
         <source>External (separate windows)</source>
         <translation>External (独立ウィンドウ)</translation>
     </message>
     <message>
-        <location filename="../src/ui/BehaviorTab.cpp" line="383"/>
+        <location filename="../src/ui/BehaviorTab.cpp" line="436"/>
         <source>Inline: show the viewer inside the main window (Enter / Esc returns to the file list).
 External: open a separate window per file (multiple files can be open side by side, can be moved to another display).</source>
         <translation>Inline: メインウィンドウ内のビュアーパネルで表示 (Enter / Esc でファイルリストへ戻る)。
 External: ファイル毎に独立したウィンドウを開く (複数並べる / 別ディスプレイへ移動可)。</translation>
     </message>
     <message>
-        <location filename="../src/ui/BehaviorTab.cpp" line="388"/>
+        <location filename="../src/ui/BehaviorTab.cpp" line="441"/>
         <source>Display mode:</source>
         <translation>表示モード:</translation>
     </message>
@@ -1469,54 +1524,68 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::BinaryView</name>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="215"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="391"/>
         <source>Unit:</source>
         <translation>単位:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="217"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="393"/>
         <source>1 Byte</source>
         <translation>1 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="218"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="394"/>
         <source>2 Byte</source>
         <translation>2 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="219"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="395"/>
         <source>4 Byte</source>
         <translation>4 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="220"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="396"/>
         <source>8 Byte</source>
         <translation>8 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="225"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="400"/>
         <source>Endian:</source>
         <translation>エンディアン:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="227"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="402"/>
         <source>Little</source>
         <translation>リトル</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="228"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="403"/>
         <source>Big</source>
         <translation>ビッグ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="232"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="407"/>
         <source>Encoding:</source>
         <translation>エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="439"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="415"/>
+        <source>Address:</source>
+        <translation>アドレス:</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="417"/>
+        <source>hex e.g. 1a0</source>
+        <translation>16進 例: 1a0</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="424"/>
+        <source>Go</source>
+        <translation>移動</translation>
+    </message>
+    <message>
         <source>  ·  truncated to first %1</source>
-        <translation>  ·  先頭 %1 件まで表示</translation>
+        <translation type="vanished">  ·  先頭 %1 件まで表示</translation>
     </message>
 </context>
 <context>
@@ -2728,97 +2797,97 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::FileListModel</name>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="185"/>
+        <location filename="../src/model/FileListModel.cpp" line="337"/>
         <source>Failed to open archive: %1</source>
         <translation>アーカイブを開けませんでした: %1</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="197"/>
+        <location filename="../src/model/FileListModel.cpp" line="349"/>
         <source>Enter password for %1:</source>
         <translation>%1 のパスワードを入力してください:</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="201"/>
+        <location filename="../src/model/FileListModel.cpp" line="353"/>
         <source>Password Required</source>
         <translation>パスワードが必要です</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="207"/>
+        <location filename="../src/model/FileListModel.cpp" line="359"/>
         <source>Password input cancelled.</source>
         <translation>パスワード入力がキャンセルされました。</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="216"/>
+        <location filename="../src/model/FileListModel.cpp" line="368"/>
         <source>Wrong password. Enter password for %1:</source>
         <translation>パスワードが違います。%1 のパスワードを再入力してください:</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="219"/>
+        <location filename="../src/model/FileListModel.cpp" line="371"/>
         <source>Cannot Open Archive</source>
         <translation>アーカイブを開けません</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="220"/>
+        <location filename="../src/model/FileListModel.cpp" line="372"/>
         <source>Wrong password (3 attempts). Giving up.</source>
         <translation>パスワードが 3 回連続で違いました。中止します。</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="221"/>
+        <location filename="../src/model/FileListModel.cpp" line="373"/>
         <source>Wrong password (gave up after 3 attempts).</source>
         <translation>パスワード違い (3 回試行で中止)。</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="229"/>
+        <location filename="../src/model/FileListModel.cpp" line="381"/>
         <source>Path not found in archive: %1</source>
         <translation>アーカイブ内に該当パスがありません: %1</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="838"/>
+        <location filename="../src/model/FileListModel.cpp" line="998"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="839"/>
+        <location filename="../src/model/FileListModel.cpp" line="999"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="840"/>
+        <location filename="../src/model/FileListModel.cpp" line="1000"/>
         <source>Type</source>
         <translation>種別</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="841"/>
+        <location filename="../src/model/FileListModel.cpp" line="1001"/>
         <source>Modified</source>
         <translation>更新日時</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="842"/>
+        <location filename="../src/model/FileListModel.cpp" line="1002"/>
         <source>Created</source>
         <translation>作成日時</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="843"/>
+        <location filename="../src/model/FileListModel.cpp" line="1003"/>
         <source>Permissions</source>
         <translation>パーミッション</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="844"/>
+        <location filename="../src/model/FileListModel.cpp" line="1004"/>
         <source>Attributes</source>
         <translation>属性</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="845"/>
+        <location filename="../src/model/FileListModel.cpp" line="1005"/>
         <source>Owner</source>
         <translation>所有者</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="846"/>
+        <location filename="../src/model/FileListModel.cpp" line="1006"/>
         <source>Group</source>
         <translation>グループ</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="847"/>
+        <location filename="../src/model/FileListModel.cpp" line="1007"/>
         <source>Link Target</source>
         <translation>リンク先</translation>
     </message>
@@ -2848,7 +2917,7 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <message>
         <location filename="../src/ui/FileListPane.cpp" line="410"/>
         <location filename="../src/ui/FileListPane.cpp" line="427"/>
-        <location filename="../src/ui/FileListPane.cpp" line="957"/>
+        <location filename="../src/ui/FileListPane.cpp" line="977"/>
         <source>List</source>
         <translation>リスト</translation>
     </message>
@@ -2869,84 +2938,84 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     </message>
     <message>
         <location filename="../src/ui/FileListPane.cpp" line="428"/>
-        <location filename="../src/ui/FileListPane.cpp" line="958"/>
+        <location filename="../src/ui/FileListPane.cpp" line="978"/>
         <source>Thumbnail (S)</source>
         <translation>サムネイル (S)</translation>
     </message>
     <message>
         <location filename="../src/ui/FileListPane.cpp" line="429"/>
-        <location filename="../src/ui/FileListPane.cpp" line="959"/>
+        <location filename="../src/ui/FileListPane.cpp" line="979"/>
         <source>Thumbnail (L)</source>
         <translation>サムネイル (L)</translation>
     </message>
     <message>
         <location filename="../src/ui/FileListPane.cpp" line="430"/>
-        <location filename="../src/ui/FileListPane.cpp" line="960"/>
+        <location filename="../src/ui/FileListPane.cpp" line="980"/>
         <source>Thumbnail (M)</source>
         <translation>サムネイル (M)</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1110"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1130"/>
         <source>CS</source>
         <translation>CS</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1111"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1131"/>
         <source>Dot-first</source>
         <translation>ドット優先</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1118"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1138"/>
         <source>Hidden</source>
         <translation>隠し</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1119"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1139"/>
         <source>Dirs only</source>
         <translation>ディレクトリのみ</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1120"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1140"/>
         <source>Files only</source>
         <translation>ファイルのみ</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1159"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1179"/>
         <source>Quick: &quot;%1&quot; (%2 / %3 items)</source>
         <translation>即時: 「%1」 (%2 / %3 件)</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1164"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1184"/>
         <source>(none)</source>
         <translation>(なし)</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1166"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1186"/>
         <source>Sort: %1  │  Filter: %2</source>
         <translation>ソート: %1  │  フィルタ: %2</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1213"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1233"/>
         <source>Add bookmark for this directory</source>
         <translation>このディレクトリをブックマークに追加</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1214"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1234"/>
         <source>Default bookmark (cannot be removed)</source>
         <translation>デフォルトブックマーク (削除不可)</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1215"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1235"/>
         <source>Remove bookmark for this directory</source>
         <translation>このディレクトリのブックマークを削除</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1237"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1257"/>
         <source>Home</source>
         <translation>ホーム</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1244"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1264"/>
         <source>Add Bookmark</source>
         <translation>ブックマークを追加</translation>
     </message>
@@ -4375,59 +4444,59 @@ This will discard all custom keybindings.</source>
         <translation type="vanished">バイナリビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1505"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1594"/>
         <source>&amp;File</source>
         <translation>ファイル(&amp;F)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1002"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1506"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1813"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1071"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1595"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1903"/>
         <source>New File</source>
         <translation>新規ファイル</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1507"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1596"/>
         <source>New Directory</source>
         <translation>新規ディレクトリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1054"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1508"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1819"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1123"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1597"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1909"/>
         <source>Rename</source>
         <translation>リネーム</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1063"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1509"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1132"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1598"/>
         <source>Bulk Rename...</source>
         <translation>一括リネーム...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1072"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1510"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1141"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1599"/>
         <source>Copy Path</source>
         <translation>パスをコピー</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="966"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1512"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1816"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1035"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1601"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1906"/>
         <source>Copy</source>
         <translation>コピー</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="975"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1513"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1817"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1044"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1602"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1907"/>
         <source>Move</source>
         <translation>移動</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="984"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1514"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1818"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1053"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1603"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1908"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
@@ -4436,187 +4505,194 @@ This will discard all custom keybindings.</source>
         <translation type="vanished">属性を変更...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1187"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1518"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1271"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1608"/>
         <source>Execute / Open Externally</source>
         <translation>実行 / 外部アプリで開く</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1520"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1610"/>
         <source>Create Archive...</source>
         <translation>アーカイブを作成...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1521"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1611"/>
         <source>Extract Archive...</source>
         <translation>アーカイブを展開...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1090"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1524"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1174"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1614"/>
         <source>Quit</source>
         <translation>終了</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1530"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1620"/>
         <source>&amp;Edit</source>
         <translation>編集(&amp;E)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="883"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1531"/>
+        <location filename="../src/ui/MainWindow.cpp" line="952"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1621"/>
         <source>Select All</source>
         <translation>全選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="873"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1532"/>
+        <location filename="../src/ui/MainWindow.cpp" line="942"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1622"/>
         <source>Invert Selection</source>
         <translation>選択反転</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="852"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1533"/>
+        <location filename="../src/ui/MainWindow.cpp" line="921"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1623"/>
         <source>Toggle Selection</source>
         <translation>選択トグル</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1534"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1624"/>
         <source>Toggle and Move Down</source>
         <translation>選択して下に移動</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1544"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1634"/>
         <source>&amp;View</source>
         <translation>表示(&amp;V)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="894"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1545"/>
+        <location filename="../src/ui/MainWindow.cpp" line="963"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1635"/>
         <source>Switch Pane</source>
         <translation>ペイン切替</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1549"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1857"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1639"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1951"/>
         <source>Single Pane</source>
         <translation>シングルパネル</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1565"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1655"/>
         <source>Sort &amp;&amp; Filter...</source>
         <translation>ソートとフィルタ...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="938"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1584"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1007"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1674"/>
         <source>Sync Other Pane to Active</source>
         <translation>反対側パネルをアクティブと同期</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="947"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1585"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1016"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1675"/>
         <source>Sync Active Pane to Other</source>
         <translation>アクティブをパネルを反対側と同期</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1011"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1080"/>
         <source>Properties</source>
         <translation>プロパティ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1016"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1085"/>
         <source>Show file or directory details and edit changeable attributes (permissions / Windows attributes). For directories, recursively calculates the total size in the background.</source>
         <translation>ファイル / ディレクトリの詳細を表示し、変更可能な属性（パーミッション / Windows 属性）を編集します。ディレクトリの場合は合計サイズをバックグラウンドで再帰的に計算します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1121"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1611"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1161"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1606"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1931"/>
+        <source>Recompute Directory Sizes</source>
+        <translation>ディレクトリサイズを再算出</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MainWindow.cpp" line="1205"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1701"/>
         <source>View File</source>
         <translation>ファイルを表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1131"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1612"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1215"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1702"/>
         <source>Open With Viewer...</source>
         <translation>ビュアーを選択して開く...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1208"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1646"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1292"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1736"/>
         <source>Toggle Log Pane</source>
         <translation>ログパネルを表示/非表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1389"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1693"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1473"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1783"/>
         <source>Keybinding List</source>
         <translation>キーバインド一覧</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1392"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1476"/>
         <source>Show or hide the keybinding list window</source>
         <translation>キーバインド一覧ウィンドウの表示/非表示を切り替えます</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1400"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1484"/>
         <source>Open plugin settings: load status, enable/disable, directory, and viewer associations.</source>
         <translation>プラグイン設定を開きます: ロード状況、有効/無効、ディレクトリ、ビュアーの拡張子関連付け。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1677"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1767"/>
         <source>&amp;Go</source>
         <translation>移動(&amp;G)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="841"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1678"/>
+        <location filename="../src/ui/MainWindow.cpp" line="910"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1768"/>
         <source>Parent Directory</source>
         <translation>親ディレクトリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="791"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1679"/>
+        <location filename="../src/ui/MainWindow.cpp" line="860"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1769"/>
         <source>Jump to Top</source>
         <translation>先頭へ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="801"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1680"/>
+        <location filename="../src/ui/MainWindow.cpp" line="870"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1770"/>
         <source>Jump to Bottom</source>
         <translation>末尾へ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1023"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1682"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1092"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1772"/>
         <source>Search Files...</source>
         <translation>ファイル検索...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1442"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1683"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1526"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1773"/>
         <source>History...</source>
         <translation>履歴...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1686"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1776"/>
         <source>&amp;Bookmarks</source>
         <translation>ブックマーク(&amp;B)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1415"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1687"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1499"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1777"/>
         <source>Toggle Bookmark</source>
         <translation>ブックマークを切替</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1424"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1688"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1508"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1778"/>
         <source>Bookmarks...</source>
         <translation>ブックマーク一覧...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1691"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1781"/>
         <source>&amp;Help</source>
         <translation>ヘルプ(&amp;H)</translation>
     </message>
@@ -4625,34 +4701,34 @@ This will discard all custom keybindings.</source>
         <translation type="vanished">ショートカット一覧</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="308"/>
+        <location filename="../src/ui/MainWindow.cpp" line="312"/>
         <source>Sync</source>
         <translation>Sync</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="309"/>
+        <location filename="../src/ui/MainWindow.cpp" line="313"/>
         <source>Compare</source>
         <translation>Compare</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="417"/>
+        <location filename="../src/ui/MainWindow.cpp" line="421"/>
         <source>&lt;cloud sync folder&gt;</source>
         <translation>&lt;クラウド同期フォルダ&gt;</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="419"/>
+        <location filename="../src/ui/MainWindow.cpp" line="423"/>
         <source>This looks like a cloud sync folder (Google Drive / OneDrive / Dropbox / iCloud).
 Local disk usage is not shown here because the host volume size would be misleading.</source>
         <translation>これはクラウド同期フォルダ (Google Drive / OneDrive / Dropbox / iCloud) のようです。
 ホスト FS の容量表示は誤解を招くため、ここではディスク使用量を表示しません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="446"/>
+        <location filename="../src/ui/MainWindow.cpp" line="450"/>
         <source>%1 free / %2 (%3%% used)</source>
         <translation>空き %1 / 全 %2 (%3%% 使用)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="449"/>
+        <location filename="../src/ui/MainWindow.cpp" line="453"/>
         <source>Volume: %1
 Mount point: %2
 File system: %3</source>
@@ -4661,67 +4737,67 @@ File system: %3</source>
 ファイルシステム: %3</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="751"/>
+        <location filename="../src/ui/MainWindow.cpp" line="820"/>
         <source>Up</source>
         <translation>上</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="761"/>
+        <location filename="../src/ui/MainWindow.cpp" line="830"/>
         <source>Down</source>
         <translation>下</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="771"/>
+        <location filename="../src/ui/MainWindow.cpp" line="840"/>
         <source>Left</source>
         <translation>左</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="781"/>
+        <location filename="../src/ui/MainWindow.cpp" line="850"/>
         <source>Right</source>
         <translation>右</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="811"/>
+        <location filename="../src/ui/MainWindow.cpp" line="880"/>
         <source>Page Up</source>
         <translation>ページ上</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="821"/>
+        <location filename="../src/ui/MainWindow.cpp" line="890"/>
         <source>Page Down</source>
         <translation>ページ下</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="831"/>
+        <location filename="../src/ui/MainWindow.cpp" line="900"/>
         <source>Enter</source>
         <translation>開く / 入る</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="862"/>
+        <location filename="../src/ui/MainWindow.cpp" line="931"/>
         <source>Toggle Selection and Move Down</source>
         <translation>選択トグルして下へ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="904"/>
+        <location filename="../src/ui/MainWindow.cpp" line="973"/>
         <source>Toggle Single Pane Mode</source>
         <translation>1画面 / 2画面 切替</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="916"/>
+        <location filename="../src/ui/MainWindow.cpp" line="985"/>
         <source>Toggle Preview Layout</source>
         <translation>プレビューレイアウト切替</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="929"/>
+        <location filename="../src/ui/MainWindow.cpp" line="998"/>
         <source>Sort &amp; Filter...</source>
         <translation>ソート / フィルタ...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="956"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1025"/>
         <source>Toggle Sync Browse</source>
         <translation>同期ブラウズ切替</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="993"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1062"/>
         <source>Make Directory</source>
         <translation>ディレクトリ作成</translation>
     </message>
@@ -4730,29 +4806,29 @@ File system: %3</source>
         <translation type="vanished">属性変更</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1040"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1109"/>
         <source>Create Archive</source>
         <translation>アーカイブ作成</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1047"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1116"/>
         <source>Extract Archive</source>
         <translation>アーカイブ展開</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1099"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1927"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1183"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2021"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1111"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1701"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1195"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1791"/>
         <source>Check for Updates...</source>
         <translation>アップデートを確認...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1116"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1200"/>
         <source>Manually check GitHub for a newer farman release.</source>
         <translation>GitHub に新しい farman リリースが出ていないか手動で確認します。</translation>
     </message>
@@ -4769,7 +4845,7 @@ File system: %3</source>
         <translation type="vanished">CSV/TSV ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1516"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1605"/>
         <source>Properties...</source>
         <translation>プロパティ...</translation>
     </message>
@@ -4778,140 +4854,140 @@ File system: %3</source>
         <translation type="vanished">ファイル / ディレクトリの詳細を表示します。ディレクトリの場合は配下を再帰的に走査して合計サイズを計算します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1222"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1649"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1306"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1739"/>
         <source>Toolbar</source>
         <translation>ツールバー</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1230"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1314"/>
         <source>Show or hide the main toolbar.</source>
         <translation>メインツールバーの表示/非表示を切り替えます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1240"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1647"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1324"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1737"/>
         <source>Quick Filter</source>
         <translation>即時フィルタ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1247"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1331"/>
         <source>Toggle the quick filter bar to filter the current list by name (substring).</source>
         <translation>即時フィルタバーをトグル表示し、ファイル名 (部分一致) で現在のリストを絞り込む。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1256"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1661"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1828"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1340"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1751"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1918"/>
         <source>Use External Viewer Window</source>
         <translation>ビュアーを別ウィンドウで表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1270"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1354"/>
         <source>Viewer mode: External (separate windows)</source>
         <translation>ビュアーモード: External (独立ウィンドウ)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1271"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1355"/>
         <source>Viewer mode: Inline (panel)</source>
         <translation>ビュアーモード: Inline (パネル)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1274"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1358"/>
         <source>Toggle between in-window viewer panel and separate viewer windows.</source>
         <translation>メインウィンドウ内のビュアーパネルと、独立ビュアーウィンドウを切り替える。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1294"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1378"/>
         <source>View as List</source>
         <translation>リスト表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1296"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1380"/>
         <source>Show the active pane as a detailed list.</source>
         <translation>アクティブペインを詳細リストで表示。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1299"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1383"/>
         <source>View as Thumbnails (Small)</source>
         <translation>サムネイル表示 (小)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1301"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1385"/>
         <source>Show the active pane as small thumbnails (96 px).</source>
         <translation>アクティブペインを小サイズ (96 px) のサムネイル表示。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1304"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1388"/>
         <source>View as Thumbnails (Medium)</source>
         <translation>サムネイル表示 (中)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1306"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1390"/>
         <source>Show the active pane as medium thumbnails (160 px).</source>
         <translation>アクティブペインを中サイズ (160 px) のサムネイル表示。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1309"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1393"/>
         <source>View as Thumbnails (Large)</source>
         <translation>サムネイル表示 (大)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1311"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1395"/>
         <source>Show the active pane as large thumbnails (256 px).</source>
         <translation>アクティブペインを大サイズ (256 px) のサムネイル表示。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1316"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1400"/>
         <source>Cycle View Mode</source>
         <translation>表示モードを順送り</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1330"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1414"/>
         <source>Cycle the active pane through List / Thumbnail (S/M/L).</source>
         <translation>アクティブペインの表示を リスト → サムネイル (S/M/L) → リスト の順に巡回。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1338"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1587"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1422"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1677"/>
         <source>Compare Directories...</source>
         <translation>ディレクトリ比較...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1348"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1432"/>
         <source>Compare the contents of the two panes&apos; current directories and highlight the differences. Press again to clear.</source>
         <translation>左右ペインの現在ディレクトリを比較し、差分を着色表示します。もう一度実行すると解除されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1357"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1590"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1441"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1680"/>
         <source>Select Differ rows</source>
         <translation>差分のある行を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1362"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1446"/>
         <source>In compare mode, add rows that differ between the two panes to the active pane&apos;s selection.</source>
         <translation>比較モード中、左右で内容が違う行をアクティブペインの選択に追加します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1367"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1591"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1451"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1681"/>
         <source>Select Only-Here rows</source>
         <translation>このペインのみの行を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1372"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1456"/>
         <source>In compare mode, add rows that exist only in the active pane to its selection.</source>
         <translation>比較モード中、アクティブペインにしかない行を選択に追加します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1377"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1592"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1461"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1682"/>
         <source>Select Newer-Than-Other rows</source>
         <translation>反対ペインより新しい行を選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1382"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1466"/>
         <source>In compare mode, add Differ rows whose mtime is newer than the matching file in the other pane.</source>
         <translation>比較モード中、差分のある行のうちアクティブペイン側の更新日時が反対ペインより新しいものを選択に追加します。</translation>
     </message>
@@ -4924,34 +5000,39 @@ File system: %3</source>
         <translation type="vanished">読み込み済みビュアープラグインとプラグイン読み込みエラーを表示します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1406"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1697"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1490"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1787"/>
         <source>What&apos;s New...</source>
         <translation>アップデート内容...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1409"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1493"/>
         <source>Show what changed in this version of farman.</source>
         <translation>このバージョンの farman のアップデート内容を表示します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1550"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1863"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1640"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1957"/>
         <source>Preview Pane</source>
         <translation>プレビューペイン</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1925"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2019"/>
         <source>Keybindings</source>
         <translation>キーバインド</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1985"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2082"/>
+        <source>Version %1&lt;br&gt;&lt;br&gt;Copyright &amp;copy; Mashsoft Inc.&lt;br&gt;&lt;a href=&quot;https://www.mashsoft.co.jp&quot;&gt;https://www.mashsoft.co.jp&lt;/a&gt;</source>
+        <translation>バージョン %1&lt;br&gt;&lt;br&gt;Copyright &amp;copy; Mashsoft Inc.&lt;br&gt;&lt;a href=&quot;https://www.mashsoft.co.jp&quot;&gt;https://www.mashsoft.co.jp&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MainWindow.cpp" line="2123"/>
         <source>License Info...</source>
         <translation>ライセンス情報...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1926"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2020"/>
         <source>Plugins</source>
         <translation>プラグイン</translation>
     </message>
@@ -5004,39 +5085,39 @@ File system: %3</source>
         <translation type="vanished">外部</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2007"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2145"/>
         <source>Failed to load license information.</source>
         <translation>ライセンス情報の読み込みに失敗しました。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2011"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2149"/>
         <source>Third-Party Licenses</source>
         <translation>サードパーティライセンス</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2070"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2208"/>
         <source>Showing What&apos;s New for %1</source>
         <translation>%1 のアップデート内容を表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2107"/>
-        <location filename="../src/ui/MainWindow.cpp" line="2127"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2245"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2265"/>
         <source>You&apos;re using the latest version of farman.</source>
         <translation>最新バージョンを使用しています。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2109"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2247"/>
         <source>This is a development build.</source>
         <translation>開発ビルドです。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2111"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2249"/>
         <source>Could not check for updates: %1</source>
         <translation>アップデートを確認できませんでした: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1397"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1694"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1481"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1784"/>
         <source>Plugins...</source>
         <translation>プラグイン...</translation>
     </message>
@@ -5045,78 +5126,78 @@ File system: %3</source>
         <translation type="vanished">ロード済みのプラグイン、およびロードに失敗したプラグインとその理由を表示します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1540"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1630"/>
         <source>Settings...</source>
         <translation>設定...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1570"/>
-        <location filename="../src/ui/MainWindow.cpp" line="1877"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1660"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1971"/>
         <source>Sync Browse</source>
         <translation>同期ブラウズ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1579"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1669"/>
         <source>Sync Browse: ON</source>
         <translation>同期ブラウズ: ON</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1603"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1693"/>
         <source>Compare: ON</source>
         <translation>ディレクトリ比較: ON</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1616"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1706"/>
         <source>View Mode</source>
         <translation>表示モード</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1618"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1708"/>
         <source>List</source>
         <translation>リスト</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1620"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1710"/>
         <source>Thumbnails (Small)</source>
         <translation>サムネイル (小)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1622"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1712"/>
         <source>Thumbnails (Medium)</source>
         <translation>サムネイル (中)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1624"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1714"/>
         <source>Thumbnails (Large)</source>
         <translation>サムネイル (大)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1673"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1763"/>
         <source>&amp;Tools</source>
         <translation>ツール(&amp;T)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1702"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1792"/>
         <source>About farman...</source>
         <translation>farman について...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1747"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1837"/>
         <source>External command failed</source>
         <translation>外部コマンドの実行に失敗しました</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1756"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1846"/>
         <source>(no external commands configured)</source>
         <translation>(外部コマンドが未設定)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1766"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1856"/>
         <source>Main Toolbar</source>
         <translation>メインツールバー</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1814"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1904"/>
         <source>New Dir</source>
         <translation>ディレクトリ作成</translation>
     </message>
@@ -5125,47 +5206,47 @@ File system: %3</source>
         <translation type="vanished">表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1821"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1911"/>
         <source>Viewer</source>
         <translation>ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1837"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1927"/>
         <source>Sort &amp;&amp; Filter</source>
         <translation>ソート / フィルタ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1838"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1928"/>
         <source>Search</source>
         <translation>検索</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1840"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1934"/>
         <source>Bookmarks</source>
         <translation>ブックマーク</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1841"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1935"/>
         <source>History</source>
         <translation>履歴</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1847"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1941"/>
         <source>Terminal</source>
         <translation>ターミナル</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1848"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1942"/>
         <source>Editor</source>
         <translation>エディタ</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1889"/>
+        <location filename="../src/ui/MainWindow.cpp" line="1983"/>
         <source>Compare Directories</source>
         <translation>ディレクトリ比較</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1908"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2002"/>
         <source>Log</source>
         <translation>ログ</translation>
     </message>
@@ -5174,24 +5255,23 @@ File system: %3</source>
         <translation type="vanished">ショートカット</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1939"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2033"/>
         <source>Hide toolbar</source>
         <translation>ツールバーを非表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1941"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2035"/>
         <source>Hide the toolbar. Re-show it from View → Toolbar or Settings → General.</source>
         <translation>ツールバーを非表示にする。再表示は View → Toolbar または Settings → General から。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1975"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2068"/>
         <source>About farman</source>
         <translation>farman について</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="1977"/>
         <source>&lt;b&gt;farman&lt;/b&gt; %1&lt;br&gt;&lt;br&gt;Copyright &amp;copy; Mashsoft Inc.&lt;br&gt;&lt;a href=&quot;https://www.mashsoft.co.jp&quot;&gt;https://www.mashsoft.co.jp&lt;/a&gt;</source>
-        <translation>&lt;b&gt;farman&lt;/b&gt; %1&lt;br&gt;&lt;br&gt;Copyright &amp;copy; Mashsoft Inc.&lt;br&gt;&lt;a href=&quot;https://www.mashsoft.co.jp&quot;&gt;https://www.mashsoft.co.jp&lt;/a&gt;</translation>
+        <translation type="vanished">&lt;b&gt;farman&lt;/b&gt; %1&lt;br&gt;&lt;br&gt;Copyright &amp;copy; Mashsoft Inc.&lt;br&gt;&lt;a href=&quot;https://www.mashsoft.co.jp&quot;&gt;https://www.mashsoft.co.jp&lt;/a&gt;</translation>
     </message>
     <message>
         <source>Viewer plugins are loaded on startup. Change the plugins directory or enable/disable external plugins, then restart farman.</source>
@@ -5230,7 +5310,7 @@ File system: %3</source>
         <translation type="vanished">プラグインの有効/無効の変更は、farman の再起動後に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2099"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2237"/>
         <source>Update check failed: %1</source>
         <translation>アップデートチェック失敗: %1</translation>
     </message>
@@ -5267,13 +5347,13 @@ Reason: %1</source>
 理由: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2113"/>
-        <location filename="../src/ui/MainWindow.cpp" line="2126"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2251"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2264"/>
         <source>Check for Updates</source>
         <translation>アップデートを確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2118"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2256"/>
         <source>Update check: latest=%1, current=%2, newer=%3</source>
         <translation>アップデートチェック: latest=%1, current=%2, newer=%3</translation>
     </message>
@@ -5286,57 +5366,57 @@ Reason: %1</source>
         <translation type="vanished">farman %1 が最新版です。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2138"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2276"/>
         <source>Update %1 is in skip list, suppressing notification</source>
         <translation>アップデート %1 はスキップ済みリストにあるため通知を抑止します</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2148"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2286"/>
         <source>Silent auto-update: downloading %1</source>
         <translation>サイレント自動アップデート: %1 をダウンロード中</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2165"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2303"/>
         <source>User chose to skip update %1</source>
         <translation>ユーザーがアップデート %1 のスキップを選択しました</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2181"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2319"/>
         <source>Updating farman...</source>
         <translation>farman をアップデート中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2182"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2320"/>
         <source>Preparing download...</source>
         <translation>ダウンロードの準備中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2207"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2345"/>
         <source>Update download failed: %1</source>
         <translation>アップデートのダウンロード失敗: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2208"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2346"/>
         <source>Update Failed</source>
         <translation>アップデート失敗</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2209"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2347"/>
         <source>Could not install the update: %1</source>
         <translation>アップデートをインストールできませんでした: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2212"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2350"/>
         <source>Update install launched, exiting</source>
         <translation>アップデートのインストールを起動しました。farman を終了します</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2325"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2463"/>
         <source>Confirm Exit</source>
         <translation>終了確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2326"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2464"/>
         <source>Are you sure you want to exit farman?</source>
         <translation>farman を終了しますか?</translation>
     </message>
@@ -7711,48 +7791,53 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::ViewerDispatcher</name>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="171"/>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="219"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="183"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="251"/>
         <source>External plugins are disabled (enable in Settings &gt; Plugins)</source>
         <translation>外部プラグインは無効です (設定 &gt; プラグイン で有効化してください)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="193"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="202"/>
+        <source>This plugin requires farman %1 or later (current %2).</source>
+        <translation>このプラグインには farman %1 以降が必要です (現在 %2)。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="225"/>
         <source>Not an IViewerPlugin (wrong IID?)</source>
         <translation>IViewerPlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="234"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="266"/>
         <source>Invalid priority %1 (external plugins must use 0-9999)</source>
         <translation>優先度 %1 は不正です (外部プラグインは 0〜9999 を指定してください)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="249"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="281"/>
         <source>Missing author information (external plugins must declare author())</source>
         <translation>制作者情報がありません (外部プラグインは author() を宣言する必要があります)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="261"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="293"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="424"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="456"/>
         <source>null plugin instance</source>
         <translation>プラグインインスタンスが null</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="433"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="465"/>
         <source>duplicate plugin id (already registered)</source>
         <translation>プラグイン ID が重複 (既に登録済み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="446"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="478"/>
         <source>initialize() returned false</source>
         <translation>initialize() が失敗を返しました</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="461"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="493"/>
         <source>bundled</source>
         <translation>同梱</translation>
     </message>
@@ -8075,37 +8160,37 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1074"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1094"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1075"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1095"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1076"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1096"/>
         <source>Type</source>
         <translation>種別</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1077"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1097"/>
         <source>Modified</source>
         <translation>更新日時</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1085"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1105"/>
         <source>Dirs First</source>
         <translation>ディレクトリ先頭</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1086"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1106"/>
         <source>Dirs Last</source>
         <translation>ディレクトリ末尾</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileListPane.cpp" line="1087"/>
+        <location filename="../src/ui/FileListPane.cpp" line="1107"/>
         <source>Mixed</source>
         <translation>混在</translation>
     </message>
@@ -8157,7 +8242,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
     </message>
     <message>
         <location filename="../src/utils/Dialogs.cpp" line="282"/>
-        <location filename="../src/model/FileListModel.cpp" line="126"/>
+        <location filename="../src/model/FileListModel.cpp" line="278"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
@@ -8169,72 +8254,72 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1400"/>
+        <location filename="../src/settings/Settings.cpp" line="1431"/>
         <source>Home</source>
         <translation>ホーム</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1402"/>
+        <location filename="../src/settings/Settings.cpp" line="1433"/>
         <source>Desktop</source>
         <translation>デスクトップ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1404"/>
+        <location filename="../src/settings/Settings.cpp" line="1435"/>
         <source>Documents</source>
         <translation>ドキュメント</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1406"/>
+        <location filename="../src/settings/Settings.cpp" line="1437"/>
         <source>Downloads</source>
         <translation>ダウンロード</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1408"/>
+        <location filename="../src/settings/Settings.cpp" line="1439"/>
         <source>Pictures</source>
         <translation>ピクチャ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1410"/>
+        <location filename="../src/settings/Settings.cpp" line="1441"/>
         <source>Music</source>
         <translation>ミュージック</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1412"/>
+        <location filename="../src/settings/Settings.cpp" line="1443"/>
         <source>Movies</source>
         <translation>ムービー</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1665"/>
+        <location filename="../src/settings/Settings.cpp" line="1696"/>
         <source>Settings file does not exist yet.</source>
         <translation>設定ファイルがまだ存在しません。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1670"/>
+        <location filename="../src/settings/Settings.cpp" line="1701"/>
         <source>Cannot overwrite existing file: %1</source>
         <translation>既存ファイルを上書きできません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1674"/>
+        <location filename="../src/settings/Settings.cpp" line="1705"/>
         <source>Failed to copy settings to: %1</source>
         <translation>設定ファイルのコピーに失敗しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1694"/>
+        <location filename="../src/settings/Settings.cpp" line="1725"/>
         <source>Not a valid JSON settings file: %1</source>
         <translation>有効な JSON 設定ファイルではありません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1700"/>
+        <location filename="../src/settings/Settings.cpp" line="1731"/>
         <source>Missing &quot;version&quot; field — not a farman settings file?</source>
         <translation>「version」フィールドがありません — farman の設定ファイルではない可能性があります。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1709"/>
+        <location filename="../src/settings/Settings.cpp" line="1740"/>
         <source>Cannot replace existing settings file: %1</source>
         <translation>既存の設定ファイルを置き換えられません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1713"/>
+        <location filename="../src/settings/Settings.cpp" line="1744"/>
         <source>Failed to install imported settings file</source>
         <translation>インポートした設定ファイルの適用に失敗しました</translation>
     </message>
@@ -8264,7 +8349,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>未知の外部コマンド: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1685"/>
+        <location filename="../src/settings/Settings.cpp" line="1716"/>
         <location filename="../src/settings/PresetIO.cpp" line="21"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>
@@ -8374,12 +8459,12 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>アーカイブの読み込みをキャンセルしました。</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="125"/>
+        <location filename="../src/model/FileListModel.cpp" line="277"/>
         <source>Reading archive: %1</source>
         <translation>アーカイブを読み込み中: %1</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="143"/>
+        <location filename="../src/model/FileListModel.cpp" line="295"/>
         <source>Reading archive: %1 (%2 entries)</source>
         <translation>アーカイブを読み込み中: %1 (%2 件)</translation>
     </message>

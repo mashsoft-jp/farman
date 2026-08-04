@@ -67,6 +67,12 @@ enum class FileSizeFormat {
   Auto     // 自動選択
 };
 
+// ディレクトリサイズのバックグラウンド算出のキャッシュ方針。
+enum class DirSizeCacheMode {
+  Always,  // 一覧表示のたびに毎回再計算する
+  Cached   // 一度算出したら一定時間 (directorySizeCacheSeconds) キャッシュを使う
+};
+
 // 属性フィルタのフラグ
 enum class AttrFilter : quint32 {
   None        = 0x00,

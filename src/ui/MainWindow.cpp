@@ -1153,6 +1153,21 @@ void MainWindow::registerCommands() {
     "file"
   ));
 
+  // ディレクトリサイズの強制再算出 (キャッシュ無効時でも現在の一覧を再計算)。
+  // Size 列にディレクトリの再帰合計サイズを表示する設定が ON のときだけ意味を持つ
+  // (OFF のときは no-op)。
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "file.recompute_dir_sizes",
+    tr("Recompute Directory Sizes"),
+    [this]() {
+      auto* pane = m_fileManagerPanel->activePane();
+      if (pane && pane->model()) {
+        pane->model()->recomputeDirSizes();
+      }
+    },
+    "file"
+  ));
+
   // Application commands
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "app.quit",
@@ -1588,6 +1603,7 @@ void MainWindow::createMenus() {
   addCmd(fileMenu, "file.delete",     tr("Delete"));
   fileMenu->addSeparator();
   addCmd(fileMenu, "file.attributes", tr("Properties..."));
+  addCmd(fileMenu, "file.recompute_dir_sizes", tr("Recompute Directory Sizes"));
   fileMenu->addSeparator();
   addCmd(fileMenu, "file.execute",    tr("Execute / Open Externally"));
   fileMenu->addSeparator();
@@ -1910,6 +1926,10 @@ void MainWindow::createMainToolBar() {
   });
   addBtn("pane.sort_filter",        tr("Sort && Filter"), QStringLiteral("sort-filter.svg"));
   addBtn("file.search",             tr("Search"),       QStringLiteral("search.svg"));
+  // ディレクトリサイズの強制再算出 (Size 列にディレクトリ合計サイズを表示する
+  // 設定が ON のときに使う)。
+  addBtn("file.recompute_dir_sizes", tr("Recompute Directory Sizes"),
+         QStringLiteral("recompute-size.svg"));
   m_toolbar->addSeparator();
   addBtn("bookmark.list",           tr("Bookmarks"),    QStringLiteral("bookmarks.svg"));
   addBtn("history.show",            tr("History"),      QStringLiteral("history.svg"));

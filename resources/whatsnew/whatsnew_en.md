@@ -14,6 +14,18 @@ With the external plugin **farman-plugin-3d**, farman can now display
   restart farman.
 - FBX is supported first; other formats such as obj / glTF are planned.
 
+### Directory sizes in the Size column (computed in the background)
+
+- The file list can now compute the recursive total size of directories in
+  the background and show it in the Size column ("&lt;DIR&gt;" moves to the
+  Type column).
+- Off by default. Enable it under Settings > Behavior > Directory Size.
+- Choose "Recompute every time" or "Cache for a period", and set how long the
+  cache stays valid (a change to a directory's timestamp always triggers a
+  recompute).
+- Force a recompute with the toolbar button or `Ctrl+Shift+R`.
+- Not computed while the Size column is hidden.
+
 ### Bug fixes
 
 - Fixed an issue where the cursor on the last file could be scrolled out of

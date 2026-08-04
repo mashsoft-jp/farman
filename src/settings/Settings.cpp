@@ -155,6 +155,9 @@ void Settings::applyDefaults() {
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
   m_showFileIcons = true;
+  m_computeDirectorySizes     = false;
+  m_directorySizeCacheMode    = DirSizeCacheMode::Cached;
+  m_directorySizeCacheSeconds = 300;
   m_language      = LanguageMode::Auto;
 
   // ── ログ ─────────────────────────
@@ -896,6 +899,25 @@ bool Settings::showFileIcons() const {
 
 void Settings::setShowFileIcons(bool show) {
   m_showFileIcons = show;
+}
+
+bool Settings::computeDirectorySizes() const {
+  return m_computeDirectorySizes;
+}
+void Settings::setComputeDirectorySizes(bool on) {
+  m_computeDirectorySizes = on;
+}
+DirSizeCacheMode Settings::directorySizeCacheMode() const {
+  return m_directorySizeCacheMode;
+}
+void Settings::setDirectorySizeCacheMode(DirSizeCacheMode mode) {
+  m_directorySizeCacheMode = mode;
+}
+int Settings::directorySizeCacheSeconds() const {
+  return m_directorySizeCacheSeconds;
+}
+void Settings::setDirectorySizeCacheSeconds(int seconds) {
+  m_directorySizeCacheSeconds = qBound(10, seconds, 86400);
 }
 
 LayoutMode Settings::layoutMode() const { return m_layoutMode; }
@@ -1989,6 +2011,15 @@ void Settings::load() {
   }
   m_showToolbar = behavior.value("showToolbar").toBool(true);
   m_showFileIcons = behavior.value("showFileIcons").toBool(true);
+  // ディレクトリサイズのバックグラウンド算出。既定 OFF / Cached / 300 秒。
+  m_computeDirectorySizes = behavior.value("computeDirectorySizes").toBool(false);
+  m_directorySizeCacheMode =
+    (behavior.value("directorySizeCacheMode").toString("cached")
+       == QLatin1String("always"))
+      ? DirSizeCacheMode::Always
+      : DirSizeCacheMode::Cached;
+  m_directorySizeCacheSeconds =
+    qBound(10, behavior.value("directorySizeCacheSeconds").toInt(300), 86400);
   // レイアウト (dual / single / preview)。未指定は dual。
   m_layoutMode = layoutModeFromKey(behavior.value("layoutMode").toString());
   // プレビュー動作パラメタ
@@ -2683,6 +2714,12 @@ void Settings::save() const {
                              : QStringLiteral("inline");
   behavior["showToolbar"] = m_showToolbar;
   behavior["showFileIcons"] = m_showFileIcons;
+  behavior["computeDirectorySizes"] = m_computeDirectorySizes;
+  behavior["directorySizeCacheMode"] =
+    (m_directorySizeCacheMode == DirSizeCacheMode::Always)
+      ? QStringLiteral("always")
+      : QStringLiteral("cached");
+  behavior["directorySizeCacheSeconds"] = m_directorySizeCacheSeconds;
   behavior["layoutMode"]  = QString::fromLatin1(layoutModeKey(m_layoutMode));
   {
     QJsonObject preview;

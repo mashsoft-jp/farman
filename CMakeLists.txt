@@ -173,6 +173,8 @@ qt_add_executable(farman
   src/core/ArchiveEntryName.cpp
   src/core/ThumbnailCache.cpp
   src/core/ThumbnailWorker.cpp
+  src/core/DirectorySizeCache.cpp
+  src/core/DirectorySizeWorker.cpp
   src/core/UpdateChecker.cpp
   src/core/UpdateDownloader.cpp
   src/utils/Dialogs.cpp

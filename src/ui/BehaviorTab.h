@@ -61,6 +61,11 @@ private:
   static constexpr int kColumnToggleCount = 9;
   QCheckBox*  m_listColumnDualCheck  [kColumnToggleCount] = {};
   QCheckBox*  m_listColumnSingleCheck[kColumnToggleCount] = {};
+
+  // ディレクトリサイズのバックグラウンド算出。
+  QCheckBox*  m_computeDirSizesCheck    = nullptr;
+  QComboBox*  m_dirSizeCacheModeCombo   = nullptr;
+  QSpinBox*   m_dirSizeCacheSecondsSpin = nullptr;
 };
 
 } // namespace Farman

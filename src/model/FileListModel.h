@@ -77,6 +77,18 @@ public:
   void setShowFileIcons(bool show);
   bool showFileIcons() const { return m_showFileIcons; }
 
+  // ディレクトリサイズのバックグラウンド算出の ON/OFF。ON のとき Size 列に
+  // ディレクトリの再帰合計サイズを表示し ("<DIR>" は Type 列へ移動)、算出は
+  // DirectorySizeCache に非同期で依頼する。FileListPane が
+  // 「設定 ON かつ Size 列が可視」のときだけ true を渡す。切替時は再描画 +
+  // (ON 化時は) 算出開始する。
+  void setComputeDirSizes(bool on);
+  bool computeDirSizes() const { return m_computeDirSizes; }
+  // 現在の一覧のディレクトリサイズを強制的に再算出する (キャッシュを無効化して
+  // 再要求)。file.recompute_dir_sizes コマンドから呼ばれる。算出 OFF のときは
+  // no-op。
+  void recomputeDirSizes();
+
   // ── パス操作 ──────────────────────────────
   QString currentPath() const;
   bool    setPath(const QString& path);  // false = アクセス不可
@@ -191,7 +203,21 @@ private slots:
   // 届くケース)。
   void onThumbnailReady(const Farman::ThumbnailKey& key, const QPixmap& pixmap);
 
+  // DirectorySizeCache::sizeReady を受けて、path が現ディレクトリにあれば該当行の
+  // Size 列 (DisplayRole) を再描画する。現ディレクトリ外なら無視する
+  // (移動後に古い算出結果が届くケース)。
+  void onDirSizeReady(const QString& path, qint64 totalBytes);
+
 private:
+  // 現在の一覧の各ディレクトリについて、キャッシュ照合 (Cached 時) or 非同期算出
+  // 要求を投げ、m_dirSizes を初期化する。算出 OFF / アーカイブモードでは何もしない。
+  void startDirSizeComputation();
+  // ソート / 表示で使う「実効サイズ」。ディレクトリで算出済みなら合計サイズ、
+  // 未算出 (-1) や算出 OFF のときはファイルの size() を返す。
+  qint64 effectiveSizeForSort(const FileItem* item) const;
+  // バイト数を現在の表示設定 (単/双ペイン別の書式・桁区切り) で整形する。
+  // ファイル行・ディレクトリ行の Size 列で共用する。
+  QString formatSizeText(qint64 bytes) const;
   // m_allEntries (setPath で読み込んだ全件) から m_entries (フィルタ後の表示用) を
   // 構築してソートする。シェアド ptr で参照を持つため、選択状態はフィルタ
   // 切替で消えない (FileItem 自体を共有)。
@@ -217,6 +243,13 @@ private:
   // 再読込 (beginResetModel) 時にクリアする。const な data() から使うため mutable。
   mutable QHash<QString, QIcon>    m_iconCache;
   bool                             m_showFileIcons = true;  // 種別アイコンの表示
+
+  // ディレクトリサイズのバックグラウンド算出。
+  bool                             m_computeDirSizes = false;
+  // 現ディレクトリのディレクトリ行の合計サイズ (絶対パス → バイト数)。
+  // 値 >= 0 が算出済み、-1 は算出中 (プレースホルダ表示)。エントリ非在は未要求。
+  // ディレクトリ移動 (beginResetModel) でクリアする。
+  QHash<QString, qint64>           m_dirSizes;
 
   // ソート設定
   SortKey             m_sortKey    = SortKey::Name;

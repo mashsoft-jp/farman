@@ -500,6 +500,13 @@ void FileListPane::refreshAppearance() {
   // refreshAppearance が呼ばれるので、ここ 1 箇所で追従できる)。
   if (m_model) {
     m_model->setShowFileIcons(Settings::instance().showFileIcons());
+    // ディレクトリサイズのバックグラウンド算出は「設定 ON かつ現在のペイン
+    // モードで Size 列が可視」のときだけ有効化する (Size 列が無ければ計算しない)。
+    const auto cv = m_model->isSinglePaneMode()
+      ? Settings::instance().listColumnVisibilitySingle()
+      : Settings::instance().listColumnVisibilityDual();
+    m_model->setComputeDirSizes(
+      Settings::instance().computeDirectorySizes() && cv.size);
   }
 
   // ブックマークボタンは登録状態で色が変わるため、実スタイル適用は
@@ -535,6 +542,13 @@ void FileListPane::applyColumnVisibility(bool singlePane) {
   m_view->setColumnHidden(FileListModel::Group,        !v.group);
 #endif
   m_view->setColumnHidden(FileListModel::LinkTarget,   !v.linkTarget);
+
+  // Size 列の可視状態が変わったので、ディレクトリサイズ算出の有効/無効も
+  // 追従させる (Size 列が非表示なら算出しない)。
+  if (m_model) {
+    m_model->setComputeDirSizes(
+      Settings::instance().computeDirectorySizes() && v.size);
+  }
 }
 
 QString FileListPane::currentPath() const {

@@ -1,6 +1,7 @@
 #include "FileListModel.h"
 #include "settings/Settings.h"
 #include "core/ArchiveContext.h"
+#include "core/DirectorySizeCache.h"
 #include "core/ThumbnailCache.h"
 #include "utils/ArchivePath.h"
 #include "utils/MediaMatchers.h"
@@ -32,6 +33,9 @@ FileListModel::FileListModel(QObject* parent)
   // ThumbnailCache の非同期 decode 結果を受けて、対象 row を再描画する。
   connect(&ThumbnailCache::instance(), &ThumbnailCache::thumbnailReady,
           this, &FileListModel::onThumbnailReady);
+  // DirectorySizeCache の非同期算出結果を受けて、対象 row の Size 列を更新する。
+  connect(&DirectorySizeCache::instance(), &DirectorySizeCache::sizeReady,
+          this, &FileListModel::onDirSizeReady);
 }
 
 FileListModel::~FileListModel() = default;
@@ -90,6 +94,147 @@ void FileListModel::setShowFileIcons(bool show) {
       index(0, Name),
       index(m_entries.size() - 1, Name),
       { Qt::DecorationRole });
+  }
+}
+
+QString FileListModel::formatSizeText(qint64 bytes) const {
+  const Settings& s = Settings::instance();
+  const FileSizeFormat fmt = m_singlePane ? s.fileSizeFormatSingle()
+                                          : s.fileSizeFormatDual();
+  // 桁区切りカンマは Auto 以外で適用 (デフォルト ON)。
+  const bool sep = m_singlePane ? s.fileSizeThousandsSeparatorSingle()
+                                : s.fileSizeThousandsSeparatorDual();
+  const bool useSep = (fmt != FileSizeFormat::Auto) && sep;
+  QLocale loc(QLocale::English);
+  if (!useSep) {
+    // ロケールの数値書式から 1000 区切りを外す
+    loc.setNumberOptions(QLocale::OmitGroupSeparator);
+  }
+  switch (fmt) {
+    case FileSizeFormat::Bytes:
+      // 素のバイト数。OmitGroupSeparator を切替えるだけで
+      // "12,345,678" と "12345678" が切替わる。
+      return QStringLiteral("%1 B").arg(loc.toString(bytes));
+    case FileSizeFormat::SI:
+      // 1000-based KB/MB/GB
+      return loc.formattedDataSize(bytes, 1, QLocale::DataSizeSIFormat);
+    case FileSizeFormat::IEC:
+      // 1024-based KiB/MiB/GiB
+      return loc.formattedDataSize(bytes, 1, QLocale::DataSizeIecFormat);
+    case FileSizeFormat::Auto:
+    default:
+      // Auto は桁区切りトグルを無視し、ロケール既定に任せる
+      // (英語ロケールで 1024-based + KB ラベル)。
+      return QLocale(QLocale::English).formattedDataSize(bytes);
+  }
+}
+
+qint64 FileListModel::effectiveSizeForSort(const FileItem* item) const {
+  if (m_computeDirSizes && item->isDir() && !item->isDotDot()) {
+    const auto it = m_dirSizes.constFind(item->absolutePath());
+    if (it != m_dirSizes.cend() && it.value() >= 0) {
+      return it.value();
+    }
+    return 0;  // 未算出は 0 扱い
+  }
+  return item->size();
+}
+
+void FileListModel::setComputeDirSizes(bool on) {
+  if (m_computeDirSizes == on) return;
+  m_computeDirSizes = on;
+  if (on) {
+    // 有効化: 現在の一覧について算出を開始する。
+    startDirSizeComputation();
+  } else {
+    // 無効化: 表示を従来の "<DIR>" に戻す。
+    m_dirSizes.clear();
+  }
+  // Size / Type 両列の表示が変わるので再描画させる。
+  if (!m_entries.isEmpty()) {
+    emit dataChanged(index(0, Type),
+                     index(m_entries.size() - 1, Size),
+                     { Qt::DisplayRole });
+  }
+}
+
+void FileListModel::startDirSizeComputation() {
+  if (!m_computeDirSizes) return;
+  // アーカイブ内はローカル FS の再帰集計ができないので対象外。
+  if (m_archiveContext) return;
+
+  DirectorySizeCache& cache = DirectorySizeCache::instance();
+  // NOTE: ここでは generation を bump しない。左右ペインが同一の
+  // DirectorySizeCache (単一 worker) を共有しており、bump するともう一方の
+  // ペインの算出中ジョブまで打ち切ってしまうため (後から読み込んだペインが
+  // 先のペインの計算をキャンセルしてしまう)。ディレクトリ移動で不要になった
+  // 結果は onDirSizeReady 側で「現ディレクトリに無い path は無視」することで
+  // 実害なく捨てられる。走査中ジョブの中断はアプリ終了時のみ (デストラクタ)。
+  m_dirSizes.clear();
+
+  const Settings& s = Settings::instance();
+  const bool cached = (s.directorySizeCacheMode() == DirSizeCacheMode::Cached);
+  // Cached: 保持秒数を ms に。Always: 経過時間を無視 (常にキャッシュ未使用)。
+  const qint64 maxAgeMs =
+    cached ? static_cast<qint64>(s.directorySizeCacheSeconds()) * 1000 : 0;
+
+  for (const auto& sp : m_entries) {
+    const FileItem* it = sp.get();
+    if (!it->isDir() || it->isDotDot()) continue;
+    const QString path = it->absolutePath();
+    if (path.isEmpty()) continue;
+
+    qint64 bytes = 0;
+    bool hit = false;
+    if (cached) {
+      // mtime も無効化条件に併用する (ディレクトリ直下の増減に追従)。
+      const qint64 mtimeMs = it->lastModified().isValid()
+                               ? it->lastModified().toMSecsSinceEpoch()
+                               : -1;
+      hit = cache.peek(path, maxAgeMs, mtimeMs, &bytes);
+    }
+    if (hit) {
+      m_dirSizes.insert(path, bytes);
+    } else {
+      m_dirSizes.insert(path, -1);  // 算出中プレースホルダ
+      cache.request(path);
+    }
+  }
+}
+
+void FileListModel::recomputeDirSizes() {
+  if (!m_computeDirSizes) return;
+  if (m_archiveContext) return;
+
+  DirectorySizeCache& cache = DirectorySizeCache::instance();
+  // 現在の一覧のディレクトリのキャッシュを無効化してから再算出する。
+  for (const auto& sp : m_entries) {
+    const FileItem* it = sp.get();
+    if (it->isDir() && !it->isDotDot()) {
+      cache.invalidate(it->absolutePath());
+    }
+  }
+  startDirSizeComputation();
+  // プレースホルダ表示に戻す (再算出完了で順次埋まる)。
+  if (!m_entries.isEmpty()) {
+    emit dataChanged(index(0, Size),
+                     index(m_entries.size() - 1, Size),
+                     { Qt::DisplayRole });
+  }
+}
+
+void FileListModel::onDirSizeReady(const QString& path, qint64 totalBytes) {
+  auto it = m_dirSizes.find(path);
+  if (it == m_dirSizes.end()) return;  // 現ディレクトリ外 (移動後に届いた古い結果)
+  it.value() = totalBytes;
+  // 該当 row の Size 列を再描画する (Type は "<DIR>" のまま変わらない)。
+  for (int r = 0; r < m_entries.size(); ++r) {
+    const FileItem* e = m_entries.at(r).get();
+    if (e && e->isDir() && e->absolutePath() == path) {
+      const QModelIndex idx = index(r, Size);
+      emit dataChanged(idx, idx, { Qt::DisplayRole });
+      break;
+    }
   }
 }
 
@@ -255,6 +400,7 @@ bool FileListModel::setPath(const QString& path) {
     m_allEntries.clear();
     m_entries.clear();
     m_iconCache.clear();  // 別ディレクトリ読込でアイコンキャッシュを破棄
+    m_dirSizes.clear();   // ディレクトリサイズ算出結果も破棄
     m_liveFilter.clear();
     // 別ディレクトリへの切替で比較モードは自動解除 (design:
     // directory-comparison.md)。同パス refresh ではユーザーが意図的に
@@ -308,6 +454,7 @@ bool FileListModel::setPath(const QString& path) {
   m_allEntries.clear();
   m_entries.clear();
   m_iconCache.clear();  // 別ディレクトリ読込でアイコンキャッシュを破棄
+  m_dirSizes.clear();   // ディレクトリサイズ算出結果も破棄
   // 別ディレクトリへの切替で比較モードは自動解除 (design:
   // directory-comparison.md)。同パス refresh では残す (copy/move/delete 完了後
   // の更新で着色を失わないように)。
@@ -342,6 +489,10 @@ bool FileListModel::setPath(const QString& path) {
   applyFilterAndSort();
 
   endResetModel();
+
+  // ディレクトリサイズのバックグラウンド算出 (有効時)。通常 FS パスのみ対象で
+  // アーカイブ内は行わない (startDirSizeComputation 内でも二重ガード)。
+  startDirSizeComputation();
 
   emit pathChanged(m_currentPath);
   return true;
@@ -629,8 +780,13 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
         return name;
       }
       case Type: {
-        // ディレクトリは Type 列を空にする (拡張子相当の判定をしない)
+        // ディレクトリは Type 列を空にする (拡張子相当の判定をしない)。
+        // ただしディレクトリサイズ算出が有効なときは、Size 列に合計サイズを
+        // 出す代わりに "<DIR>" を Type 列へ移動する (".." は除く)。
         if (item->isDir()) {
+          if (m_computeDirSizes && !item->isDotDot()) {
+            return QString("<DIR>");
+          }
           return QString("");
         }
         QString name = item->name();
@@ -643,38 +799,19 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
       }
       case Size:
         if (item->isDir()) {
+          // ディレクトリサイズ算出が有効なら、算出済みの合計サイズを表示する。
+          // 未算出 (-1) / 要求前は算出中プレースホルダを出す。".." は対象外で
+          // 従来どおり "<DIR>"。算出 OFF のときも従来どおり "<DIR>"。
+          if (m_computeDirSizes && !item->isDotDot()) {
+            const auto it = m_dirSizes.constFind(item->absolutePath());
+            if (it != m_dirSizes.cend() && it.value() >= 0) {
+              return formatSizeText(it.value());
+            }
+            return QStringLiteral("…");  // 算出中
+          }
           return QString("<DIR>");
         } else {
-          const Settings& s = Settings::instance();
-          const FileSizeFormat fmt = m_singlePane ? s.fileSizeFormatSingle()
-                                                  : s.fileSizeFormatDual();
-          const qint64 bytes = item->size();
-          // 桁区切りカンマは Auto 以外で適用 (デフォルト ON)。
-          const bool sep = m_singlePane ? s.fileSizeThousandsSeparatorSingle()
-                                        : s.fileSizeThousandsSeparatorDual();
-          const bool useSep = (fmt != FileSizeFormat::Auto) && sep;
-          QLocale loc(QLocale::English);
-          if (!useSep) {
-            // ロケールの数値書式から 1000 区切りを外す
-            loc.setNumberOptions(QLocale::OmitGroupSeparator);
-          }
-          switch (fmt) {
-            case FileSizeFormat::Bytes:
-              // 素のバイト数。OmitGroupSeparator を切替えるだけで
-              // "12,345,678" と "12345678" が切替わる。
-              return QStringLiteral("%1 B").arg(loc.toString(bytes));
-            case FileSizeFormat::SI:
-              // 1000-based KB/MB/GB
-              return loc.formattedDataSize(bytes, 1, QLocale::DataSizeSIFormat);
-            case FileSizeFormat::IEC:
-              // 1024-based KiB/MiB/GiB
-              return loc.formattedDataSize(bytes, 1, QLocale::DataSizeIecFormat);
-            case FileSizeFormat::Auto:
-            default:
-              // Auto は桁区切りトグルを無視し、ロケール既定に任せる
-              // (英語ロケールで 1024-based + KB ラベル)。
-              return QLocale(QLocale::English).formattedDataSize(bytes);
-          }
+          return formatSizeText(item->size());
         }
       case LastModified: {
         const Settings& s = Settings::instance();
@@ -979,8 +1116,10 @@ int FileListModel::compareItems(const FileItem* a, const FileItem* b, SortKey ke
       return nameA.compare(nameB, m_cs);
     }
     case SortKey::Size: {
-      qint64 sizeA = a->size();
-      qint64 sizeB = b->size();
+      // ディレクトリサイズ算出が有効なら、算出済みディレクトリは合計サイズで
+      // 比較する。未算出は 0 扱い (effectiveSizeForSort)。
+      qint64 sizeA = effectiveSizeForSort(a);
+      qint64 sizeB = effectiveSizeForSort(b);
       if (sizeA < sizeB) return -1;
       if (sizeA > sizeB) return 1;
       return 0;

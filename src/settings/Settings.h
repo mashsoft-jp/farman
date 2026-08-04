@@ -249,6 +249,19 @@ public:
   bool showFileIcons()                  const;
   void setShowFileIcons(bool show);
 
+  // ── ディレクトリサイズのバックグラウンド算出 ──────────────
+  // ON にすると、ファイル一覧で Size 列にディレクトリの再帰合計サイズを
+  // バックグラウンド算出して表示する ("<DIR>" は Type 列へ移動)。既定 OFF。
+  // Size 列が非表示のときは算出しない (FileListPane 側で判定)。
+  bool computeDirectorySizes()          const;
+  void setComputeDirectorySizes(bool on);
+  // 算出タイミング。Always=毎回算出 / Cached=一定時間キャッシュ。既定 Cached。
+  DirSizeCacheMode directorySizeCacheMode() const;
+  void             setDirectorySizeCacheMode(DirSizeCacheMode mode);
+  // Cached のときのキャッシュ保持秒数 (10〜86400)。既定 300 (5 分)。
+  int  directorySizeCacheSeconds()      const;
+  void setDirectorySizeCacheSeconds(int seconds);
+
   // ファイルマネージャパネルのレイアウト (Dual / Single / Preview)。
   // View メニュー / ツールバー / Ctrl+O (Single) / Ctrl+P (Preview) で切替。
   // 起動時の復元に使うため永続化する。
@@ -659,6 +672,10 @@ private:
   bool             m_showToolbar     = true;
   // ファイルリストのファイルアイコン表示。既定 ON。
   bool             m_showFileIcons   = true;
+  // ディレクトリサイズのバックグラウンド算出。既定 OFF。
+  bool             m_computeDirectorySizes    = false;
+  DirSizeCacheMode m_directorySizeCacheMode   = DirSizeCacheMode::Cached;
+  int              m_directorySizeCacheSeconds = 300;   // 5 分
   // ファイルマネージャパネルのレイアウト。Dual がデフォルト。Preview / Single
   // は永続化されるので、終了時に Preview なら次回も Preview で起動する。
   LayoutMode       m_layoutMode      = LayoutMode::Dual;
