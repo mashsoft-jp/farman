@@ -602,13 +602,17 @@ void BinaryView::updateColumnWidths() {
   // セル幅 = テキスト幅 + cellPad。左寄せ描画なので単位間の隙間は概ね cellPad に
   // なる。普通のバイナリエディタと同じく約 1 文字ぶんの隙間にする。
   const int cellPad = fm.horizontalAdvance(QLatin1Char('0'));
-  // Address: 8 桁 + 余白。
-  m_table->setColumnWidth(0, fm.horizontalAdvance(QStringLiteral("00000000")) + cellPad);
-  // 各 unit セル: 2*unitBytes 桁の 16 進 + 余白。
+  // アドレス / バイト列 / ASCII の 3 セクション間はもう少し広く空ける。
+  const int sectionGap = fm.averageCharWidth() * 3;
+  // Address: 8 桁 + 余白 + セクション間 (アドレスとバイト列の間を空ける)。
+  m_table->setColumnWidth(0,
+      fm.horizontalAdvance(QStringLiteral("00000000")) + cellPad + sectionGap);
+  // 各 unit セル: 2*unitBytes 桁の 16 進 + 余白。最後の unit だけ後ろに
+  // セクション間を足して、バイト列と ASCII の間を空ける。
   const QString unitSample(unitBytes * 2, QLatin1Char('F'));
   const int     unitW = fm.horizontalAdvance(unitSample) + cellPad;
   for (int u = 0; u < units; ++u) {
-    m_table->setColumnWidth(1 + u, unitW);
+    m_table->setColumnWidth(1 + u, unitW + (u == units - 1 ? sectionGap : 0));
   }
   // ASCII: 16 文字ぶん (全角混在も想定して少し広め)。
   m_table->setColumnWidth(1 + units,
