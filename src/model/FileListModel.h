@@ -7,6 +7,8 @@
 #include <QAbstractItemModel>
 #include <QFileSystemWatcher>
 #include <QFileIconProvider>
+#include <QHash>
+#include <QIcon>
 #include <QPixmap>
 #include <memory>
 
@@ -200,6 +202,14 @@ private:
   QList<std::shared_ptr<FileItem>> m_entries;
   QFileSystemWatcher               m_watcher;
   QFileIconProvider                m_iconProvider;
+
+  // ファイルアイコンのキャッシュ (絶対パス → QIcon)。DecorationRole は
+  // 描画のたびに呼ばれ、macOS の QFileIconProvider::icon() は LaunchServices
+  // 経由で 1 件 ms オーダーと遅い。カーソル移動で現/旧行が繰り返し再描画される
+  // たびに同じファイルのアイコンを取り直すと、キー長押しで遅延が積み重なる。
+  // 一度取得したアイコンをパス単位でキャッシュし、再フェッチを防ぐ。ディレクトリ
+  // 再読込 (beginResetModel) 時にクリアする。const な data() から使うため mutable。
+  mutable QHash<QString, QIcon>    m_iconCache;
 
   // ソート設定
   SortKey             m_sortKey    = SortKey::Name;

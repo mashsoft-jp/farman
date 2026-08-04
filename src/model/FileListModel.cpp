@@ -243,6 +243,7 @@ bool FileListModel::setPath(const QString& path) {
     m_currentPath      = newCurrentPath;
     m_allEntries.clear();
     m_entries.clear();
+    m_iconCache.clear();  // 別ディレクトリ読込でアイコンキャッシュを破棄
     m_liveFilter.clear();
     // 別ディレクトリへの切替で比較モードは自動解除 (design:
     // directory-comparison.md)。同パス refresh ではユーザーが意図的に
@@ -295,6 +296,7 @@ bool FileListModel::setPath(const QString& path) {
   m_currentPath = newCurrentPath;
   m_allEntries.clear();
   m_entries.clear();
+  m_iconCache.clear();  // 別ディレクトリ読込でアイコンキャッシュを破棄
   // 別ディレクトリへの切替で比較モードは自動解除 (design:
   // directory-comparison.md)。同パス refresh では残す (copy/move/delete 完了後
   // の更新で着色を失わないように)。
@@ -760,7 +762,16 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
           cache.request(key);
         }
       }
-      return m_iconProvider.icon(item->fileInfo());
+      // ファイルアイコンはパス単位でキャッシュして再フェッチを防ぐ (macOS の
+      // QFileIconProvider は遅く、カーソル移動の再描画ごとに取り直すと重い)。
+      const QString iconKey = item->absolutePath();
+      auto          it      = m_iconCache.constFind(iconKey);
+      if (it != m_iconCache.constEnd()) {
+        return it.value();
+      }
+      const QIcon icon = m_iconProvider.icon(item->fileInfo());
+      m_iconCache.insert(iconKey, icon);
+      return icon;
     }
   }
   else if (role == Qt::BackgroundRole) {
