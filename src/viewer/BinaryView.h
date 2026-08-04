@@ -8,54 +8,59 @@
 #include <atomic>
 
 class QComboBox;
-class QPlainTextEdit;
+class QLineEdit;
+class QTableView;
 
 namespace Farman {
 
-class AddressHighlighter;
+class BinaryHexModel;
 
 // 16 進ダンプ表示用の読み取り専用ビュー。
-// 上部のツールバーで unit / endian / encoding をその場で変更できるが、
-// 設定ファイルには保存しない (Settings 側のデフォルトは別途 Appearance タブで編集)。
-// `Settings::settingsChanged` でグローバル設定が変わると、ローカルの上書きはリセットされる。
+// 上部のツールバーで unit / endian / encoding をその場で変更でき、16 進アドレスへ
+// ジャンプできる。設定ファイルには保存しない (Settings 側のデフォルトは別途
+// Appearance タブで編集)。`Settings::settingsChanged` でグローバル設定が変わると
+// ローカルの上書きはリセットされる。
+//
+// 大ファイル対応: ファイルは mmap (QFile::map) して、表示中の行のバイトだけを
+// 読み取って整形する (QTableView + 仮想化モデル BinaryHexModel)。全体を読み込んだり
+// hex 文字列を一括生成したりしないので、ギガ級でも即座に開ける。mmap 不可の環境
+// では seek+read のフォールバックに切り替わる。
 class BinaryView : public QWidget {
   Q_OBJECT
 
 public:
-  // 非同期ロード用の中間表現。prepareLoad の戻り値で、UI を触らないため
-  // ワーカースレッドで生成して main へ渡せる。
-  // hex 文字列の組み立て (重い) はここで行うので、main 側は
-  // setPlainText するだけになる。
+  // 非同期ロード用の中間表現。prepareLoad (ワーカースレッド可) が UI を触らずに
+  // 生成し、applyPreparedLoad (メインスレッド) が反映する。
+  // 旧実装と違い hex 文字列は持たない (整形は表示時にモデルが行う)。prepareLoad は
+  // ファイルサイズの取得と、"Auto" 時のエンコード判定 (先頭サンプル) だけを行う。
   struct PreparedLoad {
-    bool       ok          = false;
+    bool       ok             = false;
     QString    filePath;
-    qint64     totalSize   = 0;
-    qint64     loadedSize  = 0;
-    QByteArray data;
-    QString    text;            // 完成済みの hex ダンプ + truncated 注記
-    // 実際にデコードに使ったエンコード名。"Auto" の場合は uchardet が判定
-    // した結果、それ以外は呼び出し側のユーザー指定がそのまま入る。
-    // ステータスバー表示や applyPreparedLoad での反映に使う。
-    QString    actualEncoding;
+    qint64     totalSize      = 0;
+    qint64     loadedSize     = 0;   // 大ファイルでも切り詰めないため totalSize と同じ
+    QByteArray data;                 // 互換のため残置 (未使用)
+    QString    text;                 // 互換のため残置 (未使用)
+    QString    actualEncoding;       // "Auto" 判定結果 or ユーザー指定そのまま
   };
 
   explicit BinaryView(QWidget* parent = nullptr);
+  ~BinaryView() override;
 
   // 失敗時 (open エラー) は false。
   bool loadFile(const QString& filePath);
 
-  // ワーカースレッドで実行可能なロード処理 (UI 非依存)。
-  // cancelToken が指す atomic が true になった時点で早期 return する
-  // (プレビューモードのカーソル移動による中断用)。
-  // maxBytes > 0 を指定すると内蔵の 8 MB 既定上限の代わりにそれを使う。
-  // -1 (既定) は従来通り kMaxBytes (8MB) を上限とする。
+  // ワーカースレッドで実行可能なロード処理 (UI 非依存・軽量)。
+  // サイズ取得と "Auto" 時のエンコード判定 (先頭サンプルのみ読む) を行う。
+  // cancelToken が true になったら早期 return する。maxBytes は互換のため残すが
+  // 大ファイルでも切り詰めないため無視する。
   static PreparedLoad prepareLoad(const QString&     filePath,
                                   BinaryViewerUnit   unit,
                                   BinaryViewerEndian endian,
                                   const QString&     encoding,
                                   const std::atomic<bool>* cancelToken = nullptr,
                                   qint64 maxBytes = -1);
-  // ワーカーの結果を UI に反映する。必ずメインスレッドから呼ぶこと。
+  // ワーカーの結果を UI に反映する。必ずメインスレッドから呼ぶこと
+  // (ここで mmap を開いてモデルに渡す)。
   void applyPreparedLoad(const PreparedLoad& result);
 
   // 現在の実効ローカル設定 (ViewerPanel が prepareLoad に渡す)。
@@ -66,36 +71,36 @@ public:
   // 表示中ファイルをクリア。
   void clearContent();
 
-  // ステータスバー表示用の要約 ("56 KB" 等。truncated 時はその旨)。
+  // ステータスバー表示用の要約 ("56 KB" 等)。
   QString statusInfo() const;
+
+protected:
+  // アドレス入力欄で Enter を押したときに、親ウィンドウへ伝播して「ビュアーを
+  // 閉じる」が動くのを防ぎ、その場でアドレスジャンプにする。
+  bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
   void setupUi();
-  void render();
   void syncFromSettings();
   void rebuildEncodingItems();
+  void applyModelFormat();       // unit/endian/encoding をモデルへ反映して再描画
+  void updateColumnWidths();     // フォント幅から各列幅を設定 (全行走査を避ける)
+  void jumpToAddress();          // アドレス入力欄の 16 進値へスクロール
+  void copySelection();          // 選択セルをテキストとしてクリップボードへ (Ctrl+C)
 
-  // 大きすぎるファイルの読み込みを抑制するためのソフト上限 (bytes)。
-  // 超過分は読み飛ばし、末尾に注記行を付与する。
-  static constexpr qint64 kMaxBytes = 8 * 1024 * 1024;
+  QComboBox*      m_unitCombo     = nullptr;
+  QComboBox*      m_endianCombo   = nullptr;
+  QComboBox*      m_encodingCombo = nullptr;
+  QLineEdit*      m_addressEdit   = nullptr;
+  QTableView*     m_table         = nullptr;
+  BinaryHexModel* m_model         = nullptr;
 
-  QComboBox*          m_unitCombo     = nullptr;
-  QComboBox*          m_endianCombo   = nullptr;
-  QComboBox*          m_encodingCombo = nullptr;
-  QPlainTextEdit*     m_textArea      = nullptr;
-  AddressHighlighter* m_addressHighlighter = nullptr;
-
-  QString    m_filePath;
-  QByteArray m_data;
-  qint64     m_totalSize = 0;
-  qint64     m_loadedSize = 0;
+  QString m_filePath;
+  qint64  m_totalSize = 0;
 
   // 表示に使う実効設定 (ローカル上書き)。Settings 変更時に再同期される。
   BinaryViewerUnit   m_unit     = BinaryViewerUnit::Byte1;
   BinaryViewerEndian m_endian   = BinaryViewerEndian::Little;
-  // m_encoding はユーザーがコンボで選んだ値 ("Auto" or 具体名)、
-  // m_actualEncoding は実際にデコードに使った具体名 ("Auto" のときは
-  // uchardet で検出した結果)。ステータス表示にはこちらを使う。
   QString            m_encoding       = QStringLiteral("UTF-8");
   QString            m_actualEncoding = QStringLiteral("UTF-8");
 };

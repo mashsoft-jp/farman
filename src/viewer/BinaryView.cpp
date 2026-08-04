@@ -2,54 +2,46 @@
 #include "settings/Settings.h"
 #include "utils/EnterClickFilter.h"
 
-#include <QComboBox>
-#include <QFile>
-#include <QFontDatabase>
-#include <QHBoxLayout>
-#include <QToolBar>
-#include <QLocale>
-#include <QLabel>
+#include <QAbstractTableModel>
 #include <QApplication>
+#include <QClipboard>
+#include <QComboBox>
+#include <QEvent>
+#include <QFile>
+#include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QKeySequence>
+#include <QMap>
+#include <QHeaderView>
+#include <QLabel>
+#include <QLineEdit>
+#include <QLocale>
+#include <QPainter>
 #include <QPalette>
-#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QStyle>
+#include <QStyledItemDelegate>
 #include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <QSignalBlocker>
 #include <QStringDecoder>
-// uchardet: TextView の Auto と同じく、エンコード自動判定に使う。
-// ライブラリヘッダの場所は環境によって <uchardet.h> 直下か
-// <uchardet/uchardet.h> かが分かれるが、CMake で両方の include パスを
-// 通しているのでシンプルな名前で参照する。
-#include <uchardet.h>
-#include <QSyntaxHighlighter>
-#include <QTextCodec>
+#include <QTableView>
+#include <QToolBar>
 #include <QVBoxLayout>
+// uchardet: "Auto" のエンコード判定に使う (TextView と同じ)。
+#include <uchardet.h>
+#include <QTextCodec>
+
+#include <cstring>
 
 namespace Farman {
 
-// 各行先頭 8 桁の 16 進アドレスをハイライトする。色は Settings から都度取得する。
-class AddressHighlighter : public QSyntaxHighlighter {
-public:
-  using QSyntaxHighlighter::QSyntaxHighlighter;
-
-protected:
-  void highlightBlock(const QString& text) override {
-    static const QRegularExpression re(QStringLiteral("^[0-9a-fA-F]{8}"));
-    const auto m = re.match(text);
-    if (!m.hasMatch()) return;
-    const Settings& s = Settings::instance();
-    QTextCharFormat fmt;
-    fmt.setForeground(s.binaryViewerAddressForeground());
-    if (s.binaryViewerAddressBackground().isValid()) {
-      fmt.setBackground(s.binaryViewerAddressBackground());
-    }
-    setFormat(m.capturedStart(), m.capturedLength(), fmt);
-  }
-};
-
 namespace {
 
-constexpr int kBytesPerLine = 16;
-constexpr char kHexDigits[] = "0123456789abcdef";
+constexpr int  kBytesPerLine = 16;
+constexpr char kHexDigits[]  = "0123456789abcdef";
+// "Auto" 判定に読む先頭サンプルサイズ。大ファイル全体を uchardet に渡さない。
+constexpr qint64 kEncodingSampleBytes = 64 * 1024;
 
 void appendUnitHex(QString& out, const unsigned char* valueBytes, int unitBytes,
                    BinaryViewerEndian endian) {
@@ -66,9 +58,6 @@ void appendUnitHex(QString& out, const unsigned char* valueBytes, int unitBytes,
   }
 }
 
-// "Auto" 指定時に uchardet で実エンコードを判定する。判定不能なら "UTF-8"
-// にフォールバック (TextView と同じ流儀)。userEncoding が "Auto" 以外なら
-// そのまま返す。
 QString resolveEncoding(const QByteArray& data, const QString& userEncoding) {
   if (userEncoding.compare(QStringLiteral("Auto"), Qt::CaseInsensitive) != 0) {
     return userEncoding;
@@ -87,9 +76,7 @@ QString resolveEncoding(const QByteArray& data, const QString& userEncoding) {
 }
 
 QString decodeStringColumn(const QByteArray& chunk, const QString& encoding) {
-  // Qt6 ネイティブの QStringDecoder は UTF-* / Latin1 / System のみ。
-  // Shift_JIS / EUC-JP 等は Qt5Compat の QTextCodec にフォールバック。
-  QString decoded;
+  QString        decoded;
   QStringDecoder decoder(encoding.toUtf8().constData());
   if (decoder.isValid()) {
     decoded = decoder.decode(chunk);
@@ -98,7 +85,6 @@ QString decodeStringColumn(const QByteArray& chunk, const QString& encoding) {
   } else {
     decoded = QStringDecoder(QStringDecoder::Utf8).decode(chunk);
   }
-
   QString out;
   out.reserve(decoded.size());
   for (QChar ch : decoded) {
@@ -111,105 +97,295 @@ QString decodeStringColumn(const QByteArray& chunk, const QString& encoding) {
   return out;
 }
 
-QString formatHexDump(const QByteArray& data, BinaryViewerUnit unit,
-                      BinaryViewerEndian endian, const QString& encoding,
-                      const std::atomic<bool>* cancelToken = nullptr) {
-  const int unitBytes  = binaryViewerUnitToBytes(unit);
-  const int unitsPerLine = kBytesPerLine / unitBytes;
-  const int midUnit    = unitsPerLine / 2;
-  const int lineCount  = (data.size() + kBytesPerLine - 1) / kBytesPerLine;
+// mmap (or seek+read フォールバック) でファイルバイトを供給する。表示中の行の
+// バイトだけを読むので、全体を読み込まない。
+class HexDataSource {
+public:
+  ~HexDataSource() { close(); }
 
-  QString out;
-  out.reserve(lineCount * (8 + 2 + unitsPerLine * (unitBytes * 2 + 1) + 2 + kBytesPerLine + 1));
-
-  // 8 MB の hex 整形は数秒オーダで走るので、256 行 (= 4 KB データ) おきに
-  // cancelToken を確認して早期 return できるようにする。
-  for (int line = 0; line < lineCount; ++line) {
-    if (cancelToken && (line & 0xFF) == 0
-        && cancelToken->load(std::memory_order_acquire)) {
-      return QString();
+  bool open(const QString& path) {
+    close();
+    m_file.setFileName(path);
+    if (!m_file.open(QIODevice::ReadOnly)) {
+      return false;
     }
-    const int off  = line * kBytesPerLine;
-    const qint64 addr = static_cast<qint64>(off);
-
-    char addrBuf[9];
-    for (int i = 7; i >= 0; --i) {
-      addrBuf[i] = kHexDigits[(addr >> ((7 - i) * 4)) & 0xF];
-    }
-    addrBuf[8] = '\0';
-    out.append(QLatin1String(addrBuf, 8));
-    out.append(QLatin1String("  "));
-
-    for (int u = 0; u < unitsPerLine; ++u) {
-      if (u == midUnit && midUnit > 0) {
-        out.append(QLatin1Char(' '));
-      }
-      const int unitOff = off + u * unitBytes;
-      const int avail = qMin(unitBytes, static_cast<int>(data.size()) - unitOff);
-      if (avail >= unitBytes) {
-        appendUnitHex(out, reinterpret_cast<const unsigned char*>(data.constData() + unitOff),
-                      unitBytes, endian);
-      } else if (avail > 0) {
-        for (int i = 0; i < avail; ++i) {
-          const unsigned char b = static_cast<unsigned char>(data[unitOff + i]);
-          out.append(QLatin1Char(kHexDigits[b >> 4]));
-          out.append(QLatin1Char(kHexDigits[b & 0xF]));
-        }
-        for (int i = avail; i < unitBytes; ++i) {
-          out.append(QLatin1String("  "));
-        }
-      } else {
-        for (int i = 0; i < unitBytes; ++i) {
-          out.append(QLatin1String("  "));
-        }
-      }
-      out.append(QLatin1Char(' '));
-    }
-
-    out.append(QLatin1Char(' '));
-
-    const int chunkLen = qMin(kBytesPerLine, static_cast<int>(data.size()) - off);
-    if (chunkLen > 0) {
-      const QByteArray chunk(data.constData() + off, chunkLen);
-      out.append(decodeStringColumn(chunk, encoding));
-    }
-
-    out.append(QLatin1Char('\n'));
+    m_size = m_file.size();
+    // 0 バイトや mmap 失敗時は m_map=nullptr のまま seek+read にフォールバック。
+    m_map = (m_size > 0) ? m_file.map(0, m_size) : nullptr;
+    return true;
   }
 
-  return out;
-}
+  void close() {
+    if (m_map) {
+      m_file.unmap(m_map);
+      m_map = nullptr;
+    }
+    if (m_file.isOpen()) {
+      m_file.close();
+    }
+    m_size = 0;
+  }
+
+  qint64 size() const { return m_size; }
+
+  // off から最大 len バイトを out へ読み、実際に読めたバイト数を返す。
+  int read(qint64 off, char* out, int len) {
+    if (off < 0 || off >= m_size) {
+      return 0;
+    }
+    const int n = static_cast<int>(qMin<qint64>(len, m_size - off));
+    if (m_map) {
+      std::memcpy(out, m_map + off, static_cast<size_t>(n));
+      return n;
+    }
+    if (!m_file.seek(off)) {
+      return 0;
+    }
+    return static_cast<int>(m_file.read(out, n));
+  }
+
+private:
+  QFile   m_file;
+  uchar*  m_map  = nullptr;
+  qint64  m_size = 0;
+};
+
+// セルのテキストを最小マージンで描画するデリゲート。既定のアイテムデリゲートは
+// セル左右に固定マージンを取るため、列を詰めると "00" が "…" に省略され、省略を
+// 避けようと列を広げると単位間の隙間が大きくなる。普通のバイナリエディタのように
+// 1 文字ぶんだけ空けるため、背景 (選択 / BackgroundRole) は既定スタイルで描き、
+// テキストだけ 2px の左マージンで自前描画する。ForegroundRole (アドレス色 /
+// カーソル行) と選択配色も尊重する。
+class TightCellDelegate : public QStyledItemDelegate {
+public:
+  using QStyledItemDelegate::QStyledItemDelegate;
+
+  void paint(QPainter* painter, const QStyleOptionViewItem& option,
+             const QModelIndex& index) const override {
+    QStyleOptionViewItem opt = option;
+    initStyleOption(&opt, index);
+    const QString text     = opt.text;
+    const bool    selected = (opt.state & QStyle::State_Selected);
+
+    // 1) まずセル全体を通常背景で塗り直す。ビューが選択セルを全幅で塗る下地を
+    //    打ち消し、次の「テキスト密着塗り」がはみ出さないようにする。
+    painter->fillRect(opt.rect, opt.palette.brush(QPalette::Base));
+
+    // 2) 選択 or モデル背景 (カーソル行のアドレス等) を「テキストに密着した幅」で
+    //    上塗り。左寄せなので右の隙間には塗らない (右にはみ出さない)。
+    QBrush hl(Qt::NoBrush);
+    if (selected) {
+      hl = opt.palette.brush(QPalette::Highlight);
+    } else {
+      const QVariant b = index.data(Qt::BackgroundRole);
+      if (b.canConvert<QBrush>()) {
+        hl = qvariant_cast<QBrush>(b);
+      }
+    }
+    if (hl.style() != Qt::NoBrush) {
+      const int  textW = QFontMetrics(opt.font).horizontalAdvance(text);
+      const int  w     = qMin(textW + 2, opt.rect.width());
+      painter->fillRect(QRect(opt.rect.left(), opt.rect.top(), w, opt.rect.height()), hl);
+    }
+
+    // 3) テキスト。
+    QColor color;
+    if (selected) {
+      color = opt.palette.color(QPalette::HighlightedText);
+    } else {
+      const QVariant fg = index.data(Qt::ForegroundRole);
+      color = fg.canConvert<QColor>() ? qvariant_cast<QColor>(fg)
+                                      : opt.palette.color(QPalette::Text);
+    }
+    painter->save();
+    painter->setFont(opt.font);
+    painter->setPen(color);
+    painter->drawText(opt.rect.adjusted(1, 0, -1, 0),
+                      Qt::AlignVCenter | Qt::AlignLeft, text);
+    painter->restore();
+  }
+};
 
 } // namespace
 
-BinaryView::BinaryView(QWidget* parent)
-  : QWidget(parent)
-{
+// ── 仮想化された 16 進ダンプモデル ──────────────────────────────
+// rowCount = ceil(fileSize / 16)。表示された行だけ data() が呼ばれ、その行の
+// バイトを読み取って整形する。
+// 列構成: [0]=Address, [1..units]=各 unit の 16 進, [units+1]=ASCII。
+// unit ごとに列を分けることで、セルカーソルが「単位」単位で動く。
+class BinaryHexModel : public QAbstractTableModel {
+public:
+  explicit BinaryHexModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
+
+  bool open(const QString& path) {
+    beginResetModel();
+    const bool ok = m_src.open(path);
+    // 32bit rowCount の上限を超えないようにクランプ (約 32GB 相当)。
+    const qint64 rows = (m_src.size() + kBytesPerLine - 1) / kBytesPerLine;
+    m_rows       = static_cast<int>(qMin<qint64>(rows, 0x7fffffff));
+    m_currentRow = -1;
+    endResetModel();
+    return ok;
+  }
+
+  void close() {
+    beginResetModel();
+    m_src.close();
+    m_rows       = 0;
+    m_currentRow = -1;
+    endResetModel();
+  }
+
+  qint64 fileSize() const { return m_src.size(); }
+
+  int unitsPerLine()    const { return kBytesPerLine / binaryViewerUnitToBytes(m_unit); }
+  int firstUnitColumn() const { return 1; }
+  int asciiColumn()     const { return 1 + unitsPerLine(); }
+
+  void setFormat(BinaryViewerUnit unit, BinaryViewerEndian endian, const QString& encoding) {
+    const bool unitChanged = (unit != m_unit);
+    m_unit     = unit;
+    m_endian   = endian;
+    m_encoding = encoding;
+    if (unitChanged) {
+      // 列数 (unitsPerLine) が変わるのでリセットが必要。
+      beginResetModel();
+      endResetModel();
+    } else if (m_rows > 0) {
+      emit dataChanged(index(0, 0), index(m_rows - 1, columnCount() - 1), { Qt::DisplayRole });
+    }
+  }
+
+  void setAddressColor(const QColor& c) {
+    m_addrColor = c;
+    if (m_rows > 0) {
+      emit dataChanged(index(0, 0), index(m_rows - 1, 0), { Qt::ForegroundRole });
+    }
+  }
+
+  // カーソル行のアドレスを「選択中」と同じ配色で見せるための色。
+  void setSelectionColors(const QColor& bg, const QColor& fg) {
+    m_selBg = bg;
+    m_selFg = fg;
+  }
+
+  // 現在行 (セルカーソルのある行) を記録し、アドレス列を再描画させる。
+  void setCurrentRow(int row) {
+    if (row == m_currentRow) return;
+    const int old = m_currentRow;
+    m_currentRow  = row;
+    auto notify = [this](int r) {
+      if (r >= 0 && r < m_rows) {
+        const QModelIndex i = index(r, 0);
+        emit dataChanged(i, i, { Qt::BackgroundRole, Qt::ForegroundRole });
+      }
+    };
+    notify(old);
+    notify(m_currentRow);
+  }
+
+  int rowCount(const QModelIndex& parent = {}) const override {
+    return parent.isValid() ? 0 : m_rows;
+  }
+  int columnCount(const QModelIndex& parent = {}) const override {
+    return parent.isValid() ? 0 : (unitsPerLine() + 2);  // Address + units + ASCII
+  }
+
+  QVariant data(const QModelIndex& idx, int role = Qt::DisplayRole) const override {
+    if (!idx.isValid()) {
+      return {};
+    }
+    const int    col     = idx.column();
+    const qint64 lineOff = static_cast<qint64>(idx.row()) * kBytesPerLine;
+
+    // アドレス列。
+    if (col == 0) {
+      if (role == Qt::DisplayRole) {
+        return QString::asprintf("%08llx", static_cast<unsigned long long>(lineOff));
+      }
+      if (idx.row() == m_currentRow) {
+        // カーソル行のアドレスは選択中と同じ配色で強調する。
+        if (role == Qt::BackgroundRole) {
+          return m_selBg.isValid() ? m_selBg
+                                   : QApplication::palette().color(QPalette::Highlight);
+        }
+        if (role == Qt::ForegroundRole) {
+          return m_selFg.isValid() ? m_selFg
+                                   : QApplication::palette().color(QPalette::HighlightedText);
+        }
+      } else if (role == Qt::ForegroundRole && m_addrColor.isValid()) {
+        return m_addrColor;
+      }
+      return {};
+    }
+
+    if (role != Qt::DisplayRole) {
+      return {};
+    }
+
+    // ASCII 列 (1 セルに 16 文字)。
+    if (col == asciiColumn()) {
+      unsigned char buf[kBytesPerLine];
+      const int     n = const_cast<HexDataSource&>(m_src).read(
+                          lineOff, reinterpret_cast<char*>(buf), kBytesPerLine);
+      return decodeStringColumn(QByteArray(reinterpret_cast<const char*>(buf), n), m_encoding);
+    }
+
+    // 単位セル (col = 1 .. units)。
+    const int    unitBytes = binaryViewerUnitToBytes(m_unit);
+    const int    u         = col - 1;
+    const qint64 unitOff   = lineOff + static_cast<qint64>(u) * unitBytes;
+    unsigned char ub[8];
+    const int n = const_cast<HexDataSource&>(m_src).read(unitOff, reinterpret_cast<char*>(ub),
+                                                         unitBytes);
+    if (n <= 0) {
+      return QString();
+    }
+    QString out;
+    if (n >= unitBytes) {
+      appendUnitHex(out, ub, unitBytes, m_endian);
+    } else {
+      // 端数 (最終行) はあるバイトだけ表示。
+      for (int i = 0; i < n; ++i) {
+        out.append(QLatin1Char(kHexDigits[ub[i] >> 4]));
+        out.append(QLatin1Char(kHexDigits[ub[i] & 0xF]));
+      }
+    }
+    return out;
+  }
+
+private:
+  HexDataSource      m_src;
+  int                m_rows       = 0;
+  int                m_currentRow = -1;
+  BinaryViewerUnit   m_unit       = BinaryViewerUnit::Byte1;
+  BinaryViewerEndian m_endian     = BinaryViewerEndian::Little;
+  QString            m_encoding   = QStringLiteral("UTF-8");
+  QColor             m_addrColor;
+  QColor             m_selBg;
+  QColor             m_selFg;
+};
+
+BinaryView::BinaryView(QWidget* parent) : QWidget(parent) {
   setupUi();
   syncFromSettings();
 
-  // グローバル設定が変更されたらローカル上書きをリセット
   connect(&Settings::instance(), &Settings::settingsChanged, this, [this] {
     syncFromSettings();
-    if (!m_filePath.isEmpty()) {
-      render();
-    }
   });
 }
+
+BinaryView::~BinaryView() = default;
 
 void BinaryView::setupUi() {
   QVBoxLayout* root = new QVBoxLayout(this);
   root->setContentsMargins(0, 0, 0, 0);
   root->setSpacing(0);
 
-  // ローカル設定オーバーレイ (メインウィンドウのツールバーと同じ QToolBar)
   QToolBar* toolbar = new QToolBar(this);
   toolbar->setMovable(false);
   toolbar->setFloatable(false);
   toolbar->setIconSize(QSize(20, 20));
-  // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
-  // 現状 BinaryView のヘッダは QComboBox のみだが、将来トグルボタンが
-  // 追加される可能性も見越して同じスタイルを適用しておく。
   applyToolbarStyle(toolbar);
 
   toolbar->addWidget(new QLabel(tr("Unit:"), toolbar));
@@ -218,7 +394,6 @@ void BinaryView::setupUi() {
   m_unitCombo->addItem(tr("2 Byte"), 2);
   m_unitCombo->addItem(tr("4 Byte"), 4);
   m_unitCombo->addItem(tr("8 Byte"), 8);
-  // macOS の「キーボードナビゲーション」設定に依存せず Tab で巡回させる
   m_unitCombo->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_unitCombo);
 
@@ -231,55 +406,114 @@ void BinaryView::setupUi() {
 
   toolbar->addWidget(new QLabel(tr("Encoding:"), toolbar));
   m_encodingCombo = new QComboBox(toolbar);
-  // TextView 同様、自由入力 (= 候補外の名前を打つ) は意味が無いので
-  // editable にしない。
   m_encodingCombo->setFocusPolicy(Qt::StrongFocus);
   rebuildEncodingItems();
   toolbar->addWidget(m_encodingCombo);
 
+  // アドレスジャンプ (16 進オフセットへスクロール)。
+  toolbar->addSeparator();
+  toolbar->addWidget(new QLabel(tr("Address:"), toolbar));
+  m_addressEdit = new QLineEdit(toolbar);
+  m_addressEdit->setPlaceholderText(tr("hex e.g. 1a0"));
+  m_addressEdit->setMaximumWidth(120);
+  m_addressEdit->setFocusPolicy(Qt::StrongFocus);
+  // 16 進数字のみ (先頭 0x は許容)。
+  m_addressEdit->setValidator(new QRegularExpressionValidator(
+    QRegularExpression(QStringLiteral("^(0[xX])?[0-9a-fA-F]*$")), m_addressEdit));
+  toolbar->addWidget(m_addressEdit);
+  QPushButton* goButton = new QPushButton(tr("Go"), toolbar);
+  goButton->setFocusPolicy(Qt::StrongFocus);
+  toolbar->addWidget(goButton);
+
   root->addWidget(toolbar);
 
-  // ヘッダにボタンが増えたとき用に、QAbstractButton 子孫で Enter 押下を
-  // クリック扱いにするフィルタを install しておく (現状 QComboBox のみなので
-  // 実質 no-op だが、UI を増やしたときに毎回書き直さないよう先に配線する)。
   auto* clickFilter = new EnterClickFilter(this);
   clickFilter->installOnButtonsIn(toolbar);
 
-  // 16 進ダンプ本体 (フォントは syncFromSettings で適用)
-  m_textArea = new QPlainTextEdit(this);
-  m_textArea->setReadOnly(true);
-  m_textArea->setLineWrapMode(QPlainTextEdit::NoWrap);
-  // 行頭 8 桁のアドレスを別色で塗るシンタックスハイライタ
-  m_addressHighlighter = new AddressHighlighter(m_textArea->document());
-  root->addWidget(m_textArea, /*stretch*/ 1);
+  // 16 進ダンプ本体 (QTableView + 仮想化モデル)。
+  m_model = new BinaryHexModel(this);
+  m_table = new QTableView(this);
+  m_table->setModel(m_model);
+  m_table->setShowGrid(false);
+  m_table->setSelectionBehavior(QAbstractItemView::SelectItems);
+  m_table->setSelectionMode(QAbstractItemView::ContiguousSelection);
+  m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  m_table->setWordWrap(false);
+  m_table->setCornerButtonEnabled(false);
+  m_table->horizontalHeader()->setVisible(false);
+  m_table->verticalHeader()->setVisible(false);
+  // 全行走査を避けるため列幅は自前で設定する (ResizeToContents は使わない)。
+  m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+  // セルのマージンを詰めて、単位間を 1 文字ぶんの隙間にする。
+  m_table->setItemDelegate(new TightCellDelegate(m_table));
+  root->addWidget(m_table, /*stretch*/ 1);
 
-  // ViewerPanel / BinaryViewerWindow からは BinaryView 全体に setFocus される。
-  // それを本体のテキストエリアに転送する。これがないと、子ウィジェット作成順
-  // 通りに最初のコンボ (Unit) にフォーカスが入ってしまう。
-  // (TextView / ImageView も同様に setFocusProxy で本体ウィジェットへ委譲)
-  setFocusProxy(m_textArea);
+  // Ctrl+C / Cmd+C: 選択セルをテキストとしてコピー。QShortcut だとアプリ側の
+  // Copy コマンド (ファイルパスのコピー等) に先取りされてしまうため、テキスト
+  // エディットと同様に ShortcutOverride で先取りして eventFilter で処理する。
+  m_table->installEventFilter(this);
 
-  // ローカルでの変更は Settings に保存しない (render のみ)
+  // ViewerPanel / BinaryViewerWindow からの setFocus をテーブルへ転送。
+  setFocusProxy(m_table);
+
   connect(m_unitCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
     m_unit = bytesToBinaryViewerUnit(m_unitCombo->currentData().toInt());
-    if (!m_filePath.isEmpty()) render();
+    applyModelFormat();
   });
   connect(m_endianCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
     m_endian = static_cast<BinaryViewerEndian>(m_endianCombo->currentData().toInt());
-    if (!m_filePath.isEmpty()) render();
+    applyModelFormat();
   });
   connect(m_encodingCombo, &QComboBox::currentTextChanged, this, [this](const QString& text) {
     const QString trimmed = text.trimmed();
     if (trimmed.isEmpty()) return;
     m_encoding = trimmed;
-    if (!m_filePath.isEmpty()) render();
+    applyModelFormat();
   });
+  connect(goButton, &QPushButton::clicked, this, &BinaryView::jumpToAddress);
+  // アドレス入力欄の Enter は eventFilter で消費してジャンプにする
+  // (returnPressed だとキーイベントが親へ伝播してビュアーが閉じてしまう)。
+  m_addressEdit->installEventFilter(this);
+
+  // セルカーソル (現在セル) の行が変わったら、モデルにも伝えてアドレス列を
+  // 「選択中」配色で強調させる。
+  connect(m_table->selectionModel(), &QItemSelectionModel::currentChanged, this,
+          [this](const QModelIndex& cur, const QModelIndex&) {
+            m_model->setCurrentRow(cur.row());
+          });
+}
+
+bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
+  if (watched == m_addressEdit && event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
+      jumpToAddress();
+      return true;  // 親へ伝播させない (ビュアーを閉じさせない)
+    }
+  }
+  // テーブル上の Copy (Ctrl+C / Cmd+C) を、アプリ側の Copy コマンドより先に
+  // 横取りして選択セルをコピーする。まず ShortcutOverride を accept して自分に
+  // キーを回し、続く KeyPress で実処理する。
+  if (watched == m_table) {
+    if (event->type() == QEvent::ShortcutOverride) {
+      auto* ke = static_cast<QKeyEvent*>(event);
+      if (ke->matches(QKeySequence::Copy)) {
+        event->accept();
+        return true;
+      }
+    } else if (event->type() == QEvent::KeyPress) {
+      auto* ke = static_cast<QKeyEvent*>(event);
+      if (ke->matches(QKeySequence::Copy)) {
+        copySelection();
+        return true;
+      }
+    }
+  }
+  return QWidget::eventFilter(watched, event);
 }
 
 void BinaryView::rebuildEncodingItems() {
   m_encodingCombo->clear();
-  // "Auto" は uchardet で自動判定 (TextView と同じ仕組み)。判別不能時は
-  // UTF-8 にフォールバック。
   m_encodingCombo->addItem(QStringLiteral("Auto"));
   m_encodingCombo->addItem(QStringLiteral("UTF-8"));
   m_encodingCombo->addItem(QStringLiteral("UTF-16LE"));
@@ -294,12 +528,9 @@ void BinaryView::syncFromSettings() {
   m_unit     = s.binaryViewerUnit();
   m_endian   = s.binaryViewerEndian();
   m_encoding = s.binaryViewerEncoding();
-  m_textArea->setFont(s.binaryViewerFont());
+  m_table->setFont(s.binaryViewerFont());
 
-  // 通常 / 選択カラーは QPalette 経由で適用。本体が適用済みの qApp テーマパレット
-  // を起点にし、明示指定 (有効色) の role だけ上書きする。widget の現在パレットを
-  // 起点にすると、前回 setPalette した明示値が残り、未設定の role がテーマ変更に
-  // 追従しない (ライト→ダーク→ライトで背景がダークのまま等) 不具合になる。
+  // 通常 / 選択カラーを QPalette 経由で適用 (qApp テーマパレットを起点)。
   QPalette pal = QApplication::palette();
   if (s.binaryViewerNormalForeground().isValid())
     pal.setColor(QPalette::Text, s.binaryViewerNormalForeground());
@@ -309,13 +540,13 @@ void BinaryView::syncFromSettings() {
     pal.setColor(QPalette::HighlightedText, s.binaryViewerSelectedForeground());
   if (s.binaryViewerSelectedBackground().isValid())
     pal.setColor(QPalette::Highlight, s.binaryViewerSelectedBackground());
-  m_textArea->setPalette(pal);
+  m_table->setPalette(pal);
 
-  // アドレス列の色は AddressHighlighter が描画時に Settings から直接読むので
-  // 明示的に再ハイライトを要求して反映させる
-  if (m_addressHighlighter) m_addressHighlighter->rehighlight();
+  // 行高はフォントに合わせてコンパクトに。
+  m_table->verticalHeader()->setDefaultSectionSize(
+    QFontMetrics(s.binaryViewerFont()).height() + 2);
 
-  // コンボの再選択 (シグナルを抑止して二重 render を防ぐ)
+  // コンボの再選択 (シグナル抑止)。
   {
     QSignalBlocker b(m_unitCombo);
     const int unitBytes = binaryViewerUnitToBytes(m_unit);
@@ -339,11 +570,96 @@ void BinaryView::syncFromSettings() {
     QSignalBlocker b(m_encodingCombo);
     m_encodingCombo->setCurrentText(m_encoding);
   }
+
+  // アドレス色 + カーソル行の選択配色 + フォーマットをモデルへ反映。
+  m_model->setAddressColor(s.binaryViewerAddressForeground());
+  m_model->setSelectionColors(s.binaryViewerSelectedBackground(),
+                              s.binaryViewerSelectedForeground());
+  applyModelFormat();
+}
+
+void BinaryView::applyModelFormat() {
+  // "Auto" のときは先頭サンプルで判定。ファイルが開かれていなければ素通し。
+  if (m_encoding.compare(QStringLiteral("Auto"), Qt::CaseInsensitive) == 0
+      && !m_filePath.isEmpty()) {
+    QFile f(m_filePath);
+    QByteArray sample;
+    if (f.open(QIODevice::ReadOnly)) {
+      sample = f.read(kEncodingSampleBytes);
+    }
+    m_actualEncoding = resolveEncoding(sample, m_encoding);
+  } else {
+    m_actualEncoding = m_encoding;
+  }
+  m_model->setFormat(m_unit, m_endian, m_actualEncoding);
+  updateColumnWidths();
+}
+
+void BinaryView::updateColumnWidths() {
+  const QFontMetrics fm(m_table->font());
+  const int unitBytes = binaryViewerUnitToBytes(m_unit);
+  const int units     = kBytesPerLine / unitBytes;
+  // セル幅 = テキスト幅 + cellPad。左寄せ描画なので単位間の隙間は概ね cellPad に
+  // なる。普通のバイナリエディタと同じく約 1 文字ぶんの隙間にする。
+  const int cellPad = fm.horizontalAdvance(QLatin1Char('0'));
+  // Address: 8 桁 + 余白。
+  m_table->setColumnWidth(0, fm.horizontalAdvance(QStringLiteral("00000000")) + cellPad);
+  // 各 unit セル: 2*unitBytes 桁の 16 進 + 余白。
+  const QString unitSample(unitBytes * 2, QLatin1Char('F'));
+  const int     unitW = fm.horizontalAdvance(unitSample) + cellPad;
+  for (int u = 0; u < units; ++u) {
+    m_table->setColumnWidth(1 + u, unitW);
+  }
+  // ASCII: 16 文字ぶん (全角混在も想定して少し広め)。
+  m_table->setColumnWidth(1 + units,
+                          fm.horizontalAdvance(QStringLiteral("WWWWWWWWWWWWWWWW")) + cellPad);
+}
+
+void BinaryView::jumpToAddress() {
+  QString t = m_addressEdit->text().trimmed();
+  if (t.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+    t = t.mid(2);
+  }
+  if (t.isEmpty()) {
+    return;
+  }
+  bool         ok   = false;
+  const qint64 addr = t.toLongLong(&ok, 16);
+  if (!ok || addr < 0 || addr >= m_totalSize) {
+    return;
+  }
+  const int row = static_cast<int>(addr / kBytesPerLine);
+  // 該当バイトを含む unit 列へカーソルを置く。
+  const int unitBytes = binaryViewerUnitToBytes(m_unit);
+  const int unitCol   = m_model->firstUnitColumn()
+                        + static_cast<int>((addr % kBytesPerLine) / unitBytes);
+  const QModelIndex idx = m_model->index(row, unitCol);
+  m_table->setCurrentIndex(idx);
+  m_table->scrollTo(idx, QAbstractItemView::PositionAtCenter);
+}
+
+void BinaryView::copySelection() {
+  const QModelIndexList sel = m_table->selectionModel()->selectedIndexes();
+  if (sel.isEmpty()) {
+    return;
+  }
+  // 行 → (列 → テキスト) に整理 (QMap でキー昇順 = 行/列順にソートされる)。
+  QMap<int, QMap<int, QString>> byRow;
+  for (const QModelIndex& i : sel) {
+    byRow[i.row()][i.column()] = m_model->data(i, Qt::DisplayRole).toString();
+  }
+  QStringList lines;
+  for (auto rit = byRow.constBegin(); rit != byRow.constEnd(); ++rit) {
+    QStringList cells;
+    for (auto cit = rit.value().constBegin(); cit != rit.value().constEnd(); ++cit) {
+      cells << cit.value();
+    }
+    lines << cells.join(QLatin1Char(' '));
+  }
+  QGuiApplication::clipboard()->setText(lines.join(QLatin1Char('\n')));
 }
 
 bool BinaryView::loadFile(const QString& filePath) {
-  // 同期ロード経路: prepareLoad + applyPreparedLoad を続けて呼ぶだけ。
-  // 非同期化したい呼び出し元 (ViewerPanel) は両者を別スレッドに振り分ける。
   PreparedLoad p = prepareLoad(filePath, m_unit, m_endian, m_encoding);
   if (!p.ok) return false;
   applyPreparedLoad(p);
@@ -351,116 +667,70 @@ bool BinaryView::loadFile(const QString& filePath) {
 }
 
 BinaryView::PreparedLoad BinaryView::prepareLoad(const QString&     filePath,
-                                                 BinaryViewerUnit   unit,
-                                                 BinaryViewerEndian endian,
+                                                 BinaryViewerUnit   /*unit*/,
+                                                 BinaryViewerEndian /*endian*/,
                                                  const QString&     encoding,
                                                  const std::atomic<bool>* cancelToken,
-                                                 qint64             maxBytes) {
+                                                 qint64             /*maxBytes*/) {
   PreparedLoad r;
   r.filePath = filePath;
 
   auto cancelled = [&]() {
     return cancelToken && cancelToken->load(std::memory_order_acquire);
   };
-
   if (cancelled()) return r;
 
   QFile file(filePath);
   if (!file.open(QIODevice::ReadOnly)) {
     return r;
   }
-  // 上限: 引数 maxBytes > 0 ならそれ、未指定なら内蔵 kMaxBytes (8 MB)。
-  const qint64 effectiveMax = (maxBytes > 0) ? maxBytes : kMaxBytes;
   r.totalSize  = file.size();
-  r.loadedSize = qMin<qint64>(r.totalSize, effectiveMax);
-  r.data       = file.read(r.loadedSize);
+  r.loadedSize = r.totalSize;  // 切り詰めない
+
+  // "Auto" のときだけ先頭サンプルを読んでエンコード判定 (大ファイルでも軽量)。
+  if (encoding.compare(QStringLiteral("Auto"), Qt::CaseInsensitive) == 0) {
+    const QByteArray sample = file.read(kEncodingSampleBytes);
+    r.actualEncoding = resolveEncoding(sample, encoding);
+  } else {
+    r.actualEncoding = encoding;
+  }
   file.close();
 
   if (cancelled()) return r;
-
-  // "Auto" 指定なら uchardet で実エンコードを判定。それ以外は素通し。
-  r.actualEncoding = resolveEncoding(r.data, encoding);
-
-  if (cancelled()) return r;
-
-  // 重い hex 整形をワーカースレッドで先に済ませる。actualEncoding を使う。
-  // formatHexDump は cancelToken を見ながら 256 行おきに途中で中断できる。
-  r.text = formatHexDump(r.data, unit, endian, r.actualEncoding, cancelToken);
-
-  if (cancelled()) {
-    // キャンセルされた場合のみ未完成 (ok=false) のまま返す。
-    return r;
-  }
-  // 0 バイトファイル等で r.text が空でも正常。空のまま ok=true で表示する。
-
-  if (r.totalSize > r.loadedSize) {
-    r.text.append(QStringLiteral("...\n[truncated: showing first %1 of %2 bytes]\n")
-                    .arg(r.loadedSize)
-                    .arg(r.totalSize));
-  }
   r.ok = true;
   return r;
 }
 
 void BinaryView::applyPreparedLoad(const PreparedLoad& r) {
-  m_filePath        = r.filePath;
-  m_data            = r.data;
-  m_totalSize       = r.totalSize;
-  m_loadedSize      = r.loadedSize;
-  m_actualEncoding  = r.actualEncoding;
+  m_filePath       = r.filePath;
+  m_totalSize      = r.totalSize;
+  m_actualEncoding = r.actualEncoding;
 
-  // ハイライタを一旦切り離す。さもないと setPlainText の contentsChange を
-  // 起点に全行 (8MB なら ~500K 行) で highlightBlock が同期実行され、
-  // メインスレッドが長時間ブロックされて (プログレスバーが止まって) しまう。
-  // 流し込みが終わったあと再アタッチすれば、可視ブロックだけが再ハイライト
-  // されるので大幅に短縮できる。
-  if (m_addressHighlighter) {
-    m_addressHighlighter->setDocument(nullptr);
+  // mmap を開いてモデルへ渡す (メインスレッド)。
+  m_model->setFormat(m_unit, m_endian, m_actualEncoding);
+  m_model->setAddressColor(Settings::instance().binaryViewerAddressForeground());
+  m_model->open(r.filePath);
+  updateColumnWidths();
+  if (m_model->rowCount() > 0) {
+    m_table->scrollToTop();
+    m_table->setCurrentIndex(m_model->index(0, m_model->firstUnitColumn()));
   }
-  m_textArea->setPlainText(r.text);
-  if (m_addressHighlighter) {
-    m_addressHighlighter->setDocument(m_textArea->document());
-  }
-  m_textArea->moveCursor(QTextCursor::Start);
 }
 
 void BinaryView::clearContent() {
   m_filePath.clear();
-  m_data.clear();
-  m_totalSize  = 0;
-  m_loadedSize = 0;
-  m_textArea->clear();
+  m_totalSize = 0;
+  if (m_model) m_model->close();
 }
 
 QString BinaryView::statusInfo() const {
   if (m_filePath.isEmpty()) return QString();
   QString s = QLocale(QLocale::English).formattedDataSize(m_totalSize);
-  if (m_totalSize > m_loadedSize) {
-    s += tr("  ·  truncated to first %1")
-           .arg(QLocale(QLocale::English).formattedDataSize(m_loadedSize));
-  }
-  // Auto 検出のときに何と判定されたかを末尾に表示する (TextView と同じ流儀)。
-  // 具体名を選んでいる場合は冗長なので出さない。
   if (m_encoding.compare(QStringLiteral("Auto"), Qt::CaseInsensitive) == 0
       && !m_actualEncoding.isEmpty()) {
     s += QStringLiteral("  ·  %1").arg(m_actualEncoding);
   }
   return s;
-}
-
-void BinaryView::render() {
-  // "Auto" のときは毎回 uchardet で再判定する。データが同じでも、
-  // unit/endian の変更で再 render が走るときに encoding を再評価しても
-  // 結果は同じだが、コストは小さく明示的で分かりやすい。
-  m_actualEncoding = resolveEncoding(m_data, m_encoding);
-  QString text = formatHexDump(m_data, m_unit, m_endian, m_actualEncoding);
-  if (m_totalSize > m_loadedSize) {
-    text.append(QStringLiteral("...\n[truncated: showing first %1 of %2 bytes]\n")
-                  .arg(m_loadedSize)
-                  .arg(m_totalSize));
-  }
-  m_textArea->setPlainText(text);
-  m_textArea->moveCursor(QTextCursor::Start);
 }
 
 } // namespace Farman
