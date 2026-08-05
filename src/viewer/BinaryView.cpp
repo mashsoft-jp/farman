@@ -600,10 +600,13 @@ void BinaryView::updateColumnWidths() {
   const int unitBytes = binaryViewerUnitToBytes(m_unit);
   const int units     = kBytesPerLine / unitBytes;
   // セル幅 = テキスト幅 + cellPad。左寄せ描画なので単位間の隙間は概ね cellPad に
-  // なる。普通のバイナリエディタと同じく約 1 文字ぶんの隙間にする。
-  const int cellPad = fm.horizontalAdvance(QLatin1Char('0'));
+  // なる。従来は 1 文字ぶん ("FF FF" のスペース 1 個相当) にしていたが、Linux の
+  // 既定 monospace (DejaVu Sans Mono) では隙間が広く見えるため、半文字ぶんに詰める
+  // (全プラットフォーム共通。最低 3px は確保)。
+  const int cellPad = qMax(3, fm.horizontalAdvance(QLatin1Char('0')) / 2);
   // アドレス / バイト列 / ASCII の 3 セクション間はもう少し広く空ける。
-  const int sectionGap = fm.averageCharWidth() * 3;
+  // 従来 3 文字ぶんだったが、各セクション間を 1 文字ずつ詰めて 2 文字ぶんにする。
+  const int sectionGap = fm.averageCharWidth() * 2;
   // Address: 8 桁 + 余白 + セクション間 (アドレスとバイト列の間を空ける)。
   m_table->setColumnWidth(0,
       fm.horizontalAdvance(QStringLiteral("00000000")) + cellPad + sectionGap);
