@@ -8,6 +8,7 @@
 #include <QFileSystemWatcher>
 #include <QFileIconProvider>
 #include <QHash>
+#include <QSet>
 #include <QIcon>
 #include <QPixmap>
 #include <memory>
@@ -250,6 +251,13 @@ private:
   // 値 >= 0 が算出済み、-1 は算出中 (プレースホルダ表示)。エントリ非在は未要求。
   // ディレクトリ移動 (beginResetModel) でクリアする。
   QHash<QString, qint64>           m_dirSizes;
+  // 現在このモデル (ペイン) が表示中で、サイズ算出を望むディレクトリ path 集合。
+  // DirectorySizeCache に参照カウントとして登録済みのもの。移動時に旧集合を解除
+  // して新集合を登録し、worker が不要になったジョブを中断できるようにする。
+  QSet<QString>                    m_wantedDirPaths;
+  // m_wantedDirPaths を newSet に置き換え、DirectorySizeCache::updateWanted で
+  // 差分 (解除/登録) を反映する。
+  void setWantedDirPaths(const QSet<QString>& newSet);
 
   // ソート設定
   SortKey             m_sortKey    = SortKey::Name;

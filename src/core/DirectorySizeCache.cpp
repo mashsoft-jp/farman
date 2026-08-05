@@ -15,7 +15,7 @@ DirectorySizeCache& DirectorySizeCache::instance() {
 DirectorySizeCache::DirectorySizeCache() {
   m_thread = new QThread();
   m_thread->setObjectName(QStringLiteral("DirSizeWorker"));
-  m_worker = new DirectorySizeWorker(&m_generation);
+  m_worker = new DirectorySizeWorker(&m_generation, this);
   m_worker->moveToThread(m_thread);
 
   // worker → cache (メインスレッド) の結果受信 (queued)。
@@ -77,6 +77,27 @@ void DirectorySizeCache::bumpGeneration() {
   m_generation.fetch_add(1);
   // inflight は結果受信で消える。古い世代の結果は onWorkerDone 側で ok=false /
   // path 不在として扱われる。
+}
+
+void DirectorySizeCache::updateWanted(const QSet<QString>& remove,
+                                     const QSet<QString>& add) {
+  QMutexLocker lock(&m_mutex);
+  for (const QString& p : remove) {
+    auto it = m_wanted.find(p);
+    if (it != m_wanted.end()) {
+      if (--it.value() <= 0) {
+        m_wanted.erase(it);
+      }
+    }
+  }
+  for (const QString& p : add) {
+    ++m_wanted[p];
+  }
+}
+
+bool DirectorySizeCache::isWanted(const QString& path) const {
+  QMutexLocker lock(&m_mutex);
+  return m_wanted.value(path, 0) > 0;
 }
 
 void DirectorySizeCache::invalidate(const QString& path) {

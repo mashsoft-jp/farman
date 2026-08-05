@@ -147,7 +147,8 @@ void FileListModel::setComputeDirSizes(bool on) {
     // 有効化: 現在の一覧について算出を開始する。
     startDirSizeComputation();
   } else {
-    // 無効化: 表示を従来の "<DIR>" に戻す。
+    // 無効化: 表示をクリアし、wanted 登録も解除して走査中ジョブを中断させる。
+    setWantedDirPaths({});
     m_dirSizes.clear();
   }
   // Size / Type 両列の表示が変わるので再描画させる。
@@ -159,17 +160,22 @@ void FileListModel::setComputeDirSizes(bool on) {
 }
 
 void FileListModel::startDirSizeComputation() {
-  if (!m_computeDirSizes) return;
-  // アーカイブ内はローカル FS の再帰集計ができないので対象外。
-  if (m_archiveContext) return;
+  // 算出 OFF / アーカイブ内は対象外。表示しないので wanted 登録を解除して
+  // (このペインが望んでいた) 走査中ジョブを worker に中断させる。
+  if (!m_computeDirSizes || m_archiveContext) {
+    setWantedDirPaths({});
+    m_dirSizes.clear();
+    return;
+  }
 
   DirectorySizeCache& cache = DirectorySizeCache::instance();
   // NOTE: ここでは generation を bump しない。左右ペインが同一の
   // DirectorySizeCache (単一 worker) を共有しており、bump するともう一方の
-  // ペインの算出中ジョブまで打ち切ってしまうため (後から読み込んだペインが
-  // 先のペインの計算をキャンセルしてしまう)。ディレクトリ移動で不要になった
-  // 結果は onDirSizeReady 側で「現ディレクトリに無い path は無視」することで
-  // 実害なく捨てられる。走査中ジョブの中断はアプリ終了時のみ (デストラクタ)。
+  // ペインの算出中ジョブまで打ち切ってしまうため。代わりに wanted 集合
+  // (どのペインが今どの path を表示中か) を更新し、worker はどのペインも表示
+  // していない path のジョブだけを中断する (updateWanted / isWanted)。これで、
+  // 大きなディレクトリの算出中に別ディレクトリへ移動しても、不要になった
+  // ジョブを素早く打ち切って新しいディレクトリの算出に進める。
   m_dirSizes.clear();
 
   const Settings& s = Settings::instance();
@@ -178,11 +184,13 @@ void FileListModel::startDirSizeComputation() {
   const qint64 maxAgeMs =
     cached ? static_cast<qint64>(s.directorySizeCacheSeconds()) * 1000 : 0;
 
+  QSet<QString> newWanted;
   for (const auto& sp : m_entries) {
     const FileItem* it = sp.get();
     if (!it->isDir() || it->isDotDot()) continue;
     const QString path = it->absolutePath();
     if (path.isEmpty()) continue;
+    newWanted.insert(path);
 
     qint64 bytes = 0;
     bool hit = false;
@@ -197,9 +205,25 @@ void FileListModel::startDirSizeComputation() {
       m_dirSizes.insert(path, bytes);
     } else {
       m_dirSizes.insert(path, -1);  // 算出中プレースホルダ
-      cache.request(path);
     }
   }
+
+  // 先に wanted 集合を更新 (旧ディレクトリの path を解除 → worker が中断できる)
+  // してから、未算出ぶんを request する。順序が逆だと、投入直後のジョブが旧
+  // wanted のまま中断される可能性がある。
+  setWantedDirPaths(newWanted);
+  for (auto it = m_dirSizes.constBegin(); it != m_dirSizes.constEnd(); ++it) {
+    if (it.value() < 0) {  // 未算出 (プレースホルダ) のものだけ算出要求
+      cache.request(it.key());
+    }
+  }
+}
+
+void FileListModel::setWantedDirPaths(const QSet<QString>& newSet) {
+  if (newSet == m_wantedDirPaths) return;
+  // 差分 (旧集合を解除、新集合を登録) を参照カウントで反映する。
+  DirectorySizeCache::instance().updateWanted(m_wantedDirPaths, newSet);
+  m_wantedDirPaths = newSet;
 }
 
 void FileListModel::recomputeDirSizes() {

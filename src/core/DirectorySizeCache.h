@@ -53,6 +53,18 @@ public:
   // 既存キャッシュエントリは保持する。
   void bumpGeneration();
 
+  // 現在いずれかのペインが表示しているディレクトリ path の集合 (union) を、参照
+  // カウントで更新する。remove の各 path を -1 (0 で削除)、add の各 path を +1。
+  // worker は走査を開始する前 / 走査中にこの集合を見て、どのペインも表示して
+  // いない (= 参照カウント 0) path のジョブを中断する。これにより、大きな
+  // ディレクトリの算出中に別ディレクトリへ移動しても、不要になったジョブを
+  // 素早く打ち切って新しいディレクトリの算出に進める。左右ペインの union なので
+  // 片方のペインの移動でもう一方のペインのジョブは巻き込まない。
+  void updateWanted(const QSet<QString>& remove, const QSet<QString>& add);
+  // path が現在いずれかのペインで表示されているか (参照カウント > 0)。worker から
+  // 走査可否の判定に呼ばれる。
+  bool isWanted(const QString& path) const;
+
   // 指定パスのキャッシュを無効化する (強制再算出用)。
   void invalidate(const QString& path);
   // 全キャッシュを破棄する。
@@ -95,6 +107,11 @@ private:
 
   // メインスレッドのみで触る。
   QSet<QString> m_inflight;
+
+  // 現在いずれかのペインが表示しているディレクトリ path の参照カウント (union)。
+  // メインスレッド (updateWanted) と worker スレッド (isWanted) の双方から触るため
+  // m_mutex で保護する。
+  QHash<QString, int> m_wanted;
 
   // worker と共有する世代カウンタ。走査中に値が変わったら中断される。
   std::atomic<quint64> m_generation{0};
