@@ -2130,6 +2130,15 @@ void MainWindow::showAboutDialog() {
       grid->addWidget(container, r, c, rs, cs);
     }
   }
+  // QMessageBox は Windows / Linux では本文の自然幅に合わせて横幅が狭くなり、
+  // ワードマーク + バージョン + Build 行が窮屈に見える (macOS は既定で広め)。
+  // グリッド最下段に横スペーサを差し込んで最小幅を確保し、3 OS で見た目を揃える。
+  if (auto* grid = qobject_cast<QGridLayout*>(box.layout())) {
+    auto* spacer = new QSpacerItem(430, 0,
+                                   QSizePolicy::Minimum, QSizePolicy::Minimum);
+    grid->addItem(spacer, grid->rowCount(), 0, 1, grid->columnCount());
+  }
+
   auto* okBtn = box.addButton(QMessageBox::Ok);
   // farman は Qt (LGPL v3) / libarchive (BSD) / uchardet (MPL 1.1) を利用して
   // おり、これらは配布バイナリへのライセンス通知が必要。GitHub の README だけ
