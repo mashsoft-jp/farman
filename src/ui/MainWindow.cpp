@@ -2077,12 +2077,26 @@ void MainWindow::showAboutDialog() {
     box.setIcon(QMessageBox::Information);
   }
 
+  // prerelease (-test 等) ビルドのときだけ、どの test ビルドか識別できるように
+  // ビルド日時を版数の下に併記する。安定版 (x.y.z) では表示しない。
+  // (本文の翻訳文字列はそのまま活かし、ビルド日時は %1 = 版数 側に埋め込む。)
+#ifndef FARMAN_BUILD_TIMESTAMP
+#define FARMAN_BUILD_TIMESTAMP ""
+#endif
+  QString versionText = version;
+  if (version.contains(QLatin1Char('-'))) {
+    const QString buildTs = QStringLiteral(FARMAN_BUILD_TIMESTAMP);
+    if (!buildTs.isEmpty()) {
+      versionText += QStringLiteral("<br><small>Build: %1</small>").arg(buildTs);
+    }
+  }
+
   // 本文はバージョン等のみ。farman ワードマークは本文の「上」に別途 QLabel で置く。
   box.setTextFormat(Qt::RichText);
   box.setText(tr("Version %1<br><br>"
                  "Copyright &copy; Mashsoft Inc.<br>"
                  "<a href=\"https://www.mashsoft.co.jp\">https://www.mashsoft.co.jp</a>")
-                .arg(version));
+                .arg(versionText));
 
   // ワードマーク (Web サイト / README と同じ意匠) を本文の上に表示する。
   // リッチテキストの <img> はスムーズ補間されずジャギが出るため、スムーズ縮小して

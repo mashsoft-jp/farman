@@ -266,8 +266,15 @@ else()
 endif()
 message(STATUS "FARMAN_VERSION = ${FARMAN_VERSION_STRING}")
 
+# ビルド日時 (構成時のタイムスタンプ)。About ダイアログで prerelease
+# (-test 等) ビルドのときだけ表示し、どの test ビルドかを識別できるようにする。
+# CI は毎回クリーン構成するので、この値は実質「ビルド日時」になる。
+string(TIMESTAMP FARMAN_BUILD_TIMESTAMP_STR "%Y-%m-%d %H:%M UTC" UTC)
+message(STATUS "FARMAN_BUILD_TIMESTAMP = ${FARMAN_BUILD_TIMESTAMP_STR}")
+
 target_compile_definitions(farman PRIVATE
   FARMAN_VERSION=${FARMAN_VERSION_STRING}
+  FARMAN_BUILD_TIMESTAMP="${FARMAN_BUILD_TIMESTAMP_STR}"
 )
 
 # GUI アプリとしてビルド:
