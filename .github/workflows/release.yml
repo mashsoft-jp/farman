@@ -583,6 +583,24 @@ jobs:
           # それだけが必要とする libQt6MultimediaWidgets が取りこぼされていた
           # (結果 Linux でメディアプラグインがロード失敗し mp3/mp4 が再生不可)。
           # --deploy-deps-only でプラグイン本体はコピーせず依存だけ取り込ませる。
+          #
+          # 外部 3D ビュアープラグイン (ModelViewerPlugin) はロード時に
+          # libQt6OpenGL.so.6 を必要とする。farman 本体は Qt6::OpenGL をリンクして
+          # いるが Qt6OpenGL のシンボルを実際には参照しないため、リンカの
+          # --as-needed で DT_NEEDED から落ち、linuxdeploy の依存スキャンに乗らず
+          # 同梱されない (Windows で Qt6OpenGL.dll が windeployqt に取り込まれない
+          # のと同じ現象)。--library で明示的に AppDir へ同梱する
+          # (AppImage / .deb の両方に入る)。QT_ROOT_DIR は install-qt-action が設定。
+          QT6OPENGL_LIB="$QT_ROOT_DIR/lib/libQt6OpenGL.so.6"
+          if [ ! -e "$QT6OPENGL_LIB" ]; then
+            QT6OPENGL_LIB=$(find "$QT_ROOT_DIR/lib" -maxdepth 1 -name 'libQt6OpenGL.so.6*' 2>/dev/null | sort | head -1)
+          fi
+          echo "Qt6OpenGL lib to bundle: $QT6OPENGL_LIB"
+          if [ -z "$QT6OPENGL_LIB" ] || [ ! -e "$QT6OPENGL_LIB" ]; then
+            echo "::error::libQt6OpenGL.so.6 not found under $QT_ROOT_DIR/lib"
+            exit 1
+          fi
+
           export OUTPUT=farman-x86_64.AppImage
           ./linuxdeploy-x86_64.AppImage \
             --appdir AppDir \
@@ -590,9 +608,17 @@ jobs:
             -i farman.png \
             -d linux/farman.desktop \
             --deploy-deps-only AppDir/usr/plugins/viewers/MediaViewerPlugin.so \
+            --library "$QT6OPENGL_LIB" \
             --plugin qt \
             --output appimage
           ls -la farman-x86_64.AppImage
+          # 同梱確認 (取りこぼしたら即 fail させて気付けるように)
+          echo "=== libQt6OpenGL 同梱確認 (AppDir) ==="
+          find AppDir -name 'libQt6OpenGL.so*' -print
+          if ! find AppDir -name 'libQt6OpenGL.so.6*' | grep -q .; then
+            echo "::error::libQt6OpenGL.so.6 was not bundled into AppDir"
+            exit 1
+          fi
 
           # === Step 2: .deb 生成 ===
           # linuxdeploy が作った AppDir (= self-contained な Qt frameworks +

@@ -311,11 +311,22 @@ jobs:
           # (MediaViewerPlugin.so の動画 / 音声再生に必要。release.yml と同じ処置)。
           export EXTRA_QT_PLUGINS="multimedia"
 
+          # 外部 3D ビュアープラグイン (ModelViewerPlugin) がロード時に必要とする
+          # libQt6OpenGL.so.6 を明示同梱する。farman 本体は Qt6::OpenGL をリンクする
+          # が実際にはシンボルを参照せず --as-needed で落ちるため、linuxdeploy の
+          # 依存スキャンに乗らない (release.yml と同じ処置)。
+          QT6OPENGL_LIB="$QT_ROOT_DIR/lib/libQt6OpenGL.so.6"
+          if [ ! -e "$QT6OPENGL_LIB" ]; then
+            QT6OPENGL_LIB=$(find "$QT_ROOT_DIR/lib" -maxdepth 1 -name 'libQt6OpenGL.so.6*' 2>/dev/null | sort | head -1)
+          fi
+          echo "Qt6OpenGL lib to bundle: $QT6OPENGL_LIB"
+
           ./linuxdeploy-x86_64.AppImage \
             --appdir AppDir \
             -e build/farman \
             -i farman.png \
             -d linux/farman.desktop \
+            --library "$QT6OPENGL_LIB" \
             --plugin qt \
             --output appimage
 
