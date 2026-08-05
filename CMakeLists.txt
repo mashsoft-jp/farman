@@ -306,7 +306,6 @@ target_link_libraries(farman PRIVATE
   Qt6::Svg
   Qt6::Pdf
   Qt6::PdfWidgets
-  Qt6::OpenGL
   LibArchive::LibArchive
 )
 # Qt6::OpenGL は farman 本体では直接使わないが、外部 3D ビュアープラグイン
@@ -314,6 +313,22 @@ target_link_libraries(farman PRIVATE
 # おくことで、macdeployqt / windeployqt / linuxdeployqt が配布物へ同梱し、
 # 別ディレクトリに置かれたプラグインからも解決できるようにする。
 # (assimp は本体では使わないため、プラグイン側で静的リンクして自己完結させる。)
+#
+# Linux では farman が Qt6OpenGL のシンボルを実際には参照しないため、通常リンク
+# だとリンカの --as-needed で DT_NEEDED から落ちてしまう。すると (1) linuxdeployqt
+# の依存スキャンに乗らず同梱されない、(2) 同梱しても farman 起動時にロードされない
+# ため、外部プラグインを dlopen したときにプロセス未ロード & RUNPATH 非伝播で
+# libQt6OpenGL.so.6 が解決できず "cannot open shared object file" で失敗する。
+# --no-as-needed で NEEDED を強制保持し、起動時に必ずロードさせる (プロセスに
+# 載れば dlopen したプラグインからも soname 一致で解決される)。
+# macOS はフレームワーク @rpath 解決で問題なく、Windows は明示 DLL コピー
+# (release.yml) で対応するため、この処置は Linux 限定。
+if(UNIX AND NOT APPLE)
+  target_link_libraries(farman PRIVATE
+    -Wl,--no-as-needed Qt6::OpenGL -Wl,--as-needed)
+else()
+  target_link_libraries(farman PRIVATE Qt6::OpenGL)
+endif()
 
 # HEIF/HEIC 画像プラグイン (libheif が見つかったときのみ)。静的 Qt プラグイン
 # として本体へリンクし、Q_IMPORT_PLUGIN で取り込む (main.cpp 側、
