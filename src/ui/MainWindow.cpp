@@ -2131,13 +2131,16 @@ void MainWindow::showAboutDialog() {
     }
   }
   // QMessageBox は Windows / Linux では本文の自然幅に合わせて横幅が狭くなり、
-  // ワードマーク + バージョン + Build 行が窮屈に見える (macOS は既定で広め)。
-  // グリッド最下段に横スペーサを差し込んで最小幅を確保し、3 OS で見た目を揃える。
+  // ワードマーク + バージョン + Build 行が窮屈に見える。グリッド最下段に横
+  // スペーサを差し込んで最小幅を確保する。macOS は既定で十分広く、現状の
+  // 見た目を変えたくないため対象外 (Windows / Linux 限定)。
+#ifndef Q_OS_MAC
   if (auto* grid = qobject_cast<QGridLayout*>(box.layout())) {
     auto* spacer = new QSpacerItem(430, 0,
                                    QSizePolicy::Minimum, QSizePolicy::Minimum);
     grid->addItem(spacer, grid->rowCount(), 0, 1, grid->columnCount());
   }
+#endif
 
   auto* okBtn = box.addButton(QMessageBox::Ok);
   // farman は Qt (LGPL v3) / libarchive (BSD) / uchardet (MPL 1.1) を利用して
