@@ -780,14 +780,11 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
         return name;
       }
       case Type: {
-        // ディレクトリは Type 列を空にする (拡張子相当の判定をしない)。
-        // ただしディレクトリサイズ算出が有効なときは、Size 列に合計サイズを
-        // 出す代わりに "<DIR>" を Type 列へ移動する (".." (親) も含める)。
+        // ディレクトリは種別列に "<DIR>" を表示する。ディレクトリサイズ算出の
+        // ON/OFF や ".." (親) に関わらず常に表示する (合計サイズは算出が有効な
+        // ときだけ Size 列に出す)。
         if (item->isDir()) {
-          if (m_computeDirSizes) {
-            return QString("<DIR>");
-          }
-          return QString("");
+          return QString("<DIR>");
         }
         QString name = item->name();
         // ドットファイル（.から始まる）の場合はTypeを空にする
@@ -799,20 +796,17 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
       }
       case Size:
         if (item->isDir()) {
-          if (m_computeDirSizes) {
-            // ".." (親) はサイズを算出しないので Size は空欄 ("<DIR>" は Type 列)。
-            if (item->isDotDot()) {
-              return QString();
-            }
-            // 算出済みなら合計サイズ、未算出 (-1) / 要求前は算出中プレースホルダ。
+          // "<DIR>" は種別列に出すので Size 列には出さない。ディレクトリサイズ算出
+          // が有効なディレクトリだけ合計サイズ (未算出 -1 / 要求前は "…") を出す。
+          // ".." (親) と算出 OFF のディレクトリは空欄。
+          if (m_computeDirSizes && !item->isDotDot()) {
             const auto it = m_dirSizes.constFind(item->absolutePath());
             if (it != m_dirSizes.cend() && it.value() >= 0) {
               return formatSizeText(it.value());
             }
             return QStringLiteral("…");  // 算出中
           }
-          // 算出 OFF のときは従来どおり Size 列に "<DIR>"。
-          return QString("<DIR>");
+          return QString();
         } else {
           return formatSizeText(item->size());
         }

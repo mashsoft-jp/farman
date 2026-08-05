@@ -17,8 +17,9 @@ With the external plugin **farman-plugin-3d**, farman can now display
 ### Directory sizes in the Size column (computed in the background)
 
 - The file list can now compute the recursive total size of directories in
-  the background and show it in the Size column ("&lt;DIR&gt;" moves to the
-  Type column).
+  the background and show it in the Size column.
+- Directories now always show "&lt;DIR&gt;" in the Type column (regardless of
+  whether directory-size calculation is enabled).
 - Off by default. Enable it under Settings > Behavior > Directory Size.
 - Choose "Recompute every time" or "Cache for a period", and set how long the
   cache stays valid (a change to a directory's timestamp always triggers a
