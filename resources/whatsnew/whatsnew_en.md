@@ -36,7 +36,10 @@ With the external plugin **farman-plugin-3d**, farman can now display
   input, and out-of-range addresses are rejected as you type.
 - Added search. Toggle between hex and text with radio buttons; hex input
   follows the display unit ("12 34 56" for 1-byte, "1234 5678" for 2-byte,
-  endian-aware). Press Enter or Next / Prev to search forward / backward.
+  endian-aware). Press Enter or Next / Prev to search forward / backward. Hits
+  are highlighted in both the hex and text columns. Shortcuts: Cmd/Ctrl+F to
+  focus search, Cmd+G / F3 find next, Cmd+Shift+G / Shift+F3 find previous,
+  Cmd/Ctrl+J to focus the address field.
 
 ### Bug fixes
 

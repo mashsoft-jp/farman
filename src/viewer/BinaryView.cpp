@@ -980,10 +980,17 @@ void BinaryView::setupUi() {
   m_searchEdit->setFocusPolicy(Qt::StrongFocus);
   searchBar->addWidget(m_searchEdit);
 
+  m_searchEdit->setToolTip(
+    tr("Search (%1 to focus)").arg(QKeySequence(QKeySequence::Find)
+                                     .toString(QKeySequence::NativeText)));
   QPushButton* findPrevBtn = new QPushButton(tr("Prev"), searchBar);
   QPushButton* findNextBtn = new QPushButton(tr("Next"), searchBar);
   findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   findNextBtn->setFocusPolicy(Qt::StrongFocus);
+  findNextBtn->setToolTip(QKeySequence(QKeySequence::FindNext)
+                            .toString(QKeySequence::NativeText));
+  findPrevBtn->setToolTip(QKeySequence(QKeySequence::FindPrevious)
+                            .toString(QKeySequence::NativeText));
   searchBar->addWidget(findPrevBtn);
   searchBar->addWidget(findNextBtn);
 
@@ -1032,9 +1039,50 @@ void BinaryView::setupUi() {
   // アドレス入力欄の Enter は eventFilter で消費してジャンプにする
   // (returnPressed だとキーイベントが親へ伝播してビュアーが閉じてしまう)。
   m_addressEdit->installEventFilter(this);
+
+  // ローカルショートカット (Cmd/Ctrl+F 等) は eventFilter で処理する。本体
+  // (HexView) 上でも効くように、HexView にも event filter を張る。
+  m_hex->installEventFilter(this);
 }
 
 bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
+  // ── ローカルショートカット (検索欄 / 本体 / アドレス欄のどれにフォーカスが
+  //    あっても効く) ──
+  //   Cmd/Ctrl+F          : 検索欄へフォーカス (全選択)
+  //   Cmd+G / F3          : 次を検索
+  //   Cmd+Shift+G / S+F3  : 前を検索
+  //   Cmd/Ctrl+J          : アドレスジャンプ欄へフォーカス
+  // アプリ側の Copy コマンド等より先に取りたいので、ShortcutOverride を accept
+  // してから KeyPress で処理する (Copy 横取りと同じ手法)。
+  if ((watched == m_hex || watched == m_searchEdit || watched == m_addressEdit)
+      && (event->type() == QEvent::ShortcutOverride
+          || event->type() == QEvent::KeyPress)) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    const bool find     = ke->matches(QKeySequence::Find);
+    const bool findNext = ke->matches(QKeySequence::FindNext);
+    const bool findPrev = ke->matches(QKeySequence::FindPrevious);
+    const bool toAddr   = (ke->modifiers() & Qt::ControlModifier)
+                          && ke->key() == Qt::Key_J;
+    if (find || findNext || findPrev || toAddr) {
+      if (event->type() == QEvent::ShortcutOverride) {
+        event->accept();
+        return true;
+      }
+      if (find) {
+        m_searchEdit->setFocus();
+        m_searchEdit->selectAll();
+      } else if (findNext) {
+        doSearch(true);
+      } else if (findPrev) {
+        doSearch(false);
+      } else if (toAddr) {
+        m_addressEdit->setFocus();
+        m_addressEdit->selectAll();
+      }
+      return true;
+    }
+  }
+
   if (watched == m_addressEdit && event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
     if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
