@@ -104,8 +104,11 @@ void Settings::applyDefaults() {
   m_markdownViewerFont = defaultUiFont();
 
   // ── 表示設定 ─────────────────────
-  m_fileSizeFormatDual         = FileSizeFormat::Auto;
-  m_fileSizeFormatSingle       = FileSizeFormat::Auto;
+  // 既定は SI (KB/MB/GB, 1000 基準)。macOS Finder / 現代の OS 表記と揃えて、
+  // GiB/MiB (1024) との数値差による誤解を避ける。ユーザーは設定で IEC / Bytes /
+  // Auto にも変更できる。
+  m_fileSizeFormatDual         = FileSizeFormat::SI;
+  m_fileSizeFormatSingle       = FileSizeFormat::SI;
   m_fileSizeThousandsSeparatorDual   = true;
   m_fileSizeThousandsSeparatorSingle = true;
   m_fileListRowHeight          = 0;
