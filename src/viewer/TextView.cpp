@@ -179,8 +179,12 @@ void TextView::setupUi() {
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
   applyToolbarStyle(toolbar);
 
-  toolbar->addWidget(new QLabel(tr("Encoding:"), toolbar));
+  QLabel* encodingLabel = new QLabel(tr("Encoding:"), toolbar);
+  encodingLabel->setToolTip(tr("Character encoding used to decode this file."));
+  toolbar->addWidget(encodingLabel);
   m_encodingCombo = new QComboBox(toolbar);
+  m_encodingCombo->setToolTip(
+    tr("Character encoding used to decode this file. Auto detects it automatically."));
   // 自由入力できても認識されない名前は意味が無く、誤入力で読み込み失敗する
   // だけなので、選択リストからの固定候補に限定する。
   m_encodingCombo->addItem(QStringLiteral("Auto"));
@@ -198,28 +202,35 @@ void TextView::setupUi() {
   m_lineNumbersButton = new QToolButton(toolbar);
   m_lineNumbersButton->setCheckable(true);
   m_lineNumbersButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/line-numbers.svg")));
-  m_lineNumbersButton->setToolTip(tr("Show line numbers"));
+  m_lineNumbersButton->setToolTip(tr("Toggle line numbers in the left margin."));
   m_lineNumbersButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_lineNumbersButton);
 
   m_wordWrapButton = new QToolButton(toolbar);
   m_wordWrapButton->setCheckable(true);
   m_wordWrapButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/word-wrap.svg")));
-  m_wordWrapButton->setToolTip(tr("Word wrap"));
+  m_wordWrapButton->setToolTip(tr("Toggle word wrap for long lines."));
   m_wordWrapButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_wordWrapButton);
 
   // 検索コントロール群 (常設)。Tab で順に辿れる位置に置く。
   toolbar->addSeparator();
-  toolbar->addWidget(new QLabel(tr("Find:"), toolbar));
 
   // ショートカット表記 (macOS: ⌘F / Win/Linux: Ctrl+F)
   const QString findShortcutText =
     QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
 
+  QLabel* findLabel = new QLabel(tr("Find (%1):").arg(findShortcutText), toolbar);
+  findLabel->setToolTip(
+    tr("Find text. %1 to focus, Enter=next, Shift+Enter=previous, Esc=back to text.")
+      .arg(findShortcutText));
+  toolbar->addWidget(findLabel);
+
   m_findEdit = new QLineEdit(toolbar);
   m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
-  m_findEdit->setToolTip(tr("Search text in this file (%1)").arg(findShortcutText));
+  m_findEdit->setToolTip(
+    tr("Find text. %1 to focus, Enter=next, Shift+Enter=previous, Esc=back to text.")
+      .arg(findShortcutText));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(180);
@@ -233,7 +244,7 @@ void TextView::setupUi() {
   m_findCsButton = new QToolButton(toolbar);
   m_findCsButton->setCheckable(true);
   m_findCsButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/case-sensitive.svg")));
-  m_findCsButton->setToolTip(tr("Case sensitive search"));
+  m_findCsButton->setToolTip(tr("Toggle case-sensitive search."));
   m_findCsButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_findCsButton);
 
