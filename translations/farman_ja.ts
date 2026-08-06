@@ -2306,109 +2306,132 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation>エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="439"/>
+        <location filename="../src/viewer/CsvView.cpp" line="425"/>
+        <location filename="../src/viewer/CsvView.cpp" line="436"/>
+        <location filename="../src/viewer/CsvView.cpp" line="436"/>
+        <source>Character encoding used to decode this file</source>
+        <translation>このファイルの文字コード</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="442"/>
         <source>Delimiter:</source>
         <translation>区切り:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="441"/>
+        <location filename="../src/viewer/CsvView.cpp" line="443"/>
+        <location filename="../src/viewer/CsvView.cpp" line="451"/>
+        <location filename="../src/viewer/CsvView.cpp" line="451"/>
+        <source>Character used to separate columns</source>
+        <translation>列を区切る文字</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="446"/>
         <source>Auto</source>
         <translation>自動</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="442"/>
+        <location filename="../src/viewer/CsvView.cpp" line="447"/>
         <source>Comma (,)</source>
         <translation>カンマ (,)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="443"/>
+        <location filename="../src/viewer/CsvView.cpp" line="448"/>
         <source>Tab (\t)</source>
         <translation>タブ (\t)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="444"/>
+        <location filename="../src/viewer/CsvView.cpp" line="449"/>
         <source>Semicolon (;)</source>
         <translation>セミコロン (;)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="452"/>
+        <location filename="../src/viewer/CsvView.cpp" line="458"/>
         <source>First row = header</source>
         <translation>1 行目をヘッダ扱い</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="455"/>
+        <location filename="../src/viewer/CsvView.cpp" line="461"/>
         <source>Treat the first row as column headers</source>
         <translation>1 行目を列ヘッダとして扱う</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="462"/>
         <source>Find:</source>
-        <translation>検索:</translation>
+        <translation type="vanished">検索:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="468"/>
+        <location filename="../src/viewer/CsvView.cpp" line="472"/>
+        <source>Find (%1):</source>
+        <translation>検索 (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="473"/>
+        <source>Focus the search field (%1)</source>
+        <translation>検索欄にフォーカス (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/CsvView.cpp" line="477"/>
         <source>Search text  (%1)</source>
         <translation>検索する文字列  (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="469"/>
+        <location filename="../src/viewer/CsvView.cpp" line="478"/>
         <source>Search text in this CSV (%1)</source>
         <translation>この CSV 内のテキストを検索 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="479"/>
+        <location filename="../src/viewer/CsvView.cpp" line="488"/>
         <source>Previous match (Shift+Enter)</source>
         <translation>前のマッチへ (Shift+Enter)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="486"/>
+        <location filename="../src/viewer/CsvView.cpp" line="495"/>
         <source>Next match (Enter)</source>
         <translation>次のマッチへ (Enter)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="494"/>
+        <location filename="../src/viewer/CsvView.cpp" line="503"/>
         <source>Case sensitive search</source>
         <translation>大文字小文字を区別して検索</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="663"/>
-        <location filename="../src/viewer/CsvView.cpp" line="678"/>
-        <location filename="../src/viewer/CsvView.cpp" line="678"/>
+        <location filename="../src/viewer/CsvView.cpp" line="672"/>
+        <location filename="../src/viewer/CsvView.cpp" line="687"/>
+        <location filename="../src/viewer/CsvView.cpp" line="687"/>
         <source>Detected: %1</source>
         <translation>検出: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="672"/>
+        <location filename="../src/viewer/CsvView.cpp" line="681"/>
         <source>Comma</source>
         <translation>カンマ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="673"/>
+        <location filename="../src/viewer/CsvView.cpp" line="682"/>
         <source>Tab</source>
         <translation>タブ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="674"/>
+        <location filename="../src/viewer/CsvView.cpp" line="683"/>
         <source>Semicolon</source>
         <translation>セミコロン</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="835"/>
+        <location filename="../src/viewer/CsvView.cpp" line="844"/>
         <source>Not found</source>
         <translation>見つかりません</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="837"/>
+        <location filename="../src/viewer/CsvView.cpp" line="846"/>
         <source>%1 matches</source>
         <translation>%1 件</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="839"/>
+        <location filename="../src/viewer/CsvView.cpp" line="848"/>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
     </message>
     <message>
-        <location filename="../src/viewer/CsvView.cpp" line="883"/>
+        <location filename="../src/viewer/CsvView.cpp" line="892"/>
         <source>CSV · %1 rows · %2 cols · %3 · %4</source>
         <translation>CSV · %1 行 · %2 列 · %3 · %4</translation>
     </message>
@@ -4102,9 +4125,8 @@ What would you like to do?</source>
 <context>
     <name>Farman::ImageView</name>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="236"/>
         <source>Zoom:</source>
-        <translation>ズーム:</translation>
+        <translation type="vanished">ズーム:</translation>
     </message>
     <message>
         <source>Fit to Window</source>
@@ -4127,82 +4149,99 @@ What would you like to do?</source>
         <translation type="vanished">画像情報 / メタデータを表示</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="249"/>
+        <location filename="../src/viewer/ImageView.cpp" line="237"/>
+        <source>Zoom (+ / -):</source>
+        <translation>ズーム (+ / -):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="238"/>
+        <location filename="../src/viewer/ImageView.cpp" line="242"/>
+        <location filename="../src/viewer/ImageView.cpp" line="242"/>
+        <source>Zoom level (+ / -)</source>
+        <translation>ズーム倍率 (+ / -)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="253"/>
         <source>Fit to Window (F)</source>
         <translation>ウィンドウに合わせる (F)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="257"/>
+        <location filename="../src/viewer/ImageView.cpp" line="261"/>
         <source>Play / Pause animation (GIF / WebP) (Space)</source>
         <translation>アニメーション再生 / 停止 (GIF / WebP) (Space)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="265"/>
+        <location filename="../src/viewer/ImageView.cpp" line="269"/>
         <source>Transparency background: off = checker, on = solid color (T)</source>
         <translation>透明部分の背景: OFF = チェッカー、ON = 単色 (T)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="274"/>
+        <location filename="../src/viewer/ImageView.cpp" line="278"/>
         <source>Rotate 90° clockwise (display only) (R)</source>
         <translation>時計回りに 90° 回転 (表示のみ) (R)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="293"/>
+        <location filename="../src/viewer/ImageView.cpp" line="287"/>
+        <source>Current display rotation angle</source>
+        <translation>現在の表示回転角度</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="298"/>
         <source>Show image information / metadata (I)</source>
         <translation>画像情報 / メタデータを表示 (I)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="812"/>
+        <location filename="../src/viewer/ImageView.cpp" line="817"/>
         <source>File: %1</source>
         <translation>ファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="813"/>
+        <location filename="../src/viewer/ImageView.cpp" line="818"/>
         <source>Format: %1</source>
         <translation>フォーマット: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="815"/>
+        <location filename="../src/viewer/ImageView.cpp" line="820"/>
         <source>Size: %1 x %2 px</source>
         <translation>サイズ: %1 × %2 px</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="817"/>
+        <location filename="../src/viewer/ImageView.cpp" line="822"/>
         <source>File size: %1</source>
         <translation>ファイルサイズ: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="831"/>
+        <location filename="../src/viewer/ImageView.cpp" line="836"/>
         <source>Color depth: %1 bpp</source>
         <translation>色深度: %1 bpp</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="838"/>
+        <location filename="../src/viewer/ImageView.cpp" line="843"/>
         <source>Frames: %1</source>
         <translation>フレーム数: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="856"/>
+        <location filename="../src/viewer/ImageView.cpp" line="861"/>
         <source>Resolution: %1 x %2 DPI</source>
         <translation>解像度: %1 × %2 DPI</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="867"/>
+        <location filename="../src/viewer/ImageView.cpp" line="872"/>
         <source>Color profile: %1</source>
         <translation>カラープロファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="876"/>
+        <location filename="../src/viewer/ImageView.cpp" line="881"/>
         <source>--- Embedded text ---</source>
         <translation>--- 埋め込みテキスト ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="892"/>
+        <location filename="../src/viewer/ImageView.cpp" line="897"/>
         <source>--- Exif ---</source>
         <translation>--- Exif ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="911"/>
+        <location filename="../src/viewer/ImageView.cpp" line="916"/>
         <source>Image Information</source>
         <translation>画像情報</translation>
     </message>
@@ -5588,47 +5627,51 @@ Reason: %1</source>
         <translation>生の Markdown ソースを表示 (オフ = 整形表示)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="97"/>
         <source>Find:</source>
-        <translation>検索:</translation>
+        <translation type="vanished">検索:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="103"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="102"/>
+        <source>Find (%1):</source>
+        <translation>検索 (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MarkdownView.cpp" line="105"/>
         <source>Search text  (%1)</source>
         <translation>検索する文字列  (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="104"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="106"/>
         <source>Search text in this Markdown (%1)</source>
         <translation>この Markdown 内のテキストを検索 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="114"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="116"/>
         <source>Previous match (Shift+Enter)</source>
         <translation>前のマッチへ (Shift+Enter)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="122"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="124"/>
         <source>Next match (Enter)</source>
         <translation>次のマッチへ (Enter)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="132"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="134"/>
         <source>Case sensitive search</source>
         <translation>大文字小文字を区別して検索</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="456"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="458"/>
         <source>Not found</source>
         <translation>見つかりません</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="457"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="459"/>
         <source>%1 matches</source>
         <translation>%1 件</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="493"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="495"/>
         <source>%1 lines · %2 · %3</source>
         <translation>%1 行 · %2 · %3</translation>
     </message>
@@ -5730,298 +5773,319 @@ Reason: %1</source>
     <name>Farman::MediaView</name>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="211"/>
-        <location filename="../src/viewer/MediaView.cpp" line="627"/>
+        <location filename="../src/viewer/MediaView.cpp" line="629"/>
         <source>Play / Pause (Space)</source>
         <translation>再生 / 一時停止 (Space)</translation>
     </message>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="219"/>
-        <location filename="../src/viewer/MediaView.cpp" line="639"/>
+        <location filename="../src/viewer/MediaView.cpp" line="641"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="259"/>
+        <location filename="../src/viewer/MediaView.cpp" line="261"/>
+        <location filename="../src/viewer/MediaView.cpp" line="681"/>
         <source>Loop playback (L)</source>
         <translation>ループ再生 (L)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="249"/>
+        <location filename="../src/viewer/MediaView.cpp" line="251"/>
         <source>Playback speed</source>
         <translation>再生速度</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="269"/>
-        <location filename="../src/viewer/MediaView.cpp" line="691"/>
+        <location filename="../src/viewer/MediaView.cpp" line="271"/>
+        <location filename="../src/viewer/MediaView.cpp" line="695"/>
         <source>Mute (M)</source>
         <translation>ミュート (M)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="283"/>
         <source>Volume (Up/Down)</source>
-        <translation>音量 (Up/Down)</translation>
+        <translation type="vanished">音量 (Up/Down)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="290"/>
+        <location filename="../src/viewer/MediaView.cpp" line="292"/>
         <source>Zoom:</source>
         <translation>ズーム:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="300"/>
         <source>Zoom</source>
-        <translation>ズーム</translation>
+        <translation type="vanished">ズーム</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="322"/>
+        <location filename="../src/viewer/MediaView.cpp" line="324"/>
         <source>Fit to window</source>
         <translation>ウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="336"/>
+        <location filename="../src/viewer/MediaView.cpp" line="338"/>
         <source>Full screen (F / double-click, Esc to exit)</source>
         <translation>フルスクリーン (F / ダブルクリック、Esc で解除)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="355"/>
+        <location filename="../src/viewer/MediaView.cpp" line="357"/>
         <source>Show media information / metadata (I)</source>
         <translation>メディア情報 / メタデータを表示 (I)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="422"/>
+        <location filename="../src/viewer/MediaView.cpp" line="424"/>
         <source>Cannot play this file.
 The format or codec is not supported on this platform.</source>
         <translation>このファイルは再生できません。
 このプラットフォームではフォーマットまたはコーデックが未対応です。</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="432"/>
+        <location filename="../src/viewer/MediaView.cpp" line="434"/>
         <source>Failed to load media:
 %1</source>
         <translation>メディアの読み込みに失敗しました:
 %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="579"/>
+        <location filename="../src/viewer/MediaView.cpp" line="581"/>
         <source>Full Screen</source>
         <translation>フルスクリーン</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="677"/>
         <source>Loop (L)</source>
-        <translation>ループ (L)</translation>
+        <translation type="vanished">ループ (L)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="856"/>
+        <location filename="../src/viewer/MediaView.cpp" line="861"/>
         <source>Media Information</source>
         <translation>メディア情報</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="894"/>
+        <location filename="../src/viewer/MediaView.cpp" line="899"/>
         <source>Album artist</source>
         <translation>アルバムアーティスト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="895"/>
+        <location filename="../src/viewer/MediaView.cpp" line="900"/>
         <source>Lead performer</source>
         <translation>主演者</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="897"/>
+        <location filename="../src/viewer/MediaView.cpp" line="902"/>
         <source>Track number</source>
         <translation>トラック番号</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="902"/>
+        <location filename="../src/viewer/MediaView.cpp" line="907"/>
         <source>Description</source>
         <translation>説明</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="904"/>
+        <location filename="../src/viewer/MediaView.cpp" line="909"/>
         <source>Author</source>
         <translation>作成者</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="905"/>
+        <location filename="../src/viewer/MediaView.cpp" line="910"/>
         <source>Publisher</source>
         <translation>発行元</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="906"/>
+        <location filename="../src/viewer/MediaView.cpp" line="911"/>
         <source>Language</source>
         <translation>言語</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="907"/>
+        <location filename="../src/viewer/MediaView.cpp" line="912"/>
         <source>URL</source>
         <translation>URL</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="908"/>
+        <location filename="../src/viewer/MediaView.cpp" line="913"/>
         <source>Orientation</source>
         <translation>向き</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="909"/>
+        <location filename="../src/viewer/MediaView.cpp" line="914"/>
         <source>Media type</source>
         <translation>メディア種別</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="932"/>
+        <location filename="../src/viewer/MediaView.cpp" line="937"/>
         <source>(embedded)</source>
         <translation>(埋め込み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="968"/>
+        <location filename="../src/viewer/MediaView.cpp" line="973"/>
         <source>File: %1</source>
         <translation>ファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="979"/>
+        <location filename="../src/viewer/MediaView.cpp" line="984"/>
         <source>Seekable</source>
         <translation>シーク可能</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="980"/>
+        <location filename="../src/viewer/MediaView.cpp" line="985"/>
         <source>Yes</source>
         <translation>はい</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="980"/>
+        <location filename="../src/viewer/MediaView.cpp" line="985"/>
         <source>No</source>
         <translation>いいえ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="987"/>
+        <location filename="../src/viewer/MediaView.cpp" line="992"/>
         <source>--- Metadata ---</source>
         <translation>--- メタデータ ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1001"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1006"/>
         <source>--- Audio track %1 ---</source>
         <translation>--- 音声トラック %1 ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1002"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1007"/>
         <source>--- Video track %1 ---</source>
         <translation>--- 映像トラック %1 ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1003"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1008"/>
         <source>--- Subtitle track %1 ---</source>
         <translation>--- 字幕トラック %1 ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="910"/>
+        <location filename="../src/viewer/MediaView.cpp" line="915"/>
         <source>Format</source>
         <translation>形式</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="972"/>
+        <location filename="../src/viewer/MediaView.cpp" line="977"/>
         <source>Type</source>
         <translation>種類</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="973"/>
+        <location filename="../src/viewer/MediaView.cpp" line="978"/>
         <source>Video</source>
         <translation>動画</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="973"/>
+        <location filename="../src/viewer/MediaView.cpp" line="978"/>
         <source>Audio</source>
         <translation>音声</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="976"/>
+        <location filename="../src/viewer/MediaView.cpp" line="981"/>
         <source>Duration</source>
         <translation>再生時間</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="969"/>
+        <location filename="../src/viewer/MediaView.cpp" line="974"/>
         <source>File size</source>
         <translation>ファイルサイズ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="913"/>
+        <location filename="../src/viewer/MediaView.cpp" line="918"/>
         <source>Resolution</source>
         <translation>解像度</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="937"/>
+        <location filename="../src/viewer/MediaView.cpp" line="942"/>
         <source>%1 x %2 px</source>
         <translation>%1 x %2 px</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="911"/>
+        <location filename="../src/viewer/MediaView.cpp" line="916"/>
         <source>Video codec</source>
         <translation>映像コーデック</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="914"/>
+        <location filename="../src/viewer/MediaView.cpp" line="919"/>
         <source>Frame rate</source>
         <translation>フレームレート</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="943"/>
+        <location filename="../src/viewer/MediaView.cpp" line="948"/>
         <source>%1 fps</source>
         <translation>%1 fps</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="915"/>
+        <location filename="../src/viewer/MediaView.cpp" line="920"/>
         <source>Video bit rate</source>
         <translation>映像ビットレート</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="949"/>
+        <location filename="../src/viewer/MediaView.cpp" line="954"/>
         <source>%1 kbps</source>
         <translation>%1 kbps</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="912"/>
+        <location filename="../src/viewer/MediaView.cpp" line="917"/>
         <source>Audio codec</source>
         <translation>音声コーデック</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="916"/>
+        <location filename="../src/viewer/MediaView.cpp" line="921"/>
         <source>Audio bit rate</source>
         <translation>音声ビットレート</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="892"/>
+        <location filename="../src/viewer/MediaView.cpp" line="897"/>
         <source>Title</source>
         <translation>タイトル</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="893"/>
+        <location filename="../src/viewer/MediaView.cpp" line="233"/>
+        <location filename="../src/viewer/MediaView.cpp" line="648"/>
+        <source>Seek (Left / Right, Shift for larger steps)</source>
+        <translation>シーク (← / →、Shift で大きく移動)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="241"/>
+        <location filename="../src/viewer/MediaView.cpp" line="669"/>
+        <source>Elapsed / total time</source>
+        <translation>経過時間 / 総再生時間</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="285"/>
+        <location filename="../src/viewer/MediaView.cpp" line="713"/>
+        <source>Volume (Up / Down)</source>
+        <translation>音量 (↑ / ↓)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="302"/>
+        <source>Zoom level</source>
+        <translation>ズーム倍率</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/MediaView.cpp" line="898"/>
         <source>Artist</source>
         <translation>アーティスト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="896"/>
+        <location filename="../src/viewer/MediaView.cpp" line="901"/>
         <source>Album</source>
         <translation>アルバム</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="898"/>
+        <location filename="../src/viewer/MediaView.cpp" line="903"/>
         <source>Genre</source>
         <translation>ジャンル</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="899"/>
+        <location filename="../src/viewer/MediaView.cpp" line="904"/>
         <source>Date</source>
         <translation>日付</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="900"/>
+        <location filename="../src/viewer/MediaView.cpp" line="905"/>
         <source>Composer</source>
         <translation>作曲者</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="901"/>
+        <location filename="../src/viewer/MediaView.cpp" line="906"/>
         <source>Comment</source>
         <translation>コメント</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="903"/>
+        <location filename="../src/viewer/MediaView.cpp" line="908"/>
         <source>Copyright</source>
         <translation>著作権</translation>
     </message>
@@ -6172,9 +6236,8 @@ The format or codec is not supported on this platform.</source>
         <translation>前のページ (PageUp)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="100"/>
         <source>Jump to page</source>
-        <translation>ページにジャンプ</translation>
+        <translation type="vanished">ページにジャンプ</translation>
     </message>
     <message>
         <location filename="../src/viewer/PdfView.cpp" line="113"/>
@@ -6182,14 +6245,12 @@ The format or codec is not supported on this platform.</source>
         <translation>次のページ (PageDown)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="123"/>
         <source>Zoom out (Ctrl+-)</source>
-        <translation>ズームアウト (Ctrl+-)</translation>
+        <translation type="vanished">ズームアウト (Ctrl+-)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="130"/>
         <source>Zoom in (Ctrl++)</source>
-        <translation>ズームイン (Ctrl++)</translation>
+        <translation type="vanished">ズームイン (Ctrl++)</translation>
     </message>
     <message>
         <location filename="../src/viewer/PdfView.cpp" line="136"/>
@@ -6222,32 +6283,53 @@ The format or codec is not supported on this platform.</source>
         <translation>複数ページを連続スクロール表示 (オフ = 1 ページずつ)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="168"/>
         <source>Find:</source>
-        <translation>検索:</translation>
+        <translation type="vanished">検索:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="174"/>
+        <location filename="../src/viewer/PdfView.cpp" line="176"/>
         <source>Search text  (%1)</source>
         <translation>検索する文字列  (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="175"/>
+        <location filename="../src/viewer/PdfView.cpp" line="172"/>
+        <location filename="../src/viewer/PdfView.cpp" line="177"/>
+        <location filename="../src/viewer/PdfView.cpp" line="177"/>
         <source>Search text in this PDF (%1)</source>
         <translation>この PDF 内のテキストを検索 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="185"/>
+        <location filename="../src/viewer/PdfView.cpp" line="100"/>
+        <source>Jump to page (Up: previous page, Down: next page)</source>
+        <translation>ページ移動 (↑: 前ページ、↓: 次ページ)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="123"/>
+        <source>Zoom out</source>
+        <translation>縮小</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="130"/>
+        <source>Zoom in</source>
+        <translation>拡大</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="171"/>
+        <source>Find (%1):</source>
+        <translation>検索 (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/PdfView.cpp" line="187"/>
         <source>Previous match (Shift+Enter)</source>
         <translation>前のマッチへ (Shift+Enter)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="192"/>
+        <location filename="../src/viewer/PdfView.cpp" line="194"/>
         <source>Next match (Enter)</source>
         <translation>次のマッチへ (Enter)</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/viewer/PdfView.cpp" line="347"/>
+        <location filename="../src/viewer/PdfView.cpp" line="349"/>
         <source>PDF · %1 page(s) · %2</source>
         <comment>PDF status: page count + file size</comment>
         <translation>
@@ -6255,17 +6337,17 @@ The format or codec is not supported on this platform.</source>
         </translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="524"/>
+        <location filename="../src/viewer/PdfView.cpp" line="526"/>
         <source>Not found</source>
         <translation>見つかりません</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="526"/>
+        <location filename="../src/viewer/PdfView.cpp" line="528"/>
         <source>%1 matches</source>
         <translation>%1 件</translation>
     </message>
     <message>
-        <location filename="../src/viewer/PdfView.cpp" line="528"/>
+        <location filename="../src/viewer/PdfView.cpp" line="530"/>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
     </message>
@@ -7615,6 +7697,43 @@ Keybindings are not affected.</source>
         <translation>エンコーディング:</translation>
     </message>
     <message>
+        <location filename="../src/viewer/TextView.cpp" line="183"/>
+        <source>Character encoding used to decode this file.</source>
+        <translation>このファイルのデコードに使う文字コード。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/TextView.cpp" line="187"/>
+        <source>Character encoding used to decode this file. Auto detects it automatically.</source>
+        <translation>このファイルのデコードに使う文字コード。「自動」で自動判別します。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/TextView.cpp" line="205"/>
+        <source>Toggle line numbers in the left margin.</source>
+        <translation>左余白の行番号表示を切り替えます。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/TextView.cpp" line="212"/>
+        <source>Toggle word wrap for long lines.</source>
+        <translation>長い行の折り返しを切り替えます。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/TextView.cpp" line="223"/>
+        <source>Find (%1):</source>
+        <translation>検索 (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/TextView.cpp" line="225"/>
+        <location filename="../src/viewer/TextView.cpp" line="232"/>
+        <location filename="../src/viewer/TextView.cpp" line="232"/>
+        <source>Find text. %1 to focus, Enter=next, Shift+Enter=previous, Esc=back to text.</source>
+        <translation>テキストを検索します。%1 でフォーカス、Enter で次、Shift+Enter で前、Esc で本文に戻ります。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/TextView.cpp" line="247"/>
+        <source>Toggle case-sensitive search.</source>
+        <translation>大文字・小文字を区別する検索を切り替えます。</translation>
+    </message>
+    <message>
         <source>Line Numbers</source>
         <translation type="vanished">行番号</translation>
     </message>
@@ -7623,46 +7742,41 @@ Keybindings are not affected.</source>
         <translation type="vanished">ワードラップ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/TextView.cpp" line="201"/>
         <source>Show line numbers</source>
-        <translation>行番号を表示</translation>
+        <translation type="vanished">行番号を表示</translation>
     </message>
     <message>
-        <location filename="../src/viewer/TextView.cpp" line="208"/>
         <source>Word wrap</source>
-        <translation>ワードラップ</translation>
+        <translation type="vanished">ワードラップ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/TextView.cpp" line="221"/>
+        <location filename="../src/viewer/TextView.cpp" line="230"/>
         <source>Search text  (%1)</source>
         <translation>検索する文字列  (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/TextView.cpp" line="222"/>
         <source>Search text in this file (%1)</source>
-        <translation>このファイル内を検索 (%1)</translation>
+        <translation type="vanished">このファイル内を検索 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/TextView.cpp" line="236"/>
         <source>Case sensitive search</source>
-        <translation>大文字小文字を区別して検索</translation>
+        <translation type="vanished">大文字小文字を区別して検索</translation>
     </message>
     <message>
-        <location filename="../src/viewer/TextView.cpp" line="547"/>
+        <location filename="../src/viewer/TextView.cpp" line="558"/>
         <source>%1 matches</source>
         <translation>%1 件</translation>
     </message>
     <message>
-        <location filename="../src/viewer/TextView.cpp" line="214"/>
         <source>Find:</source>
-        <translation>検索:</translation>
+        <translation type="vanished">検索:</translation>
     </message>
     <message>
         <source>Case sensitive</source>
         <translation type="vanished">大文字小文字を区別</translation>
     </message>
     <message>
-        <location filename="../src/viewer/TextView.cpp" line="545"/>
+        <location filename="../src/viewer/TextView.cpp" line="556"/>
         <source>Not found</source>
         <translation>見つかりません</translation>
     </message>
