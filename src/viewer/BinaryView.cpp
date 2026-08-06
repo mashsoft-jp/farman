@@ -934,6 +934,9 @@ void BinaryView::setupUi() {
   toolbar->addWidget(new QLabel(tr("Encoding:"), toolbar));
   m_encodingCombo = new QComboBox(toolbar);
   m_encodingCombo->setFocusPolicy(Qt::StrongFocus);
+  m_encodingCombo->setToolTip(tr("Encoding (%1)")
+    .arg(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E)
+           .toString(QKeySequence::NativeText)));
   rebuildEncodingItems();
   toolbar->addWidget(m_encodingCombo);
 
@@ -989,14 +992,17 @@ void BinaryView::setupUi() {
   m_searchEdit->setToolTip(
     tr("Search (%1 to focus)").arg(QKeySequence(QKeySequence::Find)
                                      .toString(QKeySequence::NativeText)));
-  QPushButton* findPrevBtn = new QPushButton(tr("Prev"), searchBar);
-  QPushButton* findNextBtn = new QPushButton(tr("Next"), searchBar);
+  // ボタンにはラベルへショートカットを併記する ("次へ (⌘G)" 等)。
+  const QString nextSc =
+    QKeySequence(QKeySequence::FindNext).toString(QKeySequence::NativeText);
+  const QString prevSc =
+    QKeySequence(QKeySequence::FindPrevious).toString(QKeySequence::NativeText);
+  QPushButton* findPrevBtn =
+    new QPushButton(tr("Prev (%1)").arg(prevSc), searchBar);
+  QPushButton* findNextBtn =
+    new QPushButton(tr("Next (%1)").arg(nextSc), searchBar);
   findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   findNextBtn->setFocusPolicy(Qt::StrongFocus);
-  findNextBtn->setToolTip(QKeySequence(QKeySequence::FindNext)
-                            .toString(QKeySequence::NativeText));
-  findPrevBtn->setToolTip(QKeySequence(QKeySequence::FindPrevious)
-                            .toString(QKeySequence::NativeText));
   searchBar->addWidget(findPrevBtn);
   searchBar->addWidget(findNextBtn);
 
@@ -1060,6 +1066,7 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
   //   Cmd/Ctrl+J          : アドレスジャンプ欄へフォーカス
   //   Cmd/Ctrl+1〜4       : 単位を 1 / 2 / 4 / 8 バイトに切替
   //   Cmd/Ctrl+E          : エンディアン切替 (Little ⇄ Big)
+  //   Cmd/Ctrl+Shift+E    : エンコーディングのコンボへフォーカス
   // アプリ側の Copy コマンドや表示モード (Cmd+1〜4) 等より先に取りたいので、
   // ShortcutOverride を accept してから KeyPress で処理する (Copy 横取りと同じ)。
   if ((watched == m_hex || watched == m_searchEdit || watched == m_addressEdit)
@@ -1069,9 +1076,12 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
     const bool find     = ke->matches(QKeySequence::Find);
     const bool findNext = ke->matches(QKeySequence::FindNext);
     const bool findPrev = ke->matches(QKeySequence::FindPrevious);
-    const bool ctrlOnly = (ke->modifiers() == Qt::ControlModifier);  // mac は Cmd
+    const bool ctrlOnly  = (ke->modifiers() == Qt::ControlModifier);  // mac は Cmd
+    const bool ctrlShift =
+      (ke->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier));
     const bool toAddr       = ctrlOnly && ke->key() == Qt::Key_J;
     const bool toggleEndian = ctrlOnly && ke->key() == Qt::Key_E;
+    const bool toEncoding   = ctrlShift && ke->key() == Qt::Key_E;
     int unitBytes = 0;
     if (ctrlOnly) {
       switch (ke->key()) {
@@ -1082,7 +1092,8 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
         default: break;
       }
     }
-    if (find || findNext || findPrev || toAddr || toggleEndian || unitBytes) {
+    if (find || findNext || findPrev || toAddr || toggleEndian || toEncoding
+        || unitBytes) {
       if (event->type() == QEvent::ShortcutOverride) {
         event->accept();
         return true;
@@ -1097,6 +1108,8 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
       } else if (toAddr) {
         m_addressEdit->setFocus();
         m_addressEdit->selectAll();
+      } else if (toEncoding) {
+        m_encodingCombo->setFocus();
       } else if (unitBytes) {
         // コンボの選択を変えると currentIndexChanged 経由で単位が反映される。
         for (int i = 0; i < m_unitCombo->count(); ++i) {
