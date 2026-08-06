@@ -230,6 +230,7 @@ void MediaView::setupUi() {
   m_positionSlider->setFocusPolicy(Qt::NoFocus);
   m_positionSlider->setEnabled(false);
   m_positionSlider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  m_positionSlider->setToolTip(tr("Seek (Left / Right, Shift for larger steps)"));
   connect(m_positionSlider, &QSlider::sliderMoved, this, [this](int value) {
     m_player->setPosition(value);
   });
@@ -237,6 +238,7 @@ void MediaView::setupUi() {
 
   m_timeLabel = new QLabel(QStringLiteral("0:00 / 0:00"), m_toolbar);
   m_timeLabel->setContentsMargins(6, 0, 6, 0);
+  m_timeLabel->setToolTip(tr("Elapsed / total time"));
   m_toolbar->addWidget(m_timeLabel);
 
   // 再生速度ドロップダウンはシークバー (＋時間表示) のすぐ隣に置く。
@@ -280,7 +282,7 @@ void MediaView::setupUi() {
   m_volumeSlider->setRange(0, 100);
   m_volumeSlider->setValue(Settings::instance().mediaViewerVolume());
   m_volumeSlider->setFixedWidth(100);
-  m_volumeSlider->setToolTip(tr("Volume (Up/Down)"));
+  m_volumeSlider->setToolTip(tr("Volume (Up / Down)"));
   connect(m_volumeSlider, &QSlider::valueChanged,
           this,           &MediaView::applyVolume);
   m_toolbar->addWidget(m_volumeSlider);
@@ -297,7 +299,7 @@ void MediaView::setupUi() {
     m_zoomCombo->addItem(QString::number(p) + QLatin1Char('%'), p);
   }
   m_zoomCombo->setCurrentText(QString::number(m_zoomPercent) + QLatin1Char('%'));
-  m_zoomCombo->setToolTip(tr("Zoom"));
+  m_zoomCombo->setToolTip(tr("Zoom level"));
   m_zoomCombo->setFocusPolicy(Qt::StrongFocus);
   m_zoomComboAction = m_toolbar->addWidget(m_zoomCombo);
   connect(m_zoomCombo, &QComboBox::currentTextChanged, this, [this](const QString& text) {
@@ -643,6 +645,7 @@ void MediaView::setVideoFullScreen(bool on) {
       // シークバー (クリック位置へ即シーク)
       auto* fsSeek = new ClickSeekSlider(Qt::Horizontal, m_fsControlBar);
       fsSeek->setFocusPolicy(Qt::NoFocus);
+      fsSeek->setToolTip(tr("Seek (Left / Right, Shift for larger steps)"));
       fsSeek->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
       fsSeek->setRange(0, int(m_player->duration()));
       fsSeek->setValue(int(m_player->position()));
@@ -663,6 +666,7 @@ void MediaView::setVideoFullScreen(bool on) {
 
       // 時間表示
       auto* fsTime = new QLabel(m_fsControlBar);
+      fsTime->setToolTip(tr("Elapsed / total time"));
       fsTime->setText(QStringLiteral("%1 / %2")
         .arg(formatTime(m_player->position()), formatTime(m_player->duration())));
       connect(m_player, &QMediaPlayer::positionChanged, fsTime,
@@ -674,7 +678,7 @@ void MediaView::setVideoFullScreen(bool on) {
 
       // リピート (通常表示のループボタンと双方向同期)
       auto* fsLoop = makeButton(QStringLiteral(":/icons/toolbar/loop.svg"),
-                                tr("Loop (L)"));
+                                tr("Loop playback (L)"));
       fsLoop->setCheckable(true);
       fsLoop->setChecked(m_loopButton->isChecked());
       connect(fsLoop, &QToolButton::toggled,
@@ -706,6 +710,7 @@ void MediaView::setVideoFullScreen(bool on) {
       // にならない)
       auto* fsVolume = new QSlider(Qt::Horizontal, m_fsControlBar);
       fsVolume->setFocusPolicy(Qt::NoFocus);
+      fsVolume->setToolTip(tr("Volume (Up / Down)"));
       fsVolume->setRange(0, 100);
       fsVolume->setFixedWidth(96);
       fsVolume->setValue(m_volumeSlider->value());
