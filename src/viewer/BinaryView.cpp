@@ -23,7 +23,9 @@
 #include <QStyledItemDelegate>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
+#include <QScrollBar>
 #include <QSignalBlocker>
+#include <QValidator>
 #include <QStringDecoder>
 #include <QTableView>
 #include <QToolBar>
@@ -42,6 +44,55 @@ constexpr int  kBytesPerLine = 16;
 constexpr char kHexDigits[]  = "0123456789abcdef";
 // "Auto" 判定に読む先頭サンプルサイズ。大ファイル全体を uchardet に渡さない。
 constexpr qint64 kEncodingSampleBytes = 64 * 1024;
+
+// アドレス入力欄用のバリデータ。16 進数のみ許可し、さらに値が上限
+// (*m_maxPtr = 最終バイトのオフセット) を超える入力を Invalid として弾く。
+// 上限はファイルごとに変わるので、View 側の qint64 メンバを指すポインタを持ち、
+// 常に最新の上限を参照する。
+class HexAddressValidator : public QValidator {
+public:
+  HexAddressValidator(const qint64* maxPtr, QObject* parent)
+    : QValidator(parent), m_maxPtr(maxPtr) {}
+
+  State validate(QString& input, int& /*pos*/) const override {
+    QString t = input.trimmed();
+    // 先頭の "0x" / "0X" は許可 (プレフィックスのみは入力途中とみなす)。
+    if (t.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+      t = t.mid(2);
+    }
+    if (t.isEmpty()) {
+      return Intermediate;  // 空 / プレフィックスのみは入力途中
+    }
+    // 16 進以外の文字が混じっていたら拒否。
+    for (const QChar c : t) {
+      if (!isHexDigit(c)) {
+        return Invalid;
+      }
+    }
+    const qint64 maxAddr = m_maxPtr ? *m_maxPtr : -1;
+    if (maxAddr < 0) {
+      return Invalid;  // 空ファイル等、指定可能なアドレスが無い
+    }
+    bool ok = false;
+    const qint64 value = t.toLongLong(&ok, 16);
+    if (!ok) {
+      // 桁が多すぎて 64bit を超える等 → 上限超過として拒否。
+      return Invalid;
+    }
+    if (value > maxAddr) {
+      return Invalid;  // 範囲外は受け付けない
+    }
+    return Acceptable;
+  }
+
+private:
+  static bool isHexDigit(QChar c) {
+    return (c >= QLatin1Char('0') && c <= QLatin1Char('9'))
+        || (c >= QLatin1Char('a') && c <= QLatin1Char('f'))
+        || (c >= QLatin1Char('A') && c <= QLatin1Char('F'));
+  }
+  const qint64* m_maxPtr = nullptr;
+};
 
 void appendUnitHex(QString& out, const unsigned char* valueBytes, int unitBytes,
                    BinaryViewerEndian endian) {
@@ -417,10 +468,13 @@ void BinaryView::setupUi() {
   m_addressEdit->setPlaceholderText(tr("hex e.g. 1a0"));
   m_addressEdit->setMaximumWidth(120);
   m_addressEdit->setFocusPolicy(Qt::StrongFocus);
-  // 16 進数字のみ (先頭 0x は許容)。
-  m_addressEdit->setValidator(new QRegularExpressionValidator(
-    QRegularExpression(QStringLiteral("^(0[xX])?[0-9a-fA-F]*$")), m_addressEdit));
+  // 16 進数字のみ、かつ指定可能なアドレス上限 (m_maxAddress) を超える入力を弾く。
+  m_addressEdit->setValidator(new HexAddressValidator(&m_maxAddress, m_addressEdit));
   toolbar->addWidget(m_addressEdit);
+  // 指定可能なアドレスの上限を入力欄の右に表示 (ファイル読込時に更新)。
+  m_addressMaxLabel = new QLabel(toolbar);
+  m_addressMaxLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  toolbar->addWidget(m_addressMaxLabel);
   QPushButton* goButton = new QPushButton(tr("Go"), toolbar);
   goButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(goButton);
@@ -447,6 +501,15 @@ void BinaryView::setupUi() {
   // セルのマージンを詰めて、単位間を 1 文字ぶんの隙間にする。
   m_table->setItemDelegate(new TightCellDelegate(m_table));
   root->addWidget(m_table, /*stretch*/ 1);
+
+  // 巨大ファイル (数百万行の仮想化モデル) で、末尾付近までスクロールしてから
+  // 上下に少し動かすと最終行が再描画されずに残ることがある (QTableView の
+  // ScrollPerItem での既知の描画ムラ)。ScrollPerItem のままにしつつ (ScrollPerPixel
+  // は行数×行高が int を溢れてスクロールが壊れる)、スクロール値が変わるたびに
+  // viewport 全体を更新して確実に最終行まで描き直す。表示中の行数だけの再描画
+  // なので軽い。
+  connect(m_table->verticalScrollBar(), &QScrollBar::valueChanged,
+          m_table->viewport(), QOverload<>::of(&QWidget::update));
 
   // Ctrl+C / Cmd+C: 選択セルをテキストとしてコピー。QShortcut だとアプリ側の
   // Copy コマンド (ファイルパスのコピー等) に先取りされてしまうため、テキスト
@@ -713,6 +776,19 @@ void BinaryView::applyPreparedLoad(const PreparedLoad& r) {
   m_totalSize      = r.totalSize;
   m_actualEncoding = r.actualEncoding;
 
+  // 指定可能なアドレスの上限 (= 最終バイトのオフセット) と、その表示ラベルを更新。
+  m_maxAddress = m_totalSize > 0 ? m_totalSize - 1 : -1;
+  if (m_addressMaxLabel) {
+    m_addressMaxLabel->setText(
+      m_maxAddress >= 0
+        ? QStringLiteral("/ %1").arg(QString::number(m_maxAddress, 16).toUpper())
+        : QString());
+    m_addressMaxLabel->setToolTip(tr("Maximum address (last byte offset)"));
+  }
+  if (m_addressEdit) {
+    m_addressEdit->clear();
+  }
+
   // mmap を開いてモデルへ渡す (メインスレッド)。
   m_model->setFormat(m_unit, m_endian, m_actualEncoding);
   m_model->setAddressColor(Settings::instance().binaryViewerAddressForeground());
@@ -727,6 +803,9 @@ void BinaryView::applyPreparedLoad(const PreparedLoad& r) {
 void BinaryView::clearContent() {
   m_filePath.clear();
   m_totalSize = 0;
+  m_maxAddress = -1;
+  if (m_addressMaxLabel) m_addressMaxLabel->clear();
+  if (m_addressEdit) m_addressEdit->clear();
   if (m_model) m_model->close();
 }
 

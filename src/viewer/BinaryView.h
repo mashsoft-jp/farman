@@ -8,6 +8,7 @@
 #include <atomic>
 
 class QComboBox;
+class QLabel;
 class QLineEdit;
 class QTableView;
 
@@ -92,11 +93,16 @@ private:
   QComboBox*      m_endianCombo   = nullptr;
   QComboBox*      m_encodingCombo = nullptr;
   QLineEdit*      m_addressEdit   = nullptr;
+  // アドレス入力欄の右に表示する、指定可能なアドレスの上限 ("/ 3FFFFFFF" 等)。
+  QLabel*         m_addressMaxLabel = nullptr;
   QTableView*     m_table         = nullptr;
   BinaryHexModel* m_model         = nullptr;
 
   QString m_filePath;
   qint64  m_totalSize = 0;
+  // 指定可能なアドレスの上限 (= 最終バイトのオフセット = totalSize - 1)。空ファイル
+  // では -1。アドレス入力欄のバリデータがこの値を参照して範囲外入力を弾く。
+  qint64  m_maxAddress = -1;
 
   // 表示に使う実効設定 (ローカル上書き)。Settings 変更時に再同期される。
   BinaryViewerUnit   m_unit     = BinaryViewerUnit::Byte1;

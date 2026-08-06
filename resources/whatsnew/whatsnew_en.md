@@ -27,10 +27,19 @@ With the external plugin **farman-plugin-3d**, farman can now display
 - Force a recompute with the toolbar button or `Ctrl+Shift+R`.
 - Not computed while the Size column is hidden.
 
+### Binary viewer improvements
+
+- Large files (gigabyte-class) now open quickly: only the visible rows are read
+  instead of loading the whole file.
+- Added jump-to-hex-address. The maximum valid address is shown next to the
+  input, and out-of-range addresses are rejected as you type.
+
 ### Bug fixes
 
 - Fixed an issue where the cursor on the last file could be scrolled out of
   view after returning from an inline viewer to the file list.
+- Fixed an issue where the last row could fail to render after scrolling near
+  the end of a large file.
 
 ### Other
 

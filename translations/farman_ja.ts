@@ -1524,64 +1524,69 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::BinaryView</name>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="391"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="442"/>
         <source>Unit:</source>
         <translation>単位:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="393"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="444"/>
         <source>1 Byte</source>
         <translation>1 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="394"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="445"/>
         <source>2 Byte</source>
         <translation>2 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="395"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="446"/>
         <source>4 Byte</source>
         <translation>4 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="396"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="447"/>
         <source>8 Byte</source>
         <translation>8 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="400"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="451"/>
         <source>Endian:</source>
         <translation>エンディアン:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="402"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="453"/>
         <source>Little</source>
         <translation>リトル</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="403"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="454"/>
         <source>Big</source>
         <translation>ビッグ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="407"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="458"/>
         <source>Encoding:</source>
         <translation>エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="415"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="466"/>
         <source>Address:</source>
         <translation>アドレス:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="417"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="468"/>
         <source>hex e.g. 1a0</source>
         <translation>16進 例: 1a0</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="424"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="478"/>
         <source>Go</source>
         <translation>移動</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="786"/>
+        <source>Maximum address (last byte offset)</source>
+        <translation>指定可能な最大アドレス (最終バイトのオフセット)</translation>
     </message>
     <message>
         <source>  ·  truncated to first %1</source>
@@ -2797,97 +2802,97 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::FileListModel</name>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="337"/>
+        <location filename="../src/model/FileListModel.cpp" line="365"/>
         <source>Failed to open archive: %1</source>
         <translation>アーカイブを開けませんでした: %1</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="349"/>
+        <location filename="../src/model/FileListModel.cpp" line="377"/>
         <source>Enter password for %1:</source>
         <translation>%1 のパスワードを入力してください:</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="353"/>
+        <location filename="../src/model/FileListModel.cpp" line="381"/>
         <source>Password Required</source>
         <translation>パスワードが必要です</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="359"/>
+        <location filename="../src/model/FileListModel.cpp" line="387"/>
         <source>Password input cancelled.</source>
         <translation>パスワード入力がキャンセルされました。</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="368"/>
+        <location filename="../src/model/FileListModel.cpp" line="396"/>
         <source>Wrong password. Enter password for %1:</source>
         <translation>パスワードが違います。%1 のパスワードを再入力してください:</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="371"/>
+        <location filename="../src/model/FileListModel.cpp" line="399"/>
         <source>Cannot Open Archive</source>
         <translation>アーカイブを開けません</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="372"/>
+        <location filename="../src/model/FileListModel.cpp" line="400"/>
         <source>Wrong password (3 attempts). Giving up.</source>
         <translation>パスワードが 3 回連続で違いました。中止します。</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="373"/>
+        <location filename="../src/model/FileListModel.cpp" line="401"/>
         <source>Wrong password (gave up after 3 attempts).</source>
         <translation>パスワード違い (3 回試行で中止)。</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="381"/>
+        <location filename="../src/model/FileListModel.cpp" line="409"/>
         <source>Path not found in archive: %1</source>
         <translation>アーカイブ内に該当パスがありません: %1</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="998"/>
+        <location filename="../src/model/FileListModel.cpp" line="1023"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="999"/>
+        <location filename="../src/model/FileListModel.cpp" line="1024"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="1000"/>
+        <location filename="../src/model/FileListModel.cpp" line="1025"/>
         <source>Type</source>
         <translation>種別</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="1001"/>
+        <location filename="../src/model/FileListModel.cpp" line="1026"/>
         <source>Modified</source>
         <translation>更新日時</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="1002"/>
+        <location filename="../src/model/FileListModel.cpp" line="1027"/>
         <source>Created</source>
         <translation>作成日時</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="1003"/>
+        <location filename="../src/model/FileListModel.cpp" line="1028"/>
         <source>Permissions</source>
         <translation>パーミッション</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="1004"/>
+        <location filename="../src/model/FileListModel.cpp" line="1029"/>
         <source>Attributes</source>
         <translation>属性</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="1005"/>
+        <location filename="../src/model/FileListModel.cpp" line="1030"/>
         <source>Owner</source>
         <translation>所有者</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="1006"/>
+        <location filename="../src/model/FileListModel.cpp" line="1031"/>
         <source>Group</source>
         <translation>グループ</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="1007"/>
+        <location filename="../src/model/FileListModel.cpp" line="1032"/>
         <source>Link Target</source>
         <translation>リンク先</translation>
     </message>
@@ -5022,12 +5027,12 @@ File system: %3</source>
         <translation>キーバインド</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2082"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2096"/>
         <source>Version %1&lt;br&gt;&lt;br&gt;Copyright &amp;copy; Mashsoft Inc.&lt;br&gt;&lt;a href=&quot;https://www.mashsoft.co.jp&quot;&gt;https://www.mashsoft.co.jp&lt;/a&gt;</source>
         <translation>バージョン %1&lt;br&gt;&lt;br&gt;Copyright &amp;copy; Mashsoft Inc.&lt;br&gt;&lt;a href=&quot;https://www.mashsoft.co.jp&quot;&gt;https://www.mashsoft.co.jp&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2123"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2149"/>
         <source>License Info...</source>
         <translation>ライセンス情報...</translation>
     </message>
@@ -5085,33 +5090,33 @@ File system: %3</source>
         <translation type="vanished">外部</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2145"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2171"/>
         <source>Failed to load license information.</source>
         <translation>ライセンス情報の読み込みに失敗しました。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2149"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2175"/>
         <source>Third-Party Licenses</source>
         <translation>サードパーティライセンス</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2208"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2234"/>
         <source>Showing What&apos;s New for %1</source>
         <translation>%1 のアップデート内容を表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2245"/>
-        <location filename="../src/ui/MainWindow.cpp" line="2265"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2271"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2291"/>
         <source>You&apos;re using the latest version of farman.</source>
         <translation>最新バージョンを使用しています。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2247"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2273"/>
         <source>This is a development build.</source>
         <translation>開発ビルドです。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2249"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2275"/>
         <source>Could not check for updates: %1</source>
         <translation>アップデートを確認できませんでした: %1</translation>
     </message>
@@ -5310,7 +5315,7 @@ File system: %3</source>
         <translation type="vanished">プラグインの有効/無効の変更は、farman の再起動後に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2237"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2263"/>
         <source>Update check failed: %1</source>
         <translation>アップデートチェック失敗: %1</translation>
     </message>
@@ -5347,13 +5352,13 @@ Reason: %1</source>
 理由: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2251"/>
-        <location filename="../src/ui/MainWindow.cpp" line="2264"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2277"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2290"/>
         <source>Check for Updates</source>
         <translation>アップデートを確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2256"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2282"/>
         <source>Update check: latest=%1, current=%2, newer=%3</source>
         <translation>アップデートチェック: latest=%1, current=%2, newer=%3</translation>
     </message>
@@ -5366,57 +5371,57 @@ Reason: %1</source>
         <translation type="vanished">farman %1 が最新版です。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2276"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2302"/>
         <source>Update %1 is in skip list, suppressing notification</source>
         <translation>アップデート %1 はスキップ済みリストにあるため通知を抑止します</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2286"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2312"/>
         <source>Silent auto-update: downloading %1</source>
         <translation>サイレント自動アップデート: %1 をダウンロード中</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2303"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2329"/>
         <source>User chose to skip update %1</source>
         <translation>ユーザーがアップデート %1 のスキップを選択しました</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2319"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2345"/>
         <source>Updating farman...</source>
         <translation>farman をアップデート中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2320"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2346"/>
         <source>Preparing download...</source>
         <translation>ダウンロードの準備中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2345"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2371"/>
         <source>Update download failed: %1</source>
         <translation>アップデートのダウンロード失敗: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2346"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2372"/>
         <source>Update Failed</source>
         <translation>アップデート失敗</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2347"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2373"/>
         <source>Could not install the update: %1</source>
         <translation>アップデートをインストールできませんでした: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2350"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2376"/>
         <source>Update install launched, exiting</source>
         <translation>アップデートのインストールを起動しました。farman を終了します</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2463"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2489"/>
         <source>Confirm Exit</source>
         <translation>終了確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="2464"/>
+        <location filename="../src/ui/MainWindow.cpp" line="2490"/>
         <source>Are you sure you want to exit farman?</source>
         <translation>farman を終了しますか?</translation>
     </message>
@@ -8242,7 +8247,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
     </message>
     <message>
         <location filename="../src/utils/Dialogs.cpp" line="282"/>
-        <location filename="../src/model/FileListModel.cpp" line="278"/>
+        <location filename="../src/model/FileListModel.cpp" line="306"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
@@ -8459,12 +8464,12 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>アーカイブの読み込みをキャンセルしました。</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="277"/>
+        <location filename="../src/model/FileListModel.cpp" line="305"/>
         <source>Reading archive: %1</source>
         <translation>アーカイブを読み込み中: %1</translation>
     </message>
     <message>
-        <location filename="../src/model/FileListModel.cpp" line="295"/>
+        <location filename="../src/model/FileListModel.cpp" line="323"/>
         <source>Reading archive: %1 (%2 entries)</source>
         <translation>アーカイブを読み込み中: %1 (%2 件)</translation>
     </message>
