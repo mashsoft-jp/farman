@@ -954,7 +954,9 @@ void BinaryView::clearContent() {
 
 QString BinaryView::statusInfo() const {
   if (m_filePath.isEmpty()) return QString();
-  QString s = QLocale(QLocale::English).formattedDataSize(m_totalSize);
+  // GB/GiB ではなく正確なバイト数で表示する (バイナリビュアーなのでオフセットと
+  // 対応が取りやすいように)。桁区切り付き。
+  QString s = tr("%1 bytes").arg(QLocale(QLocale::English).toString(m_totalSize));
   if (m_encoding.compare(QStringLiteral("Auto"), Qt::CaseInsensitive) == 0
       && !m_actualEncoding.isEmpty()) {
     s += QStringLiteral("  ·  %1").arg(m_actualEncoding);

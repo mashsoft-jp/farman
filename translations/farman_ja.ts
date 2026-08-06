@@ -1524,69 +1524,74 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::BinaryView</name>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="442"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="706"/>
         <source>Unit:</source>
         <translation>単位:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="444"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="708"/>
         <source>1 Byte</source>
         <translation>1 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="445"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="709"/>
         <source>2 Byte</source>
         <translation>2 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="446"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="710"/>
         <source>4 Byte</source>
         <translation>4 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="447"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="711"/>
         <source>8 Byte</source>
         <translation>8 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="451"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="715"/>
         <source>Endian:</source>
         <translation>エンディアン:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="453"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="717"/>
         <source>Little</source>
         <translation>リトル</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="454"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="718"/>
         <source>Big</source>
         <translation>ビッグ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="458"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="722"/>
         <source>Encoding:</source>
         <translation>エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="466"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="730"/>
         <source>Address:</source>
         <translation>アドレス:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="468"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="732"/>
         <source>hex e.g. 1a0</source>
         <translation>16進 例: 1a0</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="478"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="742"/>
         <source>Go</source>
         <translation>移動</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="786"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="933"/>
         <source>Maximum address (last byte offset)</source>
         <translation>指定可能な最大アドレス (最終バイトのオフセット)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="959"/>
+        <source>%1 bytes</source>
+        <translation>%1 バイト</translation>
     </message>
     <message>
         <source>  ·  truncated to first %1</source>
@@ -8259,72 +8264,72 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1431"/>
+        <location filename="../src/settings/Settings.cpp" line="1434"/>
         <source>Home</source>
         <translation>ホーム</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1433"/>
+        <location filename="../src/settings/Settings.cpp" line="1436"/>
         <source>Desktop</source>
         <translation>デスクトップ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1435"/>
+        <location filename="../src/settings/Settings.cpp" line="1438"/>
         <source>Documents</source>
         <translation>ドキュメント</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1437"/>
+        <location filename="../src/settings/Settings.cpp" line="1440"/>
         <source>Downloads</source>
         <translation>ダウンロード</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1439"/>
+        <location filename="../src/settings/Settings.cpp" line="1442"/>
         <source>Pictures</source>
         <translation>ピクチャ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1441"/>
+        <location filename="../src/settings/Settings.cpp" line="1444"/>
         <source>Music</source>
         <translation>ミュージック</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1443"/>
+        <location filename="../src/settings/Settings.cpp" line="1446"/>
         <source>Movies</source>
         <translation>ムービー</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1696"/>
+        <location filename="../src/settings/Settings.cpp" line="1699"/>
         <source>Settings file does not exist yet.</source>
         <translation>設定ファイルがまだ存在しません。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1701"/>
+        <location filename="../src/settings/Settings.cpp" line="1704"/>
         <source>Cannot overwrite existing file: %1</source>
         <translation>既存ファイルを上書きできません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1705"/>
+        <location filename="../src/settings/Settings.cpp" line="1708"/>
         <source>Failed to copy settings to: %1</source>
         <translation>設定ファイルのコピーに失敗しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1725"/>
+        <location filename="../src/settings/Settings.cpp" line="1728"/>
         <source>Not a valid JSON settings file: %1</source>
         <translation>有効な JSON 設定ファイルではありません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1731"/>
+        <location filename="../src/settings/Settings.cpp" line="1734"/>
         <source>Missing &quot;version&quot; field — not a farman settings file?</source>
         <translation>「version」フィールドがありません — farman の設定ファイルではない可能性があります。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1740"/>
+        <location filename="../src/settings/Settings.cpp" line="1743"/>
         <source>Cannot replace existing settings file: %1</source>
         <translation>既存の設定ファイルを置き換えられません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1744"/>
+        <location filename="../src/settings/Settings.cpp" line="1747"/>
         <source>Failed to install imported settings file</source>
         <translation>インポートした設定ファイルの適用に失敗しました</translation>
     </message>
@@ -8354,7 +8359,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>未知の外部コマンド: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1716"/>
+        <location filename="../src/settings/Settings.cpp" line="1719"/>
         <location filename="../src/settings/PresetIO.cpp" line="21"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>
