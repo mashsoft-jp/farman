@@ -39,7 +39,8 @@ With the external plugin **farman-plugin-3d**, farman can now display
   endian-aware). Press Enter or Next / Prev to search forward / backward. Hits
   are highlighted in both the hex and text columns. Shortcuts: Cmd/Ctrl+F to
   focus search, Cmd+G / F3 find next, Cmd+Shift+G / Shift+F3 find previous,
-  Cmd/Ctrl+J to focus the address field.
+  Cmd/Ctrl+J to focus the address field, Cmd/Ctrl+1-4 to change the unit, and
+  Cmd/Ctrl+E to toggle endianness.
 
 ### Bug fixes
 

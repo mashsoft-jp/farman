@@ -916,6 +916,10 @@ void BinaryView::setupUi() {
   m_unitCombo->addItem(tr("4 Byte"), 4);
   m_unitCombo->addItem(tr("8 Byte"), 8);
   m_unitCombo->setFocusPolicy(Qt::StrongFocus);
+  m_unitCombo->setToolTip(tr("Unit (%1)")
+    .arg(QKeySequence(Qt::CTRL | Qt::Key_1).toString(QKeySequence::NativeText)
+         + QStringLiteral("..")
+         + QKeySequence(Qt::CTRL | Qt::Key_4).toString(QKeySequence::NativeText)));
   toolbar->addWidget(m_unitCombo);
 
   toolbar->addWidget(new QLabel(tr("Endian:"), toolbar));
@@ -923,6 +927,8 @@ void BinaryView::setupUi() {
   m_endianCombo->addItem(tr("Little"), static_cast<int>(BinaryViewerEndian::Little));
   m_endianCombo->addItem(tr("Big"),    static_cast<int>(BinaryViewerEndian::Big));
   m_endianCombo->setFocusPolicy(Qt::StrongFocus);
+  m_endianCombo->setToolTip(tr("Endian (%1)")
+    .arg(QKeySequence(Qt::CTRL | Qt::Key_E).toString(QKeySequence::NativeText)));
   toolbar->addWidget(m_endianCombo);
 
   toolbar->addWidget(new QLabel(tr("Encoding:"), toolbar));
@@ -1052,8 +1058,10 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
   //   Cmd+G / F3          : 次を検索
   //   Cmd+Shift+G / S+F3  : 前を検索
   //   Cmd/Ctrl+J          : アドレスジャンプ欄へフォーカス
-  // アプリ側の Copy コマンド等より先に取りたいので、ShortcutOverride を accept
-  // してから KeyPress で処理する (Copy 横取りと同じ手法)。
+  //   Cmd/Ctrl+1〜4       : 単位を 1 / 2 / 4 / 8 バイトに切替
+  //   Cmd/Ctrl+E          : エンディアン切替 (Little ⇄ Big)
+  // アプリ側の Copy コマンドや表示モード (Cmd+1〜4) 等より先に取りたいので、
+  // ShortcutOverride を accept してから KeyPress で処理する (Copy 横取りと同じ)。
   if ((watched == m_hex || watched == m_searchEdit || watched == m_addressEdit)
       && (event->type() == QEvent::ShortcutOverride
           || event->type() == QEvent::KeyPress)) {
@@ -1061,9 +1069,20 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
     const bool find     = ke->matches(QKeySequence::Find);
     const bool findNext = ke->matches(QKeySequence::FindNext);
     const bool findPrev = ke->matches(QKeySequence::FindPrevious);
-    const bool toAddr   = (ke->modifiers() & Qt::ControlModifier)
-                          && ke->key() == Qt::Key_J;
-    if (find || findNext || findPrev || toAddr) {
+    const bool ctrlOnly = (ke->modifiers() == Qt::ControlModifier);  // mac は Cmd
+    const bool toAddr       = ctrlOnly && ke->key() == Qt::Key_J;
+    const bool toggleEndian = ctrlOnly && ke->key() == Qt::Key_E;
+    int unitBytes = 0;
+    if (ctrlOnly) {
+      switch (ke->key()) {
+        case Qt::Key_1: unitBytes = 1; break;
+        case Qt::Key_2: unitBytes = 2; break;
+        case Qt::Key_3: unitBytes = 4; break;
+        case Qt::Key_4: unitBytes = 8; break;
+        default: break;
+      }
+    }
+    if (find || findNext || findPrev || toAddr || toggleEndian || unitBytes) {
       if (event->type() == QEvent::ShortcutOverride) {
         event->accept();
         return true;
@@ -1078,6 +1097,16 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
       } else if (toAddr) {
         m_addressEdit->setFocus();
         m_addressEdit->selectAll();
+      } else if (unitBytes) {
+        // コンボの選択を変えると currentIndexChanged 経由で単位が反映される。
+        for (int i = 0; i < m_unitCombo->count(); ++i) {
+          if (m_unitCombo->itemData(i).toInt() == unitBytes) {
+            m_unitCombo->setCurrentIndex(i);
+            break;
+          }
+        }
+      } else if (toggleEndian) {
+        m_endianCombo->setCurrentIndex(m_endianCombo->currentIndex() == 0 ? 1 : 0);
       }
       return true;
     }
