@@ -16,6 +16,7 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QKeySequence>
+#include <QList>
 #include <QLabel>
 #include <QLineEdit>
 #include <QLocale>
@@ -129,26 +130,34 @@ QString resolveEncoding(const QByteArray& data, const QString& userEncoding) {
   return detected.isEmpty() ? QStringLiteral("UTF-8") : detected;
 }
 
-QString decodeStringColumn(const QByteArray& chunk, const QString& encoding) {
-  QString        decoded;
-  QStringDecoder decoder(encoding.toUtf8().constData());
-  if (decoder.isValid()) {
-    decoded = decoder.decode(chunk);
-  } else if (QTextCodec* codec = QTextCodec::codecForName(encoding.toUtf8())) {
-    decoded = codec->toUnicode(chunk);
-  } else {
-    decoded = QStringDecoder(QStringDecoder::Utf8).decode(chunk);
+// ASCII 列を、選択反転できるように「表示文字ごとに元バイトの開始位置」を添えて
+// デコードする。1 バイトずつデコーダに与え、文字が確定した時点で、その文字が
+// どのバイトから始まったかを記録する (マルチバイト文字にも対応)。非表示文字
+// (制御文字 / 空白 / 不正シーケンス) は '.' に置換する。
+void decodeAsciiCells(const unsigned char* buf, int n, const QString& encoding,
+                      QString& outText, QList<int>& outByteStart) {
+  outText.clear();
+  outByteStart.clear();
+  QStringDecoder dec(encoding.toUtf8().constData());
+  if (!dec.isValid()) {
+    dec = QStringDecoder(QStringDecoder::Utf8);
   }
-  QString out;
-  out.reserve(decoded.size());
-  for (QChar ch : decoded) {
-    if (ch == QChar(0xFFFD) || !ch.isPrint() || ch.isSpace()) {
-      out.append(QLatin1Char('.'));
-    } else {
-      out.append(ch);
+  int start = 0;  // 生成中の文字が始まったバイト位置
+  for (int i = 0; i < n; ++i) {
+    const char one = static_cast<char>(buf[i]);
+    const QString piece = dec.decode(QByteArray(&one, 1));
+    if (!piece.isEmpty()) {
+      for (const QChar ch : piece) {
+        if (ch == QChar(0xFFFD) || !ch.isPrint() || ch.isSpace()) {
+          outText.append(QLatin1Char('.'));
+        } else {
+          outText.append(ch);
+        }
+        outByteStart.append(start);
+      }
+      start = i + 1;
     }
   }
-  return out;
 }
 
 // 検索文字列を、指定エンコーディングでバイト列に変換する (ASCII 列の表示と対称)。
@@ -609,11 +618,28 @@ protected:
         p.drawText(ux + 1, textY, hx);
       }
 
-      // ASCII (エンコーディングで 16 バイトをまとめてデコード)。
-      const QString asc =
-        decodeStringColumn(QByteArray(reinterpret_cast<const char*>(buf), n), m_encoding);
-      p.setPen(normFg);
-      p.drawText(m_asciiX - hoff + 1, textY, asc);
+      // ASCII (エンコーディングでデコード)。文字ごとに元バイトを対応づけ、選択
+      // 範囲に重なる文字は反転表示する (16 進側とあわせて文字列側も強調)。
+      QString    asc;
+      QList<int> byteStart;
+      decodeAsciiCells(buf, n, m_encoding, asc, byteStart);
+      int ax2 = m_asciiX - hoff + 1;
+      for (int j = 0; j < asc.size(); ++j) {
+        const int    bs  = byteStart.at(j);
+        const int    be  = (j + 1 < byteStart.size()) ? byteStart.at(j + 1) - 1 : n - 1;
+        const QString one(asc.at(j));
+        const int     cw = fm.horizontalAdvance(one);
+        const bool    sel =
+          m_hasSel && !(lineOff + be < selLo || lineOff + bs > selHi);
+        if (sel) {
+          p.fillRect(QRect(ax2, y, cw, rh), selBg);
+          p.setPen(selFg);
+        } else {
+          p.setPen(normFg);
+        }
+        p.drawText(ax2, textY, one);
+        ax2 += cw;
+      }
     }
   }
 
