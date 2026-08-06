@@ -1524,107 +1524,98 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::BinaryView</name>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="912"/>
         <source>Unit:</source>
-        <translation>単位:</translation>
+        <translation type="vanished">単位:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="914"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="929"/>
         <source>1 Byte</source>
         <translation>1 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="915"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="930"/>
         <source>2 Byte</source>
         <translation>2 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="916"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="931"/>
         <source>4 Byte</source>
         <translation>4 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="917"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="932"/>
         <source>8 Byte</source>
         <translation>8 バイト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="919"/>
         <source>Unit (%1)</source>
-        <translation>単位 (%1)</translation>
+        <translation type="vanished">単位 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="925"/>
         <source>Endian:</source>
-        <translation>エンディアン:</translation>
+        <translation type="vanished">エンディアン:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="927"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="940"/>
         <source>Little</source>
         <translation>リトル</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="928"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="941"/>
         <source>Big</source>
         <translation>ビッグ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="930"/>
         <source>Endian (%1)</source>
-        <translation>エンディアン (%1)</translation>
+        <translation type="vanished">エンディアン (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="934"/>
         <source>Encoding:</source>
-        <translation>エンコーディング:</translation>
+        <translation type="vanished">エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="937"/>
         <source>Encoding (%1)</source>
-        <translation>エンコーディング (%1)</translation>
+        <translation type="vanished">エンコーディング (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="945"/>
         <source>Address:</source>
-        <translation>アドレス:</translation>
+        <translation type="vanished">アドレス:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="947"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="959"/>
         <source>hex e.g. 1a0</source>
         <translation>16進 例: 1a0</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="957"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="971"/>
         <source>Go</source>
         <translation>移動</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="974"/>
         <source>Search:</source>
-        <translation>検索:</translation>
+        <translation type="vanished">検索:</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="975"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="990"/>
         <source>Hex</source>
         <translation>16進</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="976"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="991"/>
         <source>Text</source>
         <translation>文字列</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="993"/>
         <source>Search (%1 to focus)</source>
-        <translation>検索 (%1 でフォーカス)</translation>
+        <translation type="vanished">検索 (%1 でフォーカス)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1001"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="1019"/>
         <source>Prev (%1)</source>
         <translation>前へ (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1003"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="1021"/>
         <source>Next (%1)</source>
         <translation>次へ (%1)</translation>
     </message>
@@ -1637,37 +1628,112 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation type="vanished">次へ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1257"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="927"/>
+        <source>Unit (%1):</source>
+        <translation>単位 (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="935"/>
+        <source>Bytes shown per group (1 / 2 / 4 / 8). Shortcut: %1</source>
+        <translation>1 グループの表示バイト数 (1 / 2 / 4 / 8)。ショートカット: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="938"/>
+        <source>Endian (%1):</source>
+        <translation>エンディアン (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="944"/>
+        <source>Byte order for multi-byte groups. Shortcut: %1 (toggle)</source>
+        <translation>複数バイト単位のバイト順。ショートカット: %1 (切替)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="947"/>
+        <source>Encoding (%1):</source>
+        <translation>エンコーディング (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="951"/>
+        <source>Text encoding of the character column. Shortcut: %1 (focus)</source>
+        <translation>文字列列の文字コード。ショートカット: %1 (フォーカス)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="957"/>
+        <source>Address (%1):</source>
+        <translation>アドレス (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="963"/>
+        <source>Jump to hex address. %1 to focus, Enter to jump.</source>
+        <translation>16 進アドレスへジャンプ。%1 でフォーカス、Enter で移動。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="973"/>
+        <source>Jump to the address (Enter)</source>
+        <translation>アドレスへ移動 (Enter)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="989"/>
+        <source>Search (%1):</source>
+        <translation>検索 (%1):</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="996"/>
+        <source>Search by hex bytes (grouped by the display unit)</source>
+        <translation>16 進バイト列で検索 (表示単位でグループ化)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="997"/>
+        <source>Search by text in the current encoding</source>
+        <translation>現在のエンコーディングの文字列で検索</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="1011"/>
+        <source>Text to find. %1 to focus, Enter to search next, Shift+Enter for previous.</source>
+        <translation>検索する文字列。%1 でフォーカス、Enter で次を検索、Shift+Enter で前を検索。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="1024"/>
+        <source>Find previous match</source>
+        <translation>前の一致へ</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="1025"/>
+        <source>Find next match</source>
+        <translation>次の一致へ</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/BinaryView.cpp" line="1277"/>
         <source>Invalid input</source>
         <translation>入力が不正</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1280"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="1300"/>
         <source>Not found</source>
         <translation>見つかりません</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1284"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="1304"/>
         <source>Wrapped</source>
         <translation>折り返しました</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1301"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="1321"/>
         <source>hex e.g. %1</source>
         <translation>16進 例: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1303"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="1323"/>
         <source>text to find</source>
         <translation>検索する文字列</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1361"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="1381"/>
         <source>Maximum address (last byte offset)</source>
         <translation>指定可能な最大アドレス (最終バイトのオフセット)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/BinaryView.cpp" line="1390"/>
+        <location filename="../src/viewer/BinaryView.cpp" line="1410"/>
         <source>%1 bytes</source>
         <translation>%1 バイト</translation>
     </message>

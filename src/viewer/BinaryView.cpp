@@ -909,44 +909,58 @@ void BinaryView::setupUi() {
   toolbar->setIconSize(QSize(20, 20));
   applyToolbarStyle(toolbar);
 
-  toolbar->addWidget(new QLabel(tr("Unit:"), toolbar));
+  // Cmd / Ctrl のネイティブ表記 (mac "⌘" / その他 "Ctrl+")。単位の 1〜4 のように
+  // 範囲を書くために、単一キーのシーケンスから末尾のキーを削って接頭辞を作る。
+  QString modPrefix = QKeySequence(Qt::CTRL | Qt::Key_1)
+                        .toString(QKeySequence::NativeText);
+  modPrefix.chop(1);
+  const QString scUnit   = modPrefix + QStringLiteral("1-4");
+  const QString scEndian =
+    QKeySequence(Qt::CTRL | Qt::Key_E).toString(QKeySequence::NativeText);
+  const QString scEnc =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E).toString(QKeySequence::NativeText);
+  const QString scAddr =
+    QKeySequence(Qt::CTRL | Qt::Key_J).toString(QKeySequence::NativeText);
+  const QString scFind =
+    QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+
+  toolbar->addWidget(new QLabel(tr("Unit (%1):").arg(scUnit), toolbar));
   m_unitCombo = new QComboBox(toolbar);
   m_unitCombo->addItem(tr("1 Byte"), 1);
   m_unitCombo->addItem(tr("2 Byte"), 2);
   m_unitCombo->addItem(tr("4 Byte"), 4);
   m_unitCombo->addItem(tr("8 Byte"), 8);
   m_unitCombo->setFocusPolicy(Qt::StrongFocus);
-  m_unitCombo->setToolTip(tr("Unit (%1)")
-    .arg(QKeySequence(Qt::CTRL | Qt::Key_1).toString(QKeySequence::NativeText)
-         + QStringLiteral("..")
-         + QKeySequence(Qt::CTRL | Qt::Key_4).toString(QKeySequence::NativeText)));
+  m_unitCombo->setToolTip(
+    tr("Bytes shown per group (1 / 2 / 4 / 8). Shortcut: %1").arg(scUnit));
   toolbar->addWidget(m_unitCombo);
 
-  toolbar->addWidget(new QLabel(tr("Endian:"), toolbar));
+  toolbar->addWidget(new QLabel(tr("Endian (%1):").arg(scEndian), toolbar));
   m_endianCombo = new QComboBox(toolbar);
   m_endianCombo->addItem(tr("Little"), static_cast<int>(BinaryViewerEndian::Little));
   m_endianCombo->addItem(tr("Big"),    static_cast<int>(BinaryViewerEndian::Big));
   m_endianCombo->setFocusPolicy(Qt::StrongFocus);
-  m_endianCombo->setToolTip(tr("Endian (%1)")
-    .arg(QKeySequence(Qt::CTRL | Qt::Key_E).toString(QKeySequence::NativeText)));
+  m_endianCombo->setToolTip(
+    tr("Byte order for multi-byte groups. Shortcut: %1 (toggle)").arg(scEndian));
   toolbar->addWidget(m_endianCombo);
 
-  toolbar->addWidget(new QLabel(tr("Encoding:"), toolbar));
+  toolbar->addWidget(new QLabel(tr("Encoding (%1):").arg(scEnc), toolbar));
   m_encodingCombo = new QComboBox(toolbar);
   m_encodingCombo->setFocusPolicy(Qt::StrongFocus);
-  m_encodingCombo->setToolTip(tr("Encoding (%1)")
-    .arg(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E)
-           .toString(QKeySequence::NativeText)));
+  m_encodingCombo->setToolTip(
+    tr("Text encoding of the character column. Shortcut: %1 (focus)").arg(scEnc));
   rebuildEncodingItems();
   toolbar->addWidget(m_encodingCombo);
 
   // アドレスジャンプ (16 進オフセットへスクロール)。
   toolbar->addSeparator();
-  toolbar->addWidget(new QLabel(tr("Address:"), toolbar));
+  toolbar->addWidget(new QLabel(tr("Address (%1):").arg(scAddr), toolbar));
   m_addressEdit = new QLineEdit(toolbar);
   m_addressEdit->setPlaceholderText(tr("hex e.g. 1a0"));
   m_addressEdit->setMaximumWidth(120);
   m_addressEdit->setFocusPolicy(Qt::StrongFocus);
+  m_addressEdit->setToolTip(
+    tr("Jump to hex address. %1 to focus, Enter to jump.").arg(scAddr));
   // 16 進数字のみ、かつ指定可能なアドレス上限 (m_maxAddress) を超える入力を弾く。
   m_addressEdit->setValidator(new HexAddressValidator(&m_maxAddress, m_addressEdit));
   toolbar->addWidget(m_addressEdit);
@@ -956,6 +970,7 @@ void BinaryView::setupUi() {
   toolbar->addWidget(m_addressMaxLabel);
   QPushButton* goButton = new QPushButton(tr("Go"), toolbar);
   goButton->setFocusPolicy(Qt::StrongFocus);
+  goButton->setToolTip(tr("Jump to the address (Enter)"));
   toolbar->addWidget(goButton);
 
   root->addWidget(toolbar);
@@ -971,12 +986,15 @@ void BinaryView::setupUi() {
   searchBar->setIconSize(QSize(20, 20));
   applyToolbarStyle(searchBar);
 
-  searchBar->addWidget(new QLabel(tr("Search:"), searchBar));
+  searchBar->addWidget(new QLabel(tr("Search (%1):").arg(scFind), searchBar));
   m_searchHexRadio  = new QRadioButton(tr("Hex"), searchBar);
   m_searchTextRadio = new QRadioButton(tr("Text"), searchBar);
   m_searchHexRadio->setChecked(true);
   m_searchHexRadio->setFocusPolicy(Qt::StrongFocus);
   m_searchTextRadio->setFocusPolicy(Qt::StrongFocus);
+  m_searchHexRadio->setToolTip(
+    tr("Search by hex bytes (grouped by the display unit)"));
+  m_searchTextRadio->setToolTip(tr("Search by text in the current encoding"));
   auto* searchGroup = new QButtonGroup(this);  // 排他選択
   searchGroup->addButton(m_searchHexRadio);
   searchGroup->addButton(m_searchTextRadio);
@@ -990,8 +1008,8 @@ void BinaryView::setupUi() {
   searchBar->addWidget(m_searchEdit);
 
   m_searchEdit->setToolTip(
-    tr("Search (%1 to focus)").arg(QKeySequence(QKeySequence::Find)
-                                     .toString(QKeySequence::NativeText)));
+    tr("Text to find. %1 to focus, Enter to search next, Shift+Enter for previous.")
+      .arg(scFind));
   // ボタンにはラベルへショートカットを併記する ("次へ (⌘G)" 等)。
   const QString nextSc =
     QKeySequence(QKeySequence::FindNext).toString(QKeySequence::NativeText);
@@ -1003,6 +1021,8 @@ void BinaryView::setupUi() {
     new QPushButton(tr("Next (%1)").arg(nextSc), searchBar);
   findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   findNextBtn->setFocusPolicy(Qt::StrongFocus);
+  findPrevBtn->setToolTip(tr("Find previous match"));
+  findNextBtn->setToolTip(tr("Find next match"));
   searchBar->addWidget(findPrevBtn);
   searchBar->addWidget(findNextBtn);
 
