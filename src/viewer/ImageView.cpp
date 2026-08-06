@@ -233,9 +233,13 @@ void ImageView::setupUi() {
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
   applyToolbarStyle(m_toolbar);
 
-  m_toolbar->addWidget(new QLabel(tr("Zoom:"), m_toolbar));
+  // ズーム倍率ラベル。倍率変更のショートカット (+ / -) を可視ラベルにも併記する。
+  QLabel* zoomLabel = new QLabel(tr("Zoom (+ / -):"), m_toolbar);
+  zoomLabel->setToolTip(tr("Zoom level (+ / -)"));
+  m_toolbar->addWidget(zoomLabel);
   m_zoomCombo = new QComboBox(m_toolbar);
   m_zoomCombo->setEditable(true);
+  m_zoomCombo->setToolTip(tr("Zoom level (+ / -)"));
   for (int p : { 25, 50, 75, 100, 200 }) {
     m_zoomCombo->addItem(QString::number(p) + QLatin1Char('%'), p);
   }
@@ -280,6 +284,7 @@ void ImageView::setupUi() {
   // 現在の回転角度。ボタンの右隣に置く。
   m_rotationLabel = new QLabel(QStringLiteral("0°"), m_toolbar);
   m_rotationLabel->setContentsMargins(2, 0, 6, 0);
+  m_rotationLabel->setToolTip(tr("Current display rotation angle"));
   m_toolbar->addWidget(m_rotationLabel);
 
   // 画像メタデータダイアログを開くボタン (フォーマット情報・コメント
