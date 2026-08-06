@@ -10,6 +10,7 @@
 class QComboBox;
 class QLabel;
 class QLineEdit;
+class QRadioButton;
 
 namespace Farman {
 
@@ -85,6 +86,13 @@ private:
   void rebuildEncodingItems();
   void applyModelFormat();       // unit/endian/encoding を HexView へ反映して再描画
   void jumpToAddress();          // アドレス入力欄の 16 進値へスクロール
+  // 検索: forward=true で次を、false で前を検索。ヒットしたら HexView で選択表示。
+  void doSearch(bool forward);
+  // 検索入力 (16 進 or 文字列) を、現在の単位/エンディアン/エンコーディングに
+  // 従って検索対象バイト列に変換する。不正なら ok=false。
+  QByteArray buildSearchPattern(bool& ok) const;
+  // 16 進検索欄のプレースホルダを、表示単位に応じた入力例に更新する。
+  void updateSearchPlaceholder();
 
   QComboBox*      m_unitCombo     = nullptr;
   QComboBox*      m_endianCombo   = nullptr;
@@ -92,6 +100,11 @@ private:
   QLineEdit*      m_addressEdit   = nullptr;
   // アドレス入力欄の右に表示する、指定可能なアドレスの上限 ("/ 3FFFFFFF" 等)。
   QLabel*         m_addressMaxLabel = nullptr;
+  // 検索バー: 16 進 / 文字列のラジオ + 入力欄 + 状態表示。
+  QRadioButton*   m_searchHexRadio  = nullptr;
+  QRadioButton*   m_searchTextRadio = nullptr;
+  QLineEdit*      m_searchEdit      = nullptr;
+  QLabel*         m_searchStatus    = nullptr;
   HexView*        m_hex           = nullptr;
 
   QString m_filePath;

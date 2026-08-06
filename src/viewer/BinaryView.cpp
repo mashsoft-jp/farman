@@ -4,6 +4,7 @@
 
 #include <QAbstractScrollArea>
 #include <QApplication>
+#include <QButtonGroup>
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QResizeEvent>
@@ -21,12 +22,14 @@
 #include <QPainter>
 #include <QPalette>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QStyle>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 #include <QScrollBar>
 #include <QSignalBlocker>
 #include <QValidator>
+#include <QStringConverter>
 #include <QStringDecoder>
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -148,6 +151,62 @@ QString decodeStringColumn(const QByteArray& chunk, const QString& encoding) {
   return out;
 }
 
+// 検索文字列を、指定エンコーディングでバイト列に変換する (ASCII 列の表示と対称)。
+QByteArray encodeStringColumn(const QString& text, const QString& encoding) {
+  QStringEncoder enc(encoding.toUtf8().constData());
+  if (enc.isValid()) {
+    return QByteArray(enc.encode(text));
+  }
+  if (QTextCodec* codec = QTextCodec::codecForName(encoding.toUtf8())) {
+    return codec->fromUnicode(text);
+  }
+  return text.toUtf8();
+}
+
+// 16 進検索の入力を、表示単位 (unitBytes) とエンディアンに従ってバイト列に変換
+// する。空白区切りの各トークンを「1 単位ぶんの 16 進値」とみなし、表示と同じ
+// バイト順で並べる (例: 1 バイト "12 34" → 12 34 / 2 バイト・リトル "1234" →
+// 34 12)。不正な入力なら ok=false で空を返す。
+QByteArray parseHexSearchInput(const QString& text, int unitBytes,
+                               BinaryViewerEndian endian, bool& ok) {
+  ok = false;
+  QByteArray pat;
+  const QStringList toks =
+    text.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
+  if (toks.isEmpty()) {
+    return {};
+  }
+  for (const QString& tok : toks) {
+    QString t = tok;
+    if (t.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+      t = t.mid(2);
+    }
+    if (t.isEmpty() || t.size() > unitBytes * 2) {
+      return {};
+    }
+    bool tokOk = false;
+    const qulonglong v = t.toULongLong(&tokOk, 16);
+    if (!tokOk) {
+      return {};
+    }
+    unsigned char le[8];
+    for (int i = 0; i < unitBytes; ++i) {
+      le[i] = static_cast<unsigned char>((v >> (8 * i)) & 0xFF);
+    }
+    if (endian == BinaryViewerEndian::Little) {
+      for (int i = 0; i < unitBytes; ++i) {
+        pat.append(static_cast<char>(le[i]));
+      }
+    } else {
+      for (int i = unitBytes - 1; i >= 0; --i) {
+        pat.append(static_cast<char>(le[i]));
+      }
+    }
+  }
+  ok = !pat.isEmpty();
+  return pat;
+}
+
 // mmap (or seek+read フォールバック) でファイルバイトを供給する。表示中の行の
 // バイトだけを読むので、全体を読み込まない。
 class HexDataSource {
@@ -246,6 +305,100 @@ public:
     recompute();
   }
   qint64 fileSize() const { return m_src.size(); }
+  qint64 totalSize() const { return m_totalSize; }
+  qint64 cursorOffset() const { return m_cursor; }
+  // 現在の選択 (無ければカーソル) の先頭 / 末尾オフセット。検索の基準に使う。
+  qint64 selectionStart() const {
+    return m_hasSel ? qMin(m_selAnchor, m_cursor) : m_cursor;
+  }
+  qint64 selectionEnd() const {
+    return m_hasSel ? qMax(m_selAnchor, m_cursor) : m_cursor;
+  }
+
+  // pat を from バイト目から前方 (forward) / 後方に探し、見つかった先頭オフセット
+  // を返す (無ければ -1)。mmap / seek のどちらでも動くよう 1MB チャンクで走査し、
+  // 境界をまたぐ一致のためにチャンクを pat 長 - 1 だけ重ねる。
+  qint64 find(const QByteArray& pat, qint64 from, bool forward) const {
+    if (pat.isEmpty() || m_totalSize <= 0) {
+      return -1;
+    }
+    const int    m     = pat.size();
+    const qint64 chunk = 1 << 20;
+    HexDataSource& src = const_cast<HexDataSource&>(m_src);
+    QByteArray buf;
+    if (forward) {
+      qint64 pos = qMax<qint64>(0, from);
+      while (pos < m_totalSize) {
+        const qint64 want = qMin<qint64>(chunk + m - 1, m_totalSize - pos);
+        buf.resize(static_cast<int>(want));
+        const int n = src.read(pos, buf.data(), static_cast<int>(want));
+        if (n <= 0) {
+          break;
+        }
+        const QByteArray view = QByteArray::fromRawData(buf.constData(), n);
+        const int idx = view.indexOf(pat);
+        if (idx >= 0) {
+          return pos + idx;
+        }
+        if (pos + want >= m_totalSize) {
+          break;  // 最終ウィンドウ
+        }
+        pos += chunk;
+      }
+    } else {
+      if (from < 0) {
+        return -1;
+      }
+      qint64 end = qMin<qint64>(m_totalSize, from + m);  // 探索領域 [0, end)
+      while (end > 0) {
+        const qint64 want = qMin<qint64>(chunk + m - 1, end);
+        const qint64 pos  = end - want;
+        buf.resize(static_cast<int>(want));
+        const int n = src.read(pos, buf.data(), static_cast<int>(want));
+        if (n <= 0) {
+          break;
+        }
+        const QByteArray view = QByteArray::fromRawData(buf.constData(), n);
+        // start <= from となる最大 index までを後方検索する。
+        int limit = n - 1;
+        if (pos + limit > from) {
+          limit = static_cast<int>(from - pos);
+        }
+        if (limit >= 0) {
+          const int idx = view.lastIndexOf(pat, limit);
+          if (idx >= 0) {
+            return pos + idx;
+          }
+        }
+        if (pos <= 0) {
+          break;
+        }
+        end = pos + (m - 1);  // 境界重なり
+      }
+    }
+    return -1;
+  }
+
+  // off から len バイトを一致範囲として選択し、画面中央付近へスクロールする。
+  void selectMatch(qint64 off, int len) {
+    if (m_totalSize <= 0 || off < 0) {
+      return;
+    }
+    off = qBound<qint64>(0, off, m_totalSize - 1);
+    m_selAnchor = off;
+    if (len > 1) {
+      m_hasSel = true;
+      m_cursor = qMin(m_totalSize - 1, off + len - 1);
+    } else {
+      m_hasSel = false;
+      m_cursor = off;
+    }
+    const int visLines = qMax(1, viewport()->height() / rowH());
+    m_topLine = qMax<qint64>(0, off / kBytesPerLine - visLines / 2);
+    clampTop();
+    syncVBar();
+    viewport()->update();
+  }
 
   void applyFont(const QFont& f) {
     QAbstractScrollArea::setFont(f);
@@ -748,6 +901,56 @@ void BinaryView::setupUi() {
   auto* clickFilter = new EnterClickFilter(this);
   clickFilter->installOnButtonsIn(toolbar);
 
+  // ── 検索バー ──────────────────────────────────
+  // 16 進 / 文字列をラジオで切替え、Enter または Next/Prev ボタンで検索する。
+  QToolBar* searchBar = new QToolBar(this);
+  searchBar->setMovable(false);
+  searchBar->setFloatable(false);
+  searchBar->setIconSize(QSize(20, 20));
+  applyToolbarStyle(searchBar);
+
+  searchBar->addWidget(new QLabel(tr("Search:"), searchBar));
+  m_searchHexRadio  = new QRadioButton(tr("Hex"), searchBar);
+  m_searchTextRadio = new QRadioButton(tr("Text"), searchBar);
+  m_searchHexRadio->setChecked(true);
+  m_searchHexRadio->setFocusPolicy(Qt::StrongFocus);
+  m_searchTextRadio->setFocusPolicy(Qt::StrongFocus);
+  auto* searchGroup = new QButtonGroup(this);  // 排他選択
+  searchGroup->addButton(m_searchHexRadio);
+  searchGroup->addButton(m_searchTextRadio);
+  searchBar->addWidget(m_searchHexRadio);
+  searchBar->addWidget(m_searchTextRadio);
+
+  m_searchEdit = new QLineEdit(searchBar);
+  m_searchEdit->setMinimumWidth(220);
+  m_searchEdit->setClearButtonEnabled(true);
+  m_searchEdit->setFocusPolicy(Qt::StrongFocus);
+  searchBar->addWidget(m_searchEdit);
+
+  QPushButton* findPrevBtn = new QPushButton(tr("Prev"), searchBar);
+  QPushButton* findNextBtn = new QPushButton(tr("Next"), searchBar);
+  findPrevBtn->setFocusPolicy(Qt::StrongFocus);
+  findNextBtn->setFocusPolicy(Qt::StrongFocus);
+  searchBar->addWidget(findPrevBtn);
+  searchBar->addWidget(findNextBtn);
+
+  m_searchStatus = new QLabel(searchBar);
+  searchBar->addWidget(m_searchStatus);
+
+  root->addWidget(searchBar);
+  {
+    auto* sf = new EnterClickFilter(this);
+    sf->installOnButtonsIn(searchBar);
+  }
+
+  connect(findNextBtn, &QPushButton::clicked, this, [this] { doSearch(true); });
+  connect(findPrevBtn, &QPushButton::clicked, this, [this] { doSearch(false); });
+  connect(m_searchHexRadio, &QRadioButton::toggled, this,
+          [this](bool) { updateSearchPlaceholder(); });
+  // Enter でジャンプ / 前後検索。親へ伝播させない (ビュアーが閉じるのを防ぐ)。
+  m_searchEdit->installEventFilter(this);
+  updateSearchPlaceholder();
+
   // 16 進ダンプ本体 (自前描画の HexView)。QTableView は行番号×行高の int 座標が
   // GB 級ファイルで溢れて途中から描画されないため、見えている行だけを描く自前
   // ビューにする。Ctrl/Cmd+C は HexView 内部で ShortcutOverride を横取りして
@@ -784,6 +987,14 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
     if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
       jumpToAddress();
       return true;  // 親へ伝播させない (ビュアーを閉じさせない)
+    }
+  }
+  // 検索欄の Enter で次を、Shift+Enter で前を検索する。
+  if (watched == m_searchEdit && event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
+      doSearch(!(ke->modifiers() & Qt::ShiftModifier));
+      return true;
     }
   }
   // 本体 (HexView) 上の Copy は HexView が ShortcutOverride を横取りして処理する。
@@ -857,6 +1068,7 @@ void BinaryView::applyModelFormat() {
   m_hex->setEndian(m_endian);
   m_hex->setEncoding(m_actualEncoding);
   m_hex->setUnit(m_unit);  // 単位変更はレイアウト再計算 (unit 未変更なら no-op)
+  updateSearchPlaceholder();  // 16 進検索の入力例は単位に依存する
 }
 
 void BinaryView::jumpToAddress() {
@@ -874,6 +1086,70 @@ void BinaryView::jumpToAddress() {
   }
   m_hex->jumpTo(addr);
   m_hex->setFocus();
+}
+
+QByteArray BinaryView::buildSearchPattern(bool& ok) const {
+  ok = false;
+  const QString text = m_searchEdit->text();
+  if (text.trimmed().isEmpty()) {
+    return {};
+  }
+  if (m_searchHexRadio->isChecked()) {
+    return parseHexSearchInput(text, binaryViewerUnitToBytes(m_unit), m_endian, ok);
+  }
+  const QByteArray b = encodeStringColumn(text, m_actualEncoding);
+  ok = !b.isEmpty();
+  return b;
+}
+
+void BinaryView::doSearch(bool forward) {
+  if (m_totalSize <= 0 || !m_searchStatus) {
+    return;
+  }
+  bool ok = false;
+  const QByteArray pat = buildSearchPattern(ok);
+  if (!ok || pat.isEmpty()) {
+    m_searchStatus->setText(tr("Invalid input"));
+    return;
+  }
+  // 前方は現在の一致 (選択) の末尾+1 から、後方は先頭-1 から。こうしないと後方
+  // 検索で今ヒットしている一致を再び拾ってしまう。
+  const qint64 from = forward ? m_hex->selectionEnd() + 1
+                              : m_hex->selectionStart() - 1;
+  qint64 found   = m_hex->find(pat, from, forward);
+  bool   wrapped = false;
+  if (found < 0) {
+    // 端まで無ければ反対側から一周だけ探す。
+    const qint64 wrapFrom = forward ? 0 : (m_totalSize - 1);
+    found   = m_hex->find(pat, wrapFrom, forward);
+    wrapped = (found >= 0);
+  }
+  if (found < 0) {
+    m_searchStatus->setText(tr("Not found"));
+    return;
+  }
+  m_hex->selectMatch(found, pat.size());
+  m_searchStatus->setText(wrapped ? tr("Wrapped") : QString());
+  m_hex->setFocus();
+}
+
+void BinaryView::updateSearchPlaceholder() {
+  if (!m_searchEdit) {
+    return;
+  }
+  if (m_searchHexRadio && m_searchHexRadio->isChecked()) {
+    QString ex;
+    switch (binaryViewerUnitToBytes(m_unit)) {
+      case 1:  ex = QStringLiteral("12 34 56");           break;
+      case 2:  ex = QStringLiteral("1234 5678");          break;
+      case 4:  ex = QStringLiteral("12345678 9abcdef0");  break;
+      case 8:  ex = QStringLiteral("0011223344556677");   break;
+      default: ex = QStringLiteral("12 34");              break;
+    }
+    m_searchEdit->setPlaceholderText(tr("hex e.g. %1").arg(ex));
+  } else {
+    m_searchEdit->setPlaceholderText(tr("text to find"));
+  }
 }
 
 bool BinaryView::loadFile(const QString& filePath) {
@@ -934,6 +1210,9 @@ void BinaryView::applyPreparedLoad(const PreparedLoad& r) {
   }
   if (m_addressEdit) {
     m_addressEdit->clear();
+  }
+  if (m_searchStatus) {
+    m_searchStatus->clear();
   }
 
   // 表示フォーマットを反映してから mmap を開く (メインスレッド)。
