@@ -97,7 +97,7 @@ void PdfView::setupUi() {
   m_pageSpin->setValue(1);
   m_pageSpin->setFixedWidth(60);
   m_pageSpin->setAlignment(Qt::AlignRight);
-  m_pageSpin->setToolTip(tr("Jump to page"));
+  m_pageSpin->setToolTip(tr("Jump to page (Up: previous page, Down: next page)"));
   // editingFinished だと値を入れただけでは飛ばないので valueChanged を使う。
   // ただし無限ループ防止のため、onCurrentPageChanged 側で blockSignals する。
   connect(m_pageSpin, qOverload<int>(&QSpinBox::valueChanged),
@@ -120,14 +120,14 @@ void PdfView::setupUi() {
   // ───── ズーム ─────
   m_zoomOutButton = new QToolButton(m_toolbar);
   m_zoomOutButton->setText(QStringLiteral("−"));
-  m_zoomOutButton->setToolTip(tr("Zoom out (Ctrl+-)"));
+  m_zoomOutButton->setToolTip(tr("Zoom out"));
   m_zoomOutButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomOutButton, &QToolButton::clicked, this, &PdfView::onZoomOut);
   m_toolbar->addWidget(m_zoomOutButton);
 
   m_zoomInButton = new QToolButton(m_toolbar);
   m_zoomInButton->setText(QStringLiteral("+"));
-  m_zoomInButton->setToolTip(tr("Zoom in (Ctrl++)"));
+  m_zoomInButton->setToolTip(tr("Zoom in"));
   m_zoomInButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomInButton, &QToolButton::clicked, this, &PdfView::onZoomIn);
   m_toolbar->addWidget(m_zoomInButton);
@@ -165,10 +165,12 @@ void PdfView::setupUi() {
   m_toolbar->addSeparator();
 
   // ───── 検索 (TextView と同じレイアウト: Find: [入力] [前] [次] [件数]) ─────
-  m_toolbar->addWidget(new QLabel(tr("Find:"), m_toolbar));
-
   const QString findShortcutText =
     QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+
+  auto* findLabel = new QLabel(tr("Find (%1):").arg(findShortcutText), m_toolbar);
+  findLabel->setToolTip(tr("Search text in this PDF (%1)").arg(findShortcutText));
+  m_toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(m_toolbar);
   m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
