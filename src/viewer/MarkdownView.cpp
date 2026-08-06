@@ -94,10 +94,12 @@ void MarkdownView::setupUi() {
   m_toolbar->addSeparator();
 
   // ───── 検索 (TextView と同じレイアウト) ─────
-  m_toolbar->addWidget(new QLabel(tr("Find:"), m_toolbar));
-
   const QString findShortcutText =
     QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+
+  // 「Find:」ラベル自体にも Cmd/Ctrl+F を併記し、ショートカットを発見しやすくする。
+  m_toolbar->addWidget(
+    new QLabel(tr("Find (%1):").arg(findShortcutText), m_toolbar));
 
   m_findEdit = new QLineEdit(m_toolbar);
   m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
