@@ -421,7 +421,9 @@ void CsvView::setupUi() {
   applyToolbarStyle(m_toolbar);
 
   // ── エンコーディング ──
-  m_toolbar->addWidget(new QLabel(tr("Encoding:"), m_toolbar));
+  auto* encodingLabel = new QLabel(tr("Encoding:"), m_toolbar);
+  encodingLabel->setToolTip(tr("Character encoding used to decode this file"));
+  m_toolbar->addWidget(encodingLabel);
   m_encodingCombo = new QComboBox(m_toolbar);
   m_encodingCombo->addItem(QStringLiteral("Auto"));
   m_encodingCombo->addItem(QStringLiteral("UTF-8"));
@@ -431,18 +433,22 @@ void CsvView::setupUi() {
   m_encodingCombo->addItem(QStringLiteral("EUC-JP"));
   m_encodingCombo->addItem(QStringLiteral("ISO-8859-1"));
   m_encodingCombo->setFocusPolicy(Qt::StrongFocus);
+  m_encodingCombo->setToolTip(tr("Character encoding used to decode this file"));
   m_toolbar->addWidget(m_encodingCombo);
 
   m_toolbar->addSeparator();
 
   // ── 区切り文字 ──
-  m_toolbar->addWidget(new QLabel(tr("Delimiter:"), m_toolbar));
+  auto* delimiterLabel = new QLabel(tr("Delimiter:"), m_toolbar);
+  delimiterLabel->setToolTip(tr("Character used to separate columns"));
+  m_toolbar->addWidget(delimiterLabel);
   m_delimiterCombo = new QComboBox(m_toolbar);
   m_delimiterCombo->addItem(tr("Auto"),       int(Delimiter::Auto));
   m_delimiterCombo->addItem(tr("Comma (,)"),  int(Delimiter::Comma));
   m_delimiterCombo->addItem(tr("Tab (\\t)"),  int(Delimiter::Tab));
   m_delimiterCombo->addItem(tr("Semicolon (;)"), int(Delimiter::Semicolon));
   m_delimiterCombo->setFocusPolicy(Qt::StrongFocus);
+  m_delimiterCombo->setToolTip(tr("Character used to separate columns"));
   m_toolbar->addWidget(m_delimiterCombo);
 
   m_toolbar->addSeparator();
@@ -459,10 +465,13 @@ void CsvView::setupUi() {
   m_toolbar->addSeparator();
 
   // ── 検索 (TextView / PdfView / MarkdownView と同じレイアウト) ──
-  m_toolbar->addWidget(new QLabel(tr("Find:"), m_toolbar));
-
   const QString findShortcutText =
     QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+
+  auto* findLabel =
+    new QLabel(tr("Find (%1):").arg(findShortcutText), m_toolbar);
+  findLabel->setToolTip(tr("Focus the search field (%1)").arg(findShortcutText));
+  m_toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(m_toolbar);
   m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
