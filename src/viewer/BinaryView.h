@@ -89,8 +89,9 @@ private:
   // 検索: forward=true で次を、false で前を検索。ヒットしたら HexView で選択表示。
   void doSearch(bool forward);
   // 検索入力 (16 進 or 文字列) を、現在の単位/エンディアン/エンコーディングに
-  // 従って検索対象バイト列に変換する。不正なら ok=false。
-  QByteArray buildSearchPattern(bool& ok) const;
+  // 従って検索対象バイト列に変換する。不正なら ok=false。16 進のとき
+  // formattedHex != nullptr なら、単位ごとに空白区切りした整形文字列を返す。
+  QByteArray buildSearchPattern(bool& ok, QString* formattedHex = nullptr) const;
   // 16 進検索欄のプレースホルダを、表示単位に応じた入力例に更新する。
   void updateSearchPlaceholder();
 

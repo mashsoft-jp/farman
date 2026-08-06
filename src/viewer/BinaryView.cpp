@@ -164,46 +164,73 @@ QByteArray encodeStringColumn(const QString& text, const QString& encoding) {
 }
 
 // 16 進検索の入力を、表示単位 (unitBytes) とエンディアンに従ってバイト列に変換
-// する。空白区切りの各トークンを「1 単位ぶんの 16 進値」とみなし、表示と同じ
-// バイト順で並べる (例: 1 バイト "12 34" → 12 34 / 2 バイト・リトル "1234" →
-// 34 12)。不正な入力なら ok=false で空を返す。
+// する。入力中の空白はすべて無視して連結し、単位ぶん (unitBytes*2 桁) ずつに
+// グループ化する。各グループを 1 単位の値とみなし、表示と同じバイト順で並べる
+// (例: 1 バイト "334455" → 33 44 55 / 2 バイト・リトル "1234" → 34 12)。
+// 連結後の桁数が単位 (unitBytes*2) の倍数でない (桁不足 / 端数) 場合や 16 進
+// 以外が混じる場合は ok=false で空を返す。formatted != nullptr のときは、単位
+// ごとに空白で区切った整形済み文字列 ("33 44 55") を返す。
 QByteArray parseHexSearchInput(const QString& text, int unitBytes,
-                               BinaryViewerEndian endian, bool& ok) {
+                               BinaryViewerEndian endian, bool& ok,
+                               QString* formatted = nullptr) {
   ok = false;
-  QByteArray pat;
-  const QStringList toks =
-    text.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
-  if (toks.isEmpty()) {
+  if (formatted) {
+    formatted->clear();
+  }
+  // 空白を除去して連結。先頭の "0x" は許可。
+  QString h;
+  h.reserve(text.size());
+  for (const QChar c : text) {
+    if (!c.isSpace()) {
+      h.append(c);
+    }
+  }
+  if (h.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+    h = h.mid(2);
+  }
+  if (h.isEmpty()) {
     return {};
   }
-  for (const QString& tok : toks) {
-    QString t = tok;
-    if (t.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
-      t = t.mid(2);
-    }
-    if (t.isEmpty() || t.size() > unitBytes * 2) {
+  for (const QChar c : h) {
+    const bool hex = (c >= QLatin1Char('0') && c <= QLatin1Char('9'))
+                  || (c >= QLatin1Char('a') && c <= QLatin1Char('f'))
+                  || (c >= QLatin1Char('A') && c <= QLatin1Char('F'));
+    if (!hex) {
       return {};
     }
-    bool tokOk = false;
-    const qulonglong v = t.toULongLong(&tokOk, 16);
-    if (!tokOk) {
+  }
+  const int groupLen = unitBytes * 2;
+  if (h.size() % groupLen != 0) {
+    return {};  // 桁不足 / 端数
+  }
+  QByteArray  pat;
+  QStringList groups;
+  for (int i = 0; i < h.size(); i += groupLen) {
+    const QString g = h.mid(i, groupLen);
+    groups << g;
+    bool gOk = false;
+    const qulonglong v = g.toULongLong(&gOk, 16);
+    if (!gOk) {
       return {};
     }
     unsigned char le[8];
-    for (int i = 0; i < unitBytes; ++i) {
-      le[i] = static_cast<unsigned char>((v >> (8 * i)) & 0xFF);
+    for (int k = 0; k < unitBytes; ++k) {
+      le[k] = static_cast<unsigned char>((v >> (8 * k)) & 0xFF);
     }
     if (endian == BinaryViewerEndian::Little) {
-      for (int i = 0; i < unitBytes; ++i) {
-        pat.append(static_cast<char>(le[i]));
+      for (int k = 0; k < unitBytes; ++k) {
+        pat.append(static_cast<char>(le[k]));
       }
     } else {
-      for (int i = unitBytes - 1; i >= 0; --i) {
-        pat.append(static_cast<char>(le[i]));
+      for (int k = unitBytes - 1; k >= 0; --k) {
+        pat.append(static_cast<char>(le[k]));
       }
     }
   }
-  ok = !pat.isEmpty();
+  if (formatted) {
+    *formatted = groups.join(QLatin1Char(' '));
+  }
+  ok = true;
   return pat;
 }
 
@@ -1088,14 +1115,15 @@ void BinaryView::jumpToAddress() {
   m_hex->setFocus();
 }
 
-QByteArray BinaryView::buildSearchPattern(bool& ok) const {
+QByteArray BinaryView::buildSearchPattern(bool& ok, QString* formattedHex) const {
   ok = false;
   const QString text = m_searchEdit->text();
   if (text.trimmed().isEmpty()) {
     return {};
   }
   if (m_searchHexRadio->isChecked()) {
-    return parseHexSearchInput(text, binaryViewerUnitToBytes(m_unit), m_endian, ok);
+    return parseHexSearchInput(text, binaryViewerUnitToBytes(m_unit), m_endian, ok,
+                               formattedHex);
   }
   const QByteArray b = encodeStringColumn(text, m_actualEncoding);
   ok = !b.isEmpty();
@@ -1107,10 +1135,18 @@ void BinaryView::doSearch(bool forward) {
     return;
   }
   bool ok = false;
-  const QByteArray pat = buildSearchPattern(ok);
+  QString formatted;
+  const QByteArray pat = buildSearchPattern(ok, &formatted);
   if (!ok || pat.isEmpty()) {
     m_searchStatus->setText(tr("Invalid input"));
     return;
+  }
+  // 16 進検索は、区切り無し入力 ("334455") を単位ごと ("33 44 55") に整形して
+  // 入力欄へ反映する。
+  if (m_searchHexRadio->isChecked() && !formatted.isEmpty()
+      && formatted != m_searchEdit->text()) {
+    QSignalBlocker b(m_searchEdit);
+    m_searchEdit->setText(formatted);
   }
   // 前方は現在の一致 (選択) の末尾+1 から、後方は先頭-1 から。こうしないと後方
   // 検索で今ヒットしている一致を再び拾ってしまう。
