@@ -29,7 +29,8 @@ With the external plugin **farman-plugin-3d**, farman can now display
 
 ### Binary viewer improvements
 
-- Large files (gigabyte-class) now open quickly: only the visible rows are read
+- Rewritten with custom rendering so **gigabyte-class files** open quickly and
+  display correctly all the way to the end: only the visible rows are read
   instead of loading the whole file.
 - Added jump-to-hex-address. The maximum valid address is shown next to the
   input, and out-of-range addresses are rejected as you type.

@@ -10,11 +10,10 @@
 class QComboBox;
 class QLabel;
 class QLineEdit;
-class QTableView;
 
 namespace Farman {
 
-class BinaryHexModel;
+class HexView;
 
 // 16 進ダンプ表示用の読み取り専用ビュー。
 // 上部のツールバーで unit / endian / encoding をその場で変更でき、16 進アドレスへ
@@ -84,10 +83,8 @@ private:
   void setupUi();
   void syncFromSettings();
   void rebuildEncodingItems();
-  void applyModelFormat();       // unit/endian/encoding をモデルへ反映して再描画
-  void updateColumnWidths();     // フォント幅から各列幅を設定 (全行走査を避ける)
+  void applyModelFormat();       // unit/endian/encoding を HexView へ反映して再描画
   void jumpToAddress();          // アドレス入力欄の 16 進値へスクロール
-  void copySelection();          // 選択セルをテキストとしてクリップボードへ (Ctrl+C)
 
   QComboBox*      m_unitCombo     = nullptr;
   QComboBox*      m_endianCombo   = nullptr;
@@ -95,8 +92,7 @@ private:
   QLineEdit*      m_addressEdit   = nullptr;
   // アドレス入力欄の右に表示する、指定可能なアドレスの上限 ("/ 3FFFFFFF" 等)。
   QLabel*         m_addressMaxLabel = nullptr;
-  QTableView*     m_table         = nullptr;
-  BinaryHexModel* m_model         = nullptr;
+  HexView*        m_hex           = nullptr;
 
   QString m_filePath;
   qint64  m_totalSize = 0;

@@ -2,8 +2,12 @@
 #include "settings/Settings.h"
 #include "utils/EnterClickFilter.h"
 
-#include <QAbstractTableModel>
+#include <QAbstractScrollArea>
 #include <QApplication>
+#include <QMouseEvent>
+#include <QPaintEvent>
+#include <QResizeEvent>
+#include <QWheelEvent>
 #include <QClipboard>
 #include <QComboBox>
 #include <QEvent>
@@ -11,8 +15,6 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QKeySequence>
-#include <QMap>
-#include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
 #include <QLocale>
@@ -20,14 +22,12 @@
 #include <QPalette>
 #include <QPushButton>
 #include <QStyle>
-#include <QStyledItemDelegate>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 #include <QScrollBar>
 #include <QSignalBlocker>
 #include <QValidator>
 #include <QStringDecoder>
-#include <QTableView>
 #include <QToolBar>
 #include <QVBoxLayout>
 // uchardet: "Auto" のエンコード判定に使う (TextView と同じ)。
@@ -201,221 +201,485 @@ private:
   qint64  m_size = 0;
 };
 
-// セルのテキストを最小マージンで描画するデリゲート。既定のアイテムデリゲートは
-// セル左右に固定マージンを取るため、列を詰めると "00" が "…" に省略され、省略を
-// 避けようと列を広げると単位間の隙間が大きくなる。普通のバイナリエディタのように
-// 1 文字ぶんだけ空けるため、背景 (選択 / BackgroundRole) は既定スタイルで描き、
-// テキストだけ 2px の左マージンで自前描画する。ForegroundRole (アドレス色 /
-// カーソル行) と選択配色も尊重する。
-class TightCellDelegate : public QStyledItemDelegate {
-public:
-  using QStyledItemDelegate::QStyledItemDelegate;
-
-  void paint(QPainter* painter, const QStyleOptionViewItem& option,
-             const QModelIndex& index) const override {
-    QStyleOptionViewItem opt = option;
-    initStyleOption(&opt, index);
-    const QString text     = opt.text;
-    const bool    selected = (opt.state & QStyle::State_Selected);
-
-    // 1) まずセル全体を通常背景で塗り直す。ビューが選択セルを全幅で塗る下地を
-    //    打ち消し、次の「テキスト密着塗り」がはみ出さないようにする。
-    painter->fillRect(opt.rect, opt.palette.brush(QPalette::Base));
-
-    // 2) 選択 or モデル背景 (カーソル行のアドレス等) を「テキストに密着した幅」で
-    //    上塗り。左寄せなので右の隙間には塗らない (右にはみ出さない)。
-    QBrush hl(Qt::NoBrush);
-    if (selected) {
-      hl = opt.palette.brush(QPalette::Highlight);
-    } else {
-      const QVariant b = index.data(Qt::BackgroundRole);
-      if (b.canConvert<QBrush>()) {
-        hl = qvariant_cast<QBrush>(b);
-      }
-    }
-    if (hl.style() != Qt::NoBrush) {
-      const int  textW = QFontMetrics(opt.font).horizontalAdvance(text);
-      const int  w     = qMin(textW + 2, opt.rect.width());
-      painter->fillRect(QRect(opt.rect.left(), opt.rect.top(), w, opt.rect.height()), hl);
-    }
-
-    // 3) テキスト。
-    QColor color;
-    if (selected) {
-      color = opt.palette.color(QPalette::HighlightedText);
-    } else {
-      const QVariant fg = index.data(Qt::ForegroundRole);
-      color = fg.canConvert<QColor>() ? qvariant_cast<QColor>(fg)
-                                      : opt.palette.color(QPalette::Text);
-    }
-    painter->save();
-    painter->setFont(opt.font);
-    painter->setPen(color);
-    painter->drawText(opt.rect.adjusted(1, 0, -1, 0),
-                      Qt::AlignVCenter | Qt::AlignLeft, text);
-    painter->restore();
-  }
-};
-
 } // namespace
 
-// ── 仮想化された 16 進ダンプモデル ──────────────────────────────
-// rowCount = ceil(fileSize / 16)。表示された行だけ data() が呼ばれ、その行の
-// バイトを読み取って整形する。
-// 列構成: [0]=Address, [1..units]=各 unit の 16 進, [units+1]=ASCII。
-// unit ごとに列を分けることで、セルカーソルが「単位」単位で動く。
-class BinaryHexModel : public QAbstractTableModel {
+// 16 進ダンプを自前描画するビュー (QAbstractScrollArea)。
+//
+// QTableView は「1 行 = 1 セクション」でその累積ピクセル位置 (行番号 × 行高) を
+// int で計算するため、GB 級ファイル (数億行) では行番号 × 行高が INT_MAX を超えて
+// 座標が破綻し、途中から描画されなくなる。ここでは行番号などの絶対座標を持たず、
+// 「画面に見えている行だけ」を HexDataSource (mmap) から読んで描画するので、
+// ファイルサイズに依存せず破綻しない。縦スクロールは行単位 (超巨大ファイルでは
+// スクロールバーを整数レンジに収めるためスケール) で管理する。
+//
+// 対応: スクロール (バー / ホイール / キーボード)、カーソル移動 (矢印 / Page /
+// Home / End)、範囲選択 (Shift + 矢印 / マウスドラッグ)、選択の 16 進コピー
+// (Ctrl/Cmd+C)、アドレスジャンプ、カーソル行アドレスの強調、単位/エンディアン/
+// エンコーディング/配色の反映。
+class HexView : public QAbstractScrollArea {
 public:
-  explicit BinaryHexModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
+  explicit HexView(QWidget* parent = nullptr) : QAbstractScrollArea(parent) {
+    setFocusPolicy(Qt::StrongFocus);
+    viewport()->setMouseTracking(false);
+    horizontalScrollBar()->setSingleStep(8);
+  }
 
-  bool open(const QString& path) {
-    beginResetModel();
+  bool openFile(const QString& path) {
+    m_src.close();
     const bool ok = m_src.open(path);
-    // 32bit rowCount の上限を超えないようにクランプ (約 32GB 相当)。
-    const qint64 rows = (m_src.size() + kBytesPerLine - 1) / kBytesPerLine;
-    m_rows       = static_cast<int>(qMin<qint64>(rows, 0x7fffffff));
-    m_currentRow = -1;
-    endResetModel();
+    m_totalSize  = m_src.size();
+    m_totalLines = (m_totalSize + kBytesPerLine - 1) / kBytesPerLine;
+    m_topLine = 0;
+    m_cursor = 0;
+    m_selAnchor = 0;
+    m_hasSel = false;
+    recompute();
     return ok;
   }
-
-  void close() {
-    beginResetModel();
+  void closeFile() {
     m_src.close();
-    m_rows       = 0;
-    m_currentRow = -1;
-    endResetModel();
+    m_totalSize = 0;
+    m_totalLines = 0;
+    m_topLine = 0;
+    m_cursor = 0;
+    m_hasSel = false;
+    recompute();
   }
-
   qint64 fileSize() const { return m_src.size(); }
 
-  int unitsPerLine()    const { return kBytesPerLine / binaryViewerUnitToBytes(m_unit); }
-  int firstUnitColumn() const { return 1; }
-  int asciiColumn()     const { return 1 + unitsPerLine(); }
-
-  void setFormat(BinaryViewerUnit unit, BinaryViewerEndian endian, const QString& encoding) {
-    const bool unitChanged = (unit != m_unit);
-    m_unit     = unit;
-    m_endian   = endian;
-    m_encoding = encoding;
-    if (unitChanged) {
-      // 列数 (unitsPerLine) が変わるのでリセットが必要。
-      beginResetModel();
-      endResetModel();
-    } else if (m_rows > 0) {
-      emit dataChanged(index(0, 0), index(m_rows - 1, columnCount() - 1), { Qt::DisplayRole });
+  void applyFont(const QFont& f) {
+    QAbstractScrollArea::setFont(f);
+    viewport()->setFont(f);
+    recompute();
+  }
+  void setUnit(BinaryViewerUnit u) {
+    if (u == m_unit) {
+      return;
     }
+    m_unit = u;
+    m_cursor -= m_cursor % binaryViewerUnitToBytes(m_unit);
+    recompute();
+  }
+  void setEndian(BinaryViewerEndian e) {
+    m_endian = e;
+    viewport()->update();
+  }
+  void setEncoding(const QString& enc) {
+    m_encoding = enc;
+    viewport()->update();
+  }
+  void setColors(const QColor& addr, const QColor& normFg, const QColor& normBg,
+                 const QColor& selFg, const QColor& selBg) {
+    m_addrColor = addr;
+    m_normFg = normFg;
+    m_normBg = normBg;
+    m_selFg = selFg;
+    m_selBg = selBg;
+    QPalette pal = viewport()->palette();
+    if (normBg.isValid()) {
+      pal.setColor(QPalette::Base, normBg);
+      pal.setColor(QPalette::Window, normBg);
+    }
+    viewport()->setPalette(pal);
+    viewport()->setAutoFillBackground(true);
+    viewport()->update();
   }
 
-  void setAddressColor(const QColor& c) {
-    m_addrColor = c;
-    if (m_rows > 0) {
-      emit dataChanged(index(0, 0), index(m_rows - 1, 0), { Qt::ForegroundRole });
+  // 指定アドレスへカーソルを移動し、画面中央付近に表示する。
+  void jumpTo(qint64 addr) {
+    if (m_totalSize <= 0) {
+      return;
     }
+    addr = qBound<qint64>(0, addr, m_totalSize - 1);
+    const int ub = binaryViewerUnitToBytes(m_unit);
+    m_cursor = addr - addr % ub;
+    m_hasSel = false;
+    m_selAnchor = m_cursor;
+    const int visLines = qMax(1, viewport()->height() / rowH());
+    m_topLine = qMax<qint64>(0, m_cursor / kBytesPerLine - visLines / 2);
+    clampTop();
+    syncVBar();
+    viewport()->update();
   }
 
-  // カーソル行のアドレスを「選択中」と同じ配色で見せるための色。
-  void setSelectionColors(const QColor& bg, const QColor& fg) {
-    m_selBg = bg;
-    m_selFg = fg;
-  }
-
-  // 現在行 (セルカーソルのある行) を記録し、アドレス列を再描画させる。
-  void setCurrentRow(int row) {
-    if (row == m_currentRow) return;
-    const int old = m_currentRow;
-    m_currentRow  = row;
-    auto notify = [this](int r) {
-      if (r >= 0 && r < m_rows) {
-        const QModelIndex i = index(r, 0);
-        emit dataChanged(i, i, { Qt::BackgroundRole, Qt::ForegroundRole });
-      }
-    };
-    notify(old);
-    notify(m_currentRow);
-  }
-
-  int rowCount(const QModelIndex& parent = {}) const override {
-    return parent.isValid() ? 0 : m_rows;
-  }
-  int columnCount(const QModelIndex& parent = {}) const override {
-    return parent.isValid() ? 0 : (unitsPerLine() + 2);  // Address + units + ASCII
-  }
-
-  QVariant data(const QModelIndex& idx, int role = Qt::DisplayRole) const override {
-    if (!idx.isValid()) {
-      return {};
+  // 選択範囲 (無ければカーソル単位) を 16 進テキストとしてクリップボードへ。
+  void copySelectionToClipboard() {
+    if (m_totalSize <= 0) {
+      return;
     }
-    const int    col     = idx.column();
-    const qint64 lineOff = static_cast<qint64>(idx.row()) * kBytesPerLine;
-
-    // アドレス列。
-    if (col == 0) {
-      if (role == Qt::DisplayRole) {
-        return QString::asprintf("%08llx", static_cast<unsigned long long>(lineOff));
-      }
-      if (idx.row() == m_currentRow) {
-        // カーソル行のアドレスは選択中と同じ配色で強調する。
-        if (role == Qt::BackgroundRole) {
-          return m_selBg.isValid() ? m_selBg
-                                   : QApplication::palette().color(QPalette::Highlight);
-        }
-        if (role == Qt::ForegroundRole) {
-          return m_selFg.isValid() ? m_selFg
-                                   : QApplication::palette().color(QPalette::HighlightedText);
-        }
-      } else if (role == Qt::ForegroundRole && m_addrColor.isValid()) {
-        return m_addrColor;
-      }
-      return {};
+    const int ub = binaryViewerUnitToBytes(m_unit);
+    qint64 lo = 0;
+    qint64 hi = 0;
+    if (m_hasSel) {
+      lo = qMin(m_selAnchor, m_cursor);
+      hi = qMax(m_selAnchor, m_cursor);
+    } else {
+      lo = m_cursor - m_cursor % ub;
+      hi = qMin(m_totalSize - 1, lo + ub - 1);
     }
-
-    if (role != Qt::DisplayRole) {
-      return {};
-    }
-
-    // ASCII 列 (1 セルに 16 文字)。
-    if (col == asciiColumn()) {
-      unsigned char buf[kBytesPerLine];
-      const int     n = const_cast<HexDataSource&>(m_src).read(
-                          lineOff, reinterpret_cast<char*>(buf), kBytesPerLine);
-      return decodeStringColumn(QByteArray(reinterpret_cast<const char*>(buf), n), m_encoding);
-    }
-
-    // 単位セル (col = 1 .. units)。
-    const int    unitBytes = binaryViewerUnitToBytes(m_unit);
-    const int    u         = col - 1;
-    const qint64 unitOff   = lineOff + static_cast<qint64>(u) * unitBytes;
-    unsigned char ub[8];
-    const int n = const_cast<HexDataSource&>(m_src).read(unitOff, reinterpret_cast<char*>(ub),
-                                                         unitBytes);
-    if (n <= 0) {
-      return QString();
+    lo -= lo % ub;
+    // 巨大選択でメモリ / クリップボードを溢れさせないため上限を設ける。
+    const qint64 kMaxBytes = 4 * 1024 * 1024;
+    if (hi - lo + 1 > kMaxBytes) {
+      hi = lo + kMaxBytes - 1;
     }
     QString out;
-    if (n >= unitBytes) {
-      appendUnitHex(out, ub, unitBytes, m_endian);
-    } else {
-      // 端数 (最終行) はあるバイトだけ表示。
-      for (int i = 0; i < n; ++i) {
-        out.append(QLatin1Char(kHexDigits[ub[i] >> 4]));
-        out.append(QLatin1Char(kHexDigits[ub[i] & 0xF]));
+    unsigned char tmp[8];
+    for (qint64 off = lo; off <= hi; off += ub) {
+      const int n = m_src.read(off, reinterpret_cast<char*>(tmp), ub);
+      if (n <= 0) {
+        break;
+      }
+      QString hx;
+      if (n >= ub) {
+        appendUnitHex(hx, tmp, ub, m_endian);
+      } else {
+        for (int k = 0; k < n; ++k) {
+          hx.append(QLatin1Char(kHexDigits[tmp[k] >> 4]));
+          hx.append(QLatin1Char(kHexDigits[tmp[k] & 0xF]));
+        }
+      }
+      if (!out.isEmpty()) {
+        out.append((off % kBytesPerLine == 0) ? QLatin1Char('\n') : QLatin1Char(' '));
+      }
+      out.append(hx);
+    }
+    QGuiApplication::clipboard()->setText(out);
+  }
+
+protected:
+  void paintEvent(QPaintEvent*) override {
+    QPainter p(viewport());
+    const int hoff = horizontalScrollBar()->value();
+    const QColor normBg = m_normBg.isValid() ? m_normBg : palette().color(QPalette::Base);
+    p.fillRect(viewport()->rect(), normBg);
+    if (m_totalSize <= 0) {
+      return;
+    }
+    p.setFont(font());
+    const QFontMetrics fm(font());
+    const int ascent   = fm.ascent();
+    const int rh       = rowH();
+    const int visLines = viewport()->height() / rh + 2;
+    const int unitBytes = binaryViewerUnitToBytes(m_unit);
+    const int units     = kBytesPerLine / unitBytes;
+
+    qint64 selLo = -1;
+    qint64 selHi = -1;
+    if (m_hasSel) {
+      selLo = qMin(m_selAnchor, m_cursor);
+      selHi = qMax(m_selAnchor, m_cursor);
+    }
+    const QColor normFg = m_normFg.isValid() ? m_normFg : palette().color(QPalette::Text);
+    const QColor addrFg = m_addrColor.isValid() ? m_addrColor : normFg;
+    const QColor selBg  = m_selBg.isValid() ? m_selBg : palette().color(QPalette::Highlight);
+    const QColor selFg  = m_selFg.isValid() ? m_selFg : palette().color(QPalette::HighlightedText);
+
+    unsigned char buf[kBytesPerLine];
+    for (int i = 0; i < visLines; ++i) {
+      const qint64 line = m_topLine + i;
+      if (line >= m_totalLines) {
+        break;
+      }
+      const qint64 lineOff = line * kBytesPerLine;
+      const int y     = i * rh;
+      const int textY = y + ascent + 1;
+      const int n = m_src.read(lineOff, reinterpret_cast<char*>(buf), kBytesPerLine);
+
+      // アドレス (カーソル行は選択配色で強調)。
+      const bool cursorLine = (m_cursor >= lineOff && m_cursor < lineOff + kBytesPerLine);
+      const QString addr =
+        QString::asprintf("%0*llx", m_addrDigits,
+                          static_cast<unsigned long long>(lineOff));
+      const int ax = m_addrX - hoff;
+      if (cursorLine) {
+        p.fillRect(QRect(ax, y, m_addrDigits * m_charW + 2, rh), selBg);
+        p.setPen(selFg);
+      } else {
+        p.setPen(addrFg);
+      }
+      p.drawText(ax, textY, addr);
+
+      // 16 進 (単位ごと)。
+      for (int u = 0; u < units; ++u) {
+        const int avail = qBound(0, n - u * unitBytes, unitBytes);
+        if (avail <= 0) {
+          continue;
+        }
+        const qint64 uOff = lineOff + static_cast<qint64>(u) * unitBytes;
+        const int    ux   = m_hexX + u * m_unitW - hoff;
+        QString hx;
+        if (avail >= unitBytes) {
+          appendUnitHex(hx, buf + u * unitBytes, unitBytes, m_endian);
+        } else {
+          for (int k = 0; k < avail; ++k) {
+            hx.append(QLatin1Char(kHexDigits[buf[u * unitBytes + k] >> 4]));
+            hx.append(QLatin1Char(kHexDigits[buf[u * unitBytes + k] & 0xF]));
+          }
+        }
+        const bool sel =
+          m_hasSel && !(uOff + unitBytes - 1 < selLo || uOff > selHi);
+        if (sel) {
+          const int tw = fm.horizontalAdvance(hx);
+          p.fillRect(QRect(ux, y, tw + 2, rh), selBg);
+          p.setPen(selFg);
+        } else {
+          p.setPen(normFg);
+        }
+        p.drawText(ux + 1, textY, hx);
+      }
+
+      // ASCII (エンコーディングで 16 バイトをまとめてデコード)。
+      const QString asc =
+        decodeStringColumn(QByteArray(reinterpret_cast<const char*>(buf), n), m_encoding);
+      p.setPen(normFg);
+      p.drawText(m_asciiX - hoff + 1, textY, asc);
+    }
+  }
+
+  void resizeEvent(QResizeEvent* e) override {
+    QAbstractScrollArea::resizeEvent(e);
+    updateScrollbars();
+  }
+
+  void scrollContentsBy(int dx, int dy) override {
+    if (dy != 0) {
+      m_topLine = static_cast<qint64>(verticalScrollBar()->value()) * m_lineScale;
+      clampTop();
+    }
+    Q_UNUSED(dx);
+    viewport()->update();
+  }
+
+  void keyPressEvent(QKeyEvent* e) override {
+    if (m_totalSize <= 0) {
+      QAbstractScrollArea::keyPressEvent(e);
+      return;
+    }
+    if (e->matches(QKeySequence::Copy)) {
+      copySelectionToClipboard();
+      e->accept();
+      return;
+    }
+    const int  unitBytes = binaryViewerUnitToBytes(m_unit);
+    const bool shift = e->modifiers() & Qt::ShiftModifier;
+    const bool ctrl  = e->modifiers() & (Qt::ControlModifier | Qt::MetaModifier);
+    const int  visLines = qMax(1, viewport()->height() / rowH());
+    qint64 nc = m_cursor;
+    switch (e->key()) {
+      case Qt::Key_Left:     nc -= unitBytes; break;
+      case Qt::Key_Right:    nc += unitBytes; break;
+      case Qt::Key_Up:       nc -= kBytesPerLine; break;
+      case Qt::Key_Down:     nc += kBytesPerLine; break;
+      case Qt::Key_PageUp:   nc -= static_cast<qint64>(visLines) * kBytesPerLine; break;
+      case Qt::Key_PageDown: nc += static_cast<qint64>(visLines) * kBytesPerLine; break;
+      case Qt::Key_Home:
+        nc = ctrl ? 0 : (m_cursor - m_cursor % kBytesPerLine);
+        break;
+      case Qt::Key_End:
+        nc = ctrl ? (m_totalSize - 1)
+                  : (m_cursor - m_cursor % kBytesPerLine + kBytesPerLine - 1);
+        break;
+      default:
+        QAbstractScrollArea::keyPressEvent(e);
+        return;
+    }
+    nc = qBound<qint64>(0, nc, m_totalSize - 1);
+    nc -= nc % unitBytes;
+    moveCursor(nc, shift);
+    e->accept();
+  }
+
+  void mousePressEvent(QMouseEvent* e) override {
+    if (e->button() != Qt::LeftButton) {
+      QAbstractScrollArea::mousePressEvent(e);
+      return;
+    }
+    setFocus();
+    const qint64 b = byteAtPos(e->pos());
+    if (b < 0) {
+      return;
+    }
+    const int ub = binaryViewerUnitToBytes(m_unit);
+    moveCursor(b - b % ub, e->modifiers() & Qt::ShiftModifier);
+    m_dragging = true;
+  }
+  void mouseMoveEvent(QMouseEvent* e) override {
+    if (!m_dragging) {
+      return;
+    }
+    const qint64 b = byteAtPos(e->pos());
+    if (b < 0) {
+      return;
+    }
+    const int ub = binaryViewerUnitToBytes(m_unit);
+    moveCursor(b - b % ub, true);
+  }
+  void mouseReleaseEvent(QMouseEvent*) override { m_dragging = false; }
+
+  // アプリ側の Copy コマンド (ファイルパスのコピー等) より先に Ctrl/Cmd+C を
+  // 受け取るため、ShortcutOverride を accept して自分に回す。
+  bool event(QEvent* e) override {
+    if (e->type() == QEvent::ShortcutOverride) {
+      auto* ke = static_cast<QKeyEvent*>(e);
+      if (ke->matches(QKeySequence::Copy)) {
+        e->accept();
+        return true;
       }
     }
-    return out;
+    return QAbstractScrollArea::event(e);
   }
 
 private:
-  HexDataSource      m_src;
-  int                m_rows       = 0;
-  int                m_currentRow = -1;
-  BinaryViewerUnit   m_unit       = BinaryViewerUnit::Byte1;
-  BinaryViewerEndian m_endian     = BinaryViewerEndian::Little;
-  QString            m_encoding   = QStringLiteral("UTF-8");
-  QColor             m_addrColor;
-  QColor             m_selBg;
-  QColor             m_selFg;
+  int rowH() const { return qMax(1, QFontMetrics(font()).height() + 2); }
+
+  void recompute() {
+    const QFontMetrics fm(font());
+    m_charW = qMax(1, fm.horizontalAdvance(QLatin1Char('0')));
+    // アドレス桁数: 最終オフセットが収まる桁数 (最低 8)。
+    int digits = 1;
+    qint64 v = m_totalSize > 0 ? m_totalSize - 1 : 0;
+    while (v >= 16) {
+      v >>= 4;
+      ++digits;
+    }
+    m_addrDigits = qMax(8, digits);
+
+    const int cellPad    = qMax(3, m_charW / 2);
+    const int sectionGap = fm.averageCharWidth() * 2;
+    const int unitBytes  = binaryViewerUnitToBytes(m_unit);
+    const int units      = kBytesPerLine / unitBytes;
+
+    m_addrX = 6;
+    const int addrW = m_addrDigits * m_charW;
+    m_hexX  = m_addrX + addrW + sectionGap;
+    m_unitW = unitBytes * 2 * m_charW + cellPad;
+    const int hexW = units * m_unitW;
+    m_asciiX = m_hexX + hexW + sectionGap;
+    m_asciiW = kBytesPerLine * m_charW + cellPad;
+    m_contentW = m_asciiX + m_asciiW + 6;
+
+    updateScrollbars();
+    viewport()->update();
+  }
+
+  void updateScrollbars() {
+    const int rh       = rowH();
+    const int visLines = rh > 0 ? viewport()->height() / rh : 0;
+    const qint64 maxTop = qMax<qint64>(0, m_totalLines - qMax(1, visLines));
+    // 縦スクロールバーは int レンジ。行数が大きい場合はスケールして収める
+    // (m_topLine 自体は qint64 で保持し、キーボードでは 1 行単位で動かせる)。
+    m_lineScale = 1;
+    while (maxTop / m_lineScale > 1000000000LL) {
+      m_lineScale *= 2;
+    }
+    {
+      QSignalBlocker b(verticalScrollBar());
+      verticalScrollBar()->setRange(0, static_cast<int>(maxTop / m_lineScale));
+      verticalScrollBar()->setPageStep(
+        qMax(1, static_cast<int>(qMax<qint64>(1, visLines / m_lineScale))));
+      verticalScrollBar()->setSingleStep(1);
+      clampTop();
+      verticalScrollBar()->setValue(static_cast<int>(m_topLine / m_lineScale));
+    }
+    const int vw   = viewport()->width();
+    const int hmax = qMax(0, m_contentW - vw);
+    {
+      QSignalBlocker b(horizontalScrollBar());
+      horizontalScrollBar()->setRange(0, hmax);
+      horizontalScrollBar()->setPageStep(vw);
+    }
+  }
+
+  void clampTop() {
+    const int rh       = rowH();
+    const int visLines = qMax(1, rh > 0 ? viewport()->height() / rh : 1);
+    const qint64 maxTop = qMax<qint64>(0, m_totalLines - visLines);
+    m_topLine = qBound<qint64>(0, m_topLine, maxTop);
+  }
+  void syncVBar() {
+    QSignalBlocker b(verticalScrollBar());
+    verticalScrollBar()->setValue(static_cast<int>(m_topLine / m_lineScale));
+  }
+
+  void ensureVisible(qint64 line) {
+    const int visLines = qMax(1, viewport()->height() / rowH());
+    if (line < m_topLine) {
+      m_topLine = line;
+    } else if (line >= m_topLine + visLines) {
+      m_topLine = line - visLines + 1;
+    }
+    clampTop();
+    syncVBar();
+  }
+
+  void moveCursor(qint64 off, bool extend) {
+    if (extend) {
+      if (!m_hasSel) {
+        m_selAnchor = m_cursor;
+      }
+      m_hasSel = true;
+    } else {
+      m_hasSel = false;
+      m_selAnchor = off;
+    }
+    m_cursor = off;
+    ensureVisible(m_cursor / kBytesPerLine);
+    viewport()->update();
+  }
+
+  qint64 byteAtPos(const QPoint& pos) const {
+    const int rh = rowH();
+    if (rh <= 0) {
+      return -1;
+    }
+    const int    hoff = horizontalScrollBar()->value();
+    const int    rx   = pos.x() + hoff;
+    const qint64 line = m_topLine + pos.y() / rh;
+    if (line < 0 || line >= m_totalLines) {
+      return -1;
+    }
+    const int unitBytes = binaryViewerUnitToBytes(m_unit);
+    const int units     = kBytesPerLine / unitBytes;
+    qint64 off = line * kBytesPerLine;
+    if (rx >= m_asciiX) {
+      int ci = (rx - m_asciiX) / m_charW;
+      ci = qBound(0, ci, kBytesPerLine - 1);
+      off += ci;
+    } else if (rx >= m_hexX) {
+      int u = (rx - m_hexX) / m_unitW;
+      u = qBound(0, u, units - 1);
+      off += static_cast<qint64>(u) * unitBytes;
+    }
+    return qBound<qint64>(0, off, m_totalSize - 1);
+  }
+
+  HexDataSource m_src;
+  qint64 m_totalSize  = 0;
+  qint64 m_totalLines = 0;
+  qint64 m_topLine    = 0;   // 画面最上行の行番号 (qint64)
+  qint64 m_lineScale  = 1;   // 縦スクロールバーのスケール (超巨大ファイル用)
+  qint64 m_cursor     = 0;   // カーソルのバイトオフセット
+  qint64 m_selAnchor  = 0;   // 選択の起点
+  bool   m_hasSel     = false;
+  bool   m_dragging   = false;
+
+  BinaryViewerUnit   m_unit     = BinaryViewerUnit::Byte1;
+  BinaryViewerEndian m_endian   = BinaryViewerEndian::Little;
+  QString            m_encoding = QStringLiteral("UTF-8");
+  QColor m_addrColor, m_normFg, m_normBg, m_selFg, m_selBg;
+
+  // レイアウト (px)。recompute() で算出。
+  int m_charW = 8;
+  int m_addrDigits = 8;
+  int m_addrX = 6;
+  int m_hexX = 0;
+  int m_unitW = 0;
+  int m_asciiX = 0;
+  int m_asciiW = 0;
+  int m_contentW = 0;
 };
+
 
 BinaryView::BinaryView(QWidget* parent) : QWidget(parent) {
   setupUi();
@@ -484,40 +748,15 @@ void BinaryView::setupUi() {
   auto* clickFilter = new EnterClickFilter(this);
   clickFilter->installOnButtonsIn(toolbar);
 
-  // 16 進ダンプ本体 (QTableView + 仮想化モデル)。
-  m_model = new BinaryHexModel(this);
-  m_table = new QTableView(this);
-  m_table->setModel(m_model);
-  m_table->setShowGrid(false);
-  m_table->setSelectionBehavior(QAbstractItemView::SelectItems);
-  m_table->setSelectionMode(QAbstractItemView::ContiguousSelection);
-  m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-  m_table->setWordWrap(false);
-  m_table->setCornerButtonEnabled(false);
-  m_table->horizontalHeader()->setVisible(false);
-  m_table->verticalHeader()->setVisible(false);
-  // 全行走査を避けるため列幅は自前で設定する (ResizeToContents は使わない)。
-  m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-  // セルのマージンを詰めて、単位間を 1 文字ぶんの隙間にする。
-  m_table->setItemDelegate(new TightCellDelegate(m_table));
-  root->addWidget(m_table, /*stretch*/ 1);
+  // 16 進ダンプ本体 (自前描画の HexView)。QTableView は行番号×行高の int 座標が
+  // GB 級ファイルで溢れて途中から描画されないため、見えている行だけを描く自前
+  // ビューにする。Ctrl/Cmd+C は HexView 内部で ShortcutOverride を横取りして
+  // 選択の 16 進コピーを行う。
+  m_hex = new HexView(this);
+  root->addWidget(m_hex, /*stretch*/ 1);
 
-  // 巨大ファイル (数百万行の仮想化モデル) で、末尾付近までスクロールしてから
-  // 上下に少し動かすと最終行が再描画されずに残ることがある (QTableView の
-  // ScrollPerItem での既知の描画ムラ)。ScrollPerItem のままにしつつ (ScrollPerPixel
-  // は行数×行高が int を溢れてスクロールが壊れる)、スクロール値が変わるたびに
-  // viewport 全体を更新して確実に最終行まで描き直す。表示中の行数だけの再描画
-  // なので軽い。
-  connect(m_table->verticalScrollBar(), &QScrollBar::valueChanged,
-          m_table->viewport(), QOverload<>::of(&QWidget::update));
-
-  // Ctrl+C / Cmd+C: 選択セルをテキストとしてコピー。QShortcut だとアプリ側の
-  // Copy コマンド (ファイルパスのコピー等) に先取りされてしまうため、テキスト
-  // エディットと同様に ShortcutOverride で先取りして eventFilter で処理する。
-  m_table->installEventFilter(this);
-
-  // ViewerPanel / BinaryViewerWindow からの setFocus をテーブルへ転送。
-  setFocusProxy(m_table);
+  // ViewerPanel / BinaryViewerWindow からの setFocus を HexView へ転送。
+  setFocusProxy(m_hex);
 
   connect(m_unitCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
     m_unit = bytesToBinaryViewerUnit(m_unitCombo->currentData().toInt());
@@ -537,13 +776,6 @@ void BinaryView::setupUi() {
   // アドレス入力欄の Enter は eventFilter で消費してジャンプにする
   // (returnPressed だとキーイベントが親へ伝播してビュアーが閉じてしまう)。
   m_addressEdit->installEventFilter(this);
-
-  // セルカーソル (現在セル) の行が変わったら、モデルにも伝えてアドレス列を
-  // 「選択中」配色で強調させる。
-  connect(m_table->selectionModel(), &QItemSelectionModel::currentChanged, this,
-          [this](const QModelIndex& cur, const QModelIndex&) {
-            m_model->setCurrentRow(cur.row());
-          });
 }
 
 bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
@@ -554,24 +786,7 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
       return true;  // 親へ伝播させない (ビュアーを閉じさせない)
     }
   }
-  // テーブル上の Copy (Ctrl+C / Cmd+C) を、アプリ側の Copy コマンドより先に
-  // 横取りして選択セルをコピーする。まず ShortcutOverride を accept して自分に
-  // キーを回し、続く KeyPress で実処理する。
-  if (watched == m_table) {
-    if (event->type() == QEvent::ShortcutOverride) {
-      auto* ke = static_cast<QKeyEvent*>(event);
-      if (ke->matches(QKeySequence::Copy)) {
-        event->accept();
-        return true;
-      }
-    } else if (event->type() == QEvent::KeyPress) {
-      auto* ke = static_cast<QKeyEvent*>(event);
-      if (ke->matches(QKeySequence::Copy)) {
-        copySelection();
-        return true;
-      }
-    }
-  }
+  // 本体 (HexView) 上の Copy は HexView が ShortcutOverride を横取りして処理する。
   return QWidget::eventFilter(watched, event);
 }
 
@@ -591,23 +806,12 @@ void BinaryView::syncFromSettings() {
   m_unit     = s.binaryViewerUnit();
   m_endian   = s.binaryViewerEndian();
   m_encoding = s.binaryViewerEncoding();
-  m_table->setFont(s.binaryViewerFont());
-
-  // 通常 / 選択カラーを QPalette 経由で適用 (qApp テーマパレットを起点)。
-  QPalette pal = QApplication::palette();
-  if (s.binaryViewerNormalForeground().isValid())
-    pal.setColor(QPalette::Text, s.binaryViewerNormalForeground());
-  if (s.binaryViewerNormalBackground().isValid())
-    pal.setColor(QPalette::Base, s.binaryViewerNormalBackground());
-  if (s.binaryViewerSelectedForeground().isValid())
-    pal.setColor(QPalette::HighlightedText, s.binaryViewerSelectedForeground());
-  if (s.binaryViewerSelectedBackground().isValid())
-    pal.setColor(QPalette::Highlight, s.binaryViewerSelectedBackground());
-  m_table->setPalette(pal);
-
-  // 行高はフォントに合わせてコンパクトに。
-  m_table->verticalHeader()->setDefaultSectionSize(
-    QFontMetrics(s.binaryViewerFont()).height() + 2);
+  m_hex->applyFont(s.binaryViewerFont());
+  m_hex->setColors(s.binaryViewerAddressForeground(),
+                   s.binaryViewerNormalForeground(),
+                   s.binaryViewerNormalBackground(),
+                   s.binaryViewerSelectedForeground(),
+                   s.binaryViewerSelectedBackground());
 
   // コンボの再選択 (シグナル抑止)。
   {
@@ -634,10 +838,6 @@ void BinaryView::syncFromSettings() {
     m_encodingCombo->setCurrentText(m_encoding);
   }
 
-  // アドレス色 + カーソル行の選択配色 + フォーマットをモデルへ反映。
-  m_model->setAddressColor(s.binaryViewerAddressForeground());
-  m_model->setSelectionColors(s.binaryViewerSelectedBackground(),
-                              s.binaryViewerSelectedForeground());
   applyModelFormat();
 }
 
@@ -654,35 +854,9 @@ void BinaryView::applyModelFormat() {
   } else {
     m_actualEncoding = m_encoding;
   }
-  m_model->setFormat(m_unit, m_endian, m_actualEncoding);
-  updateColumnWidths();
-}
-
-void BinaryView::updateColumnWidths() {
-  const QFontMetrics fm(m_table->font());
-  const int unitBytes = binaryViewerUnitToBytes(m_unit);
-  const int units     = kBytesPerLine / unitBytes;
-  // セル幅 = テキスト幅 + cellPad。左寄せ描画なので単位間の隙間は概ね cellPad に
-  // なる。従来は 1 文字ぶん ("FF FF" のスペース 1 個相当) にしていたが、Linux の
-  // 既定 monospace (DejaVu Sans Mono) では隙間が広く見えるため、半文字ぶんに詰める
-  // (全プラットフォーム共通。最低 3px は確保)。
-  const int cellPad = qMax(3, fm.horizontalAdvance(QLatin1Char('0')) / 2);
-  // アドレス / バイト列 / ASCII の 3 セクション間はもう少し広く空ける。
-  // 従来 3 文字ぶんだったが、各セクション間を 1 文字ずつ詰めて 2 文字ぶんにする。
-  const int sectionGap = fm.averageCharWidth() * 2;
-  // Address: 8 桁 + 余白 + セクション間 (アドレスとバイト列の間を空ける)。
-  m_table->setColumnWidth(0,
-      fm.horizontalAdvance(QStringLiteral("00000000")) + cellPad + sectionGap);
-  // 各 unit セル: 2*unitBytes 桁の 16 進 + 余白。最後の unit だけ後ろに
-  // セクション間を足して、バイト列と ASCII の間を空ける。
-  const QString unitSample(unitBytes * 2, QLatin1Char('F'));
-  const int     unitW = fm.horizontalAdvance(unitSample) + cellPad;
-  for (int u = 0; u < units; ++u) {
-    m_table->setColumnWidth(1 + u, unitW + (u == units - 1 ? sectionGap : 0));
-  }
-  // ASCII: 16 文字ぶん (全角混在も想定して少し広め)。
-  m_table->setColumnWidth(1 + units,
-                          fm.horizontalAdvance(QStringLiteral("WWWWWWWWWWWWWWWW")) + cellPad);
+  m_hex->setEndian(m_endian);
+  m_hex->setEncoding(m_actualEncoding);
+  m_hex->setUnit(m_unit);  // 単位変更はレイアウト再計算 (unit 未変更なら no-op)
 }
 
 void BinaryView::jumpToAddress() {
@@ -698,35 +872,8 @@ void BinaryView::jumpToAddress() {
   if (!ok || addr < 0 || addr >= m_totalSize) {
     return;
   }
-  const int row = static_cast<int>(addr / kBytesPerLine);
-  // 該当バイトを含む unit 列へカーソルを置く。
-  const int unitBytes = binaryViewerUnitToBytes(m_unit);
-  const int unitCol   = m_model->firstUnitColumn()
-                        + static_cast<int>((addr % kBytesPerLine) / unitBytes);
-  const QModelIndex idx = m_model->index(row, unitCol);
-  m_table->setCurrentIndex(idx);
-  m_table->scrollTo(idx, QAbstractItemView::PositionAtCenter);
-}
-
-void BinaryView::copySelection() {
-  const QModelIndexList sel = m_table->selectionModel()->selectedIndexes();
-  if (sel.isEmpty()) {
-    return;
-  }
-  // 行 → (列 → テキスト) に整理 (QMap でキー昇順 = 行/列順にソートされる)。
-  QMap<int, QMap<int, QString>> byRow;
-  for (const QModelIndex& i : sel) {
-    byRow[i.row()][i.column()] = m_model->data(i, Qt::DisplayRole).toString();
-  }
-  QStringList lines;
-  for (auto rit = byRow.constBegin(); rit != byRow.constEnd(); ++rit) {
-    QStringList cells;
-    for (auto cit = rit.value().constBegin(); cit != rit.value().constEnd(); ++cit) {
-      cells << cit.value();
-    }
-    lines << cells.join(QLatin1Char(' '));
-  }
-  QGuiApplication::clipboard()->setText(lines.join(QLatin1Char('\n')));
+  m_hex->jumpTo(addr);
+  m_hex->setFocus();
 }
 
 bool BinaryView::loadFile(const QString& filePath) {
@@ -789,15 +936,11 @@ void BinaryView::applyPreparedLoad(const PreparedLoad& r) {
     m_addressEdit->clear();
   }
 
-  // mmap を開いてモデルへ渡す (メインスレッド)。
-  m_model->setFormat(m_unit, m_endian, m_actualEncoding);
-  m_model->setAddressColor(Settings::instance().binaryViewerAddressForeground());
-  m_model->open(r.filePath);
-  updateColumnWidths();
-  if (m_model->rowCount() > 0) {
-    m_table->scrollToTop();
-    m_table->setCurrentIndex(m_model->index(0, m_model->firstUnitColumn()));
-  }
+  // 表示フォーマットを反映してから mmap を開く (メインスレッド)。
+  m_hex->setEndian(m_endian);
+  m_hex->setEncoding(m_actualEncoding);
+  m_hex->setUnit(m_unit);
+  m_hex->openFile(r.filePath);
 }
 
 void BinaryView::clearContent() {
@@ -806,7 +949,7 @@ void BinaryView::clearContent() {
   m_maxAddress = -1;
   if (m_addressMaxLabel) m_addressMaxLabel->clear();
   if (m_addressEdit) m_addressEdit->clear();
-  if (m_model) m_model->close();
+  if (m_hex) m_hex->closeFile();
 }
 
 QString BinaryView::statusInfo() const {
