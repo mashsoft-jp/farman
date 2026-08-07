@@ -2509,47 +2509,47 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::CsvViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="37"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="36"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
         <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="38"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="37"/>
         <source>Extensions:</source>
         <translation>拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="40"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="39"/>
         <source>Auto detect</source>
         <translation>自動判別</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="41"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="40"/>
         <source>Comma ( , )</source>
         <translation>カンマ ( , )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="42"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="41"/>
         <source>Tab ( \t )</source>
         <translation>タブ ( \t )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="43"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="42"/>
         <source>Semicolon ( ; )</source>
         <translation>セミコロン ( ; )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="44"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="43"/>
         <source>Column separator used when a file is opened</source>
         <translation>ファイルを開くときに使う列の区切り文字</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="45"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="44"/>
         <source>Delimiter:</source>
         <translation>区切り:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="48"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="47"/>
         <source>Treat first row as header</source>
         <translation>先頭行をヘッダとして扱う</translation>
     </message>
@@ -2558,17 +2558,17 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation type="vanished">ショートカット</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="67"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="66"/>
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="69"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="68"/>
         <source>Choose the font for the CSV / TSV table</source>
         <translation>CSV / TSV 表のフォントを選択</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="73"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="72"/>
         <source>CSV / TSV Viewer Font</source>
         <translation>CSV / TSV ビュアーフォント</translation>
     </message>
@@ -4519,8 +4519,8 @@ What would you like to do?</source>
         <translation>JSON ファイルからバインドを読み込む (既存を置き換え)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="832"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="837"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="858"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="863"/>
         <source>Apply Preset</source>
         <translation>プリセット適用</translation>
     </message>
@@ -4531,50 +4531,50 @@ Press OK in Settings to commit, or Cancel to revert.</source>
 Settings で OK を押すと確定、Cancel で元に戻せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="853"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="859"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="879"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="885"/>
         <source>Export Keybindings</source>
         <translation>キーバインドをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="867"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="871"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="882"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="891"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="893"/>
         <location filename="../src/ui/KeybindingTab.cpp" line="897"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="908"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="917"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="923"/>
         <source>Import Keybindings</source>
         <translation>キーバインドをインポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="872"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="898"/>
         <source>Replace all current keybindings with those in this file?
 Press OK in Settings to commit, or Cancel to revert.</source>
         <translation>このファイルのキーバインドで現在の設定を全置換しますか?
 Settings で OK を押すと確定、Cancel で元に戻せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="883"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="909"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="892"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="918"/>
         <source>Invalid JSON: %1</source>
         <translation>JSON が不正です: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="779"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="805"/>
         <source>Wrong file type: expected &apos;farman.keybindings&apos;, got &apos;%1&apos;</source>
         <translation>ファイル種別が不正です。&apos;farman.keybindings&apos; が期待されますが &apos;%1&apos; でした</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="784"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="810"/>
         <source>Invalid preset: missing &apos;bindings&apos; array</source>
         <translation>プリセットが不正です: bindings 配列がありません</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="855"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="868"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="881"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="894"/>
         <source>JSON Files (*.json)</source>
         <translation>JSON ファイル (*.json)</translation>
     </message>
@@ -4610,7 +4610,7 @@ Settings で OK を押すと確定、Cancel で元に戻せます。</translatio
     </message>
     <message>
         <location filename="../src/ui/KeybindingTab.cpp" line="163"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="455"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="481"/>
         <source>&lt;press a key&gt;</source>
         <translation>&lt;キーを押してください&gt;</translation>
     </message>
@@ -4661,51 +4661,61 @@ Settings で OK を押すと確定、Cancel で元に戻せます。</translatio
         <translation>すべてのキーバインドをデフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="283"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="299"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="356"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="372"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="264"/>
+        <source>Application</source>
+        <translation>本体</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeybindingTab.cpp" line="305"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="321"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="382"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="398"/>
         <source> (and %1 more)</source>
         <translation> (他 %1 件)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="295"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="368"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="447"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="317"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="394"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="473"/>
         <source>(unbound)</source>
         <translation>(未割当)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="588"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="620"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="347"/>
+        <source>Viewers</source>
+        <translation>ビュアー</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeybindingTab.cpp" line="614"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="646"/>
         <source>Key Already Bound</source>
         <translation>キーが既に割り当て済み</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="589"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="621"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="615"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="647"/>
         <source>The key &apos;%1&apos; is already bound to &apos;%2&apos;.
 Do you want to rebind it to this command?</source>
         <translation>キー &apos;%1&apos; は既に &apos;%2&apos; に割り当てられています。
 このコマンドに割り当て直しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="637"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="663"/>
         <source>No Selection</source>
         <translation>未選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="638"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="664"/>
         <source>Please select a command to clear its binding.</source>
         <translation>解除するコマンドを選択してください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="665"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="691"/>
         <source>Reset to Defaults</source>
         <translation>デフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="666"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="692"/>
         <source>Are you sure you want to reset all keybindings to their default values?
 This will discard all custom keybindings.</source>
         <translation>すべてのキーバインドをデフォルトに戻しますか?
@@ -6220,52 +6230,52 @@ The format or codec is not supported on this platform.</source>
 <context>
     <name>Farman::MediaViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="39"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="38"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
         <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="40"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="39"/>
         <source>Extensions:</source>
         <translation>拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="44"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="43"/>
         <source>Initial playback volume</source>
         <translation>再生開始時の音量</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="45"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="44"/>
         <source>Volume:</source>
         <translation>音量:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="52"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="51"/>
         <source>Default zoom factor (used when &apos;Fit video to window&apos; is off)</source>
         <translation>既定のズーム倍率 (「動画をウィンドウに合わせる」OFF 時に使用)</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="53"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="52"/>
         <source>Zoom:</source>
         <translation>ズーム:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="56"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="55"/>
         <source>Fit video to window</source>
         <translation>動画をウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="57"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="56"/>
         <source>Scale the video to fit within the viewer; zoom factor is ignored while this is on.</source>
         <translation>動画をビュアーに収まるよう拡大縮小します。ON の間はズーム倍率は無視されます。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="62"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="61"/>
         <source>Start playback automatically</source>
         <translation>自動的に再生を開始する</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="65"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="64"/>
         <source>Loop playback</source>
         <translation>ループ再生</translation>
     </message>
@@ -6513,47 +6523,47 @@ The format or codec is not supported on this platform.</source>
 <context>
     <name>Farman::PdfViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="31"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="30"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
         <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="32"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="31"/>
         <source>Extensions:</source>
         <translation>拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="34"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="33"/>
         <source>Actual size</source>
         <translation>等倍</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="35"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="34"/>
         <source>Fit width</source>
         <translation>幅に合わせる</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="36"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="35"/>
         <source>Fit page</source>
         <translation>ページ全体</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="37"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="36"/>
         <source>How the page is scaled when a document is opened</source>
         <translation>ドキュメントを開いたときのページの拡大率</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="38"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="37"/>
         <source>Default fit:</source>
         <translation>既定の表示:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="41"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="40"/>
         <source>Continuous scrolling</source>
         <translation>連続スクロール</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="43"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="42"/>
         <source>Scroll through all pages continuously instead of one page at a time.</source>
         <translation>1 ページずつではなく全ページを連続してスクロールします。</translation>
     </message>

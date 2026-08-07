@@ -241,6 +241,30 @@ void KeybindingTab::updateTable() {
   auto& registry   = CommandRegistry::instance();
   auto& keyManager = KeyBindingManager::instance();
 
+  // 大見出し行（「本体」「ビュアー」）。カテゴリ見出しより強い配色・やや大きい
+  // 文字で、本体（ファイルマネージャ）コマンド群とビュアーコマンド群の境目を
+  // 明示する。3 列にまたがり、選択・編集はできない。
+  auto addMajorHeading = [this](const QString& text) {
+    const int row = m_table->rowCount();
+    m_table->insertRow(row);
+    auto* item = new QTableWidgetItem(text);
+    QFont f = item->font();
+    f.setBold(true);
+    f.setPointSizeF(f.pointSizeF() + 1.0);
+    item->setFont(f);
+    // カテゴリ見出し (Mid + WindowText) より目立つよう、テーマのアクセント色
+    // (選択色) を帯にして必ず可読な HighlightedText で描く。
+    item->setBackground(palette().color(QPalette::Highlight));
+    item->setForeground(palette().color(QPalette::HighlightedText));
+    item->setTextAlignment(Qt::AlignCenter);
+    item->setFlags(Qt::ItemIsEnabled);  // 選択不可
+    m_table->setItem(row, 0, item);
+    m_table->setSpan(row, 0, 1, 3);
+  };
+
+  // ── 本体（ファイルマネージャ）のショートカット ──
+  addMajorHeading(tr("Application"));
+
   // ショートカット一覧と並びを統一するため、CommandLayout のヘルパで
   // カテゴリ別 + 登録順にグルーピングしたものを使う。各グループの先頭に
   // 見出し行を 1 行ずつ挿入する。
@@ -320,6 +344,10 @@ void KeybindingTab::updateTable() {
   auto& viewerKeys = ViewerKeyBindingManager::instance();
   const QList<ViewerCommandDef> vdefs =
     ViewerDispatcher::instance().aggregatedShortcutCommands();
+  // ── ビュアーのショートカット（「その他」の後に大見出しを挟む）──
+  if (!vdefs.isEmpty()) {
+    addMajorHeading(tr("Viewers"));
+  }
   QString currentViewer;  // 直前に見出しを出した viewerId
   for (const ViewerCommandDef& def : vdefs) {
     if (def.viewerId != currentViewer) {
