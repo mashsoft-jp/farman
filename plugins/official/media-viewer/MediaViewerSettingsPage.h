@@ -7,8 +7,6 @@ class QComboBox;
 class QLineEdit;
 class QSpinBox;
 
-namespace Farman { class ViewerShortcutSettingsWidget; }
-
 namespace Farman {
 
 // メディア (動画 / 音声) ビュアーの設定ページ (Settings → Plugins → 詳細)。
@@ -32,7 +30,6 @@ private:
   QCheckBox* m_fitCheck      = nullptr;
   QCheckBox* m_loopCheck     = nullptr;
   QCheckBox* m_autoplayCheck = nullptr;
-  ViewerShortcutSettingsWidget* m_shortcuts = nullptr;
 };
 
 } // namespace Farman

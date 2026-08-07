@@ -7,6 +7,7 @@
 #include "ExternalAppsTab.h"
 #include "settings/Settings.h"
 #include "keybinding/KeyBindingManager.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include "viewer/ViewerDispatcher.h"
 #include "utils/Dialogs.h"
 #include <QApplication>
@@ -290,6 +291,11 @@ void SettingsDialog::onApply() {
 
   // Save keybindings to settings
   KeyBindingManager::instance().saveToSettings();
+
+  // 同梱ビュアーのショートカット (ビュアー別スコープ) も永続化する。ここで
+  // ViewerKeyBindingManager::bindingsChanged が発火し、開いているビュアーへ
+  // 割り当てが再 push される (一方向：本体→ビュアー)。
+  ViewerKeyBindingManager::instance().saveToSettings();
 
   // Notify that settings have changed
   emit settingsChanged();

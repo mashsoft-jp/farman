@@ -21,6 +21,7 @@ namespace Farman {
 
 class FileManagerPanel;
 class ShortcutListDialog;
+class IViewerPlugin;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -167,6 +168,15 @@ private:
   // 新規ウィジェットを作成する。WA_DeleteOnClose 付きなので X ボタンや Esc で
   // 閉じれば自動破棄され、QPointer は自動的に nullptr になる。
   QPointer<QWidget> m_externalViewerWindow;
+  // 外部ビュアーウィンドウ内の、ショートカット割り当てを受け取るビュー本体
+  // (applyShortcutBindings を持つ子ウィジェット) と、その再 push に必要な情報。
+  // 本体キーバインド設定の変更時にこの 1 つへ再 push する（一方向：本体→ビュアー）。
+  QPointer<QWidget> m_externalViewerReceiver;
+  QString           m_externalViewerViewerId;   // 組込みビュアーの viewerId (無ければ空)
+  IViewerPlugin*    m_externalViewerPlugin = nullptr;  // media / 外部プラグイン (無ければ null)
+  // window 内の埋め込みビューへショートカット割り当てを push し、再 push 用に控える。
+  void pushShortcutsToExternalWindow(QWidget* window, const QString& viewerId,
+                                     IViewerPlugin* plugin);
 
   // Tools メニュー (外部アプリ連携)。UserCommandManager の userCommandsChanged で
   // rebuildToolsMenu() が呼ばれ、addCmd() ベースで再構築する。

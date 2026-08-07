@@ -1,7 +1,8 @@
 #include "CsvView.h"
 
 #include "settings/Settings.h"
-#include "keybinding/ViewerKeyBindingManager.h"
+#include "viewer/ViewerShortcutMap.h"
+#include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QApplication>
@@ -423,12 +424,11 @@ void CsvView::setupUi() {
 
   // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
   // ラベルには併記せず、ツールチップの中で案内する。
-  auto& vkb = ViewerKeyBindingManager::instance();
-  const QString findScut = vkb.primaryKeyText(QStringLiteral("viewer.csv.find_focus"));
-  const QString encScut  = vkb.primaryKeyText(QStringLiteral("viewer.csv.encoding_focus"));
-  const QString delScut  = vkb.primaryKeyText(QStringLiteral("viewer.csv.delimiter_focus"));
-  const QString headerScut = vkb.primaryKeyText(QStringLiteral("viewer.csv.toggle_header"));
-  const QString caseScut   = vkb.primaryKeyText(QStringLiteral("viewer.csv.toggle_case"));
+  const QString findScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.find_focus"));
+  const QString encScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.encoding_focus"));
+  const QString delScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.delimiter_focus"));
+  const QString headerScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.toggle_header"));
+  const QString caseScut   = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.toggle_case"));
 
   // ── エンコーディング ──
   auto* encodingLabel = new QLabel(tr("Encoding:"), m_toolbar);
@@ -885,9 +885,9 @@ bool CsvView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
     const QString cmd =
-      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("csv"), seq);
+      m_shortcuts.commandForSeq(seq);
     if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
         dispatchViewerCommand(cmd);
@@ -897,6 +897,10 @@ bool CsvView::eventFilter(QObject* watched, QEvent* event) {
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void CsvView::applyShortcutBindings(const QVariantMap& bindings) {
+  m_shortcuts.applyBindings(bindings);
 }
 
 void CsvView::dispatchViewerCommand(const QString& cmd) {

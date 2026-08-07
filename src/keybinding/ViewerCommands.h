@@ -22,6 +22,12 @@ struct ViewerCommandDef {
 // 固定扱いなので含めない。
 QList<ViewerCommandDef> viewerCommandDefs();
 
+// 指定ビュアー ID のコマンド定義だけを返す（各プラグインの取得 API 実装用）。
+QList<ViewerCommandDef> viewerCommandsForViewer(const QString& viewerId);
+
+// commandId の既定キー（先頭）をネイティブ表記で返す（ツールチップの初期表示用）。
+QString viewerCommandDefaultKeyText(const QString& commandId);
+
 // 定義に現れるビュアー ID を表示順で返す（設定 UI のセクション分け用）。
 QStringList viewerCommandViewerIds();
 

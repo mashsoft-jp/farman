@@ -6,10 +6,14 @@
 #include <QString>
 #include <QList>
 #include <QKeySequence>
+#include <QVariantMap>
 
 class QKeyEvent;
+class QWidget;
 
 namespace Farman {
+
+class IViewerPlugin;
 
 // 同梱ビュアーの再割り当て可能ショートカットを保持するストア（シングルトン）。
 //
@@ -50,6 +54,11 @@ public:
   // commandId の代表キー（先頭）をネイティブ表記で返す（ツールチップ用）。無ければ空。
   QString primaryKeyText(const QString& commandId) const;
 
+  // 指定ビュアーの現在割り当てを、ビュアーへ push するための QVariantMap
+  // （commandId -> キー文字列(PortableText)のリスト）にして返す。本体→ビュアーの
+  // 一方向 push（applyShortcutBindings）でそのまま渡せる形。
+  QVariantMap bindingsMapForViewer(const QString& viewerId) const;
+
   // キーイベントから照合用の QKeySequence を作る。修飾キー単独は空を返し、
   // Keypad 修飾は無視する（KeybindingTab の記録処理と同じ正規化）。
   static QKeySequence sequenceForEvent(const QKeyEvent* ke);
@@ -69,5 +78,14 @@ private:
   QHash<QString, QMap<QKeySequence, QString>> m_reverse;
   bool m_loaded = false;
 };
+
+// 本体 → ビュアーへショートカット割り当てを push する（一方向）。view は
+// Q_INVOKABLE applyShortcutBindings(const QVariantMap&) を持つ前提で、
+// QMetaObject::invokeMethod により本体ビュアー・プラグイン双方へ一様に渡せる。
+// viewerId 指定版はストアの bindingsMapForViewer をそのまま渡す。
+void pushViewerShortcutBindings(QWidget* view, const QString& viewerId);
+// プラグインの取得 API（shortcutCommands）から viewerId を解決して push する。
+// media / 外部プラグインの生成経路用。コマンドが無いプラグインでは何もしない。
+void pushViewerShortcutBindings(QWidget* view, IViewerPlugin* plugin);
 
 } // namespace Farman

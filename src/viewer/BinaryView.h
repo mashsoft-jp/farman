@@ -1,8 +1,10 @@
 #pragma once
 
 #include "types.h"
+#include "viewer/ViewerShortcutMap.h"
 #include <QByteArray>
 #include <QString>
+#include <QVariantMap>
 #include <QWidget>
 
 #include <atomic>
@@ -75,6 +77,11 @@ public:
   // ステータスバー表示用の要約 ("0 / 123,345  ·  123,345 bytes" 等)。
   QString statusInfo() const;
 
+  // 本体 (キーバインド設定) からショートカット割り当てを push で受け取る。
+  // bindings は commandId -> キー文字列リスト。QMetaObject::invokeMethod で
+  // 本体・プラグイン双方から一様に呼べるよう Q_INVOKABLE にしている。
+  Q_INVOKABLE void applyShortcutBindings(const QVariantMap& bindings);
+
 signals:
   // ステータス表示 (カーソル位置など) が変化したときに発火。ViewerPanel /
   // BinaryViewerWindow がこれを受けて本体ステータスバーを更新する。
@@ -125,6 +132,9 @@ private:
   BinaryViewerEndian m_endian   = BinaryViewerEndian::Little;
   QString            m_encoding       = QStringLiteral("UTF-8");
   QString            m_actualEncoding = QStringLiteral("UTF-8");
+
+  // 本体から push されたショートカット割り当て (ローカル保持。ストレージは読まない)。
+  ViewerShortcutMap m_shortcuts;
 };
 
 } // namespace Farman

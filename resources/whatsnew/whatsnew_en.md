@@ -46,8 +46,8 @@ With the external plugin **farman-plugin-3d**, farman can now display
 
 - The keyboard shortcuts of each bundled viewer (Text / CSV·TSV / Markdown /
   PDF / Image / Binary / Media) — toggles, zoom, focus search, unit switch, and
-  so on — can now be reassigned from that viewer's own settings page
-  (Settings → Plugins → the viewer).
+  so on — can now be reassigned per viewer from the main settings
+  (Settings → Keybindings).
 - The same key can map to a different action in a different viewer; conflicts
   are detected within a viewer.
 - Navigation keys (close with Esc/Enter, Enter / Shift+Enter in the search

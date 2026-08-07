@@ -31,6 +31,8 @@
 #include "../viewer/PdfViewerWindow.h"
 #include "../viewer/CsvViewerWindow.h"
 #include "../viewer/ViewerDispatcher.h"
+#include "../viewer/IViewerPlugin.h"
+#include "../keybinding/ViewerKeyBindingManager.h"
 #include <QAbstractItemView>
 #include <QActionGroup>
 #include <QDesktopServices>
@@ -136,6 +138,21 @@ MainWindow::MainWindow(QWidget* parent)
 
   // Load keybindings
   KeyBindingManager::instance().loadFromSettings();
+
+  // ビュアーのショートカット割り当てが変わったら、開いている外部ビュアーウィンドウの
+  // ビュー本体へ再 push する（一方向：本体→ビュアー。インライン側は ViewerPanel が
+  // 自前で bindingsChanged を購読して再 push する）。
+  connect(&ViewerKeyBindingManager::instance(),
+          &ViewerKeyBindingManager::bindingsChanged, this, [this] {
+    if (!m_externalViewerReceiver) {
+      return;
+    }
+    if (m_externalViewerPlugin) {
+      pushViewerShortcutBindings(m_externalViewerReceiver, m_externalViewerPlugin);
+    } else {
+      pushViewerShortcutBindings(m_externalViewerReceiver, m_externalViewerViewerId);
+    }
+  });
 
   // メニューバーはキーバインドが確定した後に作る（右端にショートカットを表示するため）
   createMenus();
@@ -528,6 +545,58 @@ void MainWindow::showViewer(const QString& filePath, const QString& displayPath)
   showViewerWith(filePath, ViewerPanel::ViewerKind::Auto, displayPath);
 }
 
+namespace {
+// 組込みビュアーの ViewerKind を、ショートカット割り当てストアの viewerId に対応
+// 付ける。Auto (プラグイン経路) は空を返す（この場合は plugin から解決する）。
+QString viewerIdForKind(ViewerPanel::ViewerKind kind) {
+  switch (kind) {
+    case ViewerPanel::ViewerKind::Text:     return QStringLiteral("text");
+    case ViewerPanel::ViewerKind::Image:    return QStringLiteral("image");
+    case ViewerPanel::ViewerKind::Binary:   return QStringLiteral("binary");
+    case ViewerPanel::ViewerKind::Markdown: return QStringLiteral("markdown");
+    case ViewerPanel::ViewerKind::Pdf:      return QStringLiteral("pdf");
+    case ViewerPanel::ViewerKind::Csv:      return QStringLiteral("csv");
+    case ViewerPanel::ViewerKind::Auto:     return QString();
+  }
+  return QString();
+}
+} // namespace
+
+void MainWindow::pushShortcutsToExternalWindow(QWidget* window, const QString& viewerId,
+                                               IViewerPlugin* plugin) {
+  // 再 push 用に控える（次に外部ウィンドウを開くまで、または閉じるまで有効）。
+  m_externalViewerViewerId = viewerId;
+  m_externalViewerPlugin   = plugin;
+  m_externalViewerReceiver = nullptr;
+  if (!window) {
+    return;
+  }
+  // ウィンドウ配下から applyShortcutBindings(QVariantMap) を持つビュー本体を探す。
+  // 組込みウィンドウは中央にビュー、media は MediaViewerWindow 内の MediaView、
+  // 外部プラグインラッパは applyShortcutBindings を持たない（→ 見つからず何もしない）。
+  QWidget* recv = nullptr;
+  if (window->metaObject()->indexOfMethod("applyShortcutBindings(QVariantMap)") >= 0) {
+    recv = window;
+  } else {
+    const QList<QWidget*> kids = window->findChildren<QWidget*>();
+    for (QWidget* c : kids) {
+      if (c->metaObject()->indexOfMethod("applyShortcutBindings(QVariantMap)") >= 0) {
+        recv = c;
+        break;
+      }
+    }
+  }
+  m_externalViewerReceiver = recv;
+  if (!recv) {
+    return;
+  }
+  if (plugin) {
+    pushViewerShortcutBindings(recv, plugin);
+  } else {
+    pushViewerShortcutBindings(recv, viewerId);
+  }
+}
+
 void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind kind,
                                 const QString& displayPath) {
   // 表示用パス: 指定なしなら filePath をそのまま使う。
@@ -556,6 +625,8 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
     // Auto で外部プラグインが解決したときのプラグイン名 (External ラッパの
     // ステータスバー表示用 / ラップ要否の判定用)。
     QString pluginNameForExternal;
+    // Auto で解決したプラグイン（media / 外部）。ショートカット push の viewerId 解決用。
+    IViewerPlugin* resolvedPlugin = nullptr;
     if (kind == ViewerPanel::ViewerKind::Auto) {
       // Inline (ViewerPanel::openFile) と同じ判定にするため resolvePlugin()
       // を使う。ViewerDispatcher::createViewer() は未解決時にバイナリ
@@ -567,6 +638,7 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
         w = plugin->createViewer(filePath, this, dispatcher.pluginContext());
         if (w) {
           pluginNameForExternal = plugin->pluginName();
+          resolvedPlugin = plugin;
         }
       }
     }
@@ -638,6 +710,10 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       w->raise();
       w->activateWindow();
       m_externalViewerWindow = w;
+      // 本体キーバインド設定のショートカット割り当てを、ウィンドウ内のビュー本体へ
+      // push する。組込みビュアーは viewerId から、media/外部プラグインは
+      // resolvedPlugin から解決する（外部プラグインは設定項目が無く無操作）。
+      pushShortcutsToExternalWindow(w, viewerIdForKind(effective), resolvedPlugin);
       // 外部ビュアーが開いている間はファイル操作等のメニューを無効化し、閉じたら
       // (destroyed) 再計算して復帰させる。
       updatePaneMenuActionsEnabled();
@@ -740,6 +816,9 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
     win->raise();
     win->activateWindow();
     m_externalViewerWindow = win;
+    // 本体キーバインド設定のショートカット割り当てを、ウィンドウ内のビュー本体へ
+    // push する（media 等の取得 API 経由。外部プラグインは設定項目が無く無操作）。
+    pushShortcutsToExternalWindow(win, QString(), plugin);
     // 外部ビュアーが開いている間はファイル操作等のメニューを無効化し、閉じたら復帰。
     updatePaneMenuActionsEnabled();
     connect(win, &QObject::destroyed, this, [this] { updatePaneMenuActionsEnabled(); });

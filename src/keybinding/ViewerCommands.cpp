@@ -147,6 +147,27 @@ QList<ViewerCommandDef> viewerCommandDefs() {
   return d;
 }
 
+QList<ViewerCommandDef> viewerCommandsForViewer(const QString& viewerId) {
+  QList<ViewerCommandDef> out;
+  for (const ViewerCommandDef& def : viewerCommandDefs()) {
+    if (def.viewerId == viewerId) {
+      out.append(def);
+    }
+  }
+  return out;
+}
+
+QString viewerCommandDefaultKeyText(const QString& commandId) {
+  for (const ViewerCommandDef& def : viewerCommandDefs()) {
+    if (def.commandId == commandId) {
+      return def.defaultKeys.isEmpty()
+        ? QString()
+        : def.defaultKeys.first().toString(QKeySequence::NativeText);
+    }
+  }
+  return QString();
+}
+
 QStringList viewerCommandViewerIds() {
   return {"text", "csv", "markdown", "pdf", "image", "binary", "media"};
 }

@@ -4,8 +4,10 @@
 #include <QImage>
 #include <QPixmap>
 #include <QPointer>
+#include "viewer/ViewerShortcutMap.h"
 #include <QSize>
 #include <QString>
+#include <QVariantMap>
 #include <QWidget>
 
 class QAction;
@@ -118,6 +120,11 @@ private:
   void updateZoomEnabled();
   // キー操作の実処理。処理したら true。keyPressEvent と eventFilter から呼ぶ。
   bool handleViewerKey(QKeyEvent* event);
+  // 本体 (キーバインド設定) から push されるショートカット割り当てを保持する
+  // (ローカル保持・ストレージは読まない)。QMetaObject::invokeMethod で本体から
+  // 一様に呼べるよう Q_INVOKABLE。
+  Q_INVOKABLE void applyShortcutBindings(const QVariantMap& bindings);
+  ViewerShortcutMap m_shortcuts;
   // +/- キーによる拡大 / 縮小。Fit 中は解除して現在の実効倍率から段階変更する。
   void stepZoom(bool zoomIn);
   // ズームコンボの表示値を更新する。Fit 中はその時の実効倍率

@@ -1,12 +1,17 @@
 #include "ViewerKeyBindingManager.h"
 #include "ViewerCommands.h"
+#include "viewer/IViewerPlugin.h"
 
+#include <QMetaObject>
+#include <QVariant>
+#include <QWidget>
 #include <QSettings>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QKeyEvent>
+#include <QStringList>
 
 namespace Farman {
 
@@ -211,6 +216,24 @@ QString ViewerKeyBindingManager::primaryKeyText(const QString& commandId) const 
   return keys.first().toString(QKeySequence::NativeText);
 }
 
+QVariantMap ViewerKeyBindingManager::bindingsMapForViewer(const QString& viewerId) const {
+  const_cast<ViewerKeyBindingManager*>(this)->ensureLoaded();
+  QVariantMap map;
+  for (auto it = m_keys.constBegin(); it != m_keys.constEnd(); ++it) {
+    if (m_viewerOf.value(it.key()) != viewerId) {
+      continue;
+    }
+    QStringList keyTexts;
+    for (const QKeySequence& seq : it.value()) {
+      if (!seq.isEmpty()) {
+        keyTexts << seq.toString(QKeySequence::PortableText);
+      }
+    }
+    map.insert(it.key(), keyTexts);
+  }
+  return map;
+}
+
 QKeySequence ViewerKeyBindingManager::sequenceForEvent(const QKeyEvent* ke) {
   if (!ke) {
     return QKeySequence();
@@ -224,6 +247,30 @@ QKeySequence ViewerKeyBindingManager::sequenceForEvent(const QKeyEvent* ke) {
   Qt::KeyboardModifiers mods = ke->modifiers();
   mods &= ~Qt::KeypadModifier;  // テンキー修飾は無視
   return QKeySequence(QKeyCombination(mods, static_cast<Qt::Key>(key)));
+}
+
+void pushViewerShortcutBindings(QWidget* view, const QString& viewerId) {
+  if (!view || viewerId.isEmpty()) {
+    return;
+  }
+  const QVariantMap map =
+    ViewerKeyBindingManager::instance().bindingsMapForViewer(viewerId);
+  QMetaObject::invokeMethod(view, "applyShortcutBindings",
+                            Q_ARG(QVariantMap, map));
+}
+
+void pushViewerShortcutBindings(QWidget* view, IViewerPlugin* plugin) {
+  if (!view || !plugin) {
+    return;
+  }
+  // 取得 API（各ビュアーが自分の設定可能項目を返す）から viewerId を解決する。
+  // 1 プラグイン内のコマンドは同じ viewerId を共有する前提。設定可能項目を
+  // 持たない外部プラグインでは何もしない（一方向 push なので副作用なし）。
+  const QList<ViewerCommandDef> defs = plugin->shortcutCommands();
+  if (defs.isEmpty()) {
+    return;
+  }
+  pushViewerShortcutBindings(view, defs.first().viewerId);
 }
 
 } // namespace Farman

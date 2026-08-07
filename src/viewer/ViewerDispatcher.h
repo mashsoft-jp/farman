@@ -86,6 +86,12 @@ public:
   // 全登録プラグイン一覧
   QList<IViewerPlugin*> allPlugins() const;
 
+  // 全ビュアーの「設定可能なショートカット項目」を取得用共通 API
+  // (IViewerPlugin::shortcutCommands) 経由で集約する。本体のキーバインド設定
+  // (KeybindingTab) がビュアー別セクションを構築するのに使う。commandId 重複は
+  // 除去し、カタログの標準順 (viewerCommandViewerIds) で返す。
+  QList<ViewerCommandDef> aggregatedShortcutCommands() const;
+
   // 登録済み pluginId が外部プラグイン由来かどうか。
   bool isExternalPlugin(const QString& pluginId) const;
 

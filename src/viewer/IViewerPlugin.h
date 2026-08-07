@@ -7,6 +7,8 @@
 #include <QWidget>
 #include <QtPlugin>
 
+#include "keybinding/ViewerCommands.h"  // ViewerCommandDef（shortcutCommands の戻り値）
+
 namespace Farman {
 
 // 外部ビュアープラグインに渡す Appearance のスナップショット。
@@ -139,6 +141,13 @@ public:
   virtual IPluginSettingsPage* createSettingsPage(QWidget* /*parent*/) {
     return nullptr;
   }
+
+  // このビュアーが持つ「設定可能なショートカット」の一覧を返す取得 API。
+  // 本体 (Settings → キーバインド) がこれを呼んで一覧表示・編集する。既定は空。
+  // 割り当ての保存は本体が一括で行い、変更結果は createViewer で返したビューの
+  // Q_INVOKABLE applyShortcutBindings(QVariantMap) へ本体から push される
+  // (データフローは本体→ビュアーの一方通行)。
+  virtual QList<ViewerCommandDef> shortcutCommands() const { return {}; }
 
   // 拡張子の紐付けを自前の設定ページ内で編集する場合は true を返す。
   // farman は Settings → Plugins → 詳細でホスト側の「拡張子」欄を出さず、

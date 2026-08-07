@@ -3,6 +3,9 @@
 #include "keybinding/CommandLayout.h"
 #include "keybinding/CommandRegistry.h"
 #include "keybinding/ICommand.h"
+#include "keybinding/ViewerCommands.h"
+#include "keybinding/ViewerKeyBindingManager.h"
+#include "viewer/ViewerDispatcher.h"
 #include "settings/PresetIO.h"
 #include "utils/Dialogs.h"
 #include "utils/EnterClickFilter.h"
@@ -308,6 +311,78 @@ void KeybindingTab::updateTable() {
     }
   }
 
+  // ── 同梱ビュアーのショートカット（ビュアー別セクション）──
+  // 各ビュアーの「取得用共通 API」(shortcutCommands) から設定可能項目を集約し、
+  // ビュアーごとに見出し + 行を並べる。編集対象は ViewerKeyBindingManager
+  // （ビュアー内スコープ）。ここで付随情報 (viewerId / ラベル) を再構築する。
+  m_viewerOfCommand.clear();
+  m_viewerCmdLabel.clear();
+  auto& viewerKeys = ViewerKeyBindingManager::instance();
+  const QList<ViewerCommandDef> vdefs =
+    ViewerDispatcher::instance().aggregatedShortcutCommands();
+  QString currentViewer;  // 直前に見出しを出した viewerId
+  for (const ViewerCommandDef& def : vdefs) {
+    if (def.viewerId != currentViewer) {
+      currentViewer = def.viewerId;
+      const int hdrRow = m_table->rowCount();
+      m_table->insertRow(hdrRow);
+      auto* hdr = new QTableWidgetItem(viewerCommandViewerName(def.viewerId));
+      QFont f = hdr->font();
+      f.setBold(true);
+      hdr->setFont(f);
+      hdr->setBackground(palette().color(QPalette::Mid));
+      hdr->setForeground(palette().color(QPalette::WindowText));
+      hdr->setFlags(Qt::ItemIsEnabled);  // 選択不可
+      m_table->setItem(hdrRow, 0, hdr);
+      m_table->setSpan(hdrRow, 0, 1, 3);
+    }
+    m_viewerOfCommand.insert(def.commandId, def.viewerId);
+    m_viewerCmdLabel.insert(def.commandId, def.label);
+
+    const int row = m_table->rowCount();
+    m_table->insertRow(row);
+
+    auto* nameItem = new QTableWidgetItem(def.label);
+    nameItem->setData(Qt::UserRole, def.commandId);
+    nameItem->setFlags(nameItem->flags() & ~Qt::ItemIsEditable);
+    m_table->setItem(row, 0, nameItem);
+
+    // Current key（ViewerKeyBindingManager 由来）
+    const QList<QKeySequence> keys = viewerKeys.keysFor(def.commandId);
+    QString currentKey;
+    if (!keys.isEmpty()) {
+      currentKey = keySequenceToString(keys.first());
+      if (keys.size() > 1) {
+        currentKey += tr(" (and %1 more)").arg(keys.size() - 1);
+      }
+    }
+    auto* currentItem = new QTableWidgetItem(currentKey);
+    currentItem->setFlags(currentItem->flags() & ~Qt::ItemIsEditable);
+    m_table->setItem(row, 1, currentItem);
+
+    // New key（ペンディング変更）
+    QString newKey;
+    if (m_pendingChanges.contains(def.commandId)) {
+      const QList<QKeySequence>& seqs = m_pendingChanges[def.commandId];
+      if (seqs.isEmpty()) {
+        newKey = tr("(unbound)");
+      } else {
+        newKey = keySequenceToString(seqs.first());
+        if (seqs.size() > 1) {
+          newKey += tr(" (and %1 more)").arg(seqs.size() - 1);
+        }
+      }
+    }
+    auto* newItem = new QTableWidgetItem(newKey);
+    newItem->setFlags(newItem->flags() & ~Qt::ItemIsEditable);
+    if (!newKey.isEmpty()) {
+      QFont font = newItem->font();
+      font.setBold(true);
+      newItem->setFont(font);
+    }
+    m_table->setItem(row, 2, newItem);
+  }
+
   m_table->setUpdatesEnabled(true);
   // Don't call resizeColumnsToContents() as we have fixed column sizes
 }
@@ -362,9 +437,13 @@ void KeybindingTab::startRecording(int row) {
   m_inRecordMode = true;
   m_recordedKey = QKeySequence();
 
-  // Get current key binding
-  auto& keyManager = KeyBindingManager::instance();
-  QList<QKeySequence> keys = keyManager.keysForCommand(m_editingCommandId);
+  // Get current key binding（ビュアーコマンドは ViewerKeyBindingManager から）
+  QList<QKeySequence> keys;
+  if (isViewerCommand(m_editingCommandId)) {
+    keys = ViewerKeyBindingManager::instance().keysFor(m_editingCommandId);
+  } else {
+    keys = KeyBindingManager::instance().keysForCommand(m_editingCommandId);
+  }
   QString currentKey = tr("(unbound)");
   if (!keys.isEmpty()) {
     currentKey = keySequenceToString(keys.first());
@@ -485,15 +564,48 @@ bool KeybindingTab::validateBinding(const QKeySequence& newKey, const QString& c
     return true;
   }
 
+  // ── ビュアーコマンド: 競合検出は「同一ビュアー内」に限定する ──
+  // 別ビュアーで同じキーを別機能に割り当てるのは許可 (ビュアー別スコープ)。
+  if (isViewerCommand(commandId)) {
+    const QString viewerId = m_viewerOfCommand.value(commandId);
+    QString existingCommand =
+      ViewerKeyBindingManager::instance().conflictCommand(viewerId, newKey, commandId);
+    for (auto it = m_pendingChanges.begin(); it != m_pendingChanges.end(); ++it) {
+      if (it.key() == commandId) {
+        continue;
+      }
+      // 同一ビュアーのペンディングのみ競合対象。
+      if (m_viewerOfCommand.value(it.key()) != viewerId) {
+        continue;
+      }
+      if (it.value().contains(newKey)) {
+        existingCommand = it.key();
+        break;
+      }
+    }
+    if (!existingCommand.isEmpty() && existingCommand != commandId) {
+      const QString cmdLabel = m_viewerCmdLabel.value(existingCommand, existingCommand);
+      if (!confirm(this, tr("Key Already Bound"),
+                   tr("The key '%1' is already bound to '%2'.\n"
+                      "Do you want to rebind it to this command?")
+                      .arg(keySequenceToString(newKey), cmdLabel))) {
+        return false;
+      }
+      m_pendingChanges[existingCommand] = QList<QKeySequence>{};
+    }
+    return true;
+  }
+
   auto& keyManager = KeyBindingManager::instance();
 
   // Check if this key is already bound to another command
   QString existingCommand = keyManager.commandFor(newKey);
 
   // Check pending changes too. ペンディング側で同じキーを別コマンドに
-  // 割り当てているなら衝突と見なす。
+  // 割り当てているなら衝突と見なす。ビュアーコマンドは別スコープなので除外。
   for (auto it = m_pendingChanges.begin(); it != m_pendingChanges.end(); ++it) {
     if (it.key() == commandId) continue;
+    if (isViewerCommand(it.key())) continue;
     if (it.value().contains(newKey)) {
       existingCommand = it.key();
       break;
@@ -558,6 +670,9 @@ void KeybindingTab::onResetToDefaults() {
     // Load defaults temporarily to show in table
     auto& keyManager = KeyBindingManager::instance();
     keyManager.loadDefaults();
+    // ビュアーのショートカットも既定へ戻す（メモリ上のみ。永続化は OK 時に
+    // SettingsDialog が ViewerKeyBindingManager::saveToSettings() で行う）。
+    ViewerKeyBindingManager::instance().resetAllToDefaults();
 
     updateTable();
   }
@@ -617,13 +732,23 @@ void KeybindingTab::save() {
   }
 
   auto& keyManager = KeyBindingManager::instance();
+  auto& viewerKeys = ViewerKeyBindingManager::instance();
 
   // 各 pending entry について: そのコマンドに割当てられている既存キーを
   // 全部 unbind してから、新しいキー列を 1 つずつ bind する。
   // 空リストなら新しい bind 無しで終わる (= unbound)。
+  // ビュアーコマンドは ViewerKeyBindingManager (ビュアー別スコープ) へ振り分ける。
   for (auto it = m_pendingChanges.begin(); it != m_pendingChanges.end(); ++it) {
     const QString commandId          = it.key();
     const QList<QKeySequence>& newSeqs = it.value();
+
+    if (isViewerCommand(commandId)) {
+      // ビュアー側はコマンド単位でキー列を丸ごと置き換える。永続化と
+      // 開いているビュアーへの再 push は SettingsDialog::onApply が
+      // ViewerKeyBindingManager::saveToSettings() で行う。
+      viewerKeys.setKeys(commandId, newSeqs);
+      continue;
+    }
 
     const QList<QKeySequence> oldKeys = keyManager.keysForCommand(commandId);
     for (const QKeySequence& oldKey : oldKeys) {

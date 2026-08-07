@@ -17,6 +17,9 @@ public:
 
   QString pluginId() const override { return QStringLiteral("markdown_viewer"); }
   QString pluginName() const override { return QCoreApplication::translate("ViewerNames", "Markdown Viewer"); }
+  QList<ViewerCommandDef> shortcutCommands() const override {
+    return viewerCommandsForViewer(QStringLiteral("markdown"));
+  }
   QString author() const override { return QStringLiteral("Mashsoft Inc."); }
   QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
   int priority() const override { return 10000; }

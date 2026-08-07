@@ -757,9 +757,6 @@ void PluginsTab::showPluginDetails(int row) {
   if (settingsPage) {
     settingsPage->save();
     Settings::instance().load();
-    // ビュアーのショートカット割当も設定ページで変わり得るので、本体側ストアも
-    // 再読込して開いているビュアーへ反映する。
-    ViewerKeyBindingManager::instance().loadFromSettings();
   }
 
   if (enabledEditable) {

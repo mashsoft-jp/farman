@@ -1,6 +1,7 @@
 #include "MediaView.h"
 #include "settings/Settings.h"
-#include "keybinding/ViewerKeyBindingManager.h"
+#include "viewer/ViewerShortcutMap.h"
+#include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QAction>
@@ -504,6 +505,10 @@ bool MediaView::eventFilter(QObject* watched, QEvent* event) {
   return QWidget::eventFilter(watched, event);
 }
 
+void MediaView::applyShortcutBindings(const QVariantMap& bindings) {
+  m_shortcuts.applyBindings(bindings);
+}
+
 bool MediaView::handleViewerKey(QKeyEvent* event) {
   const bool shift = event->modifiers().testFlag(Qt::ShiftModifier);
 
@@ -540,15 +545,12 @@ bool MediaView::handleViewerKey(QKeyEvent* event) {
   }
 
   // 以降は設定で再割り当て可能なキー。押されたキーに対応するコマンドを引く。
-  auto& vkb = ViewerKeyBindingManager::instance();
-  QString cmd = vkb.commandForKey(QStringLiteral("media"),
-                                  ViewerKeyBindingManager::sequenceForEvent(event));
+  QString cmd = m_shortcuts.commandForSeq(ViewerShortcutMap::sequenceForEvent(event));
   // Shift 付きのシークは「大きく移動」。Shift を外して再照合し、seek のときだけ採用。
   bool largeSeek = false;
   if (cmd.isEmpty() && shift) {
     Qt::KeyboardModifiers m = event->modifiers() & ~Qt::ShiftModifier & ~Qt::KeypadModifier;
-    const QString baseCmd = vkb.commandForKey(
-      QStringLiteral("media"),
+    const QString baseCmd = m_shortcuts.commandForSeq(
       QKeySequence(QKeyCombination(m, static_cast<Qt::Key>(event->key()))));
     if (baseCmd == QLatin1String("viewer.media.seek_back")
         || baseCmd == QLatin1String("viewer.media.seek_forward")) {

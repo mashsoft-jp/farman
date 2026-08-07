@@ -10,6 +10,8 @@
 #include <QPalette>
 #include <QPluginLoader>
 #include <QSet>
+#include <QStringList>
+#include "keybinding/ViewerCommands.h"
 #include <limits>
 
 namespace Farman {
@@ -414,6 +416,41 @@ QList<IViewerPlugin*> ViewerDispatcher::allPlugins() const {
   }
 
   return result;
+}
+
+QList<ViewerCommandDef> ViewerDispatcher::aggregatedShortcutCommands() const {
+  // 各プラグインの取得 API を呼んで集約する。commandId の重複はスキップ。
+  QList<ViewerCommandDef> all;
+  QSet<QString> seen;
+  for (const auto& plugin : m_plugins) {
+    if (!plugin) {
+      continue;
+    }
+    for (const ViewerCommandDef& def : plugin->shortcutCommands()) {
+      if (seen.contains(def.commandId)) {
+        continue;
+      }
+      seen.insert(def.commandId);
+      all.append(def);
+    }
+  }
+  // カタログの標準ビュアー順に並べ替える（プラグインのロード順に依存させない）。
+  const QStringList order = viewerCommandViewerIds();
+  QList<ViewerCommandDef> sorted;
+  for (const QString& viewerId : order) {
+    for (const ViewerCommandDef& def : all) {
+      if (def.viewerId == viewerId) {
+        sorted.append(def);
+      }
+    }
+  }
+  // カタログ順に載らなかったもの（想定外の viewerId）は末尾に残す。
+  for (const ViewerCommandDef& def : all) {
+    if (!order.contains(def.viewerId)) {
+      sorted.append(def);
+    }
+  }
+  return sorted;
 }
 
 IViewerPlugin* ViewerDispatcher::pluginById(const QString& pluginId) const {

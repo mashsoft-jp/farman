@@ -1,7 +1,8 @@
 #include "ImageView.h"
 #include "PsdReader.h"
 #include "settings/Settings.h"
-#include "keybinding/ViewerKeyBindingManager.h"
+#include "viewer/ViewerShortcutMap.h"
+#include "keybinding/ViewerCommands.h"
 #include "utils/ExifReader.h"
 
 #include <QComboBox>
@@ -235,9 +236,8 @@ void ImageView::setupUi() {
   applyToolbarStyle(m_toolbar);
 
   // ショートカットは設定で再割り当て可能。ツールチップには現在の割当を載せる。
-  auto& vkb = ViewerKeyBindingManager::instance();
-  const QString zoomInScut = vkb.primaryKeyText(QStringLiteral("viewer.image.zoom_in"));
-  const QString zoomOutScut = vkb.primaryKeyText(QStringLiteral("viewer.image.zoom_out"));
+  const QString zoomInScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.image.zoom_in"));
+  const QString zoomOutScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.image.zoom_out"));
   const QString zoomHint =
     QStringLiteral("%1 / %2").arg(zoomOutScut, zoomInScut);
 
@@ -259,7 +259,7 @@ void ImageView::setupUi() {
   m_fitButton->setCheckable(true);
   m_fitButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-to-window.svg")));
   m_fitButton->setToolTip(
-    tr("Fit to Window (%1)").arg(vkb.primaryKeyText(QStringLiteral("viewer.image.toggle_fit"))));
+    tr("Fit to Window (%1)").arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.toggle_fit"))));
   m_fitButton->setFocusPolicy(Qt::StrongFocus);
   m_fitButtonAction = m_toolbar->addWidget(m_fitButton);
 
@@ -269,7 +269,7 @@ void ImageView::setupUi() {
   m_animButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/play.svg")));
   m_animButton->setToolTip(
     tr("Play / Pause animation (GIF / WebP) (%1)")
-      .arg(vkb.primaryKeyText(QStringLiteral("viewer.image.toggle_animation"))));
+      .arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.toggle_animation"))));
   m_animButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_animButton);
 
@@ -279,7 +279,7 @@ void ImageView::setupUi() {
   m_transparencyButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/transparency.svg")));
   m_transparencyButton->setToolTip(
     tr("Transparency background: off = checker, on = solid color (%1)")
-      .arg(vkb.primaryKeyText(QStringLiteral("viewer.image.toggle_transparency"))));
+      .arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.toggle_transparency"))));
   m_transparencyButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_transparencyButton);
 
@@ -289,7 +289,7 @@ void ImageView::setupUi() {
   m_rotateCwButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/rotate-cw.svg")));
   m_rotateCwButton->setToolTip(
     tr("Rotate 90° clockwise (display only) (%1)")
-      .arg(vkb.primaryKeyText(QStringLiteral("viewer.image.rotate"))));
+      .arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.rotate"))));
   m_rotateCwButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_rotateCwButton, &QToolButton::clicked,
           this,             &ImageView::rotateCw90);
@@ -311,7 +311,7 @@ void ImageView::setupUi() {
   m_infoButton->setFont(infoFont);
   m_infoButton->setToolTip(
     tr("Show image information / metadata (%1)")
-      .arg(vkb.primaryKeyText(QStringLiteral("viewer.image.info"))));
+      .arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.info"))));
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_infoButton, &QToolButton::clicked,
           this,         &ImageView::toggleImageInfoDialog);
@@ -695,11 +695,15 @@ void ImageView::keyPressEvent(QKeyEvent* event) {
   QWidget::keyPressEvent(event);
 }
 
+void ImageView::applyShortcutBindings(const QVariantMap& bindings) {
+  m_shortcuts.applyBindings(bindings);
+}
+
 bool ImageView::handleViewerKey(QKeyEvent* event) {
   // キーは設定で再割り当て可能。押されたキーに対応するコマンドを引いて実行する。
-  const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(event);
+  const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(event);
   const QString cmd =
-    ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("image"), seq);
+    m_shortcuts.commandForSeq(seq);
   if (cmd.isEmpty()) {
     return false;
   }

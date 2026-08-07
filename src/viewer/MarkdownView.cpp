@@ -1,7 +1,8 @@
 #include "MarkdownView.h"
 
 #include "settings/Settings.h"
-#include "keybinding/ViewerKeyBindingManager.h"
+#include "viewer/ViewerShortcutMap.h"
+#include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QApplication>
@@ -83,10 +84,9 @@ void MarkdownView::setupUi() {
 
   // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
   // ラベルには併記せず、ツールチップの中で案内する。
-  auto& vkb = ViewerKeyBindingManager::instance();
-  const QString findScut = vkb.primaryKeyText(QStringLiteral("viewer.markdown.find_focus"));
-  const QString srcScut  = vkb.primaryKeyText(QStringLiteral("viewer.markdown.toggle_source"));
-  const QString caseScut = vkb.primaryKeyText(QStringLiteral("viewer.markdown.toggle_case"));
+  const QString findScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.markdown.find_focus"));
+  const QString srcScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.markdown.toggle_source"));
+  const QString caseScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.markdown.toggle_case"));
 
   m_rawSourceButton = new QToolButton(m_toolbar);
   m_rawSourceButton->setText(tr("Source"));
@@ -482,9 +482,9 @@ bool MarkdownView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
     const QString cmd =
-      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("markdown"), seq);
+      m_shortcuts.commandForSeq(seq);
     if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
         dispatchViewerCommand(cmd);
@@ -494,6 +494,10 @@ bool MarkdownView::eventFilter(QObject* watched, QEvent* event) {
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void MarkdownView::applyShortcutBindings(const QVariantMap& bindings) {
+  m_shortcuts.applyBindings(bindings);
 }
 
 void MarkdownView::dispatchViewerCommand(const QString& cmd) {

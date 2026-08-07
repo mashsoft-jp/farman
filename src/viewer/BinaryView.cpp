@@ -1,6 +1,7 @@
 #include "BinaryView.h"
 #include "settings/Settings.h"
-#include "keybinding/ViewerKeyBindingManager.h"
+#include "viewer/ViewerShortcutMap.h"
+#include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QAbstractScrollArea>
@@ -349,6 +350,9 @@ public:
   void setCursorChangedCallback(std::function<void()> cb) {
     m_onCursorChanged = std::move(cb);
   }
+  // コピーキーの判定に使うショートカットマップ。BinaryView が保持する
+  // m_shortcuts を指す (push で更新されると HexView からも最新が見える)。
+  void setShortcutMap(const ViewerShortcutMap* map) { m_shortcutMap = map; }
   // 現在の選択 (無ければカーソル) の先頭 / 末尾オフセット。検索の基準に使う。
   qint64 selectionStart() const {
     return m_hasSel ? qMin(m_selAnchor, m_cursor) : m_cursor;
@@ -671,9 +675,9 @@ protected:
       return;
     }
     // コピーは設定で再割り当て可能。カーソル移動 (矢印/Home/End/Page) は固定。
-    if (ViewerKeyBindingManager::instance().commandForKey(
-            QStringLiteral("binary"), ViewerKeyBindingManager::sequenceForEvent(e))
-        == QLatin1String("viewer.binary.copy")) {
+    if (m_shortcutMap
+        && m_shortcutMap->commandForSeq(ViewerShortcutMap::sequenceForEvent(e))
+               == QLatin1String("viewer.binary.copy")) {
       copySelectionToClipboard();
       e->accept();
       return;
@@ -739,9 +743,9 @@ protected:
   bool event(QEvent* e) override {
     if (e->type() == QEvent::ShortcutOverride) {
       auto* ke = static_cast<QKeyEvent*>(e);
-      if (ViewerKeyBindingManager::instance().commandForKey(
-              QStringLiteral("binary"), ViewerKeyBindingManager::sequenceForEvent(ke))
-          == QLatin1String("viewer.binary.copy")) {
+      if (m_shortcutMap
+          && m_shortcutMap->commandForSeq(ViewerShortcutMap::sequenceForEvent(ke))
+                 == QLatin1String("viewer.binary.copy")) {
         e->accept();
         return true;
       }
@@ -884,6 +888,7 @@ private:
   bool   m_hasSel     = false;
   bool   m_dragging   = false;
   std::function<void()> m_onCursorChanged;  // カーソル移動時の通知
+  const ViewerShortcutMap* m_shortcutMap = nullptr;  // コピーキー判定用 (BinaryView 保有)
 
   BinaryViewerUnit   m_unit     = BinaryViewerUnit::Byte1;
   BinaryViewerEndian m_endian   = BinaryViewerEndian::Little;
@@ -925,17 +930,16 @@ void BinaryView::setupUi() {
   applyToolbarStyle(toolbar);
 
   // ショートカットは設定で再割り当て可能。ツールチップには現在の割当を載せる。
-  auto& vkb = ViewerKeyBindingManager::instance();
   // 単位は 1〜4 の範囲表示にする。unit_1 の割当が "…1" 形式なら末尾を "1-4" に。
-  QString scUnit = vkb.primaryKeyText(QStringLiteral("viewer.binary.unit_1"));
+  QString scUnit = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.unit_1"));
   if (scUnit.endsWith(QLatin1Char('1'))) {
     scUnit.chop(1);
     scUnit += QStringLiteral("1-4");
   }
-  const QString scEndian = vkb.primaryKeyText(QStringLiteral("viewer.binary.toggle_endian"));
-  const QString scEnc    = vkb.primaryKeyText(QStringLiteral("viewer.binary.encoding_focus"));
-  const QString scAddr   = vkb.primaryKeyText(QStringLiteral("viewer.binary.address_focus"));
-  const QString scFind   = vkb.primaryKeyText(QStringLiteral("viewer.binary.find_focus"));
+  const QString scEndian = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.toggle_endian"));
+  const QString scEnc    = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.encoding_focus"));
+  const QString scAddr   = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.address_focus"));
+  const QString scFind   = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.find_focus"));
 
   toolbar->addWidget(new QLabel(tr("Unit:"), toolbar));
   m_unitCombo = new QComboBox(toolbar);
@@ -1023,8 +1027,8 @@ void BinaryView::setupUi() {
   m_searchEdit->setToolTip(
     tr("Text to find (%1 to focus, Enter=next, Shift+Enter=prev)").arg(scFind));
   // ボタンのラベルにはショートカットを併記せず、ツールチップで案内する。
-  const QString nextSc = vkb.primaryKeyText(QStringLiteral("viewer.binary.find_next"));
-  const QString prevSc = vkb.primaryKeyText(QStringLiteral("viewer.binary.find_prev"));
+  const QString nextSc = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.find_next"));
+  const QString prevSc = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.find_prev"));
   QPushButton* findPrevBtn = new QPushButton(tr("Prev"), searchBar);
   QPushButton* findNextBtn = new QPushButton(tr("Next"), searchBar);
   findPrevBtn->setFocusPolicy(Qt::StrongFocus);
@@ -1056,6 +1060,7 @@ void BinaryView::setupUi() {
   // ビューにする。Ctrl/Cmd+C は HexView 内部で ShortcutOverride を横取りして
   // 選択の 16 進コピーを行う。
   m_hex = new HexView(this);
+  m_hex->setShortcutMap(&m_shortcuts);
   root->addWidget(m_hex, /*stretch*/ 1);
 
   // ViewerPanel / BinaryViewerWindow からの setFocus を HexView へ転送。
@@ -1088,6 +1093,10 @@ void BinaryView::setupUi() {
   // ローカルショートカット (Cmd/Ctrl+F 等) は eventFilter で処理する。本体
   // (HexView) 上でも効くように、HexView にも event filter を張る。
   m_hex->installEventFilter(this);
+}
+
+void BinaryView::applyShortcutBindings(const QVariantMap& bindings) {
+  m_shortcuts.applyBindings(bindings);
 }
 
 void BinaryView::dispatchViewerCommand(const QString& cmd) {
@@ -1140,9 +1149,8 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
       && (event->type() == QEvent::ShortcutOverride
           || event->type() == QEvent::KeyPress)) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
-    const QString cmd =
-      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("binary"), seq);
+    const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
+    const QString cmd = m_shortcuts.commandForSeq(seq);
     // コピー (viewer.binary.copy) は本体 (HexView) 側で横取り処理するので、ここでは扱わない。
     if (!cmd.isEmpty() && cmd != QLatin1String("viewer.binary.copy")) {
       // アプリ側の Copy コマンドや表示モード (Cmd+1〜4) 等より先に取りたいので、

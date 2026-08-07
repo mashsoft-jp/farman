@@ -10,6 +10,7 @@
 #include "viewer/PdfView.h"
 #include "viewer/TextView.h"
 #include "viewer/ViewerDispatcher.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include <QApplication>
 #include <QCoreApplication>
 #include <QEventLoop>
@@ -71,6 +72,14 @@ void ViewerPanel::setupUi() {
   // ===== CSV / TSV Viewer =====
   m_csvView = new CsvView(this);
   m_stack->addWidget(m_csvView);
+
+  // 組込み 6 ビュアーへ、本体キーバインド設定のショートカット割り当てを push する
+  // （一方向：本体→ビュアー）。これらのビュアーは常駐で使い回されるため、生成時に
+  // 一度 push し、以後は設定変更シグナルで再 push する。
+  reapplyViewerShortcuts();
+  connect(&ViewerKeyBindingManager::instance(),
+          &ViewerKeyBindingManager::bindingsChanged,
+          this, &ViewerPanel::reapplyViewerShortcuts);
 
   // ===== Loading placeholder =====
   // 大きいファイルや行数の多いテキストの読み込み中、ユーザーに「何も
@@ -369,6 +378,21 @@ void ViewerPanel::clearPluginView() {
   m_stack->removeWidget(m_pluginView);
   m_pluginView->deleteLater();
   m_pluginView = nullptr;
+  m_pluginViewPlugin = nullptr;
+}
+
+void ViewerPanel::reapplyViewerShortcuts() {
+  // 組込み 6 ビュアー（常駐）へ viewerId 指定で push。
+  pushViewerShortcutBindings(m_textView,     QStringLiteral("text"));
+  pushViewerShortcutBindings(m_imageView,    QStringLiteral("image"));
+  pushViewerShortcutBindings(m_binaryView,   QStringLiteral("binary"));
+  pushViewerShortcutBindings(m_markdownView, QStringLiteral("markdown"));
+  pushViewerShortcutBindings(m_pdfView,      QStringLiteral("pdf"));
+  pushViewerShortcutBindings(m_csvView,      QStringLiteral("csv"));
+  // 表示中のプラグインビュアー（media / 外部）があれば、その取得 API 経由で push。
+  if (m_pluginView && m_pluginViewPlugin) {
+    pushViewerShortcutBindings(m_pluginView, m_pluginViewPlugin);
+  }
 }
 
 void ViewerPanel::showLoadingState(const QString& filePath) {
@@ -618,12 +642,16 @@ bool ViewerPanel::openPluginFile(IViewerPlugin* plugin,
   view->setWindowFlag(Qt::Window, false);
   view->setAttribute(Qt::WA_DeleteOnClose, false);
   m_pluginView = view;
+  m_pluginViewPlugin = plugin;
   if (m_stack->indexOf(view) < 0) {
     m_stack->addWidget(view);
   }
   m_stack->setCurrentWidget(view);
   setFocusProxy(view);
   view->setFocus(Qt::OtherFocusReason);
+  // 本体キーバインド設定のショートカット割り当てを、取得 API 経由で push する
+  // （media / 外部プラグイン。設定可能項目を持たない外部では何もしない）。
+  pushViewerShortcutBindings(view, plugin);
   m_currentFilePath = displayPath;
   emit fileOpened(displayPath);
   // プラグインのビューが statusInfoChanged(QString) シグナルと statusInfo() を

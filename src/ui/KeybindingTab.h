@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QJsonObject>
 #include <QMap>
+#include <QHash>
 #include <QList>
 #include <QKeySequence>
 
@@ -82,6 +83,18 @@ private:
   // - 複数個   = プリセット適用などでマルチキーを保持
   // - キーが map に無い = 変更なし
   QMap<QString, QList<QKeySequence>> m_pendingChanges;
+
+  // ── 同梱ビュアーのショートカット (ビュアー別スコープ) ──
+  // ビュアーコマンド (viewer.<viewerId>.<action>) は本体の KeyBindingManager では
+  // なく ViewerKeyBindingManager を参照/更新する。競合検出も「同一ビュアー内」に
+  // 限定する。updateTable() で毎回、取得 API (ViewerDispatcher::aggregatedShortcut
+  // Commands) から再構築する。m_pendingChanges はコマンド ID が名前空間化されている
+  // ため本体コマンドと共用できる (保存/競合判定時にスコープを振り分ける)。
+  QHash<QString, QString> m_viewerOfCommand;  // commandId -> viewerId
+  QHash<QString, QString> m_viewerCmdLabel;   // commandId -> 表示ラベル
+  bool isViewerCommand(const QString& commandId) const {
+    return m_viewerOfCommand.contains(commandId);
+  }
 
   // Track the command being edited
   QString m_editingCommandId;

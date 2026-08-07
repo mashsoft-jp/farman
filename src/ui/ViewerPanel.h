@@ -97,6 +97,10 @@ private:
                       const QString& filePath,
                       const QString& displayPath);
   void clearPluginView();
+  // 本体キーバインド設定の変更時に、開いている全ビュアーへ割り当てを再 push する
+  // （一方向：本体→ビュアー）。組込み 6 ビュアーは常駐、プラグインビュアーは
+  // 現在表示中のものだけが対象。
+  void reapplyViewerShortcuts();
   // ロード中表示に切り替え、ファイル名・サイズを書き込んで再描画する。
   // 同期的なロードに入る前に呼ぶと、ユーザーには「読み込み中…」が見える。
   // ここで新しい cancelToken を発行し、Cancel ボタンにフォーカスを当てる
@@ -116,6 +120,8 @@ private:
   PdfView*        m_pdfView       = nullptr;
   CsvView*        m_csvView       = nullptr;
   QWidget*        m_pluginView    = nullptr;
+  // m_pluginView を生成したプラグイン（media / 外部）。ショートカット再 push 用。
+  IViewerPlugin*  m_pluginViewPlugin = nullptr;
 
   // ロード中に出すプレースホルダ。indeterminate な QProgressBar + Cancel
   // ボタンを持つ。Cancel ボタンには表示と同時にフォーカスを当てるので、

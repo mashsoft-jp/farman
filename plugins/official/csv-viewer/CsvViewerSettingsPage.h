@@ -12,8 +12,6 @@ class QPushButton;
 
 namespace Farman {
 
-class ViewerShortcutSettingsWidget;
-
 // CSV / TSV ビュアーの設定ページ (Settings → Plugins → 詳細)。
 // 区切り文字の既定・先頭行ヘッダ扱いに加え、表示フォントを設定する。
 // CSV は文字色設定を持たないため、フォントはテーマ (Light/Dark) で分けず
@@ -40,8 +38,6 @@ private:
   // 表示フォント (テーマ非依存の単一値。保存時のみ両テーマへ書き込む)
   QPushButton* m_fontButton = nullptr;
   QFont        m_uiFont;
-
-  ViewerShortcutSettingsWidget* m_shortcuts = nullptr;
 };
 
 } // namespace Farman

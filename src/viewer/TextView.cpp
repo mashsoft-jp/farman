@@ -1,6 +1,7 @@
 #include "TextView.h"
 #include "settings/Settings.h"
-#include "keybinding/ViewerKeyBindingManager.h"
+#include "viewer/ViewerShortcutMap.h"
+#include "keybinding/ViewerCommands.h"
 
 #include <QToolBar>
 #include <QToolButton>
@@ -181,13 +182,12 @@ void TextView::setupUi() {
   applyToolbarStyle(toolbar);
 
   // 各ショートカットのネイティブ表記。設定で再割り当て可能なので、現在の
-  // 割り当て (ViewerKeyBindingManager) から取得してツールチップに載せる。
-  auto& vkb = ViewerKeyBindingManager::instance();
-  const QString findScut = vkb.primaryKeyText(QStringLiteral("viewer.text.find_focus"));
-  const QString encScut  = vkb.primaryKeyText(QStringLiteral("viewer.text.encoding_focus"));
-  const QString lineScut = vkb.primaryKeyText(QStringLiteral("viewer.text.toggle_line_numbers"));
-  const QString wrapScut = vkb.primaryKeyText(QStringLiteral("viewer.text.toggle_word_wrap"));
-  const QString caseScut = vkb.primaryKeyText(QStringLiteral("viewer.text.toggle_case"));
+  // 既定キー (ViewerCommands) を取得してツールチップに載せる。
+  const QString findScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.find_focus"));
+  const QString encScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.encoding_focus"));
+  const QString lineScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.toggle_line_numbers"));
+  const QString wrapScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.toggle_word_wrap"));
+  const QString caseScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.toggle_case"));
 
   QLabel* encodingLabel = new QLabel(tr("Encoding:"), toolbar);
   encodingLabel->setToolTip(
@@ -598,9 +598,9 @@ bool TextView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
     const QString cmd =
-      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("text"), seq);
+      m_shortcuts.commandForSeq(seq);
     if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
         dispatchViewerCommand(cmd);
@@ -610,6 +610,10 @@ bool TextView::eventFilter(QObject* watched, QEvent* event) {
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void TextView::applyShortcutBindings(const QVariantMap& bindings) {
+  m_shortcuts.applyBindings(bindings);
 }
 
 void TextView::dispatchViewerCommand(const QString& cmd) {

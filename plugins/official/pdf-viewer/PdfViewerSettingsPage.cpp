@@ -2,12 +2,10 @@
 
 #include "settings/Settings.h"
 #include "viewer/ExtensionsField.h"
-#include "viewer/ViewerShortcutSettingsWidget.h"
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFormLayout>
-#include <QGroupBox>
 #include <QLineEdit>
 #include <QVBoxLayout>
 
@@ -44,11 +42,6 @@ PdfViewerSettingsPage::PdfViewerSettingsPage(QWidget* parent)
     tr("Scroll through all pages continuously instead of one page at a time."));
   outer->addWidget(m_continuousCheck);
 
-  auto* scGroup = new QGroupBox(tr("Shortcuts"), this);
-  auto* scLayout = new QVBoxLayout(scGroup);
-  m_shortcuts = new ViewerShortcutSettingsWidget(QStringLiteral("pdf"), scGroup);
-  scLayout->addWidget(m_shortcuts);
-  outer->addWidget(scGroup);
   outer->addStretch();
 
   // 現在値を読み込む (プラグイン側 Settings をファイルから読み直す)。
@@ -75,12 +68,10 @@ void PdfViewerSettingsPage::save() {
   s.setPdfViewerFitMode(
     static_cast<PdfViewerFitMode>(m_fitCombo->currentData().toInt()));
   s.save();
-  if (m_shortcuts) m_shortcuts->save();
 }
 
 void PdfViewerSettingsPage::restoreDefaults() {
   applyValuesToUi(kDefExtensions, kDefContinuous, kDefFitMode);
-  if (m_shortcuts) m_shortcuts->restoreDefaults();
 }
 
 } // namespace Farman

@@ -1,6 +1,8 @@
 #pragma once
 
+#include "viewer/ViewerShortcutMap.h"
 #include <QString>
+#include <QVariantMap>
 #include <QWidget>
 
 #include <atomic>
@@ -85,6 +87,11 @@ private slots:
 private:
   void setupUi();
   void dispatchViewerCommand(const QString& commandId);
+  // 本体 (キーバインド設定) から push されるショートカット割り当てを保持する
+  // (ローカル保持・ストレージは読まない)。QMetaObject::invokeMethod で本体から
+  // 一様に呼べるよう Q_INVOKABLE。
+  Q_INVOKABLE void applyShortcutBindings(const QVariantMap& bindings);
+  ViewerShortcutMap m_shortcuts;
   void updatePageLabel();
   void jumpToSearchResult(int index);
   void updateFindStatus();

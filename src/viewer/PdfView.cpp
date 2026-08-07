@@ -1,7 +1,8 @@
 #include "PdfView.h"
 
 #include "settings/Settings.h"
-#include "keybinding/ViewerKeyBindingManager.h"
+#include "viewer/ViewerShortcutMap.h"
+#include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QApplication>
@@ -45,13 +46,17 @@ class PageSpinBox : public QSpinBox {
 public:
   using QSpinBox::QSpinBox;
 
+  // 前/次ページ判定に使うショートカットマップ。PdfView が保持する m_shortcuts を
+  // 指す (push で更新されると PageSpinBox からも最新が見える)。
+  void setShortcutMap(const ViewerShortcutMap* map) { m_shortcutMap = map; }
+
 protected:
   void keyPressEvent(QKeyEvent* event) override {
     // 前/次ページのキーは設定で再割り当て可能（既定は ↑ 前 / ↓ 次で、
     // QSpinBox の増減とは逆向き）。
-    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(event);
+    const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(event);
     const QString cmd =
-      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("pdf"), seq);
+      m_shortcutMap ? m_shortcutMap->commandForSeq(seq) : QString();
     if (cmd == QLatin1String("viewer.pdf.prev_page")) {
       stepBy(-1);
       event->accept();
@@ -64,6 +69,9 @@ protected:
     }
     QSpinBox::keyPressEvent(event);
   }
+
+private:
+  const ViewerShortcutMap* m_shortcutMap = nullptr;  // 前/次ページ判定用 (PdfView 保有)
 };
 } // namespace
 
@@ -100,7 +108,9 @@ void PdfView::setupUi() {
   connect(m_prevButton, &QToolButton::clicked, this, &PdfView::onPrevPage);
   m_toolbar->addWidget(m_prevButton);
 
-  m_pageSpin = new PageSpinBox(m_toolbar);
+  auto* pageSpin = new PageSpinBox(m_toolbar);
+  pageSpin->setShortcutMap(&m_shortcuts);
+  m_pageSpin = pageSpin;
   m_pageSpin->setRange(1, 1);
   m_pageSpin->setValue(1);
   m_pageSpin->setFixedWidth(60);
@@ -126,11 +136,10 @@ void PdfView::setupUi() {
   m_toolbar->addSeparator();
 
   // 各ショートカットのネイティブ表記。設定で再割り当て可能なので現在の割当から取る。
-  auto& vkb = ViewerKeyBindingManager::instance();
-  const QString findScut      = vkb.primaryKeyText(QStringLiteral("viewer.pdf.find_focus"));
-  const QString fitWidthScut  = vkb.primaryKeyText(QStringLiteral("viewer.pdf.fit_width"));
-  const QString fitPageScut   = vkb.primaryKeyText(QStringLiteral("viewer.pdf.fit_page"));
-  const QString continuousScut = vkb.primaryKeyText(QStringLiteral("viewer.pdf.toggle_continuous"));
+  const QString findScut      = viewerCommandDefaultKeyText(QStringLiteral("viewer.pdf.find_focus"));
+  const QString fitWidthScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.pdf.fit_width"));
+  const QString fitPageScut   = viewerCommandDefaultKeyText(QStringLiteral("viewer.pdf.fit_page"));
+  const QString continuousScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.pdf.toggle_continuous"));
 
   // ───── ズーム ─────
   m_zoomOutButton = new QToolButton(m_toolbar);
@@ -575,9 +584,9 @@ bool PdfView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
     const QString cmd =
-      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("pdf"), seq);
+      m_shortcuts.commandForSeq(seq);
 
     // テキスト入力欄 (検索 / ページ番号) にフォーカスがある間は、修飾キーなしの
     // 素キー (ズームの - / + 等) は入力を邪魔しないよう無効化する。
@@ -597,6 +606,10 @@ bool PdfView::eventFilter(QObject* watched, QEvent* event) {
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void PdfView::applyShortcutBindings(const QVariantMap& bindings) {
+  m_shortcuts.applyBindings(bindings);
 }
 
 void PdfView::dispatchViewerCommand(const QString& cmd) {
