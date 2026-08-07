@@ -420,9 +420,24 @@ void CsvView::setupUi() {
   m_toolbar->setIconSize(QSize(20, 20));
   applyToolbarStyle(m_toolbar);
 
+  // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
+  // ラベルには併記せず、ツールチップの中で案内する。
+  const QString findScut = QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+  const QString encScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E).toString(QKeySequence::NativeText);
+  const QString delScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D).toString(QKeySequence::NativeText);
+  // 1 行目ヘッダは ⌘⇧H (Header)。Shift+数字はレイアウト依存でキーコードが
+  // 変わり得る (Windows 等で '!'=Key_Exclam になる) ため数字は使わない。
+  const QString headerScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_H).toString(QKeySequence::NativeText);
+  const QString caseScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C).toString(QKeySequence::NativeText);
+
   // ── エンコーディング ──
   auto* encodingLabel = new QLabel(tr("Encoding:"), m_toolbar);
-  encodingLabel->setToolTip(tr("Character encoding used to decode this file"));
+  encodingLabel->setToolTip(
+    tr("Character encoding used to decode this file (%1)").arg(encScut));
   m_toolbar->addWidget(encodingLabel);
   m_encodingCombo = new QComboBox(m_toolbar);
   m_encodingCombo->addItem(QStringLiteral("Auto"));
@@ -433,14 +448,16 @@ void CsvView::setupUi() {
   m_encodingCombo->addItem(QStringLiteral("EUC-JP"));
   m_encodingCombo->addItem(QStringLiteral("ISO-8859-1"));
   m_encodingCombo->setFocusPolicy(Qt::StrongFocus);
-  m_encodingCombo->setToolTip(tr("Character encoding used to decode this file"));
+  m_encodingCombo->setToolTip(
+    tr("Character encoding used to decode this file (%1)").arg(encScut));
   m_toolbar->addWidget(m_encodingCombo);
 
   m_toolbar->addSeparator();
 
   // ── 区切り文字 ──
   auto* delimiterLabel = new QLabel(tr("Delimiter:"), m_toolbar);
-  delimiterLabel->setToolTip(tr("Character used to separate columns"));
+  delimiterLabel->setToolTip(
+    tr("Character used to separate columns (%1)").arg(delScut));
   m_toolbar->addWidget(delimiterLabel);
   m_delimiterCombo = new QComboBox(m_toolbar);
   m_delimiterCombo->addItem(tr("Auto"),       int(Delimiter::Auto));
@@ -448,7 +465,8 @@ void CsvView::setupUi() {
   m_delimiterCombo->addItem(tr("Tab (\\t)"),  int(Delimiter::Tab));
   m_delimiterCombo->addItem(tr("Semicolon (;)"), int(Delimiter::Semicolon));
   m_delimiterCombo->setFocusPolicy(Qt::StrongFocus);
-  m_delimiterCombo->setToolTip(tr("Character used to separate columns"));
+  m_delimiterCombo->setToolTip(
+    tr("Character used to separate columns (%1)").arg(delScut));
   m_toolbar->addWidget(m_delimiterCombo);
 
   m_toolbar->addSeparator();
@@ -458,24 +476,21 @@ void CsvView::setupUi() {
   m_headerToggle->setText(tr("First row = header"));
   m_headerToggle->setCheckable(true);
   m_headerToggle->setChecked(true);
-  m_headerToggle->setToolTip(tr("Treat the first row as column headers"));
+  m_headerToggle->setToolTip(
+    tr("Treat the first row as column headers (%1)").arg(headerScut));
   m_headerToggle->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_headerToggle);
 
   m_toolbar->addSeparator();
 
   // ── 検索 (TextView / PdfView / MarkdownView と同じレイアウト) ──
-  const QString findShortcutText =
-    QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
-
-  auto* findLabel =
-    new QLabel(tr("Find (%1):").arg(findShortcutText), m_toolbar);
-  findLabel->setToolTip(tr("Focus the search field (%1)").arg(findShortcutText));
+  auto* findLabel = new QLabel(tr("Find:"), m_toolbar);
+  findLabel->setToolTip(tr("Search text in this CSV (%1)").arg(findScut));
   m_toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(m_toolbar);
-  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
-  m_findEdit->setToolTip(tr("Search text in this CSV (%1)").arg(findShortcutText));
+  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findScut));
+  m_findEdit->setToolTip(tr("Search text in this CSV (%1)").arg(findScut));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(160);
@@ -500,7 +515,8 @@ void CsvView::setupUi() {
   m_findCsButton = new QToolButton(m_toolbar);
   m_findCsButton->setCheckable(true);
   m_findCsButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/case-sensitive.svg")));
-  m_findCsButton->setToolTip(tr("Case sensitive search"));
+  m_findCsButton->setToolTip(
+    tr("Toggle case-sensitive search (%1)").arg(caseScut));
   m_findCsButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_findCsButton, &QToolButton::toggled, this, [this](bool) {
     runSearchAndJump();
@@ -873,11 +889,39 @@ bool CsvView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const bool isFindKey =
-      ke->key() == Qt::Key_F &&
-      (ke->modifiers() & Qt::ControlModifier);
-    if (isFindKey && isVisible() && window() && window()->isActiveWindow()) {
-      if (event->type() == QEvent::KeyPress) focusFindInput();
+    const auto mods = ke->modifiers();
+    const bool ctrl  = mods & Qt::ControlModifier;   // macOS では Cmd
+    const bool shift = mods & Qt::ShiftModifier;
+    const bool alt   = mods & Qt::AltModifier;
+    const int  key   = ke->key();
+
+    // Cmd/Ctrl+F: 検索欄へフォーカス
+    const bool toFind = ctrl && !shift && !alt && key == Qt::Key_F;
+    // Cmd/Ctrl+Shift+E: エンコーディングのコンボへフォーカス
+    const bool toEncoding = ctrl && shift && key == Qt::Key_E;
+    // Cmd/Ctrl+Shift+D: 区切り文字のコンボへフォーカス
+    const bool toDelimiter = ctrl && shift && key == Qt::Key_D;
+    // Cmd/Ctrl+Shift+H: 1 行目ヘッダ扱いのトグル
+    const bool toHeader = ctrl && shift && key == Qt::Key_H;
+    // Cmd/Ctrl+Shift+C: 検索の大文字小文字トグル
+    const bool toCase = ctrl && shift && key == Qt::Key_C;
+
+    const bool handled =
+      toFind || toEncoding || toDelimiter || toHeader || toCase;
+    if (handled && isVisible() && window() && window()->isActiveWindow()) {
+      if (event->type() == QEvent::KeyPress) {
+        if (toFind) {
+          focusFindInput();
+        } else if (toEncoding && m_encodingCombo) {
+          m_encodingCombo->setFocus(Qt::ShortcutFocusReason);
+        } else if (toDelimiter && m_delimiterCombo) {
+          m_delimiterCombo->setFocus(Qt::ShortcutFocusReason);
+        } else if (toHeader && m_headerToggle) {
+          m_headerToggle->toggle();
+        } else if (toCase && m_findCsButton) {
+          m_findCsButton->toggle();
+        }
+      }
       event->accept();
       return true;
     }
