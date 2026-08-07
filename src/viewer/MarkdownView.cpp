@@ -80,12 +80,20 @@ void MarkdownView::setupUi() {
   // 設定するので slot は走らない。実描画は loadFile → renderCurrent が行う。
   m_rawSource = Settings::instance().markdownViewerShowSource();
 
+  // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
+  // ラベルには併記せず、ツールチップの中で案内する。
+  const QString findScut = QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+  const QString srcScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S).toString(QKeySequence::NativeText);
+  const QString caseScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C).toString(QKeySequence::NativeText);
+
   m_rawSourceButton = new QToolButton(m_toolbar);
   m_rawSourceButton->setText(tr("Source"));
   m_rawSourceButton->setCheckable(true);
   m_rawSourceButton->setChecked(m_rawSource);
   m_rawSourceButton->setToolTip(
-    tr("Show raw Markdown source (off = rendered HTML)"));
+    tr("Show raw Markdown source instead of rendered HTML (%1)").arg(srcScut));
   m_rawSourceButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_rawSourceButton, &QToolButton::toggled,
           this,              &MarkdownView::onToggleRawSource);
@@ -94,16 +102,13 @@ void MarkdownView::setupUi() {
   m_toolbar->addSeparator();
 
   // ───── 検索 (TextView と同じレイアウト) ─────
-  const QString findShortcutText =
-    QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
-
-  // 「Find:」ラベル自体にも Cmd/Ctrl+F を併記し、ショートカットを発見しやすくする。
-  m_toolbar->addWidget(
-    new QLabel(tr("Find (%1):").arg(findShortcutText), m_toolbar));
+  auto* findLabel = new QLabel(tr("Find:"), m_toolbar);
+  findLabel->setToolTip(tr("Search text in this Markdown (%1)").arg(findScut));
+  m_toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(m_toolbar);
-  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
-  m_findEdit->setToolTip(tr("Search text in this Markdown (%1)").arg(findShortcutText));
+  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findScut));
+  m_findEdit->setToolTip(tr("Search text in this Markdown (%1)").arg(findScut));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(160);
@@ -131,7 +136,8 @@ void MarkdownView::setupUi() {
   m_findCsButton = new QToolButton(m_toolbar);
   m_findCsButton->setCheckable(true);
   m_findCsButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/case-sensitive.svg")));
-  m_findCsButton->setToolTip(tr("Case sensitive search"));
+  m_findCsButton->setToolTip(
+    tr("Toggle case-sensitive search (%1)").arg(caseScut));
   m_findCsButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_findCsButton);
 
@@ -476,11 +482,30 @@ bool MarkdownView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const bool isFindKey =
-      ke->key() == Qt::Key_F &&
-      (ke->modifiers() & Qt::ControlModifier);
-    if (isFindKey && isVisible() && window() && window()->isActiveWindow()) {
-      if (event->type() == QEvent::KeyPress) focusFindInput();
+    const auto mods = ke->modifiers();
+    const bool ctrl  = mods & Qt::ControlModifier;   // macOS では Cmd
+    const bool shift = mods & Qt::ShiftModifier;
+    const bool alt   = mods & Qt::AltModifier;
+    const int  key   = ke->key();
+
+    // Cmd/Ctrl+F: 検索欄へフォーカス
+    const bool toFind = ctrl && !shift && !alt && key == Qt::Key_F;
+    // Cmd/Ctrl+Shift+S: ソース表示のトグル
+    const bool toSource = ctrl && shift && key == Qt::Key_S;
+    // Cmd/Ctrl+Shift+C: 検索の大文字小文字トグル
+    const bool toCase = ctrl && shift && key == Qt::Key_C;
+
+    const bool handled = toFind || toSource || toCase;
+    if (handled && isVisible() && window() && window()->isActiveWindow()) {
+      if (event->type() == QEvent::KeyPress) {
+        if (toFind) {
+          focusFindInput();
+        } else if (toSource && m_rawSourceButton) {
+          m_rawSourceButton->toggle();
+        } else if (toCase && m_findCsButton) {
+          m_findCsButton->toggle();
+        }
+      }
       event->accept();
       return true;
     }
