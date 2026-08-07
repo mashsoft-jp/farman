@@ -304,6 +304,15 @@ void MainWindow::setupUi() {
 }
 
 void MainWindow::updateWindowTitle() {
+  // ビュアー表示中は「farman <ver> — <ビュアー名>」で、何のビュアーを開いて
+  // いるかをタイトルバーに示す。
+  if (m_stack && m_viewerPanel && m_stack->currentWidget() == m_viewerPanel) {
+    const QString name = m_viewerPanel->currentViewerName();
+    setWindowTitle(name.isEmpty()
+      ? m_windowTitleBase
+      : (m_windowTitleBase + QStringLiteral(" — ") + name));
+    return;
+  }
   // 同期ブラウズ / ディレクトリ比較が ON のときはタイトルバーにサフィックスを
   // 付けて、ユーザーがメニューを開かなくても現在のモードが分かるようにする。
   const bool syncOn    = m_fileManagerPanel && m_fileManagerPanel->isSyncBrowseEnabled();
@@ -478,6 +487,8 @@ void MainWindow::showFileManager() {
   if (m_stack->currentWidget() != m_fileManagerPanel) {
     m_stack->setCurrentWidget(m_fileManagerPanel);
     m_viewerPanel->clear();
+    // ファイラに戻ったのでタイトルバーからビュアー名を外す。
+    updateWindowTitle();
     // ファイラに戻ったのでメニューの有効/無効を再計算 (外部ビュアーが無ければ有効化)。
     updatePaneMenuActionsEnabled();
 
@@ -657,6 +668,8 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
     showFileManager();
     return;
   }
+  // タイトルバーに「farman <ver> — <ビュアー名>」を反映。
+  updateWindowTitle();
 
   // フォーカスは openFile の後に当てる。openFile の中で初めて該当ビューが
   // current になり setFocusProxy(該当ビュー) が張られるため、先に setFocus する
@@ -742,6 +755,7 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
     showFileManager();
     return;
   }
+  updateWindowTitle();
   m_viewerPanel->setFocus();
 }
 

@@ -60,6 +60,8 @@ public:
 
   // 現在のファイルパス
   QString currentFilePath() const { return m_currentFilePath; }
+  // 現在表示中ビュアーのローカライズ名 (タイトルバー用)。未表示なら空。
+  QString currentViewerName() const { return m_currentViewerName; }
 
   // ビューアをクリア
   void clear();
@@ -129,6 +131,7 @@ private:
   std::shared_ptr<std::atomic<bool>> m_currentCancelToken;
 
   QString m_currentFilePath;
+  QString m_currentViewerName;  // 現在表示中ビュアーのローカライズ名
 };
 
 } // namespace Farman

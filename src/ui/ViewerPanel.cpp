@@ -11,6 +11,7 @@
 #include "viewer/TextView.h"
 #include "viewer/ViewerDispatcher.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QEventLoop>
 #include <QFileInfo>
 #include <QFutureWatcher>
@@ -227,6 +228,51 @@ ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
   return ViewerKind::Binary;
 }
 
+namespace {
+// ビュアーの表示名をローカライズする。プラグイン名 (pluginName) と同じ
+// 共有コンテキスト "ViewerNames" で translate するので、farman 本体・各
+// プラグイン (別ライブラリ) のどちらから呼んでも同じ farman_ja.qm で解決される。
+// ここ (farman 本体) が全 7 文字列を参照することで lupdate が farman_ja.ts に
+// 取り込む。外部プラグインは fallback (プラグイン自身の名前) を使う。
+QString localizedViewerName(const QString& pluginId, const QString& fallback) {
+  if (pluginId == QLatin1String("text_viewer")) {
+    return QCoreApplication::translate("ViewerNames", "Text Viewer");
+  }
+  if (pluginId == QLatin1String("image_viewer")) {
+    return QCoreApplication::translate("ViewerNames", "Image Viewer");
+  }
+  if (pluginId == QLatin1String("binary_viewer")) {
+    return QCoreApplication::translate("ViewerNames", "Binary Viewer");
+  }
+  if (pluginId == QLatin1String("markdown_viewer")) {
+    return QCoreApplication::translate("ViewerNames", "Markdown Viewer");
+  }
+  if (pluginId == QLatin1String("pdf_viewer")) {
+    return QCoreApplication::translate("ViewerNames", "PDF Viewer");
+  }
+  if (pluginId == QLatin1String("csv_viewer")) {
+    return QCoreApplication::translate("ViewerNames", "CSV/TSV Viewer");
+  }
+  if (pluginId == QLatin1String("media_viewer")) {
+    return QCoreApplication::translate("ViewerNames", "Media Viewer");
+  }
+  return fallback;
+}
+
+QString kindToPluginId(ViewerPanel::ViewerKind kind) {
+  switch (kind) {
+    case ViewerPanel::ViewerKind::Text:     return QStringLiteral("text_viewer");
+    case ViewerPanel::ViewerKind::Image:    return QStringLiteral("image_viewer");
+    case ViewerPanel::ViewerKind::Binary:   return QStringLiteral("binary_viewer");
+    case ViewerPanel::ViewerKind::Markdown: return QStringLiteral("markdown_viewer");
+    case ViewerPanel::ViewerKind::Pdf:      return QStringLiteral("pdf_viewer");
+    case ViewerPanel::ViewerKind::Csv:      return QStringLiteral("csv_viewer");
+    case ViewerPanel::ViewerKind::Auto:     return QString();
+  }
+  return QString();
+}
+}  // namespace
+
 bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
                            const QString& displayPath) {
   if (filePath.isEmpty()) {
@@ -270,6 +316,9 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
   }
 
   clearPluginView();
+
+  // タイトルバー用に、開くビュアーのローカライズ名を記録する。
+  m_currentViewerName = localizedViewerName(kindToPluginId(kind), QString());
 
   bool ok = false;
   switch (kind) {
@@ -551,6 +600,9 @@ bool ViewerPanel::openPluginFile(IViewerPlugin* plugin,
   if (!plugin) return false;
   clearPluginView();
 
+  // タイトルバー用のローカライズ名 (media 等の同梱プラグイン / 外部プラグイン)。
+  m_currentViewerName = localizedViewerName(plugin->pluginId(), plugin->pluginName());
+
   QWidget* view = plugin->createViewer(
     filePath,
     m_stack,
@@ -607,6 +659,7 @@ void ViewerPanel::clear() {
   if (m_pdfView) m_pdfView->clearContent();
   if (m_csvView) m_csvView->clearContent();
   m_currentFilePath.clear();
+  m_currentViewerName.clear();
   emit fileClosed();
   emit viewerStatusChanged(QString(), QString());
 }

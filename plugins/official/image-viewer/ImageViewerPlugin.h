@@ -2,6 +2,7 @@
 
 #include "viewer/IViewerPlugin.h"
 #include <QObject>
+#include <QCoreApplication>
 
 namespace Farman {
 
@@ -15,7 +16,7 @@ public:
   ~ImageViewerPlugin() override = default;
 
   QString pluginId() const override { return "image_viewer"; }
-  QString pluginName() const override { return "Image Viewer"; }
+  QString pluginName() const override { return QCoreApplication::translate("ViewerNames", "Image Viewer"); }
   QString author() const override { return QStringLiteral("Mashsoft Inc."); }
   QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
   int priority() const override { return 99997; }
