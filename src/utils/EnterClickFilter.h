@@ -21,7 +21,9 @@ namespace Farman {
 // 個別ウィジェットに stylesheet を設定すると Qt は native スタイル描画から
 // 切り替わるので、:checked の押下状態も明示しないと「ON にしても見た目が
 // 変わらない」状態になる。ここで一括カバーする。
-inline QString toolbarStyleSheet() {
+// hPad: ツールバー左右の内側余白 (px)。ビュアーのツールバーは端の
+// ラベル/ボタンが窓の縁に貼り付かないよう余白を付ける。本体ツールバーは 0。
+inline QString toolbarStyleSheet(int hPad = 8) {
   // QSS の palette() は setStyleSheet 時点の色で固定されテーマ変更に追従しない
   // (Light↔Dark 切替で色が残る)。そこで現在のパレットから実際の色を計算して
   // 埋め込み、テーマ変更時は applyToolbarStyle() が再適用して計算し直す。
@@ -41,8 +43,11 @@ inline QString toolbarStyleSheet() {
   // macOS はネイティブツールバーが押下 (checked) 状態を暗く描いてスタイルシートを
   // 上書きし、Linux は QToolBar 背景をデスクトップテーマで描いてダーク配色が
   // 反映されない。全 OS で背景を敷くことで、押下色やテーマ追従を一貫させる。
-  s += QStringLiteral("QToolBar { background-color: %1; border: 0px; }")
-         .arg(win.name());
+  const QString pad = hPad > 0
+    ? QStringLiteral(" padding-left: %1px; padding-right: %1px;").arg(hPad)
+    : QString();
+  s += QStringLiteral("QToolBar { background-color: %1; border: 0px;%2 }")
+         .arg(win.name(), pad);
   s += QStringLiteral(
     "QToolButton { padding: 3px; border: 1px solid transparent; border-radius: 3px; }"
     "QToolButton:hover { background-color: %1; }"
@@ -63,11 +68,11 @@ inline QString toolbarStyleSheet() {
 // applyThemeFields (qApp->setPalette) の後に emit されるので、この時点で
 // qApp->palette() は既に新テーマ = 正しい色になっている。tb を context にして
 // いるので、ツールバー破棄時に接続は自動解除される。
-inline void applyToolbarStyle(QToolBar* tb) {
+inline void applyToolbarStyle(QToolBar* tb, int hPad = 8) {
   if (!tb) return;
-  tb->setStyleSheet(toolbarStyleSheet());
-  QObject::connect(&Settings::instance(), &Settings::settingsChanged, tb, [tb]() {
-    tb->setStyleSheet(toolbarStyleSheet());
+  tb->setStyleSheet(toolbarStyleSheet(hPad));
+  QObject::connect(&Settings::instance(), &Settings::settingsChanged, tb, [tb, hPad]() {
+    tb->setStyleSheet(toolbarStyleSheet(hPad));
   });
 }
 
