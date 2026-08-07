@@ -42,6 +42,23 @@ With the external plugin **farman-plugin-3d**, farman can now display
   Cmd/Ctrl+J to focus the address field, Cmd/Ctrl+1-4 to change the unit,
   Cmd/Ctrl+E to toggle endianness, and Cmd/Ctrl+Shift+E to focus the encoding.
 
+### Customizable viewer shortcuts
+
+- The keyboard shortcuts of each bundled viewer (Text / CSV·TSV / Markdown /
+  PDF / Image / Binary / Media) — toggles, zoom, focus search, unit switch, and
+  so on — can now be reassigned from that viewer's own settings page
+  (Settings → Plugins → the viewer).
+- The same key can map to a different action in a different viewer; conflicts
+  are detected within a viewer.
+- Navigation keys (close with Esc/Enter, Enter / Shift+Enter in the search
+  field, cursor movement, etc.) stay fixed.
+
+### Localized viewer names and title-bar display
+
+- Bundled viewer names now follow the UI language (e.g. "テキストビュアー" in
+  Japanese), so the Plugins settings list is consistent.
+- While a viewer is open, the title bar shows "farman — <viewer name>".
+
 ### Bug fixes
 
 - Fixed an issue where the cursor on the last file could be scrolled out of
