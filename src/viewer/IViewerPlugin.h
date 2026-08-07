@@ -81,7 +81,7 @@ void syncPluginFromHostSettings();
 // メジャー番号を上げ、Dispatcher で両方のバージョンを試すことで段階移行する。
 // プラグイン側の Q_PLUGIN_METADATA でも必ずこのマクロを使うこと
 // (文字列を直書きすると IID 更新時に追従漏れする)。
-#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/4.0"
+#define FarmanIViewerPlugin_iid "com.farman.IViewerPlugin/5.0"
 class IPluginSettingsPage;  // IPluginSettingsPage.h
 class IViewerPlugin {
 public:
@@ -168,6 +168,8 @@ public:
 
 } // namespace Farman
 
+// 5.0: shortcutCommands() の追加 (仮想関数追加による ABI 変更)。旧 IID の外部
+//      プラグインは qobject_cast に失敗し、ロードエラーとして安全に拒否される。
 // 4.0: hasSettings() / createSettingsPage() / managesOwnExtensions() の追加。
 // 3.0: author() / authorUrl() の追加。
 // 仮想関数の追加・削除・並び替えなど ABI 互換が壊れる変更をしたら、
