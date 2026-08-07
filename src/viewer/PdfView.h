@@ -84,6 +84,7 @@ private slots:
 
 private:
   void setupUi();
+  void dispatchViewerCommand(const QString& commandId);
   void updatePageLabel();
   void jumpToSearchResult(int index);
   void updateFindStatus();

@@ -87,6 +87,7 @@ protected:
 
 private:
   void setupUi();
+  void dispatchViewerCommand(const QString& commandId);
   void syncFromSettings();
   void rebuildEncodingItems();
   void applyModelFormat();       // unit/endian/encoding を HexView へ反映して再描画

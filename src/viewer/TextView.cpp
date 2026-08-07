@@ -1,5 +1,6 @@
 #include "TextView.h"
 #include "settings/Settings.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 
 #include <QToolBar>
 #include <QToolButton>
@@ -179,17 +180,14 @@ void TextView::setupUi() {
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
   applyToolbarStyle(toolbar);
 
-  // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
-  // ラベルには併記せず、ツールチップの中で案内する。
-  const QString findScut = QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
-  const QString encScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E).toString(QKeySequence::NativeText);
-  const QString lineScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_L).toString(QKeySequence::NativeText);
-  const QString wrapScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_W).toString(QKeySequence::NativeText);
-  const QString caseScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C).toString(QKeySequence::NativeText);
+  // 各ショートカットのネイティブ表記。設定で再割り当て可能なので、現在の
+  // 割り当て (ViewerKeyBindingManager) から取得してツールチップに載せる。
+  auto& vkb = ViewerKeyBindingManager::instance();
+  const QString findScut = vkb.primaryKeyText(QStringLiteral("viewer.text.find_focus"));
+  const QString encScut  = vkb.primaryKeyText(QStringLiteral("viewer.text.encoding_focus"));
+  const QString lineScut = vkb.primaryKeyText(QStringLiteral("viewer.text.toggle_line_numbers"));
+  const QString wrapScut = vkb.primaryKeyText(QStringLiteral("viewer.text.toggle_word_wrap"));
+  const QString caseScut = vkb.primaryKeyText(QStringLiteral("viewer.text.toggle_case"));
 
   QLabel* encodingLabel = new QLabel(tr("Encoding:"), toolbar);
   encodingLabel->setToolTip(
@@ -591,54 +589,41 @@ bool TextView::eventFilter(QObject* watched, QEvent* event) {
     }
   }
 
-  // QApplication レベルで Cmd/Ctrl+F を捕捉する。
+  // ビュアーのショートカット (設定で再割り当て可能) を QApplication レベルで捕捉。
   // QShortcut / QAction では上位レイヤ (macOS のメニュー、QPlainTextEdit、
-  // 他のショートカット) と衝突して発火しないケースがあるため、最終手段
-  // としてアプリ全体のイベントフィルタで受ける。TextView が画面に
-  // 出ている (= ビュアーが表示されている) ときだけ反応する。
-  // ShortcutOverride も accept しないと QPlainTextEdit 等の標準ショート
-  // カット処理が先に走る可能性があるので、両方とも食う。
+  // 他のショートカット) と衝突して発火しないケースがあるため、最終手段として
+  // アプリ全体のイベントフィルタで受ける。TextView が画面に出ている (= ビュアーが
+  // 表示されている) ときだけ反応する。ShortcutOverride も accept しないと
+  // QPlainTextEdit 等の標準処理が先に走る可能性があるので、両方とも食う。
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const auto mods = ke->modifiers();
-    const bool ctrl  = mods & Qt::ControlModifier;   // macOS では Cmd
-    const bool shift = mods & Qt::ShiftModifier;
-    const bool alt   = mods & Qt::AltModifier;        // macOS では Option
-    const int  key   = ke->key();
-
-    // Cmd/Ctrl+F: 検索欄へフォーカス
-    const bool toFind = ctrl && !shift && !alt && key == Qt::Key_F;
-    // Cmd/Ctrl+Shift+E: エンコーディングのコンボへフォーカス
-    const bool toEncoding = ctrl && shift && key == Qt::Key_E;
-    // Cmd/Ctrl+Shift+L: 行番号表示のトグル
-    const bool toLineNumbers = ctrl && shift && key == Qt::Key_L;
-    // Cmd/Ctrl+Shift+C: 検索の大文字小文字トグル
-    const bool toCase = ctrl && shift && key == Qt::Key_C;
-    // Cmd/Ctrl+Shift+W: 折り返しのトグル (Wrap の頭文字。他のトグルと系統を揃える)
-    const bool toWrap = ctrl && shift && key == Qt::Key_W;
-
-    const bool handled =
-      toFind || toEncoding || toLineNumbers || toCase || toWrap;
-    if (handled && isVisible() && window() && window()->isActiveWindow()) {
+    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QString cmd =
+      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("text"), seq);
+    if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
-        if (toFind) {
-          focusFindInput();
-        } else if (toEncoding && m_encodingCombo) {
-          m_encodingCombo->setFocus(Qt::ShortcutFocusReason);
-        } else if (toLineNumbers && m_lineNumbersButton) {
-          m_lineNumbersButton->toggle();
-        } else if (toCase && m_findCsButton) {
-          m_findCsButton->toggle();
-        } else if (toWrap && m_wordWrapButton) {
-          m_wordWrapButton->toggle();
-        }
+        dispatchViewerCommand(cmd);
       }
       event->accept();
       return true;
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void TextView::dispatchViewerCommand(const QString& cmd) {
+  if (cmd == QLatin1String("viewer.text.find_focus")) {
+    focusFindInput();
+  } else if (cmd == QLatin1String("viewer.text.encoding_focus")) {
+    if (m_encodingCombo) m_encodingCombo->setFocus(Qt::ShortcutFocusReason);
+  } else if (cmd == QLatin1String("viewer.text.toggle_line_numbers")) {
+    if (m_lineNumbersButton) m_lineNumbersButton->toggle();
+  } else if (cmd == QLatin1String("viewer.text.toggle_word_wrap")) {
+    if (m_wordWrapButton) m_wordWrapButton->toggle();
+  } else if (cmd == QLatin1String("viewer.text.toggle_case")) {
+    if (m_findCsButton) m_findCsButton->toggle();
+  }
 }
 
 // ---------- ステータス ----------

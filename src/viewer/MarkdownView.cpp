@@ -1,6 +1,7 @@
 #include "MarkdownView.h"
 
 #include "settings/Settings.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QApplication>
@@ -82,11 +83,10 @@ void MarkdownView::setupUi() {
 
   // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
   // ラベルには併記せず、ツールチップの中で案内する。
-  const QString findScut = QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
-  const QString srcScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S).toString(QKeySequence::NativeText);
-  const QString caseScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C).toString(QKeySequence::NativeText);
+  auto& vkb = ViewerKeyBindingManager::instance();
+  const QString findScut = vkb.primaryKeyText(QStringLiteral("viewer.markdown.find_focus"));
+  const QString srcScut  = vkb.primaryKeyText(QStringLiteral("viewer.markdown.toggle_source"));
+  const QString caseScut = vkb.primaryKeyText(QStringLiteral("viewer.markdown.toggle_case"));
 
   m_rawSourceButton = new QToolButton(m_toolbar);
   m_rawSourceButton->setText(tr("Source"));
@@ -482,35 +482,28 @@ bool MarkdownView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const auto mods = ke->modifiers();
-    const bool ctrl  = mods & Qt::ControlModifier;   // macOS では Cmd
-    const bool shift = mods & Qt::ShiftModifier;
-    const bool alt   = mods & Qt::AltModifier;
-    const int  key   = ke->key();
-
-    // Cmd/Ctrl+F: 検索欄へフォーカス
-    const bool toFind = ctrl && !shift && !alt && key == Qt::Key_F;
-    // Cmd/Ctrl+Shift+S: ソース表示のトグル
-    const bool toSource = ctrl && shift && key == Qt::Key_S;
-    // Cmd/Ctrl+Shift+C: 検索の大文字小文字トグル
-    const bool toCase = ctrl && shift && key == Qt::Key_C;
-
-    const bool handled = toFind || toSource || toCase;
-    if (handled && isVisible() && window() && window()->isActiveWindow()) {
+    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QString cmd =
+      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("markdown"), seq);
+    if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
-        if (toFind) {
-          focusFindInput();
-        } else if (toSource && m_rawSourceButton) {
-          m_rawSourceButton->toggle();
-        } else if (toCase && m_findCsButton) {
-          m_findCsButton->toggle();
-        }
+        dispatchViewerCommand(cmd);
       }
       event->accept();
       return true;
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void MarkdownView::dispatchViewerCommand(const QString& cmd) {
+  if (cmd == QLatin1String("viewer.markdown.find_focus")) {
+    focusFindInput();
+  } else if (cmd == QLatin1String("viewer.markdown.toggle_source")) {
+    if (m_rawSourceButton) m_rawSourceButton->toggle();
+  } else if (cmd == QLatin1String("viewer.markdown.toggle_case")) {
+    if (m_findCsButton) m_findCsButton->toggle();
+  }
 }
 
 QString MarkdownView::statusInfo() const {

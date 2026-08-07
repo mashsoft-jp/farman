@@ -1,6 +1,7 @@
 #include "CsvView.h"
 
 #include "settings/Settings.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QApplication>
@@ -422,17 +423,12 @@ void CsvView::setupUi() {
 
   // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
   // ラベルには併記せず、ツールチップの中で案内する。
-  const QString findScut = QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
-  const QString encScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E).toString(QKeySequence::NativeText);
-  const QString delScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D).toString(QKeySequence::NativeText);
-  // 1 行目ヘッダは ⌘⇧H (Header)。Shift+数字はレイアウト依存でキーコードが
-  // 変わり得る (Windows 等で '!'=Key_Exclam になる) ため数字は使わない。
-  const QString headerScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_H).toString(QKeySequence::NativeText);
-  const QString caseScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C).toString(QKeySequence::NativeText);
+  auto& vkb = ViewerKeyBindingManager::instance();
+  const QString findScut = vkb.primaryKeyText(QStringLiteral("viewer.csv.find_focus"));
+  const QString encScut  = vkb.primaryKeyText(QStringLiteral("viewer.csv.encoding_focus"));
+  const QString delScut  = vkb.primaryKeyText(QStringLiteral("viewer.csv.delimiter_focus"));
+  const QString headerScut = vkb.primaryKeyText(QStringLiteral("viewer.csv.toggle_header"));
+  const QString caseScut   = vkb.primaryKeyText(QStringLiteral("viewer.csv.toggle_case"));
 
   // ── エンコーディング ──
   auto* encodingLabel = new QLabel(tr("Encoding:"), m_toolbar);
@@ -889,44 +885,32 @@ bool CsvView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const auto mods = ke->modifiers();
-    const bool ctrl  = mods & Qt::ControlModifier;   // macOS では Cmd
-    const bool shift = mods & Qt::ShiftModifier;
-    const bool alt   = mods & Qt::AltModifier;
-    const int  key   = ke->key();
-
-    // Cmd/Ctrl+F: 検索欄へフォーカス
-    const bool toFind = ctrl && !shift && !alt && key == Qt::Key_F;
-    // Cmd/Ctrl+Shift+E: エンコーディングのコンボへフォーカス
-    const bool toEncoding = ctrl && shift && key == Qt::Key_E;
-    // Cmd/Ctrl+Shift+D: 区切り文字のコンボへフォーカス
-    const bool toDelimiter = ctrl && shift && key == Qt::Key_D;
-    // Cmd/Ctrl+Shift+H: 1 行目ヘッダ扱いのトグル
-    const bool toHeader = ctrl && shift && key == Qt::Key_H;
-    // Cmd/Ctrl+Shift+C: 検索の大文字小文字トグル
-    const bool toCase = ctrl && shift && key == Qt::Key_C;
-
-    const bool handled =
-      toFind || toEncoding || toDelimiter || toHeader || toCase;
-    if (handled && isVisible() && window() && window()->isActiveWindow()) {
+    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QString cmd =
+      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("csv"), seq);
+    if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
-        if (toFind) {
-          focusFindInput();
-        } else if (toEncoding && m_encodingCombo) {
-          m_encodingCombo->setFocus(Qt::ShortcutFocusReason);
-        } else if (toDelimiter && m_delimiterCombo) {
-          m_delimiterCombo->setFocus(Qt::ShortcutFocusReason);
-        } else if (toHeader && m_headerToggle) {
-          m_headerToggle->toggle();
-        } else if (toCase && m_findCsButton) {
-          m_findCsButton->toggle();
-        }
+        dispatchViewerCommand(cmd);
       }
       event->accept();
       return true;
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void CsvView::dispatchViewerCommand(const QString& cmd) {
+  if (cmd == QLatin1String("viewer.csv.find_focus")) {
+    focusFindInput();
+  } else if (cmd == QLatin1String("viewer.csv.encoding_focus")) {
+    if (m_encodingCombo) m_encodingCombo->setFocus(Qt::ShortcutFocusReason);
+  } else if (cmd == QLatin1String("viewer.csv.delimiter_focus")) {
+    if (m_delimiterCombo) m_delimiterCombo->setFocus(Qt::ShortcutFocusReason);
+  } else if (cmd == QLatin1String("viewer.csv.toggle_header")) {
+    if (m_headerToggle) m_headerToggle->toggle();
+  } else if (cmd == QLatin1String("viewer.csv.toggle_case")) {
+    if (m_findCsButton) m_findCsButton->toggle();
+  }
 }
 
 QString CsvView::statusInfo() const {

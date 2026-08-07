@@ -166,6 +166,7 @@ private slots:
 
 private:
   void setupUi();
+  void dispatchViewerCommand(const QString& commandId);
   void reloadFromBuffer();   // 同じファイルの bytes を別エンコーディング /
                               // 区切りで再パースしてモデルに流す。
   // 現在の m_findEdit のテキスト + case トグルでモデルを再検索し、最初の

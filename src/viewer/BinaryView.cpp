@@ -1,5 +1,6 @@
 #include "BinaryView.h"
 #include "settings/Settings.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QAbstractScrollArea>
@@ -669,7 +670,10 @@ protected:
       QAbstractScrollArea::keyPressEvent(e);
       return;
     }
-    if (e->matches(QKeySequence::Copy)) {
+    // コピーは設定で再割り当て可能。カーソル移動 (矢印/Home/End/Page) は固定。
+    if (ViewerKeyBindingManager::instance().commandForKey(
+            QStringLiteral("binary"), ViewerKeyBindingManager::sequenceForEvent(e))
+        == QLatin1String("viewer.binary.copy")) {
       copySelectionToClipboard();
       e->accept();
       return;
@@ -735,7 +739,9 @@ protected:
   bool event(QEvent* e) override {
     if (e->type() == QEvent::ShortcutOverride) {
       auto* ke = static_cast<QKeyEvent*>(e);
-      if (ke->matches(QKeySequence::Copy)) {
+      if (ViewerKeyBindingManager::instance().commandForKey(
+              QStringLiteral("binary"), ViewerKeyBindingManager::sequenceForEvent(ke))
+          == QLatin1String("viewer.binary.copy")) {
         e->accept();
         return true;
       }
@@ -918,20 +924,18 @@ void BinaryView::setupUi() {
   toolbar->setIconSize(QSize(20, 20));
   applyToolbarStyle(toolbar);
 
-  // Cmd / Ctrl のネイティブ表記 (mac "⌘" / その他 "Ctrl+")。単位の 1〜4 のように
-  // 範囲を書くために、単一キーのシーケンスから末尾のキーを削って接頭辞を作る。
-  QString modPrefix = QKeySequence(Qt::CTRL | Qt::Key_1)
-                        .toString(QKeySequence::NativeText);
-  modPrefix.chop(1);
-  const QString scUnit   = modPrefix + QStringLiteral("1-4");
-  const QString scEndian =
-    QKeySequence(Qt::CTRL | Qt::Key_E).toString(QKeySequence::NativeText);
-  const QString scEnc =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E).toString(QKeySequence::NativeText);
-  const QString scAddr =
-    QKeySequence(Qt::CTRL | Qt::Key_J).toString(QKeySequence::NativeText);
-  const QString scFind =
-    QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+  // ショートカットは設定で再割り当て可能。ツールチップには現在の割当を載せる。
+  auto& vkb = ViewerKeyBindingManager::instance();
+  // 単位は 1〜4 の範囲表示にする。unit_1 の割当が "…1" 形式なら末尾を "1-4" に。
+  QString scUnit = vkb.primaryKeyText(QStringLiteral("viewer.binary.unit_1"));
+  if (scUnit.endsWith(QLatin1Char('1'))) {
+    scUnit.chop(1);
+    scUnit += QStringLiteral("1-4");
+  }
+  const QString scEndian = vkb.primaryKeyText(QStringLiteral("viewer.binary.toggle_endian"));
+  const QString scEnc    = vkb.primaryKeyText(QStringLiteral("viewer.binary.encoding_focus"));
+  const QString scAddr   = vkb.primaryKeyText(QStringLiteral("viewer.binary.address_focus"));
+  const QString scFind   = vkb.primaryKeyText(QStringLiteral("viewer.binary.find_focus"));
 
   toolbar->addWidget(new QLabel(tr("Unit:"), toolbar));
   m_unitCombo = new QComboBox(toolbar);
@@ -1019,10 +1023,8 @@ void BinaryView::setupUi() {
   m_searchEdit->setToolTip(
     tr("Text to find (%1 to focus, Enter=next, Shift+Enter=prev)").arg(scFind));
   // ボタンのラベルにはショートカットを併記せず、ツールチップで案内する。
-  const QString nextSc =
-    QKeySequence(QKeySequence::FindNext).toString(QKeySequence::NativeText);
-  const QString prevSc =
-    QKeySequence(QKeySequence::FindPrevious).toString(QKeySequence::NativeText);
+  const QString nextSc = vkb.primaryKeyText(QStringLiteral("viewer.binary.find_next"));
+  const QString prevSc = vkb.primaryKeyText(QStringLiteral("viewer.binary.find_prev"));
   QPushButton* findPrevBtn = new QPushButton(tr("Prev"), searchBar);
   QPushButton* findNextBtn = new QPushButton(tr("Next"), searchBar);
   findPrevBtn->setFocusPolicy(Qt::StrongFocus);
@@ -1088,6 +1090,40 @@ void BinaryView::setupUi() {
   m_hex->installEventFilter(this);
 }
 
+void BinaryView::dispatchViewerCommand(const QString& cmd) {
+  auto setUnit = [this](int bytes) {
+    for (int i = 0; i < m_unitCombo->count(); ++i) {
+      if (m_unitCombo->itemData(i).toInt() == bytes) {
+        m_unitCombo->setCurrentIndex(i);
+        break;
+      }
+    }
+  };
+  if (cmd == QLatin1String("viewer.binary.find_focus")) {
+    m_searchEdit->setFocus();
+    m_searchEdit->selectAll();
+  } else if (cmd == QLatin1String("viewer.binary.find_next")) {
+    doSearch(true);
+  } else if (cmd == QLatin1String("viewer.binary.find_prev")) {
+    doSearch(false);
+  } else if (cmd == QLatin1String("viewer.binary.address_focus")) {
+    m_addressEdit->setFocus();
+    m_addressEdit->selectAll();
+  } else if (cmd == QLatin1String("viewer.binary.encoding_focus")) {
+    m_encodingCombo->setFocus();
+  } else if (cmd == QLatin1String("viewer.binary.toggle_endian")) {
+    m_endianCombo->setCurrentIndex(m_endianCombo->currentIndex() == 0 ? 1 : 0);
+  } else if (cmd == QLatin1String("viewer.binary.unit_1")) {
+    setUnit(1);
+  } else if (cmd == QLatin1String("viewer.binary.unit_2")) {
+    setUnit(2);
+  } else if (cmd == QLatin1String("viewer.binary.unit_4")) {
+    setUnit(4);
+  } else if (cmd == QLatin1String("viewer.binary.unit_8")) {
+    setUnit(8);
+  }
+}
+
 bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
   // ── ローカルショートカット (検索欄 / 本体 / アドレス欄のどれにフォーカスが
   //    あっても効く) ──
@@ -1104,54 +1140,18 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
       && (event->type() == QEvent::ShortcutOverride
           || event->type() == QEvent::KeyPress)) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const bool find     = ke->matches(QKeySequence::Find);
-    const bool findNext = ke->matches(QKeySequence::FindNext);
-    const bool findPrev = ke->matches(QKeySequence::FindPrevious);
-    const bool ctrlOnly  = (ke->modifiers() == Qt::ControlModifier);  // mac は Cmd
-    const bool ctrlShift =
-      (ke->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier));
-    const bool toAddr       = ctrlOnly && ke->key() == Qt::Key_J;
-    const bool toggleEndian = ctrlOnly && ke->key() == Qt::Key_E;
-    const bool toEncoding   = ctrlShift && ke->key() == Qt::Key_E;
-    int unitBytes = 0;
-    if (ctrlOnly) {
-      switch (ke->key()) {
-        case Qt::Key_1: unitBytes = 1; break;
-        case Qt::Key_2: unitBytes = 2; break;
-        case Qt::Key_3: unitBytes = 4; break;
-        case Qt::Key_4: unitBytes = 8; break;
-        default: break;
-      }
-    }
-    if (find || findNext || findPrev || toAddr || toggleEndian || toEncoding
-        || unitBytes) {
+    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QString cmd =
+      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("binary"), seq);
+    // コピー (viewer.binary.copy) は本体 (HexView) 側で横取り処理するので、ここでは扱わない。
+    if (!cmd.isEmpty() && cmd != QLatin1String("viewer.binary.copy")) {
+      // アプリ側の Copy コマンドや表示モード (Cmd+1〜4) 等より先に取りたいので、
+      // ShortcutOverride を accept してから KeyPress で処理する。
       if (event->type() == QEvent::ShortcutOverride) {
         event->accept();
         return true;
       }
-      if (find) {
-        m_searchEdit->setFocus();
-        m_searchEdit->selectAll();
-      } else if (findNext) {
-        doSearch(true);
-      } else if (findPrev) {
-        doSearch(false);
-      } else if (toAddr) {
-        m_addressEdit->setFocus();
-        m_addressEdit->selectAll();
-      } else if (toEncoding) {
-        m_encodingCombo->setFocus();
-      } else if (unitBytes) {
-        // コンボの選択を変えると currentIndexChanged 経由で単位が反映される。
-        for (int i = 0; i < m_unitCombo->count(); ++i) {
-          if (m_unitCombo->itemData(i).toInt() == unitBytes) {
-            m_unitCombo->setCurrentIndex(i);
-            break;
-          }
-        }
-      } else if (toggleEndian) {
-        m_endianCombo->setCurrentIndex(m_endianCombo->currentIndex() == 0 ? 1 : 0);
-      }
+      dispatchViewerCommand(cmd);
       return true;
     }
   }

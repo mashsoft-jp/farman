@@ -1,5 +1,6 @@
 #include "MediaView.h"
 #include "settings/Settings.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QAction>
@@ -528,68 +529,77 @@ bool MediaView::handleViewerKey(QKeyEvent* event) {
     return true;
   };
 
-  switch (event->key()) {
-    case Qt::Key_S:
-      if (m_stopButton) {
-        m_stopButton->click();
-      }
+  // フルスクリーン解除の Esc は固定。通常表示中の Esc は親 (ViewerPanel /
+  // ViewerWindow) の「閉じる」処理に流すので、ここでは消費しない。
+  if (event->key() == Qt::Key_Escape) {
+    if (isVideoFullScreen()) {
+      setVideoFullScreen(false);
       return true;
-    case Qt::Key_BracketLeft:
-      if (m_rateCombo && m_rateCombo->currentIndex() > 0) {
-        m_rateCombo->setCurrentIndex(m_rateCombo->currentIndex() - 1);
-      }
-      return true;
-    case Qt::Key_BracketRight:
-      if (m_rateCombo && m_rateCombo->currentIndex() < m_rateCombo->count() - 1) {
-        m_rateCombo->setCurrentIndex(m_rateCombo->currentIndex() + 1);
-      }
-      return true;
-    case Qt::Key_Minus:
-      return stepZoom(false);
-    case Qt::Key_Plus:
-    case Qt::Key_Equal:
-      return stepZoom(true);
-    case Qt::Key_Space:
-      togglePlayPause();
-      return true;
-    case Qt::Key_Left:
-      seekBy(shift ? -kSeekLargeStepMs : -kSeekStepMs);
-      return true;
-    case Qt::Key_Right:
-      seekBy(shift ? kSeekLargeStepMs : kSeekStepMs);
-      return true;
-    case Qt::Key_Up:
-      adjustVolume(kVolumeStep);
-      return true;
-    case Qt::Key_Down:
-      adjustVolume(-kVolumeStep);
-      return true;
-    case Qt::Key_M:
-      m_muteButton->toggle();
-      return true;
-    case Qt::Key_L:
-      m_loopButton->toggle();
-      return true;
-    case Qt::Key_I:
-      toggleMediaInfoDialog();
-      return true;
-    case Qt::Key_F:
-      if (m_player->hasVideo()) {
-        setVideoFullScreen(!isVideoFullScreen());
-        return true;
-      }
-      return false;
-    case Qt::Key_Escape:
-      // フルスクリーン解除のみここで消費。通常表示中の Esc は
-      // 親 (ViewerPanel / ViewerWindow) の「閉じる」処理に流す。
-      if (isVideoFullScreen()) {
-        setVideoFullScreen(false);
-        return true;
-      }
-      return false;
-    default:
-      return false;
+    }
+    return false;
   }
+
+  // 以降は設定で再割り当て可能なキー。押されたキーに対応するコマンドを引く。
+  auto& vkb = ViewerKeyBindingManager::instance();
+  QString cmd = vkb.commandForKey(QStringLiteral("media"),
+                                  ViewerKeyBindingManager::sequenceForEvent(event));
+  // Shift 付きのシークは「大きく移動」。Shift を外して再照合し、seek のときだけ採用。
+  bool largeSeek = false;
+  if (cmd.isEmpty() && shift) {
+    Qt::KeyboardModifiers m = event->modifiers() & ~Qt::ShiftModifier & ~Qt::KeypadModifier;
+    const QString baseCmd = vkb.commandForKey(
+      QStringLiteral("media"),
+      QKeySequence(QKeyCombination(m, static_cast<Qt::Key>(event->key()))));
+    if (baseCmd == QLatin1String("viewer.media.seek_back")
+        || baseCmd == QLatin1String("viewer.media.seek_forward")) {
+      cmd = baseCmd;
+      largeSeek = true;
+    }
+  }
+  if (cmd.isEmpty()) {
+    return false;
+  }
+
+  if (cmd == QLatin1String("viewer.media.play_pause")) {
+    togglePlayPause();
+  } else if (cmd == QLatin1String("viewer.media.stop")) {
+    if (m_stopButton) m_stopButton->click();
+  } else if (cmd == QLatin1String("viewer.media.seek_back")) {
+    seekBy(largeSeek ? -kSeekLargeStepMs : -kSeekStepMs);
+  } else if (cmd == QLatin1String("viewer.media.seek_forward")) {
+    seekBy(largeSeek ? kSeekLargeStepMs : kSeekStepMs);
+  } else if (cmd == QLatin1String("viewer.media.volume_up")) {
+    adjustVolume(kVolumeStep);
+  } else if (cmd == QLatin1String("viewer.media.volume_down")) {
+    adjustVolume(-kVolumeStep);
+  } else if (cmd == QLatin1String("viewer.media.rate_slower")) {
+    if (m_rateCombo && m_rateCombo->currentIndex() > 0) {
+      m_rateCombo->setCurrentIndex(m_rateCombo->currentIndex() - 1);
+    }
+  } else if (cmd == QLatin1String("viewer.media.rate_faster")) {
+    if (m_rateCombo && m_rateCombo->currentIndex() < m_rateCombo->count() - 1) {
+      m_rateCombo->setCurrentIndex(m_rateCombo->currentIndex() + 1);
+    }
+  } else if (cmd == QLatin1String("viewer.media.zoom_in")) {
+    return stepZoom(true);
+  } else if (cmd == QLatin1String("viewer.media.zoom_out")) {
+    return stepZoom(false);
+  } else if (cmd == QLatin1String("viewer.media.toggle_mute")) {
+    if (m_muteButton) m_muteButton->toggle();
+  } else if (cmd == QLatin1String("viewer.media.toggle_loop")) {
+    if (m_loopButton) m_loopButton->toggle();
+  } else if (cmd == QLatin1String("viewer.media.info")) {
+    toggleMediaInfoDialog();
+  } else if (cmd == QLatin1String("viewer.media.toggle_fullscreen")) {
+    if (m_player->hasVideo()) {
+      setVideoFullScreen(!isVideoFullScreen());
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+  return true;
 }
 
 void MediaView::togglePlayPause() {

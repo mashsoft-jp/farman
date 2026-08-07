@@ -1,6 +1,7 @@
 #include "PdfView.h"
 
 #include "settings/Settings.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include "utils/EnterClickFilter.h"
 
 #include <QApplication>
@@ -46,11 +47,18 @@ public:
 
 protected:
   void keyPressEvent(QKeyEvent* event) override {
-    const auto mods = event->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier
-                                            | Qt::AltModifier | Qt::MetaModifier);
-    if (mods == Qt::NoModifier
-        && (event->key() == Qt::Key_Up || event->key() == Qt::Key_Down)) {
-      stepBy(event->key() == Qt::Key_Up ? -1 : +1);
+    // 前/次ページのキーは設定で再割り当て可能（既定は ↑ 前 / ↓ 次で、
+    // QSpinBox の増減とは逆向き）。
+    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(event);
+    const QString cmd =
+      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("pdf"), seq);
+    if (cmd == QLatin1String("viewer.pdf.prev_page")) {
+      stepBy(-1);
+      event->accept();
+      return;
+    }
+    if (cmd == QLatin1String("viewer.pdf.next_page")) {
+      stepBy(+1);
       event->accept();
       return;
     }
@@ -117,17 +125,12 @@ void PdfView::setupUi() {
 
   m_toolbar->addSeparator();
 
-  // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
-  // ラベルには併記せず、ツールチップの中で案内する。
-  const QString findScut = QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
-  const QString fitWidthScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_W).toString(QKeySequence::NativeText);
-  // ページ全体は ⌘⇧O (Overall)。⌘⇧P は「ヘルプ → プラグイン」メニュー
-  // (help.plugins) と衝突しネイティブメニューに横取りされるため使わない。
-  const QString fitPageScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_O).toString(QKeySequence::NativeText);
-  const QString continuousScut =
-    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_N).toString(QKeySequence::NativeText);
+  // 各ショートカットのネイティブ表記。設定で再割り当て可能なので現在の割当から取る。
+  auto& vkb = ViewerKeyBindingManager::instance();
+  const QString findScut      = vkb.primaryKeyText(QStringLiteral("viewer.pdf.find_focus"));
+  const QString fitWidthScut  = vkb.primaryKeyText(QStringLiteral("viewer.pdf.fit_width"));
+  const QString fitPageScut   = vkb.primaryKeyText(QStringLiteral("viewer.pdf.fit_page"));
+  const QString continuousScut = vkb.primaryKeyText(QStringLiteral("viewer.pdf.toggle_continuous"));
 
   // ───── ズーム ─────
   m_zoomOutButton = new QToolButton(m_toolbar);
@@ -566,60 +569,54 @@ bool PdfView::eventFilter(QObject* watched, QEvent* event) {
     }
   }
 
-  // Cmd/Ctrl+F: ビューが表示されているときだけ拾って検索欄にフォーカスを移す。
-  // TextView と同じく ShortcutOverride + KeyPress 両方で捕捉して上位の
-  // ショートカット (メニュー等) に取られるのを防ぐ。
+  // ビュアーのショートカット (設定で再割り当て可能) を捕捉する。TextView と同じく
+  // ShortcutOverride + KeyPress 両方で捕捉して上位のショートカット (メニュー等) に
+  // 取られるのを防ぐ。
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const auto mods = ke->modifiers();
-    const bool ctrl  = mods & Qt::ControlModifier;   // macOS では Cmd
-    const bool shift = mods & Qt::ShiftModifier;
-    const bool alt   = mods & Qt::AltModifier;
-    const int  key   = ke->key();
+    const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(ke);
+    const QString cmd =
+      ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("pdf"), seq);
 
-    // テキスト入力欄 (検索 / ページ番号) にフォーカスがある間は素キーの
-    // ズーム (- / +) を無効化する (入力を邪魔しないため)。
+    // テキスト入力欄 (検索 / ページ番号) にフォーカスがある間は、修飾キーなしの
+    // 素キー (ズームの - / + 等) は入力を邪魔しないよう無効化する。
+    const bool chord = ke->modifiers()
+      & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier);
     const bool typingField =
       (m_findEdit && m_findEdit->hasFocus())
       || (m_pageSpin && m_pageSpin->hasFocus());
 
-    // Cmd/Ctrl+F: 検索欄へフォーカス
-    const bool toFind = ctrl && !shift && !alt && key == Qt::Key_F;
-    // Cmd/Ctrl+Shift+W: 幅にフィット
-    const bool toFitWidth = ctrl && shift && key == Qt::Key_W;
-    // Cmd/Ctrl+Shift+O: ページ全体にフィット (⌘⇧P はメニューと衝突するため O)
-    const bool toFitPage = ctrl && shift && key == Qt::Key_O;
-    // Cmd/Ctrl+Shift+N: 連続表示のトグル
-    const bool toContinuous = ctrl && shift && key == Qt::Key_N;
-    // - / + : ズーム (他ビュアーと統一。素キーなので入力欄では無効)
-    const bool toZoomOut = !ctrl && !alt && !typingField && key == Qt::Key_Minus;
-    const bool toZoomIn  = !ctrl && !alt && !typingField
-                           && (key == Qt::Key_Plus || key == Qt::Key_Equal);
-
-    const bool handled =
-      toFind || toFitWidth || toFitPage || toContinuous || toZoomOut || toZoomIn;
-    if (handled && isVisible() && window() && window()->isActiveWindow()) {
+    if (!cmd.isEmpty() && !(typingField && !chord)
+        && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
-        if (toFind) {
-          focusFindInput();
-        } else if (toFitWidth && m_fitWidthButton) {
-          m_fitWidthButton->toggle();
-        } else if (toFitPage && m_fitPageButton) {
-          m_fitPageButton->toggle();
-        } else if (toContinuous && m_continuousButton) {
-          m_continuousButton->toggle();
-        } else if (toZoomOut) {
-          onZoomOut();
-        } else if (toZoomIn) {
-          onZoomIn();
-        }
+        dispatchViewerCommand(cmd);
       }
       event->accept();
       return true;
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void PdfView::dispatchViewerCommand(const QString& cmd) {
+  if (cmd == QLatin1String("viewer.pdf.find_focus")) {
+    focusFindInput();
+  } else if (cmd == QLatin1String("viewer.pdf.fit_width")) {
+    if (m_fitWidthButton) m_fitWidthButton->toggle();
+  } else if (cmd == QLatin1String("viewer.pdf.fit_page")) {
+    if (m_fitPageButton) m_fitPageButton->toggle();
+  } else if (cmd == QLatin1String("viewer.pdf.toggle_continuous")) {
+    if (m_continuousButton) m_continuousButton->toggle();
+  } else if (cmd == QLatin1String("viewer.pdf.zoom_out")) {
+    onZoomOut();
+  } else if (cmd == QLatin1String("viewer.pdf.zoom_in")) {
+    onZoomIn();
+  } else if (cmd == QLatin1String("viewer.pdf.prev_page")) {
+    onPrevPage();
+  } else if (cmd == QLatin1String("viewer.pdf.next_page")) {
+    onNextPage();
+  }
 }
 
 } // namespace Farman

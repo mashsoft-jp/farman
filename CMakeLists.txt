@@ -215,6 +215,8 @@ qt_add_executable(farman
   src/keybinding/CommandRegistry.cpp
   src/keybinding/CommandLayout.cpp
   src/keybinding/KeyBindingManager.cpp
+  src/keybinding/ViewerCommands.cpp
+  src/keybinding/ViewerKeyBindingManager.cpp
   src/keybinding/commands/BaseCommand.cpp
   src/keybinding/commands/NavigationCommands.cpp
   src/keybinding/commands/SelectionCommands.cpp
@@ -362,6 +364,11 @@ set(FARMAN_PLUGIN_COMMON_SOURCES
   src/core/Logger.cpp
   src/utils/CancellableLoadPage.cpp
   src/utils/EnterClickFilter.cpp
+  # ビュアーのショートカット設定を media プラグイン等でも参照できるよう共通に含める。
+  src/keybinding/ViewerCommands.cpp
+  src/keybinding/ViewerKeyBindingManager.cpp
+  # 各ビュアー設定ページに埋め込むショートカット編集ウィジェット。
+  src/viewer/ViewerShortcutSettingsWidget.cpp
 )
 
 function(add_farman_official_viewer_plugin target plugin_dir)

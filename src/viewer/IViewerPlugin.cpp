@@ -7,6 +7,7 @@
 
 #include "core/Logger.h"
 #include "settings/Settings.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 
 namespace Farman {
 
@@ -27,6 +28,9 @@ void syncPluginFromHostSettings() {
   Logger::instance().setFileOutput(settings.logToFile(),
                                    settings.logDirectory(),
                                    settings.logRetentionDays());
+  // ビュアーのショートカット割り当ても本体側で変わり得るので再読込する
+  // (media 等プラグイン内ビュアーが最新の割当で動くように)。
+  ViewerKeyBindingManager::instance().loadFromSettings();
 }
 
 bool IViewerPlugin::canHandle(const QString& filePath) const {

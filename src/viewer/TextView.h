@@ -88,6 +88,8 @@ private slots:
 
 private:
   void setupUi();
+  // 設定可能なビュアーコマンド (commandId) を実行する。
+  void dispatchViewerCommand(const QString& commandId);
   void syncFromSettings();
   void applyEditAreaSettings();
   void reloadFromBuffer();

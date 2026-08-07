@@ -1,6 +1,7 @@
 #include "ImageView.h"
 #include "PsdReader.h"
 #include "settings/Settings.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include "utils/ExifReader.h"
 
 #include <QComboBox>
@@ -233,14 +234,20 @@ void ImageView::setupUi() {
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
   applyToolbarStyle(m_toolbar);
 
-  // ズーム倍率ラベル。ショートカット (+ / -) はラベルには併記せず
-  // ツールチップで案内する。
+  // ショートカットは設定で再割り当て可能。ツールチップには現在の割当を載せる。
+  auto& vkb = ViewerKeyBindingManager::instance();
+  const QString zoomInScut = vkb.primaryKeyText(QStringLiteral("viewer.image.zoom_in"));
+  const QString zoomOutScut = vkb.primaryKeyText(QStringLiteral("viewer.image.zoom_out"));
+  const QString zoomHint =
+    QStringLiteral("%1 / %2").arg(zoomOutScut, zoomInScut);
+
+  // ズーム倍率ラベル。ショートカットはラベルには併記せずツールチップで案内する。
   QLabel* zoomLabel = new QLabel(tr("Zoom:"), m_toolbar);
-  zoomLabel->setToolTip(tr("Zoom level (+ / -)"));
+  zoomLabel->setToolTip(tr("Zoom level (%1)").arg(zoomHint));
   m_toolbar->addWidget(zoomLabel);
   m_zoomCombo = new QComboBox(m_toolbar);
   m_zoomCombo->setEditable(true);
-  m_zoomCombo->setToolTip(tr("Zoom level (+ / -)"));
+  m_zoomCombo->setToolTip(tr("Zoom level (%1)").arg(zoomHint));
   for (int p : { 25, 50, 75, 100, 200 }) {
     m_zoomCombo->addItem(QString::number(p) + QLatin1Char('%'), p);
   }
@@ -251,7 +258,8 @@ void ImageView::setupUi() {
   m_fitButton = new QToolButton(m_toolbar);
   m_fitButton->setCheckable(true);
   m_fitButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-to-window.svg")));
-  m_fitButton->setToolTip(tr("Fit to Window (F)"));
+  m_fitButton->setToolTip(
+    tr("Fit to Window (%1)").arg(vkb.primaryKeyText(QStringLiteral("viewer.image.toggle_fit"))));
   m_fitButton->setFocusPolicy(Qt::StrongFocus);
   m_fitButtonAction = m_toolbar->addWidget(m_fitButton);
 
@@ -259,7 +267,9 @@ void ImageView::setupUi() {
   m_animButton = new QToolButton(m_toolbar);
   m_animButton->setCheckable(true);
   m_animButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/play.svg")));
-  m_animButton->setToolTip(tr("Play / Pause animation (GIF / WebP) (Space)"));
+  m_animButton->setToolTip(
+    tr("Play / Pause animation (GIF / WebP) (%1)")
+      .arg(vkb.primaryKeyText(QStringLiteral("viewer.image.toggle_animation"))));
   m_animButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_animButton);
 
@@ -267,8 +277,9 @@ void ImageView::setupUi() {
   m_transparencyButton = new QToolButton(m_toolbar);
   m_transparencyButton->setCheckable(true);
   m_transparencyButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/transparency.svg")));
-  m_transparencyButton->setToolTip(tr(
-    "Transparency background: off = checker, on = solid color (T)"));
+  m_transparencyButton->setToolTip(
+    tr("Transparency background: off = checker, on = solid color (%1)")
+      .arg(vkb.primaryKeyText(QStringLiteral("viewer.image.toggle_transparency"))));
   m_transparencyButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_transparencyButton);
 
@@ -276,7 +287,9 @@ void ImageView::setupUi() {
   // 連打すると 0 → 90 → 180 → 270 → 0 と進む。ファイル切替で 0 にリセット。
   m_rotateCwButton = new QToolButton(m_toolbar);
   m_rotateCwButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/rotate-cw.svg")));
-  m_rotateCwButton->setToolTip(tr("Rotate 90° clockwise (display only) (R)"));
+  m_rotateCwButton->setToolTip(
+    tr("Rotate 90° clockwise (display only) (%1)")
+      .arg(vkb.primaryKeyText(QStringLiteral("viewer.image.rotate"))));
   m_rotateCwButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_rotateCwButton, &QToolButton::clicked,
           this,             &ImageView::rotateCw90);
@@ -296,7 +309,9 @@ void ImageView::setupUi() {
   infoFont.setItalic(true);
   infoFont.setBold(true);
   m_infoButton->setFont(infoFont);
-  m_infoButton->setToolTip(tr("Show image information / metadata (I)"));
+  m_infoButton->setToolTip(
+    tr("Show image information / metadata (%1)")
+      .arg(vkb.primaryKeyText(QStringLiteral("viewer.image.info"))));
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_infoButton, &QToolButton::clicked,
           this,         &ImageView::toggleImageInfoDialog);
@@ -681,37 +696,46 @@ void ImageView::keyPressEvent(QKeyEvent* event) {
 }
 
 bool ImageView::handleViewerKey(QKeyEvent* event) {
-  switch (event->key()) {
-    case Qt::Key_I:
-      toggleImageInfoDialog();
-      return true;
-    case Qt::Key_R:
-      rotateCw90();
-      return true;
-    case Qt::Key_F:
-      if (m_fitButton) { m_fitButton->toggle(); return true; }
-      return false;
-    case Qt::Key_T:
-      // 透明部分の背景 (チェッカー / 単色) をトグル。
-      if (m_transparencyButton) { m_transparencyButton->toggle(); return true; }
-      return false;
-    case Qt::Key_Space:
-      // アニメ画像のときだけ再生/停止をトグル (それ以外は既定動作に任せる)。
-      if (m_animButton && m_animButton->isEnabled()) {
-        m_animButton->toggle();
-        return true;
-      }
-      return false;
-    case Qt::Key_Plus:
-    case Qt::Key_Equal:  // Shift 無しの '=' キーも '+' 相当として受ける
-      stepZoom(true);
-      return true;
-    case Qt::Key_Minus:
-      stepZoom(false);
-      return true;
-    default:
-      return false;
+  // キーは設定で再割り当て可能。押されたキーに対応するコマンドを引いて実行する。
+  const QKeySequence seq = ViewerKeyBindingManager::sequenceForEvent(event);
+  const QString cmd =
+    ViewerKeyBindingManager::instance().commandForKey(QStringLiteral("image"), seq);
+  if (cmd.isEmpty()) {
+    return false;
   }
+  if (cmd == QLatin1String("viewer.image.info")) {
+    toggleImageInfoDialog();
+    return true;
+  }
+  if (cmd == QLatin1String("viewer.image.rotate")) {
+    rotateCw90();
+    return true;
+  }
+  if (cmd == QLatin1String("viewer.image.toggle_fit")) {
+    if (m_fitButton) { m_fitButton->toggle(); return true; }
+    return false;
+  }
+  if (cmd == QLatin1String("viewer.image.toggle_transparency")) {
+    if (m_transparencyButton) { m_transparencyButton->toggle(); return true; }
+    return false;
+  }
+  if (cmd == QLatin1String("viewer.image.toggle_animation")) {
+    // アニメ画像のときだけ再生/停止をトグル (それ以外は既定動作に任せる)。
+    if (m_animButton && m_animButton->isEnabled()) {
+      m_animButton->toggle();
+      return true;
+    }
+    return false;
+  }
+  if (cmd == QLatin1String("viewer.image.zoom_in")) {
+    stepZoom(true);
+    return true;
+  }
+  if (cmd == QLatin1String("viewer.image.zoom_out")) {
+    stepZoom(false);
+    return true;
+  }
+  return false;
 }
 
 void ImageView::stepZoom(bool zoomIn) {
