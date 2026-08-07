@@ -216,7 +216,7 @@ void MediaView::setupUi() {
 
   m_stopButton = new QToolButton(m_toolbar);
   m_stopButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/stop.svg")));
-  m_stopButton->setToolTip(tr("Stop"));
+  m_stopButton->setToolTip(tr("Stop (S)"));
   m_stopButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_stopButton, &QToolButton::clicked,
           m_player,     &QMediaPlayer::stop);
@@ -248,7 +248,7 @@ void MediaView::setupUi() {
   m_rateCombo->addItem(QStringLiteral("1.5x"), 1.5);
   m_rateCombo->addItem(QStringLiteral("2.0x"), 2.0);
   m_rateCombo->setCurrentIndex(1);
-  m_rateCombo->setToolTip(tr("Playback speed"));
+  m_rateCombo->setToolTip(tr("Playback speed ([ slower / ] faster)"));
   m_rateCombo->setFocusPolicy(Qt::StrongFocus);
   connect(m_rateCombo, &QComboBox::currentIndexChanged, this, [this](int) {
     m_player->setPlaybackRate(m_rateCombo->currentData().toReal());
@@ -299,7 +299,7 @@ void MediaView::setupUi() {
     m_zoomCombo->addItem(QString::number(p) + QLatin1Char('%'), p);
   }
   m_zoomCombo->setCurrentText(QString::number(m_zoomPercent) + QLatin1Char('%'));
-  m_zoomCombo->setToolTip(tr("Zoom level"));
+  m_zoomCombo->setToolTip(tr("Zoom level (- / +)"));
   m_zoomCombo->setFocusPolicy(Qt::StrongFocus);
   m_zoomComboAction = m_toolbar->addWidget(m_zoomCombo);
   connect(m_zoomCombo, &QComboBox::currentTextChanged, this, [this](const QString& text) {
@@ -505,7 +505,50 @@ bool MediaView::eventFilter(QObject* watched, QEvent* event) {
 
 bool MediaView::handleViewerKey(QKeyEvent* event) {
   const bool shift = event->modifiers().testFlag(Qt::ShiftModifier);
+
+  // ズームは他ビュアーと同じく - / + で。プリセット段階を上下する
+  // (動画のみ。音声には拡大縮小が無いので何もしない)。
+  auto stepZoom = [this](bool zoomIn) -> bool {
+    if (!m_zoomCombo || !m_player->hasVideo()) {
+      return false;
+    }
+    static const int presets[] = {25, 50, 75, 100, 150, 200, 400};
+    const int count = int(sizeof(presets) / sizeof(presets[0]));
+    int np = m_zoomPercent;
+    if (zoomIn) {
+      for (int i = 0; i < count; ++i) {
+        if (presets[i] > m_zoomPercent) { np = presets[i]; break; }
+      }
+    } else {
+      for (int i = count - 1; i >= 0; --i) {
+        if (presets[i] < m_zoomPercent) { np = presets[i]; break; }
+      }
+    }
+    m_zoomCombo->setCurrentText(QString::number(np) + QLatin1Char('%'));
+    return true;
+  };
+
   switch (event->key()) {
+    case Qt::Key_S:
+      if (m_stopButton) {
+        m_stopButton->click();
+      }
+      return true;
+    case Qt::Key_BracketLeft:
+      if (m_rateCombo && m_rateCombo->currentIndex() > 0) {
+        m_rateCombo->setCurrentIndex(m_rateCombo->currentIndex() - 1);
+      }
+      return true;
+    case Qt::Key_BracketRight:
+      if (m_rateCombo && m_rateCombo->currentIndex() < m_rateCombo->count() - 1) {
+        m_rateCombo->setCurrentIndex(m_rateCombo->currentIndex() + 1);
+      }
+      return true;
+    case Qt::Key_Minus:
+      return stepZoom(false);
+    case Qt::Key_Plus:
+    case Qt::Key_Equal:
+      return stepZoom(true);
     case Qt::Key_Space:
       togglePlayPause();
       return true;
@@ -638,7 +681,7 @@ void MediaView::setVideoFullScreen(bool on) {
 
       // 停止
       auto* fsStop = makeButton(QStringLiteral(":/icons/toolbar/stop.svg"),
-                                tr("Stop"));
+                                tr("Stop (S)"));
       connect(fsStop, &QToolButton::clicked, m_player, &QMediaPlayer::stop);
       barLay->addWidget(fsStop);
 
