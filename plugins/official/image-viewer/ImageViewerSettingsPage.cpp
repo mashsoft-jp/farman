@@ -2,6 +2,7 @@
 
 #include "settings/Settings.h"
 #include "viewer/ExtensionsField.h"
+#include "viewer/ViewerShortcutSettingsWidget.h"
 #include "viewer/ViewerThemeFields.h"
 #include "types.h"
 
@@ -67,6 +68,12 @@ ImageViewerSettingsPage::ImageViewerSettingsPage(QWidget* parent)
   outer->addWidget(m_animCheck);
 
   outer->addWidget(buildTransparencySection());
+
+  auto* scGroup = new QGroupBox(tr("Shortcuts"), this);
+  auto* scLayout = new QVBoxLayout(scGroup);
+  m_shortcuts = new ViewerShortcutSettingsWidget(QStringLiteral("image"), scGroup);
+  scLayout->addWidget(m_shortcuts);
+  outer->addWidget(scGroup);
   outer->addStretch();
 
   // 現在値を読み込む。プラグイン dylib 側の Settings インスタンスをファイルから
@@ -225,6 +232,8 @@ void ImageViewerSettingsPage::save() {
 
   // ファイルへ永続化 (本体側はこの後 Settings::load() で拾う)。
   s.save();
+
+  if (m_shortcuts) m_shortcuts->save();
 }
 
 void ImageViewerSettingsPage::restoreDefaults() {
@@ -241,6 +250,8 @@ void ImageViewerSettingsPage::restoreDefaults() {
   overlayFields(dl, m_light);
   overlayFields(dd, m_dark);
   loadSideToUi(m_editSide);
+
+  if (m_shortcuts) m_shortcuts->restoreDefaults();
 }
 
 } // namespace Farman

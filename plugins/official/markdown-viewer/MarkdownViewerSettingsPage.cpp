@@ -2,6 +2,7 @@
 
 #include "settings/Settings.h"
 #include "viewer/ExtensionsField.h"
+#include "viewer/ViewerShortcutSettingsWidget.h"
 #include "viewer/ViewerThemeFields.h"
 
 #include <QButtonGroup>
@@ -47,6 +48,12 @@ MarkdownViewerSettingsPage::MarkdownViewerSettingsPage(QWidget* parent)
   outer->addWidget(m_showSourceCheck);
 
   outer->addWidget(buildThemeSection());
+
+  auto* scGroup = new QGroupBox(tr("Shortcuts"), this);
+  auto* scLayout = new QVBoxLayout(scGroup);
+  m_shortcuts = new ViewerShortcutSettingsWidget(QStringLiteral("markdown"), scGroup);
+  scLayout->addWidget(m_shortcuts);
+  outer->addWidget(scGroup);
   outer->addStretch();
 
   Settings& s = Settings::instance();
@@ -203,6 +210,7 @@ void MarkdownViewerSettingsPage::save() {
   s.setScheme(ThemeMode::Dark, fresh);
 
   s.save();
+  if (m_shortcuts) m_shortcuts->save();
 }
 
 void MarkdownViewerSettingsPage::restoreDefaults() {
@@ -215,6 +223,7 @@ void MarkdownViewerSettingsPage::restoreDefaults() {
   m_uiFont = dl.markdownViewerFont;
   styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
+  if (m_shortcuts) m_shortcuts->restoreDefaults();
 }
 
 } // namespace Farman

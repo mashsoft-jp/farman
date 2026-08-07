@@ -1,6 +1,7 @@
 #include "BinaryViewerSettingsPage.h"
 
 #include "settings/Settings.h"
+#include "viewer/ViewerShortcutSettingsWidget.h"
 #include "viewer/ViewerThemeFields.h"
 #include "types.h"
 
@@ -55,6 +56,12 @@ BinaryViewerSettingsPage::BinaryViewerSettingsPage(QWidget* parent)
 
   outer->addLayout(form);
   outer->addWidget(buildThemeColorSection());
+
+  auto* scGroup = new QGroupBox(tr("Shortcuts"), this);
+  auto* scLayout = new QVBoxLayout(scGroup);
+  m_shortcuts = new ViewerShortcutSettingsWidget(QStringLiteral("binary"), scGroup);
+  scLayout->addWidget(m_shortcuts);
+  outer->addWidget(scGroup);
   outer->addStretch();
 
   Settings& s = Settings::instance();
@@ -241,6 +248,8 @@ void BinaryViewerSettingsPage::save() {
   s.setScheme(ThemeMode::Dark, fresh);
 
   s.save();
+
+  if (m_shortcuts) m_shortcuts->save();
 }
 
 void BinaryViewerSettingsPage::restoreDefaults() {
@@ -254,6 +263,8 @@ void BinaryViewerSettingsPage::restoreDefaults() {
   m_uiFont = dl.binaryViewerFont;
   styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
+
+  if (m_shortcuts) m_shortcuts->restoreDefaults();
 }
 
 } // namespace Farman

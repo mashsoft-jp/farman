@@ -2,6 +2,7 @@
 
 #include "settings/Settings.h"
 #include "viewer/ExtensionsField.h"
+#include "viewer/ViewerShortcutSettingsWidget.h"
 #include "viewer/ViewerThemeFields.h"
 
 #include <QButtonGroup>
@@ -69,6 +70,12 @@ TextViewerSettingsPage::TextViewerSettingsPage(QWidget* parent)
   outer->addLayout(row);
 
   outer->addWidget(buildThemeColorSection());
+
+  auto* scGroup = new QGroupBox(tr("Shortcuts"), this);
+  auto* scLayout = new QVBoxLayout(scGroup);
+  m_shortcuts = new ViewerShortcutSettingsWidget(QStringLiteral("text"), scGroup);
+  scLayout->addWidget(m_shortcuts);
+  outer->addWidget(scGroup);
   outer->addStretch();
 
   Settings& s = Settings::instance();
@@ -254,6 +261,8 @@ void TextViewerSettingsPage::save() {
   s.setScheme(ThemeMode::Dark, fresh);
 
   s.save();
+
+  if (m_shortcuts) m_shortcuts->save();
 }
 
 void TextViewerSettingsPage::restoreDefaults() {
@@ -268,6 +277,8 @@ void TextViewerSettingsPage::restoreDefaults() {
   m_uiFont = dl.textViewerFont;
   styleThemeFontButton(m_fontButton, m_uiFont);
   loadSideToUi(m_editSide);
+
+  if (m_shortcuts) m_shortcuts->restoreDefaults();
 }
 
 } // namespace Farman

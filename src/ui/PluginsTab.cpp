@@ -1,6 +1,7 @@
 #include "PluginsTab.h"
 #include "settings/Settings.h"
 #include "viewer/IPluginSettingsPage.h"
+#include "keybinding/ViewerKeyBindingManager.h"
 #include "viewer/IViewerPlugin.h"
 #include "viewer/ViewerDispatcher.h"
 #include <QCheckBox>
@@ -756,6 +757,9 @@ void PluginsTab::showPluginDetails(int row) {
   if (settingsPage) {
     settingsPage->save();
     Settings::instance().load();
+    // ビュアーのショートカット割当も設定ページで変わり得るので、本体側ストアも
+    // 再読込して開いているビュアーへ反映する。
+    ViewerKeyBindingManager::instance().loadFromSettings();
   }
 
   if (enabledEditable) {

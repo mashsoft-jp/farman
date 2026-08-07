@@ -2,6 +2,7 @@
 
 #include "settings/Settings.h"
 #include "viewer/ExtensionsField.h"
+#include "viewer/ViewerShortcutSettingsWidget.h"
 #include "viewer/ViewerThemeFields.h"
 
 #include <QCheckBox>
@@ -9,6 +10,7 @@
 #include <QFontDatabase>
 #include <QFontDialog>
 #include <QFormLayout>
+#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -48,6 +50,12 @@ CsvViewerSettingsPage::CsvViewerSettingsPage(QWidget* parent)
   outer->addWidget(m_headerCheck);
 
   outer->addWidget(buildFontSection());
+
+  auto* scGroup = new QGroupBox(tr("Shortcuts"), this);
+  auto* scLayout = new QVBoxLayout(scGroup);
+  m_shortcuts = new ViewerShortcutSettingsWidget(QStringLiteral("csv"), scGroup);
+  scLayout->addWidget(m_shortcuts);
+  outer->addWidget(scGroup);
   outer->addStretch();
 
   Settings& s = Settings::instance();
@@ -107,12 +115,14 @@ void CsvViewerSettingsPage::save() {
   s.setScheme(ThemeMode::Dark, fresh);
 
   s.save();
+  if (m_shortcuts) m_shortcuts->save();
 }
 
 void CsvViewerSettingsPage::restoreDefaults() {
   applyValuesToUi(kDefExtensions, kDefDelimiter, kDefFirstRowHeader);
   m_uiFont = defaultLightScheme().csvViewerFont;
   styleThemeFontButton(m_fontButton, m_uiFont);
+  if (m_shortcuts) m_shortcuts->restoreDefaults();
 }
 
 } // namespace Farman

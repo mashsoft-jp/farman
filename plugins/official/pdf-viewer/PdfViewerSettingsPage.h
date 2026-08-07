@@ -7,6 +7,8 @@ class QCheckBox;
 class QComboBox;
 class QLineEdit;
 
+namespace Farman { class ViewerShortcutSettingsWidget; }
+
 namespace Farman {
 
 // PDF ビュアーの設定ページ (Settings → Plugins → 詳細)。
@@ -27,6 +29,7 @@ private:
   QLineEdit* m_extensionsEdit  = nullptr;
   QCheckBox* m_continuousCheck = nullptr;
   QComboBox* m_fitCombo        = nullptr;
+  ViewerShortcutSettingsWidget* m_shortcuts = nullptr;
 };
 
 } // namespace Farman

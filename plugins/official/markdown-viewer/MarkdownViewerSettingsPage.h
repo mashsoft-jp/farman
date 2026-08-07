@@ -8,6 +8,8 @@ class QLineEdit;
 class QPushButton;
 class QRadioButton;
 
+namespace Farman { class ViewerShortcutSettingsWidget; }
+
 namespace Farman {
 
 // Markdown ビュアーの設定ページ (Settings → Plugins → 詳細)。
@@ -51,6 +53,8 @@ private:
   ColorScheme   m_light;
   ColorScheme   m_dark;
   ThemeMode     m_editSide = ThemeMode::Light;
+
+  ViewerShortcutSettingsWidget* m_shortcuts = nullptr;
 };
 
 } // namespace Farman

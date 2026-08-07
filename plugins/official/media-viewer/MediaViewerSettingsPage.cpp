@@ -2,10 +2,12 @@
 
 #include "settings/Settings.h"
 #include "viewer/ExtensionsField.h"
+#include "viewer/ViewerShortcutSettingsWidget.h"
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFormLayout>
+#include <QGroupBox>
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QVBoxLayout>
@@ -63,6 +65,12 @@ MediaViewerSettingsPage::MediaViewerSettingsPage(QWidget* parent)
 
   m_loopCheck = new QCheckBox(tr("Loop playback"), this);
   outer->addWidget(m_loopCheck);
+
+  auto* scGroup = new QGroupBox(tr("Shortcuts"), this);
+  auto* scLayout = new QVBoxLayout(scGroup);
+  m_shortcuts = new ViewerShortcutSettingsWidget(QStringLiteral("media"), scGroup);
+  scLayout->addWidget(m_shortcuts);
+  outer->addWidget(scGroup);
   outer->addStretch();
 
   Settings& s = Settings::instance();
@@ -97,11 +105,13 @@ void MediaViewerSettingsPage::save() {
   s.setMediaViewerLoop(m_loopCheck->isChecked());
   s.setMediaViewerAutoplay(m_autoplayCheck->isChecked());
   s.save();
+  if (m_shortcuts) m_shortcuts->save();
 }
 
 void MediaViewerSettingsPage::restoreDefaults() {
   applyValuesToUi(kDefExtensions, kDefVolume, kDefLoop, kDefAutoplay,
                   kDefFit, kDefZoom);
+  if (m_shortcuts) m_shortcuts->restoreDefaults();
 }
 
 } // namespace Farman
