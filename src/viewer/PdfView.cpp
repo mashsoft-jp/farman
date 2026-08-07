@@ -117,17 +117,29 @@ void PdfView::setupUi() {
 
   m_toolbar->addSeparator();
 
+  // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
+  // ラベルには併記せず、ツールチップの中で案内する。
+  const QString findScut = QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+  const QString fitWidthScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_W).toString(QKeySequence::NativeText);
+  // ページ全体は ⌘⇧O (Overall)。⌘⇧P は「ヘルプ → プラグイン」メニュー
+  // (help.plugins) と衝突しネイティブメニューに横取りされるため使わない。
+  const QString fitPageScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_O).toString(QKeySequence::NativeText);
+  const QString continuousScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_N).toString(QKeySequence::NativeText);
+
   // ───── ズーム ─────
   m_zoomOutButton = new QToolButton(m_toolbar);
   m_zoomOutButton->setText(QStringLiteral("−"));
-  m_zoomOutButton->setToolTip(tr("Zoom out"));
+  m_zoomOutButton->setToolTip(tr("Zoom out (-)"));
   m_zoomOutButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomOutButton, &QToolButton::clicked, this, &PdfView::onZoomOut);
   m_toolbar->addWidget(m_zoomOutButton);
 
   m_zoomInButton = new QToolButton(m_toolbar);
   m_zoomInButton->setText(QStringLiteral("+"));
-  m_zoomInButton->setToolTip(tr("Zoom in"));
+  m_zoomInButton->setToolTip(tr("Zoom in (+)"));
   m_zoomInButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomInButton, &QToolButton::clicked, this, &PdfView::onZoomIn);
   m_toolbar->addWidget(m_zoomInButton);
@@ -135,7 +147,8 @@ void PdfView::setupUi() {
   m_fitWidthButton = new QToolButton(m_toolbar);
   m_fitWidthButton->setText(tr("Fit Width"));
   m_fitWidthButton->setCheckable(true);
-  m_fitWidthButton->setToolTip(tr("Fit page width to view"));
+  m_fitWidthButton->setToolTip(
+    tr("Fit page width to view (%1)").arg(fitWidthScut));
   m_fitWidthButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_fitWidthButton, &QToolButton::toggled, this, &PdfView::onFitWidth);
   m_toolbar->addWidget(m_fitWidthButton);
@@ -143,7 +156,8 @@ void PdfView::setupUi() {
   m_fitPageButton = new QToolButton(m_toolbar);
   m_fitPageButton->setText(tr("Fit Page"));
   m_fitPageButton->setCheckable(true);
-  m_fitPageButton->setToolTip(tr("Fit whole page in view"));
+  m_fitPageButton->setToolTip(
+    tr("Fit whole page in view (%1)").arg(fitPageScut));
   m_fitPageButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_fitPageButton, &QToolButton::toggled, this, &PdfView::onFitPage);
   m_toolbar->addWidget(m_fitPageButton);
@@ -156,7 +170,8 @@ void PdfView::setupUi() {
   m_continuousButton->setCheckable(true);
   m_continuousButton->setChecked(true);
   m_continuousButton->setToolTip(
-    tr("Continuous multi-page scrolling (off = single page)"));
+    tr("Continuous multi-page scrolling; single page when off (%1)")
+      .arg(continuousScut));
   m_continuousButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_continuousButton, &QToolButton::toggled,
           this,                &PdfView::onPageModeToggled);
@@ -165,16 +180,13 @@ void PdfView::setupUi() {
   m_toolbar->addSeparator();
 
   // ───── 検索 (TextView と同じレイアウト: Find: [入力] [前] [次] [件数]) ─────
-  const QString findShortcutText =
-    QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
-
-  auto* findLabel = new QLabel(tr("Find (%1):").arg(findShortcutText), m_toolbar);
-  findLabel->setToolTip(tr("Search text in this PDF (%1)").arg(findShortcutText));
+  auto* findLabel = new QLabel(tr("Find:"), m_toolbar);
+  findLabel->setToolTip(tr("Search text in this PDF (%1)").arg(findScut));
   m_toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(m_toolbar);
-  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
-  m_findEdit->setToolTip(tr("Search text in this PDF (%1)").arg(findShortcutText));
+  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findScut));
+  m_findEdit->setToolTip(tr("Search text in this PDF (%1)").arg(findScut));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(160);
@@ -560,11 +572,49 @@ bool PdfView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const bool isFindKey =
-      ke->key() == Qt::Key_F &&
-      (ke->modifiers() & Qt::ControlModifier);  // macOS では Cmd
-    if (isFindKey && isVisible() && window() && window()->isActiveWindow()) {
-      if (event->type() == QEvent::KeyPress) focusFindInput();
+    const auto mods = ke->modifiers();
+    const bool ctrl  = mods & Qt::ControlModifier;   // macOS では Cmd
+    const bool shift = mods & Qt::ShiftModifier;
+    const bool alt   = mods & Qt::AltModifier;
+    const int  key   = ke->key();
+
+    // テキスト入力欄 (検索 / ページ番号) にフォーカスがある間は素キーの
+    // ズーム (- / +) を無効化する (入力を邪魔しないため)。
+    const bool typingField =
+      (m_findEdit && m_findEdit->hasFocus())
+      || (m_pageSpin && m_pageSpin->hasFocus());
+
+    // Cmd/Ctrl+F: 検索欄へフォーカス
+    const bool toFind = ctrl && !shift && !alt && key == Qt::Key_F;
+    // Cmd/Ctrl+Shift+W: 幅にフィット
+    const bool toFitWidth = ctrl && shift && key == Qt::Key_W;
+    // Cmd/Ctrl+Shift+O: ページ全体にフィット (⌘⇧P はメニューと衝突するため O)
+    const bool toFitPage = ctrl && shift && key == Qt::Key_O;
+    // Cmd/Ctrl+Shift+N: 連続表示のトグル
+    const bool toContinuous = ctrl && shift && key == Qt::Key_N;
+    // - / + : ズーム (他ビュアーと統一。素キーなので入力欄では無効)
+    const bool toZoomOut = !ctrl && !alt && !typingField && key == Qt::Key_Minus;
+    const bool toZoomIn  = !ctrl && !alt && !typingField
+                           && (key == Qt::Key_Plus || key == Qt::Key_Equal);
+
+    const bool handled =
+      toFind || toFitWidth || toFitPage || toContinuous || toZoomOut || toZoomIn;
+    if (handled && isVisible() && window() && window()->isActiveWindow()) {
+      if (event->type() == QEvent::KeyPress) {
+        if (toFind) {
+          focusFindInput();
+        } else if (toFitWidth && m_fitWidthButton) {
+          m_fitWidthButton->toggle();
+        } else if (toFitPage && m_fitPageButton) {
+          m_fitPageButton->toggle();
+        } else if (toContinuous && m_continuousButton) {
+          m_continuousButton->toggle();
+        } else if (toZoomOut) {
+          onZoomOut();
+        } else if (toZoomIn) {
+          onZoomIn();
+        }
+      }
       event->accept();
       return true;
     }
