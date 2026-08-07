@@ -23,6 +23,7 @@
 #include <QPainter>
 #include <QPalette>
 #include <QPushButton>
+#include <functional>
 #include <QRadioButton>
 #include <QStyle>
 #include <QRegularExpression>
@@ -343,6 +344,10 @@ public:
   qint64 fileSize() const { return m_src.size(); }
   qint64 totalSize() const { return m_totalSize; }
   qint64 cursorOffset() const { return m_cursor; }
+  // カーソル位置が変わったら呼ぶコールバック (BinaryView がステータス更新に使う)。
+  void setCursorChangedCallback(std::function<void()> cb) {
+    m_onCursorChanged = std::move(cb);
+  }
   // 現在の選択 (無ければカーソル) の先頭 / 末尾オフセット。検索の基準に使う。
   qint64 selectionStart() const {
     return m_hasSel ? qMin(m_selAnchor, m_cursor) : m_cursor;
@@ -434,6 +439,7 @@ public:
     clampTop();
     syncVBar();
     viewport()->update();
+    if (m_onCursorChanged) m_onCursorChanged();
   }
 
   void applyFont(const QFont& f) {
@@ -489,6 +495,7 @@ public:
     clampTop();
     syncVBar();
     viewport()->update();
+    if (m_onCursorChanged) m_onCursorChanged();
   }
 
   // 選択範囲 (無ければカーソル単位) を 16 進テキストとしてクリップボードへ。
@@ -832,6 +839,7 @@ private:
     m_cursor = off;
     ensureVisible(m_cursor / kBytesPerLine);
     viewport()->update();
+    if (m_onCursorChanged) m_onCursorChanged();
   }
 
   qint64 byteAtPos(const QPoint& pos) const {
@@ -869,6 +877,7 @@ private:
   qint64 m_selAnchor  = 0;   // 選択の起点
   bool   m_hasSel     = false;
   bool   m_dragging   = false;
+  std::function<void()> m_onCursorChanged;  // カーソル移動時の通知
 
   BinaryViewerUnit   m_unit     = BinaryViewerUnit::Byte1;
   BinaryViewerEndian m_endian   = BinaryViewerEndian::Little;
@@ -1049,6 +1058,11 @@ void BinaryView::setupUi() {
 
   // ViewerPanel / BinaryViewerWindow からの setFocus を HexView へ転送。
   setFocusProxy(m_hex);
+
+  // カーソルが動いたらステータス (カーソル位置 / 全体) を更新通知する。
+  m_hex->setCursorChangedCallback([this]() {
+    emit statusInfoChanged(statusInfo());
+  });
 
   connect(m_unitCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
     m_unit = bytesToBinaryViewerUnit(m_unitCombo->currentData().toInt());
@@ -1411,7 +1425,11 @@ QString BinaryView::statusInfo() const {
   if (m_filePath.isEmpty()) return QString();
   // GB/GiB ではなく正確なバイト数で表示する (バイナリビュアーなのでオフセットと
   // 対応が取りやすいように)。桁区切り付き。
-  QString s = tr("%1 bytes").arg(QLocale(QLocale::English).toString(m_totalSize));
+  const QLocale loc(QLocale::English);
+  const qint64 cur = m_hex ? m_hex->cursorOffset() : 0;
+  // 「カーソル位置 / 全体サイズ バイト」の形で、何バイト目かと総サイズを 1 つに
+  // まとめて表示する (位置は 16 進アドレス列に合わせて 0 始まり)。
+  QString s = tr("%1 / %2 bytes").arg(loc.toString(cur), loc.toString(m_totalSize));
   if (m_encoding.compare(QStringLiteral("Auto"), Qt::CaseInsensitive) == 0
       && !m_actualEncoding.isEmpty()) {
     s += QStringLiteral("  ·  %1").arg(m_actualEncoding);

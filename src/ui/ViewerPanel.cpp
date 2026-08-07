@@ -55,6 +55,9 @@ void ViewerPanel::setupUi() {
   // ===== Binary Viewer (fallback) =====
   m_binaryView = new BinaryView(this);
   m_stack->addWidget(m_binaryView);
+  // カーソル移動でステータス (位置 / 全体) が変わったら本体ステータスバーへ中継。
+  connect(m_binaryView, &BinaryView::statusInfoChanged,
+          this,          &ViewerPanel::onPluginStatusInfoChanged);
 
   // ===== Markdown Viewer (.md / .markdown 等) =====
   m_markdownView = new MarkdownView(this);

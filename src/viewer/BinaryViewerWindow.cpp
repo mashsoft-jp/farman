@@ -67,7 +67,10 @@ void BinaryViewerWindow::loadFile() {
   m_stack->setCurrentWidget(m_view);
   // BinaryView の setFocusProxy(m_textArea) を効かせるため明示的に setFocus。
   m_view->setFocus();
-  statusBar()->addPermanentWidget(new QLabel(m_view->statusInfo(), this));
+  // カーソル移動で位置表示が変わるので、ラベルを保持して追従更新する。
+  auto* statusLabel = new QLabel(m_view->statusInfo(), this);
+  statusBar()->addPermanentWidget(statusLabel);
+  connect(m_view, &BinaryView::statusInfoChanged, statusLabel, &QLabel::setText);
   logViewerLoadResult(QStringLiteral("Binary, external"),
                        m_displayPath, true, false);
 }

@@ -72,8 +72,13 @@ public:
   // 表示中ファイルをクリア。
   void clearContent();
 
-  // ステータスバー表示用の要約 ("56 KB" 等)。
+  // ステータスバー表示用の要約 ("0 / 123,345  ·  123,345 bytes" 等)。
   QString statusInfo() const;
+
+signals:
+  // ステータス表示 (カーソル位置など) が変化したときに発火。ViewerPanel /
+  // BinaryViewerWindow がこれを受けて本体ステータスバーを更新する。
+  void statusInfoChanged(const QString& info);
 
 protected:
   // アドレス入力欄で Enter を押したときに、親ウィンドウへ伝播して「ビュアーを
