@@ -924,7 +924,7 @@ void BinaryView::setupUi() {
   const QString scFind =
     QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
 
-  toolbar->addWidget(new QLabel(tr("Unit (%1):").arg(scUnit), toolbar));
+  toolbar->addWidget(new QLabel(tr("Unit:"), toolbar));
   m_unitCombo = new QComboBox(toolbar);
   m_unitCombo->addItem(tr("1 Byte"), 1);
   m_unitCombo->addItem(tr("2 Byte"), 2);
@@ -932,35 +932,35 @@ void BinaryView::setupUi() {
   m_unitCombo->addItem(tr("8 Byte"), 8);
   m_unitCombo->setFocusPolicy(Qt::StrongFocus);
   m_unitCombo->setToolTip(
-    tr("Bytes shown per group (1 / 2 / 4 / 8). Shortcut: %1").arg(scUnit));
+    tr("Bytes shown per group, 1 / 2 / 4 / 8 (%1)").arg(scUnit));
   toolbar->addWidget(m_unitCombo);
 
-  toolbar->addWidget(new QLabel(tr("Endian (%1):").arg(scEndian), toolbar));
+  toolbar->addWidget(new QLabel(tr("Endian:"), toolbar));
   m_endianCombo = new QComboBox(toolbar);
   m_endianCombo->addItem(tr("Little"), static_cast<int>(BinaryViewerEndian::Little));
   m_endianCombo->addItem(tr("Big"),    static_cast<int>(BinaryViewerEndian::Big));
   m_endianCombo->setFocusPolicy(Qt::StrongFocus);
   m_endianCombo->setToolTip(
-    tr("Byte order for multi-byte groups. Shortcut: %1 (toggle)").arg(scEndian));
+    tr("Byte order for multi-byte groups (%1)").arg(scEndian));
   toolbar->addWidget(m_endianCombo);
 
-  toolbar->addWidget(new QLabel(tr("Encoding (%1):").arg(scEnc), toolbar));
+  toolbar->addWidget(new QLabel(tr("Encoding:"), toolbar));
   m_encodingCombo = new QComboBox(toolbar);
   m_encodingCombo->setFocusPolicy(Qt::StrongFocus);
   m_encodingCombo->setToolTip(
-    tr("Text encoding of the character column. Shortcut: %1 (focus)").arg(scEnc));
+    tr("Text encoding of the character column (%1)").arg(scEnc));
   rebuildEncodingItems();
   toolbar->addWidget(m_encodingCombo);
 
   // アドレスジャンプ (16 進オフセットへスクロール)。
   toolbar->addSeparator();
-  toolbar->addWidget(new QLabel(tr("Address (%1):").arg(scAddr), toolbar));
+  toolbar->addWidget(new QLabel(tr("Address:"), toolbar));
   m_addressEdit = new QLineEdit(toolbar);
   m_addressEdit->setPlaceholderText(tr("hex e.g. 1a0"));
   m_addressEdit->setMaximumWidth(120);
   m_addressEdit->setFocusPolicy(Qt::StrongFocus);
   m_addressEdit->setToolTip(
-    tr("Jump to hex address. %1 to focus, Enter to jump.").arg(scAddr));
+    tr("Jump to hex address (%1 to focus, Enter to jump)").arg(scAddr));
   // 16 進数字のみ、かつ指定可能なアドレス上限 (m_maxAddress) を超える入力を弾く。
   m_addressEdit->setValidator(new HexAddressValidator(&m_maxAddress, m_addressEdit));
   toolbar->addWidget(m_addressEdit);
@@ -986,7 +986,7 @@ void BinaryView::setupUi() {
   searchBar->setIconSize(QSize(20, 20));
   applyToolbarStyle(searchBar);
 
-  searchBar->addWidget(new QLabel(tr("Search (%1):").arg(scFind), searchBar));
+  searchBar->addWidget(new QLabel(tr("Search:"), searchBar));
   m_searchHexRadio  = new QRadioButton(tr("Hex"), searchBar);
   m_searchTextRadio = new QRadioButton(tr("Text"), searchBar);
   m_searchHexRadio->setChecked(true);
@@ -1008,21 +1008,18 @@ void BinaryView::setupUi() {
   searchBar->addWidget(m_searchEdit);
 
   m_searchEdit->setToolTip(
-    tr("Text to find. %1 to focus, Enter to search next, Shift+Enter for previous.")
-      .arg(scFind));
-  // ボタンにはラベルへショートカットを併記する ("次へ (⌘G)" 等)。
+    tr("Text to find (%1 to focus, Enter=next, Shift+Enter=prev)").arg(scFind));
+  // ボタンのラベルにはショートカットを併記せず、ツールチップで案内する。
   const QString nextSc =
     QKeySequence(QKeySequence::FindNext).toString(QKeySequence::NativeText);
   const QString prevSc =
     QKeySequence(QKeySequence::FindPrevious).toString(QKeySequence::NativeText);
-  QPushButton* findPrevBtn =
-    new QPushButton(tr("Prev (%1)").arg(prevSc), searchBar);
-  QPushButton* findNextBtn =
-    new QPushButton(tr("Next (%1)").arg(nextSc), searchBar);
+  QPushButton* findPrevBtn = new QPushButton(tr("Prev"), searchBar);
+  QPushButton* findNextBtn = new QPushButton(tr("Next"), searchBar);
   findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   findNextBtn->setFocusPolicy(Qt::StrongFocus);
-  findPrevBtn->setToolTip(tr("Find previous match"));
-  findNextBtn->setToolTip(tr("Find next match"));
+  findPrevBtn->setToolTip(tr("Find previous match (Shift+Enter, %1)").arg(prevSc));
+  findNextBtn->setToolTip(tr("Find next match (Enter, %1)").arg(nextSc));
   searchBar->addWidget(findPrevBtn);
   searchBar->addWidget(findNextBtn);
 
