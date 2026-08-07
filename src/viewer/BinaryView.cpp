@@ -1149,9 +1149,13 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
       return true;  // 親へ伝播させない (ビュアーを閉じさせない)
     }
   }
-  // 検索欄の Enter で次を、Shift+Enter で前を検索する。
+  // 検索欄の Enter で次を、Shift+Enter で前を検索する。Esc で本体へ戻す。
   if (watched == m_searchEdit && event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() == Qt::Key_Escape) {
+      m_hex->setFocus(Qt::OtherFocusReason);
+      return true;
+    }
     if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
       doSearch(!(ke->modifiers() & Qt::ShiftModifier));
       return true;
@@ -1299,7 +1303,10 @@ void BinaryView::doSearch(bool forward) {
   }
   m_hex->selectMatch(found, pat.size());
   m_searchStatus->setText(wrapped ? tr("Wrapped") : QString());
-  m_hex->setFocus();
+  // ここで本体 (HexView) にフォーカスを移すと、検索欄で続けて Enter を押した
+  // ときに 2 回目が本体側へ流れてビュアーが閉じてしまう。一致は selectMatch が
+  // スクロール＆ハイライトするので、フォーカスは検索欄に残す (他ビュアーと同様、
+  // Esc で本体へ戻す)。
 }
 
 void BinaryView::updateSearchPlaceholder() {
