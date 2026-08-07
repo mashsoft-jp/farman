@@ -179,12 +179,26 @@ void TextView::setupUi() {
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
   applyToolbarStyle(toolbar);
 
+  // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
+  // ラベルには併記せず、ツールチップの中で案内する。
+  const QString findScut = QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
+  const QString encScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E).toString(QKeySequence::NativeText);
+  const QString lineScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_L).toString(QKeySequence::NativeText);
+  const QString wrapScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_W).toString(QKeySequence::NativeText);
+  const QString caseScut =
+    QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C).toString(QKeySequence::NativeText);
+
   QLabel* encodingLabel = new QLabel(tr("Encoding:"), toolbar);
-  encodingLabel->setToolTip(tr("Character encoding used to decode this file."));
+  encodingLabel->setToolTip(
+    tr("Character encoding used to decode this file (%1)").arg(encScut));
   toolbar->addWidget(encodingLabel);
   m_encodingCombo = new QComboBox(toolbar);
   m_encodingCombo->setToolTip(
-    tr("Character encoding used to decode this file. Auto detects it automatically."));
+    tr("Character encoding used to decode this file, Auto detects automatically (%1)")
+      .arg(encScut));
   // 自由入力できても認識されない名前は意味が無く、誤入力で読み込み失敗する
   // だけなので、選択リストからの固定候補に限定する。
   m_encodingCombo->addItem(QStringLiteral("Auto"));
@@ -202,35 +216,33 @@ void TextView::setupUi() {
   m_lineNumbersButton = new QToolButton(toolbar);
   m_lineNumbersButton->setCheckable(true);
   m_lineNumbersButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/line-numbers.svg")));
-  m_lineNumbersButton->setToolTip(tr("Toggle line numbers in the left margin."));
+  m_lineNumbersButton->setToolTip(
+    tr("Toggle line numbers in the left margin (%1)").arg(lineScut));
   m_lineNumbersButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_lineNumbersButton);
 
   m_wordWrapButton = new QToolButton(toolbar);
   m_wordWrapButton->setCheckable(true);
   m_wordWrapButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/word-wrap.svg")));
-  m_wordWrapButton->setToolTip(tr("Toggle word wrap for long lines."));
+  m_wordWrapButton->setToolTip(
+    tr("Toggle word wrap for long lines (%1)").arg(wrapScut));
   m_wordWrapButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_wordWrapButton);
 
   // 検索コントロール群 (常設)。Tab で順に辿れる位置に置く。
   toolbar->addSeparator();
 
-  // ショートカット表記 (macOS: ⌘F / Win/Linux: Ctrl+F)
-  const QString findShortcutText =
-    QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText);
-
-  QLabel* findLabel = new QLabel(tr("Find (%1):").arg(findShortcutText), toolbar);
+  QLabel* findLabel = new QLabel(tr("Find:"), toolbar);
   findLabel->setToolTip(
-    tr("Find text. %1 to focus, Enter=next, Shift+Enter=previous, Esc=back to text.")
-      .arg(findShortcutText));
+    tr("Find text (%1 to focus, Enter=next, Shift+Enter=prev, Esc=back)")
+      .arg(findScut));
   toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(toolbar);
-  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findShortcutText));
+  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findScut));
   m_findEdit->setToolTip(
-    tr("Find text. %1 to focus, Enter=next, Shift+Enter=previous, Esc=back to text.")
-      .arg(findShortcutText));
+    tr("Find text (%1 to focus, Enter=next, Shift+Enter=prev, Esc=back)")
+      .arg(findScut));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(180);
@@ -244,7 +256,8 @@ void TextView::setupUi() {
   m_findCsButton = new QToolButton(toolbar);
   m_findCsButton->setCheckable(true);
   m_findCsButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/case-sensitive.svg")));
-  m_findCsButton->setToolTip(tr("Toggle case-sensitive search."));
+  m_findCsButton->setToolTip(
+    tr("Toggle case-sensitive search (%1)").arg(caseScut));
   m_findCsButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_findCsButton);
 
@@ -588,12 +601,38 @@ bool TextView::eventFilter(QObject* watched, QEvent* event) {
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
-    const bool isFindKey =
-      ke->key() == Qt::Key_F &&
-      (ke->modifiers() & Qt::ControlModifier);  // macOS では Cmd
-    if (isFindKey && isVisible() && window() && window()->isActiveWindow()) {
+    const auto mods = ke->modifiers();
+    const bool ctrl  = mods & Qt::ControlModifier;   // macOS では Cmd
+    const bool shift = mods & Qt::ShiftModifier;
+    const bool alt   = mods & Qt::AltModifier;        // macOS では Option
+    const int  key   = ke->key();
+
+    // Cmd/Ctrl+F: 検索欄へフォーカス
+    const bool toFind = ctrl && !shift && !alt && key == Qt::Key_F;
+    // Cmd/Ctrl+Shift+E: エンコーディングのコンボへフォーカス
+    const bool toEncoding = ctrl && shift && key == Qt::Key_E;
+    // Cmd/Ctrl+Shift+L: 行番号表示のトグル
+    const bool toLineNumbers = ctrl && shift && key == Qt::Key_L;
+    // Cmd/Ctrl+Shift+C: 検索の大文字小文字トグル
+    const bool toCase = ctrl && shift && key == Qt::Key_C;
+    // Cmd/Ctrl+Shift+W: 折り返しのトグル (Wrap の頭文字。他のトグルと系統を揃える)
+    const bool toWrap = ctrl && shift && key == Qt::Key_W;
+
+    const bool handled =
+      toFind || toEncoding || toLineNumbers || toCase || toWrap;
+    if (handled && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
-        focusFindInput();
+        if (toFind) {
+          focusFindInput();
+        } else if (toEncoding && m_encodingCombo) {
+          m_encodingCombo->setFocus(Qt::ShortcutFocusReason);
+        } else if (toLineNumbers && m_lineNumbersButton) {
+          m_lineNumbersButton->toggle();
+        } else if (toCase && m_findCsButton) {
+          m_findCsButton->toggle();
+        } else if (toWrap && m_wordWrapButton) {
+          m_wordWrapButton->toggle();
+        }
       }
       event->accept();
       return true;
