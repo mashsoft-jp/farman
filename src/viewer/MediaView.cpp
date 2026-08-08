@@ -471,13 +471,21 @@ void MediaView::keyPressEvent(QKeyEvent* event) {
 }
 
 bool MediaView::eventFilter(QObject* watched, QEvent* event) {
-  // 埋め込み / フルスクリーン、どちらのビューでも同じキー / ダブルクリック処理。
+  // ビュー本体にフォーカスがあるときもショートカットを効かせる。QGraphicsView は
+  // viewport がフォーカスを持つため、KeyPress はビュー枠 (m_videoView / m_fsView) と
+  // その viewport のどちらから来ても handleViewerKey に渡す (viewport には既に
+  // eventFilter を設置済み)。
+  if (event->type() == QEvent::KeyPress
+      && (watched == m_videoView || watched == m_fsView
+          || (m_videoView && watched == m_videoView->viewport())
+          || (m_fsView && watched == m_fsView->viewport()))) {
+    if (handleViewerKey(static_cast<QKeyEvent*>(event))) {
+      return true;
+    }
+  }
+  // 埋め込み / フルスクリーン、どちらのビューでも同じダブルクリック / クローズ処理。
   if (watched == m_videoView || watched == m_fsView) {
-    if (event->type() == QEvent::KeyPress) {
-      if (handleViewerKey(static_cast<QKeyEvent*>(event))) {
-        return true;
-      }
-    } else if (event->type() == QEvent::MouseButtonDblClick) {
+    if (event->type() == QEvent::MouseButtonDblClick) {
       setVideoFullScreen(!isVideoFullScreen());
       return true;
     } else if (event->type() == QEvent::Close && watched == m_fsView) {

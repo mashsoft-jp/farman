@@ -249,13 +249,40 @@ QKeySequence ViewerKeyBindingManager::sequenceForEvent(const QKeyEvent* ke) {
   return QKeySequence(QKeyCombination(mods, static_cast<Qt::Key>(key)));
 }
 
+namespace {
+// view 自身、または子孫のうち applyShortcutBindings(QVariantMap) を持つ
+// ウィジェットを返す。media のようにプラグインの createViewer がラッパ
+// (MediaViewerWindow 等) を返し、実体ビュー (MediaView) がその子である場合に、
+// ラッパではなく実体へ push できるようにする。組込みビュアーは view 自身が
+// 該当メソッドを持つのでそのまま返る。
+QWidget* shortcutBindingReceiver(QWidget* view) {
+  if (!view) {
+    return nullptr;
+  }
+  if (view->metaObject()->indexOfMethod("applyShortcutBindings(QVariantMap)") >= 0) {
+    return view;
+  }
+  const QList<QWidget*> kids = view->findChildren<QWidget*>();
+  for (QWidget* c : kids) {
+    if (c->metaObject()->indexOfMethod("applyShortcutBindings(QVariantMap)") >= 0) {
+      return c;
+    }
+  }
+  return nullptr;
+}
+} // namespace
+
 void pushViewerShortcutBindings(QWidget* view, const QString& viewerId) {
-  if (!view || viewerId.isEmpty()) {
+  if (viewerId.isEmpty()) {
+    return;
+  }
+  QWidget* recv = shortcutBindingReceiver(view);
+  if (!recv) {
     return;
   }
   const QVariantMap map =
     ViewerKeyBindingManager::instance().bindingsMapForViewer(viewerId);
-  QMetaObject::invokeMethod(view, "applyShortcutBindings",
+  QMetaObject::invokeMethod(recv, "applyShortcutBindings",
                             Q_ARG(QVariantMap, map));
 }
 
