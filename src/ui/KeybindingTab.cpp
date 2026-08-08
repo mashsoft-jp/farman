@@ -6,6 +6,7 @@
 #include "keybinding/ViewerCommands.h"
 #include "keybinding/ViewerKeyBindingManager.h"
 #include "viewer/ViewerDispatcher.h"
+#include "viewer/IViewerPlugin.h"
 #include "settings/PresetIO.h"
 #include "utils/Dialogs.h"
 #include "utils/EnterClickFilter.h"
@@ -27,6 +28,28 @@
 #include <QSet>
 
 namespace Farman {
+
+namespace {
+// ビュアー節の見出し名を解決する。同梱ビュアーはカタログ (viewerCommandViewerName)
+// から。未知 (外部プラグイン) の viewerId は、その viewerId を公開しているプラグインの
+// 表示名 (pluginName) から解決する。見つからなければ viewerId をそのまま返す。
+QString viewerSectionName(const QString& viewerId) {
+  const QString bundled = viewerCommandViewerName(viewerId);
+  if (bundled != viewerId) {
+    return bundled;  // 同梱ビュアーの既知名
+  }
+  for (IViewerPlugin* p : ViewerDispatcher::instance().allPlugins()) {
+    if (!p) {
+      continue;
+    }
+    const QList<ViewerCommandDef> defs = p->shortcutCommands();
+    if (!defs.isEmpty() && defs.first().viewerId == viewerId) {
+      return p->pluginName();
+    }
+  }
+  return viewerId;
+}
+} // namespace
 
 KeybindingTab::KeybindingTab(QWidget* parent)
   : QWidget(parent)
@@ -354,7 +377,7 @@ void KeybindingTab::updateTable() {
       currentViewer = def.viewerId;
       const int hdrRow = m_table->rowCount();
       m_table->insertRow(hdrRow);
-      auto* hdr = new QTableWidgetItem(viewerCommandViewerName(def.viewerId));
+      auto* hdr = new QTableWidgetItem(viewerSectionName(def.viewerId));
       QFont f = hdr->font();
       f.setBold(true);
       hdr->setFont(f);

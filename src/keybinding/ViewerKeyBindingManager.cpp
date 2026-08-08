@@ -1,10 +1,12 @@
 #include "ViewerKeyBindingManager.h"
 #include "ViewerCommands.h"
 #include "viewer/IViewerPlugin.h"
+#include "viewer/ViewerDispatcher.h"
 
 #include <QMetaObject>
 #include <QVariant>
 #include <QWidget>
+#include <QSet>
 #include <QSettings>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -45,6 +47,32 @@ QJsonArray keysToJson(const QList<QKeySequence>& keys) {
   return arr;
 }
 
+// 同梱ビュアーの標準コマンド表 (viewerCommandDefs) に、ロード済み外部プラグインが
+// 取得 API (shortcutCommands) で公開するコマンドを重複なく足した「全ビュアーコマンド
+// 一覧」を返す。これにより外部プラグイン (3D モデルビュアー等) のショートカットも
+// 本体のキーバインド設定で編集・保存できる。同梱分は常に完全な標準表から取るので、
+// ビュアーの有効 / 無効に関係なく既定・保存が保たれる。
+QList<ViewerCommandDef> combinedViewerCommandDefs() {
+  QList<ViewerCommandDef> defs = viewerCommandDefs();
+  QSet<QString> seen;
+  for (const ViewerCommandDef& d : defs) {
+    seen.insert(d.commandId);
+  }
+  const QList<IViewerPlugin*> plugins = ViewerDispatcher::instance().allPlugins();
+  for (IViewerPlugin* p : plugins) {
+    if (!p) {
+      continue;
+    }
+    for (const ViewerCommandDef& d : p->shortcutCommands()) {
+      if (!seen.contains(d.commandId)) {
+        seen.insert(d.commandId);
+        defs.append(d);
+      }
+    }
+  }
+  return defs;
+}
+
 bool sameKeys(const QList<QKeySequence>& a, const QList<QKeySequence>& b) {
   if (a.size() != b.size()) {
     return false;
@@ -67,7 +95,7 @@ ViewerKeyBindingManager& ViewerKeyBindingManager::instance() {
 void ViewerKeyBindingManager::applyDefaults() {
   m_keys.clear();
   m_viewerOf.clear();
-  for (const ViewerCommandDef& def : viewerCommandDefs()) {
+  for (const ViewerCommandDef& def : combinedViewerCommandDefs()) {
     m_keys.insert(def.commandId, def.defaultKeys);
     m_viewerOf.insert(def.commandId, def.viewerId);
   }
@@ -127,7 +155,7 @@ void ViewerKeyBindingManager::loadFromSettings() {
 void ViewerKeyBindingManager::saveToSettings() {
   // 既定と異なるものだけ保存する（新バージョンの既定変更を反映しやすくするため）。
   QHash<QString, QList<QKeySequence>> defaults;
-  for (const ViewerCommandDef& def : viewerCommandDefs()) {
+  for (const ViewerCommandDef& def : combinedViewerCommandDefs()) {
     defaults.insert(def.commandId, def.defaultKeys);
   }
 
@@ -162,7 +190,7 @@ void ViewerKeyBindingManager::resetAllToDefaults() {
 
 void ViewerKeyBindingManager::resetViewerToDefaults(const QString& viewerId) {
   ensureLoaded();
-  for (const ViewerCommandDef& def : viewerCommandDefs()) {
+  for (const ViewerCommandDef& def : combinedViewerCommandDefs()) {
     if (def.viewerId == viewerId) {
       m_keys[def.commandId] = def.defaultKeys;
     }
