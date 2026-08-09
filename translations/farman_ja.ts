@@ -4519,8 +4519,8 @@ What would you like to do?</source>
         <translation>JSON ファイルからバインドを読み込む (既存を置き換え)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="982"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="987"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="995"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1000"/>
         <source>Apply Preset</source>
         <translation>プリセット適用</translation>
     </message>
@@ -4531,50 +4531,50 @@ Press OK in Settings to commit, or Cancel to revert.</source>
 Settings で OK を押すと確定、Cancel で元に戻せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1003"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1009"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1016"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1022"/>
         <source>Export Keybindings</source>
         <translation>キーバインドをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1017"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1021"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1032"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1041"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1047"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1030"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1034"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1045"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1054"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1060"/>
         <source>Import Keybindings</source>
         <translation>キーバインドをインポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1022"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1035"/>
         <source>Replace all current keybindings with those in this file?
 Press OK in Settings to commit, or Cancel to revert.</source>
         <translation>このファイルのキーバインドで現在の設定を全置換しますか?
 Settings で OK を押すと確定、Cancel で元に戻せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1033"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1046"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1042"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1055"/>
         <source>Invalid JSON: %1</source>
         <translation>JSON が不正です: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="929"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="942"/>
         <source>Wrong file type: expected &apos;farman.keybindings&apos;, got &apos;%1&apos;</source>
         <translation>ファイル種別が不正です。&apos;farman.keybindings&apos; が期待されますが &apos;%1&apos; でした</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="934"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="947"/>
         <source>Invalid preset: missing &apos;bindings&apos; array</source>
         <translation>プリセットが不正です: bindings 配列がありません</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="1005"/>
         <location filename="../src/ui/KeybindingTab.cpp" line="1018"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1031"/>
         <source>JSON Files (*.json)</source>
         <translation>JSON ファイル (*.json)</translation>
     </message>
@@ -4620,7 +4620,7 @@ Settings で OK を押すと確定、Cancel で元に戻せます。</translatio
     </message>
     <message>
         <location filename="../src/ui/KeybindingTab.cpp" line="207"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="605"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="618"/>
         <source>&lt;press a key&gt;</source>
         <translation>&lt;キーを押してください&gt;</translation>
     </message>
@@ -4686,7 +4686,7 @@ Settings で OK を押すと確定、Cancel で元に戻せます。</translatio
     <message>
         <location filename="../src/ui/KeybindingTab.cpp" line="364"/>
         <location filename="../src/ui/KeybindingTab.cpp" line="441"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="597"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="610"/>
         <source>(unbound)</source>
         <translation>(未割当)</translation>
     </message>
@@ -4696,36 +4696,36 @@ Settings で OK を押すと確定、Cancel で元に戻せます。</translatio
         <translation>ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="738"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="770"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="751"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="783"/>
         <source>Key Already Bound</source>
         <translation>キーが既に割り当て済み</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="739"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="771"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="752"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="784"/>
         <source>The key &apos;%1&apos; is already bound to &apos;%2&apos;.
 Do you want to rebind it to this command?</source>
         <translation>キー &apos;%1&apos; は既に &apos;%2&apos; に割り当てられています。
 このコマンドに割り当て直しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="787"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="800"/>
         <source>No Selection</source>
         <translation>未選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="788"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="801"/>
         <source>Please select a command to clear its binding.</source>
         <translation>解除するコマンドを選択してください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="815"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="828"/>
         <source>Reset to Defaults</source>
         <translation>デフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="816"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="829"/>
         <source>Are you sure you want to reset all keybindings to their default values?
 This will discard all custom keybindings.</source>
         <translation>すべてのキーバインドをデフォルトに戻しますか?
@@ -9077,17 +9077,17 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
     <name>ViewerCommands</name>
     <message>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="24"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="36"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="48"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="56"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="92"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="38"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="50"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="58"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="94"/>
         <source>Focus search field</source>
         <translation>検索欄へフォーカス</translation>
     </message>
     <message>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="26"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="38"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="103"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="40"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="105"/>
         <source>Focus encoding selector</source>
         <translation>エンコーディング選択へフォーカス</translation>
     </message>
@@ -9103,192 +9103,193 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
     </message>
     <message>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="32"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="44"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="52"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="46"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="54"/>
         <source>Toggle case-sensitive search</source>
         <translation>検索の大文字・小文字の区別を切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="40"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="42"/>
         <source>Focus delimiter selector</source>
         <translation>区切り文字選択へフォーカス</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="42"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="44"/>
         <source>Toggle first-row header</source>
         <translation>1 行目ヘッダ扱いを切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="50"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="52"/>
         <source>Toggle raw source view</source>
         <translation>ソース表示を切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="58"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="60"/>
         <source>Fit page width</source>
         <translation>幅にフィット</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="60"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="62"/>
         <source>Fit whole page</source>
         <translation>ページ全体にフィット</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="62"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="64"/>
         <source>Toggle continuous scrolling</source>
         <translation>連続スクロール表示を切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="64"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="85"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="133"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="66"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="87"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="135"/>
         <source>Zoom in</source>
         <translation>拡大</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="67"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="88"/>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="136"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="69"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="90"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="138"/>
         <source>Zoom out</source>
         <translation>縮小</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="69"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="71"/>
         <source>Previous page</source>
         <translation>前のページ</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="71"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="73"/>
         <source>Next page</source>
         <translation>次のページ</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="75"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="77"/>
         <source>Toggle fit to window</source>
         <translation>ウィンドウに合わせる切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="77"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="79"/>
         <source>Rotate 90° clockwise</source>
         <translation>時計回りに 90° 回転</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="79"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="81"/>
         <source>Toggle transparency background</source>
         <translation>透明部分の背景を切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="81"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="83"/>
         <source>Play / pause animation</source>
         <translation>アニメーションの再生/一時停止</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="83"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="85"/>
         <source>Show image information</source>
         <translation>画像情報を表示</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="94"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="96"/>
         <source>Find next</source>
         <translation>次を検索</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="96"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="98"/>
         <source>Find previous</source>
         <translation>前を検索</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="99"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="101"/>
         <source>Focus address field</source>
         <translation>アドレス欄へフォーカス</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="101"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="103"/>
         <source>Toggle endianness</source>
         <translation>エンディアンを切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="105"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="107"/>
         <source>Unit: 1 byte</source>
         <translation>単位: 1 バイト</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="107"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="109"/>
         <source>Unit: 2 bytes</source>
         <translation>単位: 2 バイト</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="109"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="111"/>
         <source>Unit: 4 bytes</source>
         <translation>単位: 4 バイト</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="111"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="113"/>
         <source>Unit: 8 bytes</source>
         <translation>単位: 8 バイト</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="113"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="34"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="115"/>
         <source>Copy selection</source>
         <translation>選択範囲をコピー</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="117"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="119"/>
         <source>Play / pause</source>
         <translation>再生 / 一時停止</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="119"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="121"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="121"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="123"/>
         <source>Seek backward</source>
         <translation>シーク（戻る）</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="123"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="125"/>
         <source>Seek forward</source>
         <translation>シーク（進む）</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="125"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="127"/>
         <source>Volume up</source>
         <translation>音量を上げる</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="127"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="129"/>
         <source>Volume down</source>
         <translation>音量を下げる</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="129"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="131"/>
         <source>Playback speed: slower</source>
         <translation>再生速度: 遅く</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="131"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="133"/>
         <source>Playback speed: faster</source>
         <translation>再生速度: 速く</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="138"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="140"/>
         <source>Toggle mute</source>
         <translation>ミュートを切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="140"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="142"/>
         <source>Toggle loop</source>
         <translation>ループを切り替え</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="142"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="144"/>
         <source>Show media information</source>
         <translation>メディア情報を表示</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="144"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="146"/>
         <source>Toggle full screen</source>
         <translation>全画面を切り替え</translation>
     </message>
@@ -9296,49 +9297,49 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
 <context>
     <name>ViewerNames</name>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="178"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="180"/>
         <location filename="../src/ui/ViewerPanel.cpp" line="248"/>
         <location filename="../plugins/official/text-viewer/TextViewerPlugin.h" line="19"/>
         <source>Text Viewer</source>
         <translation>テキストビュアー</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="190"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="192"/>
         <location filename="../src/ui/ViewerPanel.cpp" line="251"/>
         <location filename="../plugins/official/image-viewer/ImageViewerPlugin.h" line="19"/>
         <source>Image Viewer</source>
         <translation>画像ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="193"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="195"/>
         <location filename="../src/ui/ViewerPanel.cpp" line="254"/>
         <location filename="../plugins/official/binary-viewer/BinaryViewerPlugin.h" line="22"/>
         <source>Binary Viewer</source>
         <translation>バイナリビュアー</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="184"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="186"/>
         <location filename="../src/ui/ViewerPanel.cpp" line="257"/>
         <location filename="../plugins/official/markdown-viewer/MarkdownViewerPlugin.h" line="19"/>
         <source>Markdown Viewer</source>
         <translation>Markdown ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="187"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="189"/>
         <location filename="../src/ui/ViewerPanel.cpp" line="260"/>
         <location filename="../plugins/official/pdf-viewer/PdfViewerPlugin.h" line="19"/>
         <source>PDF Viewer</source>
         <translation>PDF ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="181"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="183"/>
         <location filename="../src/ui/ViewerPanel.cpp" line="263"/>
         <location filename="../plugins/official/csv-viewer/CsvViewerPlugin.h" line="19"/>
         <source>CSV/TSV Viewer</source>
         <translation>CSV/TSV ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/keybinding/ViewerCommands.cpp" line="196"/>
+        <location filename="../src/keybinding/ViewerCommands.cpp" line="198"/>
         <location filename="../src/ui/ViewerPanel.cpp" line="266"/>
         <location filename="../plugins/official/media-viewer/MediaViewerPlugin.h" line="19"/>
         <source>Media Viewer</source>

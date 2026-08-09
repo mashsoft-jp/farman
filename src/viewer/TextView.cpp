@@ -627,6 +627,16 @@ void TextView::dispatchViewerCommand(const QString& cmd) {
     if (m_wordWrapButton) m_wordWrapButton->toggle();
   } else if (cmd == QLatin1String("viewer.text.toggle_case")) {
     if (m_findCsButton) m_findCsButton->toggle();
+  } else if (cmd == QLatin1String("viewer.text.copy")) {
+    // コピーはフォーカスのあるウィジェットから行う (検索欄にフォーカスがある間は
+    // 検索文字列を、それ以外は本文の選択をコピー)。app 全体フィルタで捕捉するため
+    // 文脈に応じて対象を切り替える。
+    QWidget* fw = QApplication::focusWidget();
+    if (m_findEdit && fw == m_findEdit) {
+      m_findEdit->copy();
+    } else if (m_editArea) {
+      m_editArea->copy();
+    }
   }
 }
 
