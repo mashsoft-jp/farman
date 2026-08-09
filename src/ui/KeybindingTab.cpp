@@ -20,6 +20,8 @@
 #include <QFrame>
 #include <QShortcut>
 #include <QComboBox>
+#include <QLineEdit>
+#include <QVector>
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QJsonDocument>
@@ -30,6 +32,13 @@
 namespace Farman {
 
 namespace {
+// フィルタ処理で行の種別を見分けるためのロール。列0のアイテムに格納する。
+// コマンド行は UserRole に commandId を持つ (種別ロール無し = 既定 0 = RowCommand)。
+// 見出し行は commandId を持たないので、大見出しだけ RowMajorHeading を立てて、
+// カテゴリ / ビュアーの小見出し (commandId 無し・大見出しフラグ無し) と区別する。
+constexpr int kRowKindRole = Qt::UserRole + 1;
+enum RowKind { RowCommand = 0, RowMajorHeading = 2 };
+
 // ビュアー節の見出し名を解決する。同梱ビュアーはカタログ (viewerCommandViewerName)
 // から。未知 (外部プラグイン) の viewerId は、その viewerId を公開しているプラグインの
 // 表示名 (pluginName) から解決する。見つからなければ viewerId をそのまま返す。
@@ -108,6 +117,18 @@ void KeybindingTab::setupUi() {
   QLabel* tableInfoLabel = new QLabel(tr("Press Enter or double-click to change a keybinding."), this);
   tableInfoLabel->setWordWrap(true);
   mainLayout->addWidget(tableInfoLabel);
+
+  // ─── 絞り込み ───
+  // コマンド名 / 割り当てキー文字列で部分一致フィルタする。一覧が長いので、
+  // 目的のバインドを素早く見つけられるようにする。空にすると全表示に戻る。
+  QHBoxLayout* filterRow = new QHBoxLayout();
+  filterRow->addWidget(new QLabel(tr("Filter:"), this));
+  m_filterEdit = new QLineEdit(this);
+  m_filterEdit->setClearButtonEnabled(true);
+  m_filterEdit->setPlaceholderText(tr("Filter by command name or key (e.g. Copy, ⌘F)"));
+  connect(m_filterEdit, &QLineEdit::textChanged, this, &KeybindingTab::applyFilter);
+  filterRow->addWidget(m_filterEdit, 1);
+  mainLayout->addLayout(filterRow);
 
   // Table
   m_table = new QTableWidget(this);
@@ -281,6 +302,7 @@ void KeybindingTab::updateTable() {
     item->setForeground(palette().color(QPalette::HighlightedText));
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(Qt::ItemIsEnabled);  // 選択不可
+    item->setData(kRowKindRole, RowMajorHeading);  // フィルタ用: 大見出し
     m_table->setItem(row, 0, item);
     m_table->setSpan(row, 0, 1, 3);
   };
@@ -436,6 +458,83 @@ void KeybindingTab::updateTable() {
 
   m_table->setUpdatesEnabled(true);
   // Don't call resizeColumnsToContents() as we have fixed column sizes
+
+  // 行を作り直したので、現在の絞り込み条件を再適用する。
+  if (m_filterEdit) {
+    applyFilter(m_filterEdit->text());
+  }
+}
+
+void KeybindingTab::applyFilter(const QString& text) {
+  const QString q = text.trimmed();
+  const int rows = m_table->rowCount();
+  QVector<bool> visible(rows, false);
+
+  auto isHeadingRow = [this](int r) -> bool {
+    QTableWidgetItem* it = m_table->item(r, 0);
+    // 見出し行 (大見出し / 小見出し) は commandId を持たない。
+    return !it || it->data(Qt::UserRole).toString().isEmpty();
+  };
+  auto isMajorRow = [this](int r) -> bool {
+    QTableWidgetItem* it = m_table->item(r, 0);
+    return it && it->data(kRowKindRole).toInt() == RowMajorHeading;
+  };
+
+  // Pass 1: コマンド行の一致判定 (名前 / 現在キー / 新キーの部分一致)。
+  for (int r = 0; r < rows; ++r) {
+    if (isHeadingRow(r)) {
+      continue;
+    }
+    if (q.isEmpty()) {
+      visible[r] = true;
+      continue;
+    }
+    QString hay = m_table->item(r, 0)->text();
+    if (auto* c1 = m_table->item(r, 1)) { hay += QLatin1Char('\n'); hay += c1->text(); }
+    if (auto* c2 = m_table->item(r, 2)) { hay += QLatin1Char('\n'); hay += c2->text(); }
+    visible[r] = hay.contains(q, Qt::CaseInsensitive);
+  }
+
+  // Pass 2: 小見出し (カテゴリ / ビュアー) は、直後から次の見出しまでの間に
+  // 可視コマンドが1つでもあれば表示。
+  for (int r = 0; r < rows; ++r) {
+    if (!isHeadingRow(r) || isMajorRow(r)) {
+      continue;
+    }
+    bool any = false;
+    for (int k = r + 1; k < rows; ++k) {
+      if (isHeadingRow(k)) {
+        break;  // 次の見出し (小/大) に到達
+      }
+      if (visible[k]) {
+        any = true;
+        break;
+      }
+    }
+    visible[r] = any;
+  }
+
+  // Pass 3: 大見出し (本体 / ビュアー) は、次の大見出しまでに可視行があれば表示。
+  for (int r = 0; r < rows; ++r) {
+    if (!isMajorRow(r)) {
+      continue;
+    }
+    bool any = false;
+    for (int k = r + 1; k < rows; ++k) {
+      if (isMajorRow(k)) {
+        break;
+      }
+      if (visible[k]) {
+        any = true;
+        break;
+      }
+    }
+    visible[r] = any;
+  }
+
+  for (int r = 0; r < rows; ++r) {
+    m_table->setRowHidden(r, !visible[r]);
+  }
 }
 
 QString KeybindingTab::keySequenceToString(const QKeySequence& key) const {

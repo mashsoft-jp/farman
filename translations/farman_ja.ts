@@ -4480,7 +4480,7 @@ What would you like to do?</source>
 <context>
     <name>Farman::KeybindingTab</name>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="57"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="89"/>
         <source>Preset:</source>
         <translation>プリセット:</translation>
     </message>
@@ -4489,38 +4489,38 @@ What would you like to do?</source>
         <translation type="vanished">適用</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="60"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="92"/>
         <source>Selecting a preset previews it in the New Key column. Press OK to commit or Cancel to revert.</source>
         <translation>プリセットを選ぶと「New Key」列にプレビュー表示されます。OK で確定、Cancel で破棄します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="62"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="94"/>
         <source>(Choose a preset...)</source>
         <translation>(プリセットを選択...)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="71"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="103"/>
         <source>Export...</source>
         <translation>エクスポート...</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="72"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="104"/>
         <source>Save the current bindings to a JSON file</source>
         <translation>現在のバインドを JSON ファイルに保存する</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="76"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="108"/>
         <source>Import...</source>
         <translation>インポート...</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="77"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="109"/>
         <source>Load bindings from a JSON file (replaces existing)</source>
         <translation>JSON ファイルからバインドを読み込む (既存を置き換え)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="858"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="863"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="982"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="987"/>
         <source>Apply Preset</source>
         <translation>プリセット適用</translation>
     </message>
@@ -4531,191 +4531,201 @@ Press OK in Settings to commit, or Cancel to revert.</source>
 Settings で OK を押すと確定、Cancel で元に戻せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="879"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="885"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1003"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1009"/>
         <source>Export Keybindings</source>
         <translation>キーバインドをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="893"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="897"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="908"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="917"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="923"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1017"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1021"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1032"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1041"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1047"/>
         <source>Import Keybindings</source>
         <translation>キーバインドをインポート</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="898"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1022"/>
         <source>Replace all current keybindings with those in this file?
 Press OK in Settings to commit, or Cancel to revert.</source>
         <translation>このファイルのキーバインドで現在の設定を全置換しますか?
 Settings で OK を押すと確定、Cancel で元に戻せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="909"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1033"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="918"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1042"/>
         <source>Invalid JSON: %1</source>
         <translation>JSON が不正です: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="805"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="929"/>
         <source>Wrong file type: expected &apos;farman.keybindings&apos;, got &apos;%1&apos;</source>
         <translation>ファイル種別が不正です。&apos;farman.keybindings&apos; が期待されますが &apos;%1&apos; でした</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="810"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="934"/>
         <source>Invalid preset: missing &apos;bindings&apos; array</source>
         <translation>プリセットが不正です: bindings 配列がありません</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="881"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="894"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1005"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="1018"/>
         <source>JSON Files (*.json)</source>
         <translation>JSON ファイル (*.json)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="85"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="117"/>
         <source>Press Enter or double-click to change a keybinding.</source>
         <translation>Enter またはダブルクリックでキーバインドを変更します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="94"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="125"/>
+        <source>Filter:</source>
+        <translation>絞り込み:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeybindingTab.cpp" line="128"/>
+        <source>Filter by command name or key (e.g. Copy, ⌘F)</source>
+        <translation>コマンド名やキーで絞り込み (例: コピー, ⌘F)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeybindingTab.cpp" line="138"/>
         <source>Command</source>
         <translation>コマンド</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="94"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="138"/>
         <source>Current Key</source>
         <translation>現在のキー</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="94"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="138"/>
         <source>New Key</source>
         <translation>新しいキー</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="124"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="168"/>
         <source>Command:</source>
         <translation>コマンド:</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="153"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="197"/>
         <source>→</source>
         <translation>→</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="163"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="481"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="207"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="605"/>
         <source>&lt;press a key&gt;</source>
         <translation>&lt;キーを押してください&gt;</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="179"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="223"/>
         <source>Cancel (Cmd+C)</source>
         <translation>キャンセル (Cmd+C)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="180"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="183"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="224"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="227"/>
         <source>OK (Enter)</source>
         <translation>OK (Enter)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="182"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="226"/>
         <source>Cancel (Ctrl+C)</source>
         <translation>キャンセル (Ctrl+C)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="204"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="248"/>
         <source>Clear Binding (Cmd+D)</source>
         <translation>割り当てを解除 (Cmd+D)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="206"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="250"/>
         <source>Clear Binding (Ctrl+D)</source>
         <translation>割り当てを解除 (Ctrl+D)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="208"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="252"/>
         <source>Remove the keybinding for the selected command</source>
         <translation>選択したコマンドのキーバインドを解除</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="213"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="257"/>
         <source>Reset to Defaults (Cmd+R)</source>
         <translation>デフォルトに戻す (Cmd+R)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="215"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="259"/>
         <source>Reset to Defaults (Ctrl+R)</source>
         <translation>デフォルトに戻す (Ctrl+R)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="217"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="261"/>
         <source>Reset all keybindings to their default values</source>
         <translation>すべてのキーバインドをデフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="264"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="311"/>
         <source>Application</source>
         <translation>本体</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="305"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="321"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="382"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="398"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="352"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="368"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="429"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="445"/>
         <source> (and %1 more)</source>
         <translation> (他 %1 件)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="317"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="394"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="473"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="364"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="441"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="597"/>
         <source>(unbound)</source>
         <translation>(未割当)</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="347"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="394"/>
         <source>Viewers</source>
         <translation>ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="614"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="646"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="738"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="770"/>
         <source>Key Already Bound</source>
         <translation>キーが既に割り当て済み</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="615"/>
-        <location filename="../src/ui/KeybindingTab.cpp" line="647"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="739"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="771"/>
         <source>The key &apos;%1&apos; is already bound to &apos;%2&apos;.
 Do you want to rebind it to this command?</source>
         <translation>キー &apos;%1&apos; は既に &apos;%2&apos; に割り当てられています。
 このコマンドに割り当て直しますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="663"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="787"/>
         <source>No Selection</source>
         <translation>未選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="664"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="788"/>
         <source>Please select a command to clear its binding.</source>
         <translation>解除するコマンドを選択してください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="691"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="815"/>
         <source>Reset to Defaults</source>
         <translation>デフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../src/ui/KeybindingTab.cpp" line="692"/>
+        <location filename="../src/ui/KeybindingTab.cpp" line="816"/>
         <source>Are you sure you want to reset all keybindings to their default values?
 This will discard all custom keybindings.</source>
         <translation>すべてのキーバインドをデフォルトに戻しますか?
@@ -5894,7 +5904,7 @@ Reason: %1</source>
     <name>Farman::MediaView</name>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="213"/>
-        <location filename="../src/viewer/MediaView.cpp" line="684"/>
+        <location filename="../src/viewer/MediaView.cpp" line="692"/>
         <source>Play / Pause (Space)</source>
         <translation>再生 / 一時停止 (Space)</translation>
     </message>
@@ -5904,7 +5914,7 @@ Reason: %1</source>
     </message>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="263"/>
-        <location filename="../src/viewer/MediaView.cpp" line="736"/>
+        <location filename="../src/viewer/MediaView.cpp" line="744"/>
         <source>Loop playback (L)</source>
         <translation>ループ再生 (L)</translation>
     </message>
@@ -5914,7 +5924,7 @@ Reason: %1</source>
     </message>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="273"/>
-        <location filename="../src/viewer/MediaView.cpp" line="750"/>
+        <location filename="../src/viewer/MediaView.cpp" line="758"/>
         <source>Mute (M)</source>
         <translation>ミュート (M)</translation>
     </message>
@@ -5961,7 +5971,7 @@ The format or codec is not supported on this platform.</source>
 %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="636"/>
+        <location filename="../src/viewer/MediaView.cpp" line="644"/>
         <source>Full Screen</source>
         <translation>フルスクリーン</translation>
     </message>
@@ -5970,113 +5980,113 @@ The format or codec is not supported on this platform.</source>
         <translation type="vanished">ループ (L)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="916"/>
+        <location filename="../src/viewer/MediaView.cpp" line="924"/>
         <source>Media Information</source>
         <translation>メディア情報</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="954"/>
+        <location filename="../src/viewer/MediaView.cpp" line="962"/>
         <source>Album artist</source>
         <translation>アルバムアーティスト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="955"/>
+        <location filename="../src/viewer/MediaView.cpp" line="963"/>
         <source>Lead performer</source>
         <translation>主演者</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="957"/>
+        <location filename="../src/viewer/MediaView.cpp" line="965"/>
         <source>Track number</source>
         <translation>トラック番号</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="962"/>
+        <location filename="../src/viewer/MediaView.cpp" line="970"/>
         <source>Description</source>
         <translation>説明</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="964"/>
+        <location filename="../src/viewer/MediaView.cpp" line="972"/>
         <source>Author</source>
         <translation>作成者</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="965"/>
+        <location filename="../src/viewer/MediaView.cpp" line="973"/>
         <source>Publisher</source>
         <translation>発行元</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="966"/>
+        <location filename="../src/viewer/MediaView.cpp" line="974"/>
         <source>Language</source>
         <translation>言語</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="967"/>
+        <location filename="../src/viewer/MediaView.cpp" line="975"/>
         <source>URL</source>
         <translation>URL</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="968"/>
+        <location filename="../src/viewer/MediaView.cpp" line="976"/>
         <source>Orientation</source>
         <translation>向き</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="969"/>
+        <location filename="../src/viewer/MediaView.cpp" line="977"/>
         <source>Media type</source>
         <translation>メディア種別</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="992"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1000"/>
         <source>(embedded)</source>
         <translation>(埋め込み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1028"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1036"/>
         <source>File: %1</source>
         <translation>ファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1039"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1047"/>
         <source>Seekable</source>
         <translation>シーク可能</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1040"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1048"/>
         <source>Yes</source>
         <translation>はい</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1040"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1048"/>
         <source>No</source>
         <translation>いいえ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1047"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1055"/>
         <source>--- Metadata ---</source>
         <translation>--- メタデータ ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1061"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1069"/>
         <source>--- Audio track %1 ---</source>
         <translation>--- 音声トラック %1 ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1062"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1070"/>
         <source>--- Video track %1 ---</source>
         <translation>--- 映像トラック %1 ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1063"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1071"/>
         <source>--- Subtitle track %1 ---</source>
         <translation>--- 字幕トラック %1 ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="970"/>
+        <location filename="../src/viewer/MediaView.cpp" line="978"/>
         <source>Format</source>
         <translation>形式</translation>
     </message>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="221"/>
-        <location filename="../src/viewer/MediaView.cpp" line="696"/>
+        <location filename="../src/viewer/MediaView.cpp" line="704"/>
         <source>Stop (S)</source>
         <translation>停止 (S)</translation>
     </message>
@@ -6091,95 +6101,95 @@ The format or codec is not supported on this platform.</source>
         <translation>ズーム倍率（- / +）</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1032"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1040"/>
         <source>Type</source>
         <translation>種類</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1033"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1041"/>
         <source>Video</source>
         <translation>動画</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1033"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1041"/>
         <source>Audio</source>
         <translation>音声</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1036"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1044"/>
         <source>Duration</source>
         <translation>再生時間</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1029"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1037"/>
         <source>File size</source>
         <translation>ファイルサイズ</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="973"/>
+        <location filename="../src/viewer/MediaView.cpp" line="981"/>
         <source>Resolution</source>
         <translation>解像度</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="997"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1005"/>
         <source>%1 x %2 px</source>
         <translation>%1 x %2 px</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="971"/>
+        <location filename="../src/viewer/MediaView.cpp" line="979"/>
         <source>Video codec</source>
         <translation>映像コーデック</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="974"/>
+        <location filename="../src/viewer/MediaView.cpp" line="982"/>
         <source>Frame rate</source>
         <translation>フレームレート</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1003"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1011"/>
         <source>%1 fps</source>
         <translation>%1 fps</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="975"/>
+        <location filename="../src/viewer/MediaView.cpp" line="983"/>
         <source>Video bit rate</source>
         <translation>映像ビットレート</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="1009"/>
+        <location filename="../src/viewer/MediaView.cpp" line="1017"/>
         <source>%1 kbps</source>
         <translation>%1 kbps</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="972"/>
+        <location filename="../src/viewer/MediaView.cpp" line="980"/>
         <source>Audio codec</source>
         <translation>音声コーデック</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="976"/>
+        <location filename="../src/viewer/MediaView.cpp" line="984"/>
         <source>Audio bit rate</source>
         <translation>音声ビットレート</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="952"/>
+        <location filename="../src/viewer/MediaView.cpp" line="960"/>
         <source>Title</source>
         <translation>タイトル</translation>
     </message>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="235"/>
-        <location filename="../src/viewer/MediaView.cpp" line="703"/>
+        <location filename="../src/viewer/MediaView.cpp" line="711"/>
         <source>Seek (Left / Right, Shift for larger steps)</source>
         <translation>シーク (← / →、Shift で大きく移動)</translation>
     </message>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="243"/>
-        <location filename="../src/viewer/MediaView.cpp" line="724"/>
+        <location filename="../src/viewer/MediaView.cpp" line="732"/>
         <source>Elapsed / total time</source>
         <translation>経過時間 / 総再生時間</translation>
     </message>
     <message>
         <location filename="../src/viewer/MediaView.cpp" line="287"/>
-        <location filename="../src/viewer/MediaView.cpp" line="768"/>
+        <location filename="../src/viewer/MediaView.cpp" line="776"/>
         <source>Volume (Up / Down)</source>
         <translation>音量 (↑ / ↓)</translation>
     </message>
@@ -6188,37 +6198,37 @@ The format or codec is not supported on this platform.</source>
         <translation type="vanished">ズーム倍率</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="953"/>
+        <location filename="../src/viewer/MediaView.cpp" line="961"/>
         <source>Artist</source>
         <translation>アーティスト</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="956"/>
+        <location filename="../src/viewer/MediaView.cpp" line="964"/>
         <source>Album</source>
         <translation>アルバム</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="958"/>
+        <location filename="../src/viewer/MediaView.cpp" line="966"/>
         <source>Genre</source>
         <translation>ジャンル</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="959"/>
+        <location filename="../src/viewer/MediaView.cpp" line="967"/>
         <source>Date</source>
         <translation>日付</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="960"/>
+        <location filename="../src/viewer/MediaView.cpp" line="968"/>
         <source>Composer</source>
         <translation>作曲者</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="961"/>
+        <location filename="../src/viewer/MediaView.cpp" line="969"/>
         <source>Comment</source>
         <translation>コメント</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MediaView.cpp" line="963"/>
+        <location filename="../src/viewer/MediaView.cpp" line="971"/>
         <source>Copyright</source>
         <translation>著作権</translation>
     </message>

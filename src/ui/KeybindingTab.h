@@ -14,6 +14,7 @@ class QFrame;
 class QLabel;
 class QShortcut;
 class QComboBox;
+class QLineEdit;
 
 namespace Farman {
 
@@ -49,6 +50,9 @@ private:
   void setupUi();
   void loadKeybindings();
   void updateTable();
+  // 一覧の絞り込み。コマンド名 / 割り当てキー文字列の部分一致 (大小無視)。
+  // 非一致のコマンド行と、配下に可視行が無い見出し行を隠す。空文字で全表示。
+  void applyFilter(const QString& text);
   QString keySequenceToString(const QKeySequence& key) const;
   bool validateBinding(const QKeySequence& newKey, const QString& commandId);
   void startRecording(int row);
@@ -65,6 +69,7 @@ private:
   // ── プリセット / インポート / エクスポート ─────
   // プリセット選択はコンボの currentIndexChanged で即時プレビュー反映するので
   // Apply ボタンは存在しない。Export / Import は明示クリック必須。
+  QLineEdit*    m_filterEdit   = nullptr;
   QComboBox*    m_presetCombo  = nullptr;
   QPushButton*  m_exportButton = nullptr;
   QPushButton*  m_importButton = nullptr;
