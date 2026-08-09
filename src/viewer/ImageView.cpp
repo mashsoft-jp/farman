@@ -2,6 +2,7 @@
 #include "PsdReader.h"
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
+#include "viewer/ViewerHints.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/ExifReader.h"
 
@@ -258,8 +259,7 @@ void ImageView::setupUi() {
   m_fitButton = new QToolButton(m_toolbar);
   m_fitButton->setCheckable(true);
   m_fitButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-to-window.svg")));
-  m_fitButton->setToolTip(
-    tr("Fit to Window (%1)").arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.toggle_fit"))));
+  ViewerHints::tag(m_fitButton, QStringLiteral("viewer.image.toggle_fit"), tr("Fit to Window (%1)"));
   m_fitButton->setFocusPolicy(Qt::StrongFocus);
   m_fitButtonAction = m_toolbar->addWidget(m_fitButton);
 
@@ -267,9 +267,8 @@ void ImageView::setupUi() {
   m_animButton = new QToolButton(m_toolbar);
   m_animButton->setCheckable(true);
   m_animButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/play.svg")));
-  m_animButton->setToolTip(
-    tr("Play / Pause animation (GIF / WebP) (%1)")
-      .arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.toggle_animation"))));
+  ViewerHints::tag(m_animButton, QStringLiteral("viewer.image.toggle_animation"),
+    tr("Play / Pause animation (GIF / WebP) (%1)"));
   m_animButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_animButton);
 
@@ -277,9 +276,8 @@ void ImageView::setupUi() {
   m_transparencyButton = new QToolButton(m_toolbar);
   m_transparencyButton->setCheckable(true);
   m_transparencyButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/transparency.svg")));
-  m_transparencyButton->setToolTip(
-    tr("Transparency background: off = checker, on = solid color (%1)")
-      .arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.toggle_transparency"))));
+  ViewerHints::tag(m_transparencyButton, QStringLiteral("viewer.image.toggle_transparency"),
+    tr("Transparency background: off = checker, on = solid color (%1)"));
   m_transparencyButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_transparencyButton);
 
@@ -287,9 +285,8 @@ void ImageView::setupUi() {
   // 連打すると 0 → 90 → 180 → 270 → 0 と進む。ファイル切替で 0 にリセット。
   m_rotateCwButton = new QToolButton(m_toolbar);
   m_rotateCwButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/rotate-cw.svg")));
-  m_rotateCwButton->setToolTip(
-    tr("Rotate 90° clockwise (display only) (%1)")
-      .arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.rotate"))));
+  ViewerHints::tag(m_rotateCwButton, QStringLiteral("viewer.image.rotate"),
+    tr("Rotate 90° clockwise (display only) (%1)"));
   m_rotateCwButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_rotateCwButton, &QToolButton::clicked,
           this,             &ImageView::rotateCw90);
@@ -309,9 +306,8 @@ void ImageView::setupUi() {
   infoFont.setItalic(true);
   infoFont.setBold(true);
   m_infoButton->setFont(infoFont);
-  m_infoButton->setToolTip(
-    tr("Show image information / metadata (%1)")
-      .arg(viewerCommandDefaultKeyText(QStringLiteral("viewer.image.info"))));
+  ViewerHints::tag(m_infoButton, QStringLiteral("viewer.image.info"),
+    tr("Show image information / metadata (%1)"));
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_infoButton, &QToolButton::clicked,
           this,         &ImageView::toggleImageInfoDialog);
@@ -697,6 +693,7 @@ void ImageView::keyPressEvent(QKeyEvent* event) {
 
 void ImageView::applyShortcutBindings(const QVariantMap& bindings) {
   m_shortcuts.applyBindings(bindings);
+  ViewerHints::refresh(this, m_shortcuts);
 }
 
 bool ImageView::handleViewerKey(QKeyEvent* event) {

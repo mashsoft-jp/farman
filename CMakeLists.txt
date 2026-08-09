@@ -218,6 +218,7 @@ qt_add_executable(farman
   src/keybinding/ViewerCommands.cpp
   src/keybinding/ViewerKeyBindingManager.cpp
   src/viewer/ViewerShortcutMap.cpp
+  src/viewer/ViewerHints.cpp
   src/keybinding/commands/BaseCommand.cpp
   src/keybinding/commands/NavigationCommands.cpp
   src/keybinding/commands/SelectionCommands.cpp
@@ -369,6 +370,7 @@ set(FARMAN_PLUGIN_COMMON_SOURCES
   # 本体から push された割当を保持するローカルホルダ（ビュアーのディスパッチで使う）。
   src/keybinding/ViewerCommands.cpp
   src/viewer/ViewerShortcutMap.cpp
+  src/viewer/ViewerHints.cpp
 )
 
 function(add_farman_official_viewer_plugin target plugin_dir)

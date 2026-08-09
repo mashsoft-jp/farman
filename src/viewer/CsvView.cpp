@@ -2,6 +2,7 @@
 
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
+#include "viewer/ViewerHints.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
@@ -422,18 +423,10 @@ void CsvView::setupUi() {
   m_toolbar->setIconSize(QSize(20, 20));
   applyToolbarStyle(m_toolbar);
 
-  // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
-  // ラベルには併記せず、ツールチップの中で案内する。
-  const QString findScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.find_focus"));
-  const QString encScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.encoding_focus"));
-  const QString delScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.delimiter_focus"));
-  const QString headerScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.toggle_header"));
-  const QString caseScut   = viewerCommandDefaultKeyText(QStringLiteral("viewer.csv.toggle_case"));
-
   // ── エンコーディング ──
   auto* encodingLabel = new QLabel(tr("Encoding:"), m_toolbar);
-  encodingLabel->setToolTip(
-    tr("Character encoding used to decode this file (%1)").arg(encScut));
+  ViewerHints::tag(encodingLabel, QStringLiteral("viewer.csv.encoding_focus"),
+                   tr("Character encoding used to decode this file (%1)"));
   m_toolbar->addWidget(encodingLabel);
   m_encodingCombo = new QComboBox(m_toolbar);
   m_encodingCombo->addItem(QStringLiteral("Auto"));
@@ -444,16 +437,16 @@ void CsvView::setupUi() {
   m_encodingCombo->addItem(QStringLiteral("EUC-JP"));
   m_encodingCombo->addItem(QStringLiteral("ISO-8859-1"));
   m_encodingCombo->setFocusPolicy(Qt::StrongFocus);
-  m_encodingCombo->setToolTip(
-    tr("Character encoding used to decode this file (%1)").arg(encScut));
+  ViewerHints::tag(m_encodingCombo, QStringLiteral("viewer.csv.encoding_focus"),
+                   tr("Character encoding used to decode this file (%1)"));
   m_toolbar->addWidget(m_encodingCombo);
 
   m_toolbar->addSeparator();
 
   // ── 区切り文字 ──
   auto* delimiterLabel = new QLabel(tr("Delimiter:"), m_toolbar);
-  delimiterLabel->setToolTip(
-    tr("Character used to separate columns (%1)").arg(delScut));
+  ViewerHints::tag(delimiterLabel, QStringLiteral("viewer.csv.delimiter_focus"),
+                   tr("Character used to separate columns (%1)"));
   m_toolbar->addWidget(delimiterLabel);
   m_delimiterCombo = new QComboBox(m_toolbar);
   m_delimiterCombo->addItem(tr("Auto"),       int(Delimiter::Auto));
@@ -461,8 +454,8 @@ void CsvView::setupUi() {
   m_delimiterCombo->addItem(tr("Tab (\\t)"),  int(Delimiter::Tab));
   m_delimiterCombo->addItem(tr("Semicolon (;)"), int(Delimiter::Semicolon));
   m_delimiterCombo->setFocusPolicy(Qt::StrongFocus);
-  m_delimiterCombo->setToolTip(
-    tr("Character used to separate columns (%1)").arg(delScut));
+  ViewerHints::tag(m_delimiterCombo, QStringLiteral("viewer.csv.delimiter_focus"),
+                   tr("Character used to separate columns (%1)"));
   m_toolbar->addWidget(m_delimiterCombo);
 
   m_toolbar->addSeparator();
@@ -472,8 +465,8 @@ void CsvView::setupUi() {
   m_headerToggle->setText(tr("First row = header"));
   m_headerToggle->setCheckable(true);
   m_headerToggle->setChecked(true);
-  m_headerToggle->setToolTip(
-    tr("Treat the first row as column headers (%1)").arg(headerScut));
+  ViewerHints::tag(m_headerToggle, QStringLiteral("viewer.csv.toggle_header"),
+                   tr("Treat the first row as column headers (%1)"));
   m_headerToggle->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_headerToggle);
 
@@ -481,12 +474,15 @@ void CsvView::setupUi() {
 
   // ── 検索 (TextView / PdfView / MarkdownView と同じレイアウト) ──
   auto* findLabel = new QLabel(tr("Find:"), m_toolbar);
-  findLabel->setToolTip(tr("Search text in this CSV (%1)").arg(findScut));
+  ViewerHints::tag(findLabel, QStringLiteral("viewer.csv.find_focus"),
+                   tr("Search text in this CSV (%1)"));
   m_toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(m_toolbar);
-  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findScut));
-  m_findEdit->setToolTip(tr("Search text in this CSV (%1)").arg(findScut));
+  ViewerHints::tag(m_findEdit, QStringLiteral("viewer.csv.find_focus"),
+                   tr("Search text  (%1)"), /*placeholder=*/true);
+  ViewerHints::tag(m_findEdit, QStringLiteral("viewer.csv.find_focus"),
+                   tr("Search text in this CSV (%1)"));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(160);
@@ -511,8 +507,8 @@ void CsvView::setupUi() {
   m_findCsButton = new QToolButton(m_toolbar);
   m_findCsButton->setCheckable(true);
   m_findCsButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/case-sensitive.svg")));
-  m_findCsButton->setToolTip(
-    tr("Toggle case-sensitive search (%1)").arg(caseScut));
+  ViewerHints::tag(m_findCsButton, QStringLiteral("viewer.csv.toggle_case"),
+                   tr("Toggle case-sensitive search (%1)"));
   m_findCsButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_findCsButton, &QToolButton::toggled, this, [this](bool) {
     runSearchAndJump();
@@ -901,6 +897,7 @@ bool CsvView::eventFilter(QObject* watched, QEvent* event) {
 
 void CsvView::applyShortcutBindings(const QVariantMap& bindings) {
   m_shortcuts.applyBindings(bindings);
+  ViewerHints::refresh(this, m_shortcuts);
 }
 
 void CsvView::dispatchViewerCommand(const QString& cmd) {

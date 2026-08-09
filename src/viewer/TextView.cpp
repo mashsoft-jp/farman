@@ -1,6 +1,7 @@
 #include "TextView.h"
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
+#include "viewer/ViewerHints.h"
 #include "keybinding/ViewerCommands.h"
 
 #include <QToolBar>
@@ -181,22 +182,15 @@ void TextView::setupUi() {
   // フォーカス枠 + checkable の押下状態 + ホバー。共通スタイル。
   applyToolbarStyle(toolbar);
 
-  // 各ショートカットのネイティブ表記。設定で再割り当て可能なので、現在の
-  // 既定キー (ViewerCommands) を取得してツールチップに載せる。
-  const QString findScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.find_focus"));
-  const QString encScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.encoding_focus"));
-  const QString lineScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.toggle_line_numbers"));
-  const QString wrapScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.toggle_word_wrap"));
-  const QString caseScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.text.toggle_case"));
-
+  // ショートカット表記は現在の割り当てに追随させる (ViewerHints)。tag しておくと
+  // applyShortcutBindings → refresh で再割り当て時に自動更新される。
   QLabel* encodingLabel = new QLabel(tr("Encoding:"), toolbar);
-  encodingLabel->setToolTip(
-    tr("Character encoding used to decode this file (%1)").arg(encScut));
+  ViewerHints::tag(encodingLabel, QStringLiteral("viewer.text.encoding_focus"),
+    tr("Character encoding used to decode this file (%1)"));
   toolbar->addWidget(encodingLabel);
   m_encodingCombo = new QComboBox(toolbar);
-  m_encodingCombo->setToolTip(
-    tr("Character encoding used to decode this file, Auto detects automatically (%1)")
-      .arg(encScut));
+  ViewerHints::tag(m_encodingCombo, QStringLiteral("viewer.text.encoding_focus"),
+    tr("Character encoding used to decode this file, Auto detects automatically (%1)"));
   // 自由入力できても認識されない名前は意味が無く、誤入力で読み込み失敗する
   // だけなので、選択リストからの固定候補に限定する。
   m_encodingCombo->addItem(QStringLiteral("Auto"));
@@ -214,16 +208,16 @@ void TextView::setupUi() {
   m_lineNumbersButton = new QToolButton(toolbar);
   m_lineNumbersButton->setCheckable(true);
   m_lineNumbersButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/line-numbers.svg")));
-  m_lineNumbersButton->setToolTip(
-    tr("Toggle line numbers in the left margin (%1)").arg(lineScut));
+  ViewerHints::tag(m_lineNumbersButton, QStringLiteral("viewer.text.toggle_line_numbers"),
+    tr("Toggle line numbers in the left margin (%1)"));
   m_lineNumbersButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_lineNumbersButton);
 
   m_wordWrapButton = new QToolButton(toolbar);
   m_wordWrapButton->setCheckable(true);
   m_wordWrapButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/word-wrap.svg")));
-  m_wordWrapButton->setToolTip(
-    tr("Toggle word wrap for long lines (%1)").arg(wrapScut));
+  ViewerHints::tag(m_wordWrapButton, QStringLiteral("viewer.text.toggle_word_wrap"),
+    tr("Toggle word wrap for long lines (%1)"));
   m_wordWrapButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_wordWrapButton);
 
@@ -231,16 +225,15 @@ void TextView::setupUi() {
   toolbar->addSeparator();
 
   QLabel* findLabel = new QLabel(tr("Find:"), toolbar);
-  findLabel->setToolTip(
-    tr("Find text (%1 to focus, Enter=next, Shift+Enter=prev, Esc=back)")
-      .arg(findScut));
+  ViewerHints::tag(findLabel, QStringLiteral("viewer.text.find_focus"),
+    tr("Find text (%1 to focus, Enter=next, Shift+Enter=prev, Esc=back)"));
   toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(toolbar);
-  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findScut));
-  m_findEdit->setToolTip(
-    tr("Find text (%1 to focus, Enter=next, Shift+Enter=prev, Esc=back)")
-      .arg(findScut));
+  ViewerHints::tag(m_findEdit, QStringLiteral("viewer.text.find_focus"),
+    tr("Search text  (%1)"), /*placeholder=*/true);
+  ViewerHints::tag(m_findEdit, QStringLiteral("viewer.text.find_focus"),
+    tr("Find text (%1 to focus, Enter=next, Shift+Enter=prev, Esc=back)"));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(180);
@@ -254,8 +247,8 @@ void TextView::setupUi() {
   m_findCsButton = new QToolButton(toolbar);
   m_findCsButton->setCheckable(true);
   m_findCsButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/case-sensitive.svg")));
-  m_findCsButton->setToolTip(
-    tr("Toggle case-sensitive search (%1)").arg(caseScut));
+  ViewerHints::tag(m_findCsButton, QStringLiteral("viewer.text.toggle_case"),
+    tr("Toggle case-sensitive search (%1)"));
   m_findCsButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_findCsButton);
 
@@ -614,6 +607,7 @@ bool TextView::eventFilter(QObject* watched, QEvent* event) {
 
 void TextView::applyShortcutBindings(const QVariantMap& bindings) {
   m_shortcuts.applyBindings(bindings);
+  ViewerHints::refresh(this, m_shortcuts);  // ツールチップ / プレースホルダを追随
 }
 
 void TextView::dispatchViewerCommand(const QString& cmd) {

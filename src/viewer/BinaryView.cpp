@@ -1,6 +1,7 @@
 #include "BinaryView.h"
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
+#include "viewer/ViewerHints.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
@@ -936,10 +937,6 @@ void BinaryView::setupUi() {
     scUnit.chop(1);
     scUnit += QStringLiteral("1-4");
   }
-  const QString scEndian = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.toggle_endian"));
-  const QString scEnc    = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.encoding_focus"));
-  const QString scAddr   = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.address_focus"));
-  const QString scFind   = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.find_focus"));
 
   toolbar->addWidget(new QLabel(tr("Unit:"), toolbar));
   m_unitCombo = new QComboBox(toolbar);
@@ -957,15 +954,15 @@ void BinaryView::setupUi() {
   m_endianCombo->addItem(tr("Little"), static_cast<int>(BinaryViewerEndian::Little));
   m_endianCombo->addItem(tr("Big"),    static_cast<int>(BinaryViewerEndian::Big));
   m_endianCombo->setFocusPolicy(Qt::StrongFocus);
-  m_endianCombo->setToolTip(
-    tr("Byte order for multi-byte groups (%1)").arg(scEndian));
+  ViewerHints::tag(m_endianCombo, QStringLiteral("viewer.binary.toggle_endian"),
+    tr("Byte order for multi-byte groups (%1)"));
   toolbar->addWidget(m_endianCombo);
 
   toolbar->addWidget(new QLabel(tr("Encoding:"), toolbar));
   m_encodingCombo = new QComboBox(toolbar);
   m_encodingCombo->setFocusPolicy(Qt::StrongFocus);
-  m_encodingCombo->setToolTip(
-    tr("Text encoding of the character column (%1)").arg(scEnc));
+  ViewerHints::tag(m_encodingCombo, QStringLiteral("viewer.binary.encoding_focus"),
+    tr("Text encoding of the character column (%1)"));
   rebuildEncodingItems();
   toolbar->addWidget(m_encodingCombo);
 
@@ -976,8 +973,8 @@ void BinaryView::setupUi() {
   m_addressEdit->setPlaceholderText(tr("hex e.g. 1a0"));
   m_addressEdit->setMaximumWidth(120);
   m_addressEdit->setFocusPolicy(Qt::StrongFocus);
-  m_addressEdit->setToolTip(
-    tr("Jump to hex address (%1 to focus, Enter to jump)").arg(scAddr));
+  ViewerHints::tag(m_addressEdit, QStringLiteral("viewer.binary.address_focus"),
+    tr("Jump to hex address (%1 to focus, Enter to jump)"));
   // 16 進数字のみ、かつ指定可能なアドレス上限 (m_maxAddress) を超える入力を弾く。
   m_addressEdit->setValidator(new HexAddressValidator(&m_maxAddress, m_addressEdit));
   toolbar->addWidget(m_addressEdit);
@@ -1024,17 +1021,17 @@ void BinaryView::setupUi() {
   m_searchEdit->setFocusPolicy(Qt::StrongFocus);
   searchBar->addWidget(m_searchEdit);
 
-  m_searchEdit->setToolTip(
-    tr("Text to find (%1 to focus, Enter=next, Shift+Enter=prev)").arg(scFind));
+  ViewerHints::tag(m_searchEdit, QStringLiteral("viewer.binary.find_focus"),
+    tr("Text to find (%1 to focus, Enter=next, Shift+Enter=prev)"));
   // ボタンのラベルにはショートカットを併記せず、ツールチップで案内する。
-  const QString nextSc = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.find_next"));
-  const QString prevSc = viewerCommandDefaultKeyText(QStringLiteral("viewer.binary.find_prev"));
   QPushButton* findPrevBtn = new QPushButton(tr("Prev"), searchBar);
   QPushButton* findNextBtn = new QPushButton(tr("Next"), searchBar);
   findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   findNextBtn->setFocusPolicy(Qt::StrongFocus);
-  findPrevBtn->setToolTip(tr("Find previous match (Shift+Enter, %1)").arg(prevSc));
-  findNextBtn->setToolTip(tr("Find next match (Enter, %1)").arg(nextSc));
+  ViewerHints::tag(findPrevBtn, QStringLiteral("viewer.binary.find_prev"),
+    tr("Find previous match (Shift+Enter, %1)"));
+  ViewerHints::tag(findNextBtn, QStringLiteral("viewer.binary.find_next"),
+    tr("Find next match (Enter, %1)"));
   searchBar->addWidget(findPrevBtn);
   searchBar->addWidget(findNextBtn);
 
@@ -1097,6 +1094,7 @@ void BinaryView::setupUi() {
 
 void BinaryView::applyShortcutBindings(const QVariantMap& bindings) {
   m_shortcuts.applyBindings(bindings);
+  ViewerHints::refresh(this, m_shortcuts);
 }
 
 void BinaryView::dispatchViewerCommand(const QString& cmd) {

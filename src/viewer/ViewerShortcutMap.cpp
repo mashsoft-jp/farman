@@ -7,6 +7,7 @@ namespace Farman {
 
 void ViewerShortcutMap::applyBindings(const QVariantMap& bindings) {
   m_reverse.clear();
+  m_forward.clear();
   for (auto it = bindings.constBegin(); it != bindings.constEnd(); ++it) {
     const QString commandId = it.key();
     const QStringList keys = it.value().toStringList();
@@ -19,12 +20,23 @@ void ViewerShortcutMap::applyBindings(const QVariantMap& bindings) {
       if (seq.isEmpty()) {
         continue;
       }
-      // 同一キーの重複は先勝ち（本体 UI 側で競合を検出して防ぐ）。
+      // 逆引き (照合用): 同一キーの重複は先勝ち（本体 UI 側で競合を検出して防ぐ）。
       if (!m_reverse.contains(seq)) {
         m_reverse.insert(seq, commandId);
       }
+      // 正引き (hints 用): commandId ごとに割り当て順で保持。
+      m_forward[commandId].append(seq);
     }
   }
+}
+
+QString ViewerShortcutMap::primaryKeyText(const QString& commandId,
+                                          QKeySequence::SequenceFormat format) const {
+  const auto it = m_forward.constFind(commandId);
+  if (it == m_forward.constEnd() || it.value().isEmpty()) {
+    return QString();
+  }
+  return it.value().first().toString(format);
 }
 
 QString ViewerShortcutMap::commandForSeq(const QKeySequence& seq) const {

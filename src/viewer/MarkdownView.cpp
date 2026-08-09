@@ -2,6 +2,7 @@
 
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
+#include "viewer/ViewerHints.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
@@ -82,18 +83,12 @@ void MarkdownView::setupUi() {
   // 設定するので slot は走らない。実描画は loadFile → renderCurrent が行う。
   m_rawSource = Settings::instance().markdownViewerShowSource();
 
-  // 各ショートカットのネイティブ表記 (macOS: ⌘ / その他: Ctrl+ 等)。
-  // ラベルには併記せず、ツールチップの中で案内する。
-  const QString findScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.markdown.find_focus"));
-  const QString srcScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.markdown.toggle_source"));
-  const QString caseScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.markdown.toggle_case"));
-
   m_rawSourceButton = new QToolButton(m_toolbar);
   m_rawSourceButton->setText(tr("Source"));
   m_rawSourceButton->setCheckable(true);
   m_rawSourceButton->setChecked(m_rawSource);
-  m_rawSourceButton->setToolTip(
-    tr("Show raw Markdown source instead of rendered HTML (%1)").arg(srcScut));
+  ViewerHints::tag(m_rawSourceButton, QStringLiteral("viewer.markdown.toggle_source"),
+                   tr("Show raw Markdown source instead of rendered HTML (%1)"));
   m_rawSourceButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_rawSourceButton, &QToolButton::toggled,
           this,              &MarkdownView::onToggleRawSource);
@@ -103,12 +98,15 @@ void MarkdownView::setupUi() {
 
   // ───── 検索 (TextView と同じレイアウト) ─────
   auto* findLabel = new QLabel(tr("Find:"), m_toolbar);
-  findLabel->setToolTip(tr("Search text in this Markdown (%1)").arg(findScut));
+  ViewerHints::tag(findLabel, QStringLiteral("viewer.markdown.find_focus"),
+                   tr("Search text in this Markdown (%1)"));
   m_toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(m_toolbar);
-  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findScut));
-  m_findEdit->setToolTip(tr("Search text in this Markdown (%1)").arg(findScut));
+  ViewerHints::tag(m_findEdit, QStringLiteral("viewer.markdown.find_focus"),
+                   tr("Search text  (%1)"), /*placeholder=*/true);
+  ViewerHints::tag(m_findEdit, QStringLiteral("viewer.markdown.find_focus"),
+                   tr("Search text in this Markdown (%1)"));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(160);
@@ -136,8 +134,8 @@ void MarkdownView::setupUi() {
   m_findCsButton = new QToolButton(m_toolbar);
   m_findCsButton->setCheckable(true);
   m_findCsButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/case-sensitive.svg")));
-  m_findCsButton->setToolTip(
-    tr("Toggle case-sensitive search (%1)").arg(caseScut));
+  ViewerHints::tag(m_findCsButton, QStringLiteral("viewer.markdown.toggle_case"),
+                   tr("Toggle case-sensitive search (%1)"));
   m_findCsButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_findCsButton);
 
@@ -498,6 +496,7 @@ bool MarkdownView::eventFilter(QObject* watched, QEvent* event) {
 
 void MarkdownView::applyShortcutBindings(const QVariantMap& bindings) {
   m_shortcuts.applyBindings(bindings);
+  ViewerHints::refresh(this, m_shortcuts);
 }
 
 void MarkdownView::dispatchViewerCommand(const QString& cmd) {

@@ -2,6 +2,7 @@
 
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
+#include "viewer/ViewerHints.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
@@ -135,12 +136,6 @@ void PdfView::setupUi() {
 
   m_toolbar->addSeparator();
 
-  // 各ショートカットのネイティブ表記。設定で再割り当て可能なので現在の割当から取る。
-  const QString findScut      = viewerCommandDefaultKeyText(QStringLiteral("viewer.pdf.find_focus"));
-  const QString fitWidthScut  = viewerCommandDefaultKeyText(QStringLiteral("viewer.pdf.fit_width"));
-  const QString fitPageScut   = viewerCommandDefaultKeyText(QStringLiteral("viewer.pdf.fit_page"));
-  const QString continuousScut = viewerCommandDefaultKeyText(QStringLiteral("viewer.pdf.toggle_continuous"));
-
   // ───── ズーム ─────
   m_zoomOutButton = new QToolButton(m_toolbar);
   m_zoomOutButton->setText(QStringLiteral("−"));
@@ -159,8 +154,8 @@ void PdfView::setupUi() {
   m_fitWidthButton = new QToolButton(m_toolbar);
   m_fitWidthButton->setText(tr("Fit Width"));
   m_fitWidthButton->setCheckable(true);
-  m_fitWidthButton->setToolTip(
-    tr("Fit page width to view (%1)").arg(fitWidthScut));
+  ViewerHints::tag(m_fitWidthButton, QStringLiteral("viewer.pdf.fit_width"),
+    tr("Fit page width to view (%1)"));
   m_fitWidthButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_fitWidthButton, &QToolButton::toggled, this, &PdfView::onFitWidth);
   m_toolbar->addWidget(m_fitWidthButton);
@@ -168,8 +163,8 @@ void PdfView::setupUi() {
   m_fitPageButton = new QToolButton(m_toolbar);
   m_fitPageButton->setText(tr("Fit Page"));
   m_fitPageButton->setCheckable(true);
-  m_fitPageButton->setToolTip(
-    tr("Fit whole page in view (%1)").arg(fitPageScut));
+  ViewerHints::tag(m_fitPageButton, QStringLiteral("viewer.pdf.fit_page"),
+    tr("Fit whole page in view (%1)"));
   m_fitPageButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_fitPageButton, &QToolButton::toggled, this, &PdfView::onFitPage);
   m_toolbar->addWidget(m_fitPageButton);
@@ -181,9 +176,8 @@ void PdfView::setupUi() {
   m_continuousButton->setText(tr("Continuous"));
   m_continuousButton->setCheckable(true);
   m_continuousButton->setChecked(true);
-  m_continuousButton->setToolTip(
-    tr("Continuous multi-page scrolling; single page when off (%1)")
-      .arg(continuousScut));
+  ViewerHints::tag(m_continuousButton, QStringLiteral("viewer.pdf.toggle_continuous"),
+    tr("Continuous multi-page scrolling; single page when off (%1)"));
   m_continuousButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_continuousButton, &QToolButton::toggled,
           this,                &PdfView::onPageModeToggled);
@@ -193,12 +187,15 @@ void PdfView::setupUi() {
 
   // ───── 検索 (TextView と同じレイアウト: Find: [入力] [前] [次] [件数]) ─────
   auto* findLabel = new QLabel(tr("Find:"), m_toolbar);
-  findLabel->setToolTip(tr("Search text in this PDF (%1)").arg(findScut));
+  ViewerHints::tag(findLabel, QStringLiteral("viewer.pdf.find_focus"),
+    tr("Search text in this PDF (%1)"));
   m_toolbar->addWidget(findLabel);
 
   m_findEdit = new QLineEdit(m_toolbar);
-  m_findEdit->setPlaceholderText(tr("Search text  (%1)").arg(findScut));
-  m_findEdit->setToolTip(tr("Search text in this PDF (%1)").arg(findScut));
+  ViewerHints::tag(m_findEdit, QStringLiteral("viewer.pdf.find_focus"),
+    tr("Search text  (%1)"), /*placeholder=*/true);
+  ViewerHints::tag(m_findEdit, QStringLiteral("viewer.pdf.find_focus"),
+    tr("Search text in this PDF (%1)"));
   m_findEdit->setClearButtonEnabled(true);
   m_findEdit->setFocusPolicy(Qt::StrongFocus);
   m_findEdit->setMinimumWidth(160);
@@ -610,6 +607,7 @@ bool PdfView::eventFilter(QObject* watched, QEvent* event) {
 
 void PdfView::applyShortcutBindings(const QVariantMap& bindings) {
   m_shortcuts.applyBindings(bindings);
+  ViewerHints::refresh(this, m_shortcuts);
 }
 
 void PdfView::dispatchViewerCommand(const QString& cmd) {

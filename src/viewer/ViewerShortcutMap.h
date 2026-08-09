@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QList>
 #include <QMap>
 #include <QString>
 #include <QKeySequence>
@@ -23,12 +24,19 @@ public:
   // seq に割り当てられたコマンド ID（無ければ空文字）。
   QString commandForSeq(const QKeySequence& seq) const;
 
+  // commandId に現在割り当てられている代表キー（先頭）の表記。ツールチップ／
+  // プレースホルダ用。未割り当てなら空文字。format は既定でネイティブ表記。
+  QString primaryKeyText(const QString& commandId,
+                         QKeySequence::SequenceFormat format = QKeySequence::NativeText) const;
+
   // キーイベントから照合用の QKeySequence を作る（修飾キー単独は空、Keypad 除去）。
   static QKeySequence sequenceForEvent(const QKeyEvent* ke);
 
 private:
   // key -> commandId（QKeySequence は operator< を持つので QMap）
   QMap<QKeySequence, QString> m_reverse;
+  // commandId -> 割り当てキー列（先頭を代表キーとして hints に使う）。
+  QMap<QString, QList<QKeySequence>> m_forward;
 };
 
 } // namespace Farman
