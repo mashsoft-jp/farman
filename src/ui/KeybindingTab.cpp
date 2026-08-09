@@ -480,19 +480,32 @@ void KeybindingTab::applyFilter(const QString& text) {
     return it && it->data(kRowKindRole).toInt() == RowMajorHeading;
   };
 
-  // Pass 1: コマンド行の一致判定 (名前 / 現在キー / 新キーの部分一致)。
+  // Pass 1: コマンド行の一致判定。名前 / 現在キー / 新キーに加え、所属する
+  // 小見出し (カテゴリ名 / ビュアー名) と大見出し (本体 / ビュアー) の名称にも
+  // 一致したら表示する。例:「テキストビュアー」でその節のコマンドが出る。
+  QString curMajor;
+  QString curSub;
   for (int r = 0; r < rows; ++r) {
+    QTableWidgetItem* name = m_table->item(r, 0);
+    if (isMajorRow(r)) {
+      curMajor = name ? name->text() : QString();
+      curSub.clear();
+      continue;
+    }
     if (isHeadingRow(r)) {
+      curSub = name ? name->text() : QString();
       continue;
     }
     if (q.isEmpty()) {
       visible[r] = true;
       continue;
     }
-    QString hay = m_table->item(r, 0)->text();
+    QString hay = name ? name->text() : QString();
     if (auto* c1 = m_table->item(r, 1)) { hay += QLatin1Char('\n'); hay += c1->text(); }
     if (auto* c2 = m_table->item(r, 2)) { hay += QLatin1Char('\n'); hay += c2->text(); }
-    visible[r] = hay.contains(q, Qt::CaseInsensitive);
+    visible[r] = hay.contains(q, Qt::CaseInsensitive)
+              || (!curSub.isEmpty()   && curSub.contains(q, Qt::CaseInsensitive))
+              || (!curMajor.isEmpty() && curMajor.contains(q, Qt::CaseInsensitive));
   }
 
   // Pass 2: 小見出し (カテゴリ / ビュアー) は、直後から次の見出しまでの間に
