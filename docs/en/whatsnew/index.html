@@ -47,6 +47,64 @@
       What's new in each version. These are the same notes shown in the app under "Help → What's New...", listed newest first.
     </p>
 
+    <!-- 0.9.9 -->
+    <section class="doc-section" id="v0-9-9">
+      <h2>farman 0.9.9 <span class="wn-date">2026-08-12</span></h2>
+      <div class="whatsnew">
+        <h3>3D model viewer (FBX) support</h3>
+        <p>With the external plugin <strong>farman-plugin-3d</strong>, farman can now display <code>.fbx</code> 3D models inside the app.</p>
+        <ul>
+          <li>Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe display, and bone (skeleton) display.</li>
+          <li>Rotate, pan, and zoom with the mouse or keyboard.</li>
+          <li>The plugin is not bundled with farman. Download the build for your OS, place it in the <code>viewers/</code> folder of farman's external plugin directory, turn on "Allow loading external plugins" under Settings &gt; Plugins, then restart farman.</li>
+          <li>FBX is supported first; other formats such as obj / glTF are planned.</li>
+        </ul>
+
+        <h3>Directory sizes in the Size column (computed in the background)</h3>
+        <ul>
+          <li>The file list can now compute the recursive total size of directories in the background and show it in the Size column.</li>
+          <li>Directories now always show "<code>&lt;DIR&gt;</code>" in the Type column (regardless of whether directory-size calculation is enabled).</li>
+          <li>Off by default. Enable it under Settings &gt; Behavior &gt; Directory Size.</li>
+          <li>Choose "Recompute every time" or "Cache for a period", and set how long the cache stays valid (a change to a directory's timestamp always triggers a recompute).</li>
+          <li>Force a recompute with the toolbar button or <code>Ctrl+Shift+R</code>.</li>
+          <li>Not computed while the Size column is hidden.</li>
+        </ul>
+
+        <h3>Binary viewer improvements</h3>
+        <ul>
+          <li>Rewritten with custom rendering so <strong>gigabyte-class files</strong> open quickly and display correctly all the way to the end: only the visible rows are read instead of loading the whole file.</li>
+          <li>Added jump-to-hex-address. The maximum valid address is shown next to the input, and out-of-range addresses are rejected as you type.</li>
+          <li>Added search. Toggle between hex and text with radio buttons; hex input follows the display unit ("12 34 56" for 1-byte, "1234 5678" for 2-byte, endian-aware). Press Enter or Next / Prev to search forward / backward. Hits are highlighted in both the hex and text columns. Shortcuts: <code>Cmd/Ctrl+F</code> to focus search, <code>Cmd+G</code> / <code>F3</code> find next, <code>Cmd+Shift+G</code> / <code>Shift+F3</code> find previous, <code>Cmd/Ctrl+J</code> to focus the address field, <code>Cmd/Ctrl+1-4</code> to change the unit, <code>Cmd/Ctrl+E</code> to toggle endianness, and <code>Cmd/Ctrl+Shift+E</code> to focus the encoding.</li>
+        </ul>
+
+        <h3>Customizable viewer shortcuts</h3>
+        <ul>
+          <li>The keyboard shortcuts of each bundled viewer (Text / CSV·TSV / Markdown / PDF / Image / Binary / Media) — toggles, zoom, focus search, unit switch, and so on — can now be reassigned per viewer from the main settings (Settings → Keybindings).</li>
+          <li>The same key can map to a different action in a different viewer; conflicts are detected within a viewer.</li>
+          <li>Shortcuts of external viewer plugins (such as the 3D model viewer) can be edited from the same screen.</li>
+          <li>The list can get long, so a filter box at the top lets you quickly find entries by command name, assigned key, or viewer name.</li>
+          <li>Navigation keys (close with Esc/Enter, Enter / Shift+Enter in the search field, cursor movement, etc.) stay fixed.</li>
+        </ul>
+
+        <h3>Localized viewer names and title-bar display</h3>
+        <ul>
+          <li>Bundled viewer names now follow the UI language (e.g. "テキストビュアー" in Japanese), so the Plugins settings list is consistent.</li>
+          <li>While a viewer is open, the title bar shows "farman — &lt;viewer name&gt;".</li>
+        </ul>
+
+        <h3>Bug fixes</h3>
+        <ul>
+          <li>Fixed an issue where the cursor on the last file could be scrolled out of view after returning from an inline viewer to the file list.</li>
+          <li>Fixed an issue where the last row could fail to render after scrolling near the end of a large file.</li>
+        </ul>
+
+        <h3>Other</h3>
+        <ul>
+          <li>Stability improvements and bug fixes</li>
+        </ul>
+      </div>
+    </section>
+
     <!-- 0.9.8 -->
     <section class="doc-section" id="v0-9-8">
       <h2>farman 0.9.8 <span class="wn-date">2026-07-23</span></h2>

@@ -50,6 +50,10 @@ With the external plugin **farman-plugin-3d**, farman can now display
   (Settings → Keybindings).
 - The same key can map to a different action in a different viewer; conflicts
   are detected within a viewer.
+- Shortcuts of external viewer plugins (such as the 3D model viewer) can be
+  edited from the same screen.
+- The list can get long, so a filter box at the top lets you quickly find
+  entries by command name, assigned key, or viewer name.
 - Navigation keys (close with Esc/Enter, Enter / Shift+Enter in the search
   field, cursor movement, etc.) stay fixed.
 
