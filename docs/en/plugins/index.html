@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>farman Plugins — list, install, and development</title>
-  <meta name="description" content="List of farman external plugins and how to install them. Add viewers and archive formats after the fact. Official LZH (LHA) plugin and more, plus a link to the plugin development guide." />
+  <meta name="description" content="List of farman external plugins and how to install them. Add viewers and archive formats after the fact. Official 3D model viewer (FBX) and LZH (LHA) plugins and more, plus a link to the plugin development guide." />
 
   <meta property="og:title" content="farman Plugins" />
   <meta property="og:description" content="farman external plugins: list, install steps, and development guide." />
@@ -64,6 +64,13 @@
     <section class="doc-section" id="list">
       <h2>Available plugins</h2>
       <div class="feature-grid">
+        <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
+          <h3>3D model viewer (FBX)</h3>
+          <p>Display <code>.fbx</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, and bone (skeleton) display. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
+          <p class="plugin-meta">Type: viewer · Platforms: macOS / Windows / Linux · Requires farman 0.9.9 or later</p>
+          <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d/releases/latest" rel="noopener">Download</a>
+             <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">Repository</a></p>
+        </div>
         <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
           <h3>LZH (LHA) archive</h3>
           <p>Browse and extract <code>.lzh</code> / <code>.lha</code> archives, just like zip / tar. Japanese Shift-JIS file names are handled (read-only). The macOS build is signed with an Apple Developer ID and notarized.</p>

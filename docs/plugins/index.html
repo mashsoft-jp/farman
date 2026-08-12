@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>farman プラグイン — 一覧・導入手順・開発</title>
-  <meta name="description" content="farman の外部プラグイン一覧と導入手順。ビュアーやアーカイブ形式を後から追加できます。公式 LZH (LHA) プラグインほか。プラグイン開発ガイドへのリンクも。" />
+  <meta name="description" content="farman の外部プラグイン一覧と導入手順。ビュアーやアーカイブ形式を後から追加できます。公式の 3D モデルビュアー (FBX) / LZH (LHA) プラグインほか。プラグイン開発ガイドへのリンクも。" />
 
   <meta property="og:title" content="farman プラグイン" />
   <meta property="og:description" content="farman の外部プラグイン一覧・導入手順・開発ガイド。" />
@@ -64,6 +64,13 @@
     <section class="doc-section" id="list">
       <h2>プラグイン一覧</h2>
       <div class="feature-grid">
+        <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
+          <h3>3D モデルビュアー (FBX)</h3>
+          <p><code>.fbx</code> 形式の 3D モデルを farman 内で表示。テクスチャ（外部・埋め込み）・スケルタルアニメーション・複数マテリアル・床グリッド・ワイヤーフレーム・ボーン（スケルトン）表示に対応。マウス / キーボードで回転・平行移動・拡大縮小できます（操作キーは本体の「設定 → キーバインド」で変更できます）。</p>
+          <p class="plugin-meta">種別: ビュアー ・ 対応 OS: macOS / Windows / Linux ・ 要 farman 0.9.9 以降</p>
+          <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d/releases/latest" rel="noopener">ダウンロード</a>
+             <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">リポジトリ</a></p>
+        </div>
         <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
           <h3>LZH (LHA) アーカイブ</h3>
           <p><code>.lzh</code> / <code>.lha</code> アーカイブを、zip / tar と同じようにブラウジング・展開。日本語 Shift-JIS のファイル名にも対応（読み取り専用）。macOS 版は Apple の Developer ID 署名 + 公証済み。</p>
