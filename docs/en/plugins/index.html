@@ -24,7 +24,8 @@
     /* Docs page: same single-column layout as the manual (.manual + .doc-section)
        so headings and body share one left edge. */
     .btn-sm { padding: 7px 16px; font-size: .9rem; margin: 2px 4px 2px 0; }
-    .plugin-meta { color: var(--fg-muted); font-size: .85rem; margin: 6px 0 12px; }
+    .plugin-meta { color: var(--fg-muted); font-size: .85rem; margin: 6px 0 12px; list-style: none; padding: 0; }
+    .plugin-meta li { margin: 2px 0; }
     .plugin-ver { color: var(--fg-muted); font-size: .85rem; margin-left: 6px; white-space: nowrap; }
     .feature .btn-sm { margin-top: 4px; }
     .feature p { margin: 0 0 4px; }
@@ -67,14 +68,22 @@
         <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D model viewer (FBX)</h3>
           <p>Display <code>.fbx</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, and bone (skeleton) display. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
-          <p class="plugin-meta">Type: viewer · Platforms: macOS / Windows / Linux · Requires farman 0.9.9 or later</p>
+          <ul class="plugin-meta">
+            <li>Type: viewer</li>
+            <li>Platforms: macOS / Windows / Linux</li>
+            <li>Compatible farman: 0.9.9 or later</li>
+          </ul>
           <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d/releases/latest" rel="noopener">Download</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">Repository</a></p>
         </div>
         <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
           <h3>LZH (LHA) archive</h3>
           <p>Browse and extract <code>.lzh</code> / <code>.lha</code> archives, just like zip / tar. Japanese Shift-JIS file names are handled (read-only). The macOS build is signed with an Apple Developer ID and notarized.</p>
-          <p class="plugin-meta">Type: archive · Platforms: macOS / Windows / Linux</p>
+          <ul class="plugin-meta">
+            <li>Type: archive</li>
+            <li>Platforms: macOS / Windows / Linux</li>
+            <li>Compatible farman: 0.9.8 or later</li>
+          </ul>
           <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">Download</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">Repository</a></p>
         </div>

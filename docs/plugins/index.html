@@ -24,7 +24,8 @@
     /* プラグインページはマニュアルと同じ単一カラムのドキュメントレイアウト
        (.manual + .doc-section)。見出し・本文がすべて同じ左端に揃う。 */
     .btn-sm { padding: 7px 16px; font-size: .9rem; margin: 2px 4px 2px 0; }
-    .plugin-meta { color: var(--fg-muted); font-size: .85rem; margin: 6px 0 12px; }
+    .plugin-meta { color: var(--fg-muted); font-size: .85rem; margin: 6px 0 12px; list-style: none; padding: 0; }
+    .plugin-meta li { margin: 2px 0; }
     .plugin-ver { color: var(--fg-muted); font-size: .85rem; margin-left: 6px; white-space: nowrap; }
     .feature .btn-sm { margin-top: 4px; }
     .feature p { margin: 0 0 4px; }
@@ -67,14 +68,22 @@
         <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D モデルビュアー (FBX)</h3>
           <p><code>.fbx</code> 形式の 3D モデルを farman 内で表示。テクスチャ（外部・埋め込み）・スケルタルアニメーション・複数マテリアル・床グリッド・ワイヤーフレーム・ボーン（スケルトン）表示に対応。マウス / キーボードで回転・平行移動・拡大縮小できます（操作キーは本体の「設定 → キーバインド」で変更できます）。</p>
-          <p class="plugin-meta">種別: ビュアー ・ 対応 OS: macOS / Windows / Linux ・ 要 farman 0.9.9 以降</p>
+          <ul class="plugin-meta">
+            <li>種別: ビュアー</li>
+            <li>対応 OS: macOS / Windows / Linux</li>
+            <li>対応本体バージョン: farman 0.9.9 以降</li>
+          </ul>
           <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d/releases/latest" rel="noopener">ダウンロード</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">リポジトリ</a></p>
         </div>
         <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
           <h3>LZH (LHA) アーカイブ</h3>
           <p><code>.lzh</code> / <code>.lha</code> アーカイブを、zip / tar と同じようにブラウジング・展開。日本語 Shift-JIS のファイル名にも対応（読み取り専用）。macOS 版は Apple の Developer ID 署名 + 公証済み。</p>
-          <p class="plugin-meta">種別: アーカイブ ・ 対応 OS: macOS / Windows / Linux</p>
+          <ul class="plugin-meta">
+            <li>種別: アーカイブ</li>
+            <li>対応 OS: macOS / Windows / Linux</li>
+            <li>対応本体バージョン: farman 0.9.8 以降</li>
+          </ul>
           <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">ダウンロード</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">リポジトリ</a></p>
         </div>
