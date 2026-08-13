@@ -42,6 +42,12 @@
     /* 設定カテゴリの各項目（概要 + スクショの下に置く箇条書き） */
     .settings-detail { margin: 8px 0 6px; padding-left: 1.4em; list-style: disc; }
     .settings-detail li { margin: 3px 0; font-size: .94em; }
+    /* 機能が追加されたバージョンを示すバッジ */
+    .ver-tag { display: inline-block; font-size: .72em; font-weight: 700; line-height: 1;
+      padding: 2px 7px; margin-left: 4px; border-radius: 999px; vertical-align: middle;
+      white-space: nowrap; color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent); }
   </style>
 </head>
 <body>
@@ -70,6 +76,7 @@
       基本操作からキーバインド、各機能の使い方まで。
       下の検索ボックスに<strong>キーワードを入力すると、該当する項目だけに絞り込めます</strong>
       （例: <code>コピー</code> / <code>アーカイブ</code> / <code>Ctrl+R</code>）。
+      機能名の横にある <span class="ver-tag">v0.9.9</span> のようなバッジは、その機能に対応したバージョンを表します。
     </p>
 
     <div class="manual-search">
@@ -165,6 +172,7 @@
           <tr class="f-item"><td><kbd>d</kbd></td><td>削除（ゴミ箱 / 完全削除は設定・確認ダイアログで選択）</td></tr>
           <tr class="f-item"><td><kbd>r</kbd></td><td>リネーム</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+R</kbd></td><td>一括リネームダイアログ</td></tr>
+          <tr class="f-item"><td><kbd>Ctrl+Shift+R</kbd></td><td>ディレクトリサイズを強制再算出 <span class="ver-tag">v0.9.9</span></td></tr>
           <tr class="f-item"><td><kbd>Ctrl+C</kbd></td><td>カーソル / 選択ファイルの絶対パスをクリップボードへコピー</td></tr>
           <tr class="f-item"><td><kbd>a</kbd></td><td>プロパティ（名前・場所・サイズ・日時・パーミッションの確認 / 変更）</td></tr>
           <tr class="f-item"><td><kbd>p</kbd></td><td>選択ファイルをアーカイブ化（圧縮）</td></tr>
@@ -207,6 +215,9 @@
           <tr class="f-item"><td><kbd>Ctrl+Shift+P</kbd></td><td>プラグイン設定を開く</td></tr>
         </tbody>
       </table>
+
+      <h3 class="f-subhead">ビュアーのショートカット <span class="ver-tag">v0.9.9</span></h3>
+      <p class="f-item doc-note">各同梱ビュアー（テキスト / 画像 / 動画・音声 / バイナリ / Markdown / PDF / CSV）の操作キー（検索フォーカス、各種トグル、ズーム、単位切替など）も、<strong>設定 → キーバインド</strong>の<strong>ビュアー別セクション</strong>で再割り当てできます。<strong>外部プラグインのビュアー（3D モデルビュアーなど）のキーも同じ画面で編集できます</strong>。項目が多いため、一覧上部の<strong>絞り込みボックス</strong>にコマンド名・割り当てキー・ビュアー名を入力すると素早く探せます。（ビュアーを閉じる <kbd>Esc</kbd> / <kbd>Enter</kbd>、検索欄の <kbd>Enter</kbd> / <kbd>Shift+Enter</kbd> などのナビゲーションキーは固定です。）</p>
     </section>
 
     <!-- ファイル操作 -->
@@ -288,6 +299,7 @@
             <li>ナビゲーション: カーソルの上下ループ、ディレクトリ履歴の永続化（次回起動時に復元）、<code>Shift+文字</code> でドットファイルの 2 文字目にマッチ、同期ブラウズが自動解除されたときの通知。</li>
             <li>ファイル操作: 削除時は既定でゴミ箱へ、自動リネームの接尾辞、検索時の除外ディレクトリ、完了時に進捗ダイアログを自動で閉じる。</li>
             <li>一覧表示: ファイルサイズの単位（バイト / KB / KiB / 自動）と桁区切り、日時の書式、一覧に表示するカラム。</li>
+            <li>ディレクトリサイズ <span class="ver-tag">v0.9.9</span>: サイズ列にディレクトリの再帰合計サイズをバックグラウンドで算出して表示（既定 OFF）。「毎回算出」/「一定時間キャッシュ」を選べ、<code>Ctrl+Shift+R</code> で強制再算出できます。ディレクトリは種別（Type）列が常に <code>&lt;DIR&gt;</code> 表示になります。</li>
             <li>ビュアー表示: ビュアーの表示方法（インライン / 別ウィンドウなど）の既定。</li>
           </ul></li>
         <li class="f-item"><strong>外観</strong>: テーマ・配色・カーソル・行高など、見た目に関する設定。
@@ -361,6 +373,7 @@
         <h3>バイナリ</h3>
         <p class="viewer-meta"><strong>対応形式</strong>: 上記いずれにも該当しない任意のファイル</p>
         <p class="viewer-meta"><strong>主な機能</strong>: 16 進ダンプ（アドレス列・文字列列のカラーリング）</p>
+        <p class="viewer-meta"><strong>強化</strong> <span class="ver-tag">v0.9.9</span>: ギガ級ファイル対応（可視行のみ読み込みで高速表示・末尾まで正しく表示）、16 進アドレスジャンプ（<code>Cmd/Ctrl+J</code>）、16 進 / 文字列検索（<code>Cmd/Ctrl+F</code>、次 <code>Cmd+G</code>・<code>F3</code> / 前 <code>Cmd+Shift+G</code>・<code>Shift+F3</code>）、表示単位切替（<code>Cmd/Ctrl+1〜4</code>）、エンディアン切替（<code>Cmd/Ctrl+E</code>）、選択範囲のコピー（<code>Cmd/Ctrl+C</code>）</p>
         <figure class="doc-figure"><img src="../screenshots/09-binary-viewer.png" width="1200" height="729" alt="バイナリビュアー" loading="lazy" /><figcaption>バイナリビュアー</figcaption></figure>
       </div>
 

@@ -42,6 +42,12 @@
     /* Per-item bullets under each settings category (below the overview + screenshot) */
     .settings-detail { margin: 8px 0 6px; padding-left: 1.4em; list-style: disc; }
     .settings-detail li { margin: 3px 0; font-size: .94em; }
+    /* Badge showing the version a feature was added in */
+    .ver-tag { display: inline-block; font-size: .72em; font-weight: 700; line-height: 1;
+      padding: 2px 7px; margin-left: 4px; border-radius: 999px; vertical-align: middle;
+      white-space: nowrap; color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent); }
   </style>
 </head>
 <body>
@@ -70,6 +76,7 @@
       Everything from the basics to keybindings and each feature.
       <strong>Type a keyword in the search box below to filter down to matching items</strong>
       (e.g. <code>copy</code> / <code>archive</code> / <code>Ctrl+R</code>).
+      A badge such as <span class="ver-tag">v0.9.9</span> next to a feature indicates the version it was introduced in.
     </p>
 
     <div class="manual-search">
@@ -165,6 +172,7 @@
           <tr class="f-item"><td><kbd>d</kbd></td><td>Delete (trash / permanent is chosen in the confirm dialog)</td></tr>
           <tr class="f-item"><td><kbd>r</kbd></td><td>Rename</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+R</kbd></td><td>Bulk rename dialog</td></tr>
+          <tr class="f-item"><td><kbd>Ctrl+Shift+R</kbd></td><td>Recompute directory sizes <span class="ver-tag">v0.9.9</span></td></tr>
           <tr class="f-item"><td><kbd>Ctrl+C</kbd></td><td>Copy the cursor / selected file paths to the clipboard</td></tr>
           <tr class="f-item"><td><kbd>a</kbd></td><td>Properties (view / edit name, location, size, dates, permissions)</td></tr>
           <tr class="f-item"><td><kbd>p</kbd></td><td>Pack selected files into an archive</td></tr>
@@ -207,6 +215,9 @@
           <tr class="f-item"><td><kbd>Ctrl+Shift+P</kbd></td><td>Open the plugin settings</td></tr>
         </tbody>
       </table>
+
+      <h3 class="f-subhead">Viewer shortcuts <span class="ver-tag">v0.9.9</span></h3>
+      <p class="f-item doc-note">The keys of each bundled viewer (Text / Image / Media / Binary / Markdown / PDF / CSV) — focus search, various toggles, zoom, unit switch, and so on — can now be reassigned under <strong>Settings → Keybindings</strong> in a <strong>per-viewer section</strong>. <strong>The keys of external viewer plugins (such as the 3D model viewer) can be edited from the same screen</strong>. Since the list can get long, a <strong>filter box</strong> at the top lets you find entries quickly by command name, assigned key, or viewer name. (Navigation keys such as <kbd>Esc</kbd> / <kbd>Enter</kbd> to close a viewer and <kbd>Enter</kbd> / <kbd>Shift+Enter</kbd> in the search field stay fixed.)</p>
     </section>
 
     <!-- File operations -->
@@ -289,6 +300,7 @@
             <li>Navigation: cursor wrap-around, persist directory history (restored on next launch), match a dotfile's second character with <code>Shift+key</code>, notify when Sync Browse is auto-disabled.</li>
             <li>File operations: move to Trash by default when deleting, auto-rename suffix, search exclude dirs, close the progress dialog automatically when done.</li>
             <li>List display: file-size units (bytes / KB / KiB / auto) and thousands separator, date/time format, which columns to show.</li>
+            <li>Directory size <span class="ver-tag">v0.9.9</span>: compute the recursive total size of directories in the background and show it in the Size column (off by default). Choose "recompute every time" or "cache for a period", and force a recompute with <code>Ctrl+Shift+R</code>. Directories always show <code>&lt;DIR&gt;</code> in the Type column.</li>
             <li>Viewer display: default display mode for viewers (inline / separate window, etc.).</li>
           </ul></li>
         <li class="f-item"><strong>Appearance</strong>: look-and-feel — theme, colors, cursor, row height, and so on.
@@ -362,6 +374,7 @@
         <h3>Binary</h3>
         <p class="viewer-meta"><strong>Supported formats</strong>: any file not matched by the viewers above</p>
         <p class="viewer-meta"><strong>Main features</strong>: hex dump with colored address / text columns</p>
+        <p class="viewer-meta"><strong>Enhanced</strong> <span class="ver-tag">v0.9.9</span>: gigabyte-class files (only visible rows are read, fast and correct all the way to the end), jump to hex address (<code>Cmd/Ctrl+J</code>), hex / text search (<code>Cmd/Ctrl+F</code>; next <code>Cmd+G</code> / <code>F3</code>, prev <code>Cmd+Shift+G</code> / <code>Shift+F3</code>), display unit switch (<code>Cmd/Ctrl+1-4</code>), endianness toggle (<code>Cmd/Ctrl+E</code>), copy selection (<code>Cmd/Ctrl+C</code>)</p>
         <figure class="doc-figure"><img src="../../screenshots/09-binary-viewer.png" width="1200" height="729" alt="Binary viewer" loading="lazy" /><figcaption>Binary viewer</figcaption></figure>
       </div>
 
