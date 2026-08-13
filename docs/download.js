@@ -110,7 +110,10 @@
         title: "Linux",
         arch: "x86_64",
         primary: urls.linuxAppImage ? { label: L.appimage, url: urls.linuxAppImage } : null,
-        secondary: urls.linuxDeb ? { label: L.deb, url: urls.linuxDeb } : null
+        secondary: urls.linuxDeb ? { label: L.deb, url: urls.linuxDeb } : null,
+        // Linux は AppImage / .deb をどちらも同格のボタンとして出す
+        // (deb を補助テキストリンクにせず、選びやすいボタンにする)。
+        secondaryAsButton: true
       }
     ].map(function (c) { c.isCurrent = (c.os === currentOS); return c; });
   }
@@ -138,8 +141,14 @@
               + L.releasesPage + "</a>";
       }
       if (c.secondary) {
-        html += '<a class="dl-secondary" href="' + c.secondary.url + '">'
-              + c.secondary.label + "</a>";
+        if (c.secondaryAsButton) {
+          // 主ボタンと同じ見た目の第 2 ボタン (btn-ghost)。
+          html += '<a class="btn btn-ghost" href="' + c.secondary.url + '">'
+                + c.secondary.label + "</a>";
+        } else {
+          html += '<a class="dl-secondary" href="' + c.secondary.url + '">'
+                + c.secondary.label + "</a>";
+        }
       }
       if (c.note) {
         html += '<p class="dl-note">' + c.note + "</p>";
