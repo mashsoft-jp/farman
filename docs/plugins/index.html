@@ -29,6 +29,14 @@
     .plugin-ver { color: var(--fg-muted); font-size: .85rem; margin-left: 6px; white-space: nowrap; }
     .feature .btn-sm { margin-top: 4px; }
     .feature p { margin: 0 0 4px; }
+    /* プラグイン説明に添えるスクショ。クリックで拡大 (site.js の lightbox を共用)。 */
+    .plugin-figure { margin: 10px 0 12px; max-width: 100%; }
+    .plugin-figure img { width: 100%; height: auto; display: block;
+      border: 1px solid var(--border); border-radius: 8px; cursor: zoom-in;
+      transition: transform .18s ease, box-shadow .18s ease; }
+    .plugin-figure img:hover { transform: scale(1.01);
+      box-shadow: 0 2px 6px rgba(0,0,0,.10), 0 12px 28px rgba(0,0,0,.12); }
+    .plugin-figure figcaption { font-size: .82rem; color: var(--fg-muted); margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -68,6 +76,10 @@
         <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D モデルビュアー (FBX)</h3>
           <p><code>.fbx</code> 形式の 3D モデルを farman 内で表示。テクスチャ（外部・埋め込み）・スケルタルアニメーション・複数マテリアル・床グリッド・ワイヤーフレーム・ボーン（スケルトン）表示に対応。マウス / キーボードで回転・平行移動・拡大縮小できます（操作キーは本体の「設定 → キーバインド」で変更できます）。</p>
+          <figure class="doc-figure plugin-figure">
+            <img src="../screenshots/ex-01-3d-model-viewer.png" width="1200" height="792" alt="3D モデルビュアーで FBX を表示" loading="lazy" />
+            <figcaption>3D モデルビュアー（テクスチャ・スケルタルアニメーション対応）</figcaption>
+          </figure>
           <ul class="plugin-meta">
             <li>種別: ビュアー</li>
             <li>対応 OS: macOS / Windows / Linux</li>

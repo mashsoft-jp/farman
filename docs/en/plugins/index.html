@@ -29,6 +29,14 @@
     .plugin-ver { color: var(--fg-muted); font-size: .85rem; margin-left: 6px; white-space: nowrap; }
     .feature .btn-sm { margin-top: 4px; }
     .feature p { margin: 0 0 4px; }
+    /* Screenshot shown with a plugin description; click to zoom (shared site.js lightbox). */
+    .plugin-figure { margin: 10px 0 12px; max-width: 100%; }
+    .plugin-figure img { width: 100%; height: auto; display: block;
+      border: 1px solid var(--border); border-radius: 8px; cursor: zoom-in;
+      transition: transform .18s ease, box-shadow .18s ease; }
+    .plugin-figure img:hover { transform: scale(1.01);
+      box-shadow: 0 2px 6px rgba(0,0,0,.10), 0 12px 28px rgba(0,0,0,.12); }
+    .plugin-figure figcaption { font-size: .82rem; color: var(--fg-muted); margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -68,6 +76,10 @@
         <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D model viewer (FBX)</h3>
           <p>Display <code>.fbx</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, and bone (skeleton) display. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
+          <figure class="doc-figure plugin-figure">
+            <img src="../../screenshots/ex-01-3d-model-viewer.png" width="1200" height="792" alt="A FBX model shown in the 3D model viewer" loading="lazy" />
+            <figcaption>3D model viewer (textures and skeletal animation)</figcaption>
+          </figure>
           <ul class="plugin-meta">
             <li>Type: viewer</li>
             <li>Platforms: macOS / Windows / Linux</li>
