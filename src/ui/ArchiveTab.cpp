@@ -83,7 +83,7 @@ void ArchiveTab::setupUi() {
 
   // 一覧は最低限の列 (有効 / 形式 / 由来 / 拡張子) に絞り、作成時の既定値など
   // は各行右端の「詳細...」ボタンで開くダイアログで見せる。PluginsTab の
-  // 一覧と同じ作法 (Enter/Space で詳細、行移動は ↑/↓)。
+  // 一覧と同じ作法 (Enter で詳細・Space でトグル、行移動は ↑/↓)。
   m_formatTable = new QTableWidget(formatGroup);
   m_formatTable->setWordWrap(false);
   m_formatTable->setColumnCount(6);
@@ -104,6 +104,13 @@ void ArchiveTab::setupUi() {
   connect(m_formatTable, &QTableWidget::itemDoubleClicked, this,
           [this](QTableWidgetItem* item) {
     if (item) showFormatDetails(item->row());
+  });
+
+  // 一覧のチェックボックス操作を編集状態へ反映する。
+  connect(m_formatTable, &QTableWidget::itemChanged, this,
+          [this](QTableWidgetItem* item) {
+    if (m_populating || !item || item->column() != 0) return;
+    setFormatEnabled(item->row(), item->checkState() == Qt::Checked);
   });
   formatLayout->addWidget(m_formatTable, 1);
 
@@ -193,9 +200,16 @@ bool ArchiveTab::eventFilter(QObject* watched, QEvent* event) {
     const bool tab =
       !backtab && key == Qt::Key_Tab && keyEvent->modifiers() == Qt::NoModifier;
 
-    // Enter / Space で選択行の詳細ダイアログを開く
-    if (key == Qt::Key_Return || key == Qt::Key_Enter || key == Qt::Key_Space) {
+    // Enter で詳細ダイアログ、Space で有効 / 無効のトグル。
+    if (key == Qt::Key_Return || key == Qt::Key_Enter) {
       showFormatDetails(m_formatTable->currentRow());
+      return true;
+    }
+    if (key == Qt::Key_Space) {
+      const int row = m_formatTable->currentRow();
+      if (auto* item = (row >= 0) ? m_formatTable->item(row, 0) : nullptr) {
+        setFormatEnabled(row, item->checkState() != Qt::Checked);
+      }
       return true;
     }
     // 行移動は ↑/↓ のみ。←/→ での現在セル移動はさせない
@@ -253,6 +267,23 @@ QStringList ArchiveTab::parsePatterns(const QString& text) const {
   return patterns;
 }
 
+// 一覧のチェックボックス / 詳細ダイアログのどちらから変更しても、同じ編集
+// 状態 (FormatState::enabled) と同じ表示 (一覧のチェック) を更新する。
+void ArchiveTab::setFormatEnabled(int row, bool enabled) {
+  if (row < 0 || row >= m_formats.size()) return;
+  m_formats[row].enabled = enabled;
+
+  if (auto* item = m_formatTable->item(row, 0)) {
+    const Qt::CheckState checkState = enabled ? Qt::Checked : Qt::Unchecked;
+    if (item->checkState() != checkState) {
+      const bool wasPopulating = m_populating;
+      m_populating = true;   // 表示合わせの setCheckState を再入させない
+      item->setCheckState(checkState);
+      m_populating = wasPopulating;
+    }
+  }
+}
+
 // プラグイン形式のロード状態。ViewerTab の一覧と同じ絵文字 / 文言に揃える。
 QString ArchiveTab::pluginStatusText(const ArchivePluginRecord& record) const {
   if (record.loaded) return tr("Loaded");
@@ -272,17 +303,24 @@ QString ArchiveTab::originText(const ArchiveFormatInfo& info) const {
 }
 
 void ArchiveTab::loadFormatList() {
+  // 行を作り直す間の itemChanged はユーザー操作ではないので無視する。
+  m_populating = true;
   m_formatTable->setRowCount(m_formats.size());
 
   for (int row = 0; row < m_formats.size(); ++row) {
     const FormatState& state = m_formats[row];
     const ArchiveFormatInfo& info = state.resolved.info;
 
-    // 有効 / 無効 (表示のみ。切り替えは詳細ダイアログで行う)。
+    // 有効 / 無効はこの一覧で直接切り替えられる (詳細ダイアログでも変更可)。
     auto* enabledItem = new QTableWidgetItem();
-    enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable
+                          | Qt::ItemIsUserCheckable);
     enabledItem->setCheckState(state.enabled ? Qt::Checked : Qt::Unchecked);
-    enabledItem->setToolTip(tr("Enable/disable can be changed in the Details dialog."));
+    enabledItem->setToolTip(
+      info.source == ArchiveFormatInfo::Source::Plugin
+        ? tr("Click to enable/disable. Takes effect after restarting farman.")
+        : tr("Click to enable/disable. When off, files matching the patterns "
+             "are treated as ordinary files."));
     m_formatTable->setItem(row, 0, enabledItem);
 
     // 状態列。組み込み形式は常に使えるので空欄、プラグイン形式だけ
@@ -326,6 +364,8 @@ void ArchiveTab::loadFormatList() {
     });
     m_formatTable->setCellWidget(row, 5, detailsButton);
   }
+
+  m_populating = false;
 
   m_formatTable->resizeColumnsToContents();
   m_formatTable->resizeRowsToContents();
@@ -495,7 +535,7 @@ void ArchiveTab::showFormatDetails(int row) {
                 dialog.sizeHint().height());
   if (dialog.exec() != QDialog::Accepted) return;
 
-  state.enabled  = enabledCheck->isChecked();
+  setFormatEnabled(row, enabledCheck->isChecked());
   // 空にされた場合は「何も認識しない」ではなく既定に戻す (誤操作で形式が
   // まるごと消えるのを避ける)。明示的に無効化したいなら Enabled を外す。
   const QStringList patterns = parsePatterns(patternsEdit->text());
@@ -504,9 +544,6 @@ void ArchiveTab::showFormatDetails(int row) {
   if (encryptionCombo)  state.encryption       = encryptionCombo->currentData().toString();
   if (encodingCombo)    state.filenameEncoding = encodingCombo->currentData().toString();
 
-  if (auto* item = m_formatTable->item(row, 0)) {
-    item->setCheckState(state.enabled ? Qt::Checked : Qt::Unchecked);
-  }
   if (auto* item = m_formatTable->item(row, 4)) {
     item->setText(patternsDisplayText(state.patterns));
     item->setToolTip(item->text());

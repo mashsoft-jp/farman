@@ -44,7 +44,7 @@ public:
 
 protected:
   // 形式一覧のキー操作。PluginsTab の一覧と同じ作法に揃える:
-  //   - Enter / Space で選択行の詳細ダイアログを開く
+  //   - Enter で選択行の詳細ダイアログ、Space で有効 / 無効のトグル
   //   - 行移動は ↑/↓ のみ (←/→ は無効化)
   bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -55,6 +55,9 @@ private:
   // 形式一覧の「詳細...」ダイアログ。一覧には最低限の列しか出さないので、
   // 対応拡張子と作成時の既定値の編集はこちらで行う。
   void showFormatDetails(int row);
+  // 有効 / 無効の変更を編集状態と一覧表示の両方へ反映する。一覧のチェック
+  // ボックスと詳細ダイアログの両方から呼ぶ。
+  void setFormatEnabled(int row, bool enabled);
 
   // 編集中の 1 形式ぶんの状態。カタログ既定と一致する項目は save() で
   // 上書きとして書かない (既定への追従を保つため)。
@@ -85,6 +88,9 @@ private:
   QToolButton* m_tempDirectoryDefault = nullptr;
   QSpinBox*    m_passwordRetrySpin    = nullptr;
   QSpinBox*    m_maxNestDepthSpin     = nullptr;
+
+  // 一覧を作り直している間は itemChanged をユーザー操作として扱わない。
+  bool m_populating = false;
 
   bool m_restartRequiredOnSave = false;
 };

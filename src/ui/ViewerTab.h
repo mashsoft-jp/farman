@@ -41,7 +41,7 @@ public:
 
 protected:
   // プラグイン一覧のキー操作の制御:
-  //   - Enter / Space で選択行の詳細ダイアログを開く
+  //   - Enter で選択行の詳細ダイアログ、Space で有効 / 無効のトグル
   //   - 行移動は ↑/↓ のみ (←/→ は無効化)
   //   - Tab は「詳細...」ボタンに止まらず設定ダイアログの OK ボタンへ抜ける
   //     (macOS は TabFocusTextControls で Tab 先がテキスト系優先になるため、
@@ -59,6 +59,9 @@ private:
   // 有効 / 無効の切り替えと拡張子紐付けの確認・変更もここで行う (一覧は表示
   // のみ)。設定 UI を持つプラグインは設定ページをこの中に埋め込む。
   void showPluginDetails(int row);
+  // 有効 / 無効の変更を編集状態と一覧表示の両方へ反映する。一覧のチェック
+  // ボックスと詳細ダイアログの両方から呼ぶ。
+  void setPluginEnabled(int row, bool enabled);
   QString pluginStatusText(const PluginRecord& record) const;
   QString pluginStatusEmoji(const PluginRecord& record) const;
   QString extensionsDisplayText(const PluginRecord& record) const;
@@ -91,6 +94,9 @@ private:
   // 一覧に存在しないプラグインのパターン (pluginId → パターン一覧)。編集
   // 対象外なので save() でそのまま書き戻す。
   QMap<QString, QStringList> m_preservedPatterns;
+
+  // 一覧を作り直している間は itemChanged をユーザー操作として扱わない。
+  bool m_populating = false;
 
   bool m_restartRequiredOnSave = false;
 };

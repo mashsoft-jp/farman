@@ -70,8 +70,8 @@ void ViewerTab::setupUi() {
   m_pluginTable->setSelectionMode(QAbstractItemView::SingleSelection);
   m_pluginTable->verticalHeader()->setVisible(false);
   // Tab はセル間移動ではなく設定ダイアログの OK ボタンへ抜ける。テーブルに
-  // フォーカスがある間の行移動は ↑/↓ のみで、Enter / Space で詳細を開く。
-  // 制御は eventFilter で明示的に行う (ヘッダコメント参照)。
+  // フォーカスがある間の行移動は ↑/↓ のみで、Enter で詳細・Space で有効 /
+  // 無効のトグル。制御は eventFilter で明示的に行う (ヘッダコメント参照)。
   m_pluginTable->setTabKeyNavigation(false);
   m_pluginTable->installEventFilter(this);
   updatePluginTablePalette(/*focused=*/false);  // 初期状態は非フォーカス
@@ -81,6 +81,13 @@ void ViewerTab::setupUi() {
   connect(m_pluginTable, &QTableWidget::itemDoubleClicked, this,
           [this](QTableWidgetItem* item) {
     if (item) showPluginDetails(item->row());
+  });
+
+  // 一覧のチェックボックス操作を編集状態へ反映する。
+  connect(m_pluginTable, &QTableWidget::itemChanged, this,
+          [this](QTableWidgetItem* item) {
+    if (m_populating || !item || item->column() != 0) return;
+    setPluginEnabled(item->row(), item->checkState() == Qt::Checked);
   });
 
   mainLayout->addWidget(listGroup, 1);
@@ -112,9 +119,17 @@ bool ViewerTab::eventFilter(QObject* watched, QEvent* event) {
     const bool tab =
       !backtab && key == Qt::Key_Tab && keyEvent->modifiers() == Qt::NoModifier;
 
-    // Enter / Space で選択行の詳細ダイアログを開く
-    if (key == Qt::Key_Return || key == Qt::Key_Enter || key == Qt::Key_Space) {
+    // Enter で詳細ダイアログ、Space で有効 / 無効のトグル。
+    if (key == Qt::Key_Return || key == Qt::Key_Enter) {
       showPluginDetails(table->currentRow());
+      return true;
+    }
+    if (key == Qt::Key_Space) {
+      const int row = table->currentRow();
+      if (auto* item = (row >= 0) ? table->item(row, 0) : nullptr;
+          item && (item->flags() & Qt::ItemIsUserCheckable)) {
+        setPluginEnabled(row, item->checkState() != Qt::Checked);
+      }
       return true;
     }
     // 行移動は ↑/↓ のみ。←/→ での現在セル移動はさせない
@@ -165,6 +180,8 @@ void ViewerTab::loadSettings() {
 void ViewerTab::loadPluginList() {
   const QList<PluginRecord>& records = m_pluginRecords;
 
+  // 行を作り直す間の itemChanged はユーザー操作ではないので無視する。
+  m_populating = true;
   m_pluginTable->setRowCount(records.size());
 
   auto setItem = [this](int row, int col, const QString& text,
@@ -180,29 +197,27 @@ void ViewerTab::loadPluginList() {
     const bool toggleable =
       !rec.pluginId.isEmpty()
       && !ViewerDispatcher::isCoreViewerPlugin(rec.pluginId);
-    // 有効 / 無効は表示のみ (ItemIsUserCheckable を付けない)。
-    // 切り替えは詳細ダイアログで行う。
+    // 有効 / 無効はこの一覧で直接切り替えられる (詳細ダイアログでも変更可)。
+    // チェックは「ユーザーの有効 / 無効設定」そのもので、実際にロードできたか
+    // は隣の状態列が示す (外部プラグイン読込みが OFF のときは、有効にして
+    // あってもロードされない)。
     auto* enabledItem = new QTableWidgetItem();
-    enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    if (rec.blockedExternalDisabled) {
-      // 外部プラグイン読込みが OFF のためロードしていない。未チェック表示。
-      enabledItem->setCheckState(Qt::Unchecked);
+    Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    if (toggleable) flags |= Qt::ItemIsUserCheckable;
+    enabledItem->setFlags(flags);
+    enabledItem->setCheckState(
+      toggleable && isPluginDisabled(rec.pluginId) ? Qt::Unchecked : Qt::Checked);
+    if (!toggleable) {
+      enabledItem->setToolTip(rec.pluginId.isEmpty()
+                                ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
+                                : tr("This core viewer plugin is always enabled."));
+    } else if (rec.blockedExternalDisabled) {
       enabledItem->setToolTip(
         tr("External plugin loading is off. Turn on \"Allow loading external "
-           "plugins\" above to load this plugin."));
+           "plugins\" in Settings → General to load this plugin."));
     } else {
-      enabledItem->setCheckState(
-        toggleable && isPluginDisabled(rec.pluginId)
-          ? Qt::Unchecked
-          : Qt::Checked);
-      if (toggleable) {
-        enabledItem->setToolTip(
-          tr("Enable/disable can be changed in the Details dialog."));
-      } else {
-        enabledItem->setToolTip(rec.pluginId.isEmpty()
-                                  ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
-                                  : tr("This core viewer plugin is always enabled."));
-      }
+      enabledItem->setToolTip(
+        tr("Click to enable/disable. Takes effect after restarting farman."));
     }
     m_pluginTable->setItem(row, 0, enabledItem);
 
@@ -249,6 +264,8 @@ void ViewerTab::loadPluginList() {
     m_pluginTable->setCellWidget(row, 5, detailsButton);
   }
 
+  m_populating = false;
+
   m_pluginTable->resizeColumnsToContents();
   m_pluginTable->resizeRowsToContents();
   m_pluginTable->horizontalHeader()->setStretchLastSection(false);
@@ -286,6 +303,30 @@ void ViewerTab::updatePluginTablePalette(bool focused) {
   pal.setColor(QPalette::HighlightedText,
                pal.color(QPalette::Active, QPalette::Text));
   m_pluginTable->setPalette(pal);
+}
+
+// 一覧のチェックボックス / 詳細ダイアログのどちらから変更しても、同じ編集
+// 状態 (m_disabledPluginIds) と同じ表示 (一覧のチェック) を更新する。
+void ViewerTab::setPluginEnabled(int row, bool enabled) {
+  if (row < 0 || row >= m_pluginRecords.size()) return;
+  const QString pluginId = m_pluginRecords[row].pluginId.trimmed();
+  if (pluginId.isEmpty()) return;
+
+  if (enabled) {
+    m_disabledPluginIds.remove(pluginId.toLower());
+  } else {
+    m_disabledPluginIds.insert(pluginId.toLower());
+  }
+
+  if (auto* item = m_pluginTable->item(row, 0)) {
+    const Qt::CheckState state = enabled ? Qt::Checked : Qt::Unchecked;
+    if (item->checkState() != state) {
+      const bool wasPopulating = m_populating;
+      m_populating = true;   // 表示合わせの setCheckState を再入させない
+      item->setCheckState(state);
+      m_populating = wasPopulating;
+    }
+  }
 }
 
 QString ViewerTab::pluginStatusText(const PluginRecord& record) const {
@@ -444,16 +485,8 @@ void ViewerTab::showPluginDetails(int row) {
   }
 
   if (enabledEditable) {
-    if (enabledCheck->isChecked()) {
-      m_disabledPluginIds.remove(rec.pluginId.trimmed().toLower());
-    } else {
-      m_disabledPluginIds.insert(rec.pluginId.trimmed().toLower());
-    }
-    // 一覧の「有効」列にも編集後の状態を反映する
-    if (auto* item = m_pluginTable->item(row, 0)) {
-      item->setCheckState(enabledCheck->isChecked() ? Qt::Checked
-                                                    : Qt::Unchecked);
-    }
+    // 一覧のチェックボックスと同じ経路で反映する。
+    setPluginEnabled(row, enabledCheck->isChecked());
   }
   if (extensionsEdit) {
     m_extensions[rec.pluginId] = normalizedExtensions(extensionsEdit->text());
