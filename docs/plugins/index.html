@@ -37,6 +37,8 @@
     .plugin-figure img:hover { transform: scale(1.01);
       box-shadow: 0 2px 6px rgba(0,0,0,.10), 0 12px 28px rgba(0,0,0,.12); }
     .plugin-figure figcaption { font-size: .82rem; color: var(--fg-muted); margin-top: 6px; }
+    /* 小さめに見せる図（導入手順の設定画面など） */
+    .plugin-figure.plugin-figure-sm { max-width: 380px; }
   </style>
 </head>
 <body>
@@ -113,7 +115,7 @@
         <li>同じ画面で「<strong>外部プラグインの読込みを許可する</strong>」をオンにします（既定はオフ）。</li>
         <li>farman を再起動します。設定 → プラグインの一覧に読み込まれたプラグインが表示されれば導入完了です。</li>
       </ol>
-      <figure class="doc-figure plugin-figure">
+      <figure class="doc-figure plugin-figure plugin-figure-sm">
         <img src="../screenshots/ex-how-to-install.png" width="1000" height="652" alt="設定 → プラグインでプラグインディレクトリを開き、外部プラグインの読込みを許可する" loading="lazy" />
         <figcaption>設定 → プラグイン（「開く」でプラグインディレクトリを表示・「外部プラグインの読込みを許可する」をオン）</figcaption>
       </figure>

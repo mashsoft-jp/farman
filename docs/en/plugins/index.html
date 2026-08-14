@@ -37,6 +37,8 @@
     .plugin-figure img:hover { transform: scale(1.01);
       box-shadow: 0 2px 6px rgba(0,0,0,.10), 0 12px 28px rgba(0,0,0,.12); }
     .plugin-figure figcaption { font-size: .82rem; color: var(--fg-muted); margin-top: 6px; }
+    /* Smaller figure (e.g. the settings screen in the install steps) */
+    .plugin-figure.plugin-figure-sm { max-width: 380px; }
   </style>
 </head>
 <body>
@@ -113,7 +115,7 @@
         <li>On the same screen, turn on <strong>Allow loading external plugins</strong> (off by default).</li>
         <li>Restart farman. If the plugin appears in the list under Settings → Plugins, it's installed.</li>
       </ol>
-      <figure class="doc-figure plugin-figure">
+      <figure class="doc-figure plugin-figure plugin-figure-sm">
         <img src="../../screenshots/ex-how-to-install.png" width="1000" height="652" alt="Open the plugins directory and allow loading external plugins under Settings → Plugins" loading="lazy" />
         <figcaption>Settings → Plugins (use "Open" to reveal the plugins directory and turn on "Allow loading external plugins")</figcaption>
       </figure>
