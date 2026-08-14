@@ -1,4 +1,5 @@
 #include "UpdateAvailableDialog.h"
+#include "utils/MarkdownSanitize.h"
 
 #include <QDesktopServices>
 #include <QDialogButtonBox>
@@ -44,7 +45,10 @@ UpdateAvailableDialog::UpdateAvailableDialog(const QString& currentVersion,
   m_notesView = new QTextBrowser(this);
   m_notesView->setOpenExternalLinks(true);
   if (!release.body.isEmpty()) {
-    m_notesView->setMarkdown(release.body);
+    // 本文は GitHub のリリースノート (ネットワーク越しの外部文字列)。生の
+    // "<...>" が HTML タグ扱いされると以降が消えるので必ず無害化してから渡す
+    // (MarkdownSanitize.h のコメント参照)。
+    m_notesView->setMarkdown(MarkdownSanitize::neutralizeRawHtml(release.body));
   } else {
     m_notesView->setPlainText(tr("(No release notes provided.)"));
   }

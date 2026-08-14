@@ -185,6 +185,7 @@ qt_add_executable(farman
   src/utils/CancellableLoadPage.cpp
   src/utils/ArchivePath.cpp
   src/utils/MediaMatchers.cpp
+  src/utils/MarkdownSanitize.cpp
   src/utils/ExifReader.cpp
   src/core/workers/WorkerBase.cpp
   src/core/workers/CopyWorker.cpp
@@ -368,6 +369,8 @@ set(FARMAN_PLUGIN_COMMON_SOURCES
   src/core/Logger.cpp
   src/utils/CancellableLoadPage.cpp
   src/utils/EnterClickFilter.cpp
+  # setMarkdown に渡す前の raw HTML 無害化。Markdown ビュアープラグインが使う。
+  src/utils/MarkdownSanitize.cpp
   # ショートカットのコマンドカタログ（プラグインの取得 API 実装で使う）と、
   # 本体から push された割当を保持するローカルホルダ（ビュアーのディスパッチで使う）。
   src/keybinding/ViewerCommands.cpp

@@ -1,6 +1,7 @@
 #include "WhatsNewDialog.h"
 
 #include "settings/Settings.h"
+#include "utils/MarkdownSanitize.h"
 
 #include <QDialogButtonBox>
 #include <QFile>
@@ -22,7 +23,9 @@ WhatsNewDialog::WhatsNewDialog(const QString& version, const QString& markdown,
 
   m_notesView = new QTextBrowser(this);
   m_notesView->setOpenExternalLinks(true);
-  m_notesView->setMarkdown(markdown);
+  // 生の "<...>" が HTML タグ扱いされて以降の本文が消えるのを防ぐ
+  // (MarkdownSanitize.h のコメント参照)。
+  m_notesView->setMarkdown(MarkdownSanitize::neutralizeRawHtml(markdown));
   outer->addWidget(m_notesView, /*stretch=*/1);
 
   auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok, this);

@@ -5,6 +5,7 @@
 #include "viewer/ViewerHints.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
+#include "utils/MarkdownSanitize.h"
 
 #include <QApplication>
 #include <QColor>
@@ -281,74 +282,6 @@ void MarkdownView::applyPreparedLoad(const PreparedLoad& r) {
   renderCurrent();
 }
 
-namespace {
-
-// Qt の setMarkdown (GitHub dialect) は raw HTML を通すため、コードに入れ忘れた
-// 生の "<...>" が HTML 開始タグと解釈され、対応する閉じが無いと以降の本文が
-// 飲み込まれて消える (例: SPEC.md の型名)。コードスパン / フェンスドコード
-// ブロックの外にある '<' だけを "&lt;" にしてタグ解釈を無効化する。
-// ('>' '&' は setMarkdown が正しく扱うので触らない。コード内も触らない。)
-QString neutralizeRawHtml(const QString& src) {
-  QString out;
-  out.reserve(src.size() + 16);
-  const QStringList lines = src.split(QLatin1Char('\n'));
-  bool inFence = false;
-  for (int li = 0; li < lines.size(); ++li) {
-    const QString& line = lines.at(li);
-    const QString trimmed = line.trimmed();
-    const bool fenceLine = trimmed.startsWith(QLatin1String("```")) ||
-                           trimmed.startsWith(QLatin1String("~~~"));
-    if (fenceLine) {
-      inFence = !inFence;
-      out += line;  // フェンス行自体はそのまま
-    } else if (inFence) {
-      out += line;  // コードブロック内はそのまま
-    } else {
-      int i = 0;
-      const int n = line.size();
-      while (i < n) {
-        const QChar c = line.at(i);
-        if (c == QLatin1Char('`')) {
-          // バッククォートのラン長を測り、同じ長さの閉じまでをコードとして素通し
-          int j = i;
-          while (j < n && line.at(j) == QLatin1Char('`')) ++j;
-          const int runLen = j - i;
-          int k = j;
-          int closeStart = -1;
-          while (k < n) {
-            if (line.at(k) == QLatin1Char('`')) {
-              int m = k;
-              while (m < n && line.at(m) == QLatin1Char('`')) ++m;
-              if (m - k == runLen) { closeStart = k; break; }
-              k = m;
-            } else {
-              ++k;
-            }
-          }
-          if (closeStart >= 0) {
-            out += line.mid(i, closeStart + runLen - i);
-            i = closeStart + runLen;
-            continue;
-          }
-          // 閉じが無ければ通常文字として扱う
-        }
-        if (c == QLatin1Char('<')) {
-          out += QLatin1String("&lt;");
-        } else {
-          out += c;
-        }
-        ++i;
-      }
-    }
-    if (li + 1 < lines.size()) {
-      out += QLatin1Char('\n');
-    }
-  }
-  return out;
-}
-
-} // namespace
-
 void MarkdownView::renderCurrent() {
   if (!m_browser) return;
   if (m_rawSource) {
@@ -356,7 +289,8 @@ void MarkdownView::renderCurrent() {
   } else {
     // CommonMark + GFM 拡張 (テーブル / タスクリスト / 取り消し線 / autolink)
     m_browser->document()->setMarkdown(
-      neutralizeRawHtml(m_text), QTextDocument::MarkdownDialectGitHub);
+      MarkdownSanitize::neutralizeRawHtml(m_text),
+      QTextDocument::MarkdownDialectGitHub);
   }
   // 先頭にスクロールを戻す
   m_browser->moveCursor(QTextCursor::Start);
