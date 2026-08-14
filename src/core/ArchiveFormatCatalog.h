@@ -55,6 +55,11 @@ struct ArchiveFormatInfo {
 
   Encryption encryption = Encryption::None;
 
+  // 作成時に使う暗号化方式の既定 ("aes256" / "zipcrypt")。
+  // Encryption::ReadWrite の形式でのみ意味を持つ。パスワードが空なら暗号化
+  // 自体を行わないので、「暗号化しない」はこの値ではなくパスワード欄で決まる。
+  QString defaultEncryption;
+
   // エントリ名の文字コードを指定できるか (zip / lzh のようにレガシーコード
   // ページで格納されうる形式)。
   bool supportsFilenameEncoding = false;

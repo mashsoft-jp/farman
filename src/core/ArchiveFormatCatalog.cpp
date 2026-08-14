@@ -11,6 +11,10 @@ namespace ArchiveFormatCatalog {
 
 namespace {
 
+// 表示名は呼び出し側で QT_TRANSLATE_NOOP("ArchiveFormatCatalog", ...) と
+// マークしておき (lupdate はマクロを見て抽出する)、実際の翻訳はここで行う。
+// ラッパ関数越しに translate すると lupdate が文言を拾えないため、抽出用の
+// マークと翻訳の実行を分けている。
 QString name(const char* text) {
   return QCoreApplication::translate("ArchiveFormatCatalog", text);
 }
@@ -18,12 +22,12 @@ QString name(const char* text) {
 using Enc = ArchiveFormatInfo::Encryption;
 
 // 作成もできるコンテナ形式 (v0.9.9 までと同じ 5 形式)。
-ArchiveFormatInfo makeCreatable(const QString& id, const QString& displayName,
+ArchiveFormatInfo makeCreatable(const QString& id, const char* displayName,
                                 const QStringList& patterns,
                                 bool supportsLevel, Enc encryption) {
   ArchiveFormatInfo f;
   f.id                       = id;
-  f.displayName              = displayName;
+  f.displayName              = name(displayName);
   f.defaultPatterns          = patterns;
   f.source                   = ArchiveFormatInfo::Source::Builtin;
   f.defaultEnabled           = true;
@@ -31,18 +35,22 @@ ArchiveFormatInfo makeCreatable(const QString& id, const QString& displayName,
   f.supportsCompressionLevel = supportsLevel;
   f.encryption               = encryption;
   f.supportsFilenameEncoding = true;
+  if (encryption == Enc::ReadWrite) {
+    // 旧式 ZipCrypto は脆弱なので既定は AES-256 (v0.9.9 までの決め打ちと同じ)。
+    f.defaultEncryption = QStringLiteral("aes256");
+  }
   return f;
 }
 
 // 読取のみのコンテナ形式。libarchive は読めるはずだが farman としての動作確認と
 // 各 OS のコーデック同梱保証が済んでいないため、既定では無効にしておく。
-ArchiveFormatInfo makeReadOnly(const QString& id, const QString& displayName,
+ArchiveFormatInfo makeReadOnly(const QString& id, const char* displayName,
                                const QStringList& patterns,
                                Enc encryption = Enc::None,
                                bool supportsFilenameEncoding = false) {
   ArchiveFormatInfo f;
   f.id                       = id;
-  f.displayName              = displayName;
+  f.displayName              = name(displayName);
   f.defaultPatterns          = patterns;
   f.source                   = ArchiveFormatInfo::Source::Builtin;
   f.defaultEnabled           = false;
@@ -54,7 +62,7 @@ ArchiveFormatInfo makeReadOnly(const QString& id, const QString& displayName,
 }
 
 // 中身 1 エントリの単一ファイル圧縮 (tar を伴わない .gz / .xz など)。
-ArchiveFormatInfo makeSingleFile(const QString& id, const QString& displayName,
+ArchiveFormatInfo makeSingleFile(const QString& id, const char* displayName,
                                  const QStringList& patterns) {
   ArchiveFormatInfo f = makeReadOnly(id, displayName, patterns);
   f.singleFileCompression = true;
@@ -65,59 +73,59 @@ QList<ArchiveFormatInfo> buildBuiltinFormats() {
   QList<ArchiveFormatInfo> list;
 
   // ── 作成もできる形式 ──────────────────────────
-  list << makeCreatable(QStringLiteral("zip"), name("ZIP"),
+  list << makeCreatable(QStringLiteral("zip"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "ZIP"),
                         {QStringLiteral("*.zip")}, true, Enc::ReadWrite);
-  list << makeCreatable(QStringLiteral("tar"), name("TAR (uncompressed)"),
+  list << makeCreatable(QStringLiteral("tar"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR (uncompressed)"),
                         {QStringLiteral("*.tar")}, false, Enc::None);
-  list << makeCreatable(QStringLiteral("tar.gz"), name("TAR + gzip"),
+  list << makeCreatable(QStringLiteral("tar.gz"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR + gzip"),
                         {QStringLiteral("*.tar.gz"), QStringLiteral("*.tgz")},
                         true, Enc::None);
-  list << makeCreatable(QStringLiteral("tar.bz2"), name("TAR + bzip2"),
+  list << makeCreatable(QStringLiteral("tar.bz2"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR + bzip2"),
                         {QStringLiteral("*.tar.bz2"), QStringLiteral("*.tbz2")},
                         true, Enc::None);
-  list << makeCreatable(QStringLiteral("tar.xz"), name("TAR + xz"),
+  list << makeCreatable(QStringLiteral("tar.xz"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR + xz"),
                         {QStringLiteral("*.tar.xz"), QStringLiteral("*.txz")},
                         true, Enc::None);
 
   // ── 読取のみのコンテナ形式 ────────────────────
-  list << makeReadOnly(QStringLiteral("tar.zst"), name("TAR + Zstandard"),
+  list << makeReadOnly(QStringLiteral("tar.zst"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR + Zstandard"),
                        {QStringLiteral("*.tar.zst"), QStringLiteral("*.tzst")});
-  list << makeReadOnly(QStringLiteral("tar.lz4"), name("TAR + LZ4"),
+  list << makeReadOnly(QStringLiteral("tar.lz4"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR + LZ4"),
                        {QStringLiteral("*.tar.lz4")});
-  list << makeReadOnly(QStringLiteral("tar.lzma"), name("TAR + LZMA"),
+  list << makeReadOnly(QStringLiteral("tar.lzma"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR + LZMA"),
                        {QStringLiteral("*.tar.lzma"), QStringLiteral("*.tlz")});
-  list << makeReadOnly(QStringLiteral("tar.lz"), name("TAR + lzip"),
+  list << makeReadOnly(QStringLiteral("tar.lz"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR + lzip"),
                        {QStringLiteral("*.tar.lz")});
-  list << makeReadOnly(QStringLiteral("tar.Z"), name("TAR + compress"),
+  list << makeReadOnly(QStringLiteral("tar.Z"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "TAR + compress"),
                        {QStringLiteral("*.tar.Z"), QStringLiteral("*.taz")});
-  list << makeReadOnly(QStringLiteral("7z"), name("7-Zip"),
+  list << makeReadOnly(QStringLiteral("7z"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "7-Zip"),
                        {QStringLiteral("*.7z")}, Enc::ReadOnly, true);
-  list << makeReadOnly(QStringLiteral("rar"), name("RAR"),
+  list << makeReadOnly(QStringLiteral("rar"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "RAR"),
                        {QStringLiteral("*.rar")}, Enc::ReadOnly, true);
-  list << makeReadOnly(QStringLiteral("iso"), name("ISO9660 disc image"),
+  list << makeReadOnly(QStringLiteral("iso"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "ISO9660 disc image"),
                        {QStringLiteral("*.iso")});
-  list << makeReadOnly(QStringLiteral("cab"), name("Microsoft Cabinet"),
+  list << makeReadOnly(QStringLiteral("cab"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "Microsoft Cabinet"),
                        {QStringLiteral("*.cab")}, Enc::None, true);
-  list << makeReadOnly(QStringLiteral("xar"), name("xar / pkg"),
+  list << makeReadOnly(QStringLiteral("xar"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "xar / pkg"),
                        {QStringLiteral("*.xar"), QStringLiteral("*.pkg")});
-  list << makeReadOnly(QStringLiteral("cpio"), name("cpio"),
+  list << makeReadOnly(QStringLiteral("cpio"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "cpio"),
                        {QStringLiteral("*.cpio")});
-  list << makeReadOnly(QStringLiteral("ar"), name("ar / Debian package"),
+  list << makeReadOnly(QStringLiteral("ar"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "ar / Debian package"),
                        {QStringLiteral("*.ar"), QStringLiteral("*.a"),
                         QStringLiteral("*.deb")});
 
   // ── 単一ファイル圧縮 ─────────────────────────
   // tar 併用形 (*.tar.gz 等) より後に置くが、照合は「最長のパターン優先」で
   // 決めるのでカタログ順には依存しない。
-  list << makeSingleFile(QStringLiteral("gz"),   name("gzip"),      {QStringLiteral("*.gz")});
-  list << makeSingleFile(QStringLiteral("bz2"),  name("bzip2"),     {QStringLiteral("*.bz2")});
-  list << makeSingleFile(QStringLiteral("xz"),   name("xz"),        {QStringLiteral("*.xz")});
-  list << makeSingleFile(QStringLiteral("lzma"), name("LZMA"),      {QStringLiteral("*.lzma")});
-  list << makeSingleFile(QStringLiteral("zst"),  name("Zstandard"), {QStringLiteral("*.zst")});
-  list << makeSingleFile(QStringLiteral("lz4"),  name("LZ4"),       {QStringLiteral("*.lz4")});
-  list << makeSingleFile(QStringLiteral("lz"),   name("lzip"),      {QStringLiteral("*.lz")});
-  list << makeSingleFile(QStringLiteral("Z"),    name("compress"),  {QStringLiteral("*.Z")});
-  list << makeSingleFile(QStringLiteral("lzo"),  name("LZO"),       {QStringLiteral("*.lzo")});
+  list << makeSingleFile(QStringLiteral("gz"),   QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "gzip"),      {QStringLiteral("*.gz")});
+  list << makeSingleFile(QStringLiteral("bz2"),  QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "bzip2"),     {QStringLiteral("*.bz2")});
+  list << makeSingleFile(QStringLiteral("xz"),   QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "xz"),        {QStringLiteral("*.xz")});
+  list << makeSingleFile(QStringLiteral("lzma"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "LZMA"),      {QStringLiteral("*.lzma")});
+  list << makeSingleFile(QStringLiteral("zst"),  QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "Zstandard"), {QStringLiteral("*.zst")});
+  list << makeSingleFile(QStringLiteral("lz4"),  QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "LZ4"),       {QStringLiteral("*.lz4")});
+  list << makeSingleFile(QStringLiteral("lz"),   QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "lzip"),      {QStringLiteral("*.lz")});
+  list << makeSingleFile(QStringLiteral("Z"),    QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "compress"),  {QStringLiteral("*.Z")});
+  list << makeSingleFile(QStringLiteral("lzo"),  QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "LZO"),       {QStringLiteral("*.lzo")});
 
   return list;
 }
@@ -194,7 +202,7 @@ QList<ResolvedArchiveFormat> resolvedFormats() {
     }
 
     r.compressionLevel = ov.compressionLevel.value_or(-1);
-    r.encryption       = ov.encryption.value_or(QString());
+    r.encryption       = ov.encryption.value_or(info.defaultEncryption);
     r.filenameEncoding = ov.filenameEncoding.value_or(QString());
 
     resolved << r;

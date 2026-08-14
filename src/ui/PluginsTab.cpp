@@ -443,8 +443,11 @@ void PluginsTab::loadArchivePluginList() {
       enabledItem->setCheckState(
         toggleable && isArchivePluginDisabled(rec.pluginId) ? Qt::Unchecked
                                                             : Qt::Checked);
+      // 有効 / 無効の編集は「設定 → アーカイブ」の形式一覧に一本化している
+      // (組み込み形式とプラグイン形式を同じ場所でトグルできるようにするため)。
+      // ここでは現在の状態を表示するだけ。
       enabledItem->setToolTip(
-        toggleable ? tr("Enable/disable can be changed in the Details dialog.")
+        toggleable ? tr("Enable/disable can be changed in Settings → Archive.")
                    : tr("Plugin ID is unavailable, so this plugin cannot be toggled."));
     }
     m_archiveTable->setItem(row, 0, enabledItem);
@@ -515,16 +518,21 @@ void PluginsTab::showArchivePluginDetails(int row) {
     form->addRow(label, v);
   };
 
-  // 有効 / 無効の切り替え (ID があれば可能)。
-  const bool enabledEditable = !rec.pluginId.isEmpty();
+  // 有効 / 無効は表示のみ。編集は「設定 → アーカイブ」の形式一覧に一本化して
+  // いる (組み込み形式とプラグイン形式を同じ場所でトグルできるようにするため)。
+  const bool enabled =
+    !(!rec.pluginId.isEmpty() && isArchivePluginDisabled(rec.pluginId));
   auto* enabledCheck = new QCheckBox(&dialog);
-  enabledCheck->setChecked(
-    !(enabledEditable && isArchivePluginDisabled(rec.pluginId)));
-  enabledCheck->setEnabled(enabledEditable);
-  enabledCheck->setToolTip(
-    enabledEditable ? tr("Changes take effect after restarting farman.")
-                    : tr("Plugin ID is unavailable, so this plugin cannot be toggled."));
+  enabledCheck->setChecked(enabled);
+  enabledCheck->setEnabled(false);
+  enabledCheck->setToolTip(tr("Change this in Settings → Archive."));
   form->addRow(tr("Enabled:"), enabledCheck);
+  auto* enabledHint = new QLabel(
+    tr("Enable/disable is set per archive format in Settings → Archive."),
+    &dialog);
+  enabledHint->setWordWrap(true);
+  enabledHint->setEnabled(false);
+  form->addRow(QString(), enabledHint);
 
   addField(tr("Type:"), tr("Archive"));
   addField(tr("Status:"), archivePluginStatusEmoji(rec) + QStringLiteral(" ")
@@ -561,18 +569,7 @@ void PluginsTab::showArchivePluginDetails(int row) {
   layout->addWidget(buttons);
   dialog.resize(std::clamp(dialog.sizeHint().width(), 420, 560),
                 dialog.sizeHint().height());
-  if (dialog.exec() != QDialog::Accepted) return;
-
-  if (enabledEditable) {
-    if (enabledCheck->isChecked()) {
-      m_disabledArchivePluginIds.remove(rec.pluginId.trimmed().toLower());
-    } else {
-      m_disabledArchivePluginIds.insert(rec.pluginId.trimmed().toLower());
-    }
-    if (auto* item = m_archiveTable->item(row, 0)) {
-      item->setCheckState(enabledCheck->isChecked() ? Qt::Checked : Qt::Unchecked);
-    }
-  }
+  dialog.exec();   // 表示専用 (編集項目が無いので結果は見ない)
 }
 
 // 一覧の「拡張子」列に出す文字列。編集中の現在値を優先し、編集対象外の
@@ -978,23 +975,10 @@ void PluginsTab::save() {
     m_restartRequiredOnSave = true;
   }
 
-  // アーカイブプラグインの有効 / 無効 (次回起動から有効)。ビュアーと同じ扱い。
-  QStringList disabledArchive = settings.disabledArchivePlugins();
-  for (const ArchivePluginRecord& rec : m_archiveRecords) {
-    if (rec.pluginId.isEmpty()) continue;
-    disabledArchive.removeIf([&rec](const QString& id) {
-      return id.trimmed().compare(rec.pluginId, Qt::CaseInsensitive) == 0;
-    });
-    if (isArchivePluginDisabled(rec.pluginId)) {
-      disabledArchive.append(rec.pluginId);
-    }
-  }
-  disabledArchive.sort(Qt::CaseInsensitive);
-  disabledArchive.removeDuplicates();
-  if (disabledArchive != settings.disabledArchivePlugins()) {
-    settings.setDisabledArchivePlugins(disabledArchive);
-    m_restartRequiredOnSave = true;
-  }
+  // アーカイブプラグインの有効 / 無効はここでは書かない。編集は
+  // 「設定 → アーカイブ」の形式一覧に一本化してあり (ArchiveTab::save が
+  // disabledArchivePlugins を書く)、同じ設定を 2 つのタブから書くと保存順で
+  // 打ち消し合うため。この一覧は状態の表示だけを担当する。
 
   // ビュアーの拡張子紐付け (詳細ダイアログで編集した値)。
   // 既定に追従しているプラグインは書かず、明示的に変えたものだけ保存する。

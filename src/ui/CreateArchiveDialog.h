@@ -51,6 +51,10 @@ private:
   void setupUi(const QString& defaultOutputDir);
   QString baseName() const;
   QString extensionForFormat(ArchiveCreateWorker::Format fmt) const;
+  // 作成形式 → ArchiveFormatCatalog の組み込み形式 ID ("zip" / "tar.gz" …)。
+  QString catalogIdForFormat(ArchiveCreateWorker::Format fmt) const;
+  // 設定 → アーカイブに保存した「作成時の既定」を現在の形式ぶん反映する。
+  void applyFormatDefaults();
 
   QString      m_destPaneDir;     // 相手ペイン (= 既定値)
   QString      m_sourcePaneDir;   // 自分ペイン (= ↑↓トグル相手)

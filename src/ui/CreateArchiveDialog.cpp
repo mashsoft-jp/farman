@@ -1,4 +1,5 @@
 #include "CreateArchiveDialog.h"
+#include "core/ArchiveFormatCatalog.h"
 #include "utils/Dialogs.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -46,12 +47,17 @@ QString CreateArchiveDialog::passphrase() const {
 }
 
 ArchiveCreateWorker::Encryption CreateArchiveDialog::encryption() const {
-  // zip + パスワードありなら AES-256 で暗号化。旧式 ZipCrypto は脆弱なので
-  // UI からは選択肢を出さず、ここで決め打ちにする (worker 側の enum は将来
-  // 再露出できるよう残してある)。
+  // zip + パスワードありなら暗号化する。方式は設定 → アーカイブの zip 形式の
+  // 「既定の暗号化」に従う (既定は AES-256)。旧式 ZipCrypto は脆弱なので、
+  // このダイアログには方式の選択 UI は出さず設定側だけで選ばせる。
   if (format() != ArchiveCreateWorker::Format::Zip
       || m_passwordEdit->text().isEmpty()) {
     return ArchiveCreateWorker::Encryption::None;
+  }
+  const ResolvedArchiveFormat zip =
+    ArchiveFormatCatalog::resolvedFormat(QStringLiteral("zip"));
+  if (zip.encryption == QStringLiteral("zipcrypt")) {
+    return ArchiveCreateWorker::Encryption::ZipCrypt;
   }
   return ArchiveCreateWorker::Encryption::Aes256;
 }
@@ -60,6 +66,28 @@ int CreateArchiveDialog::compressionLevel() const {
   // 無圧縮の Tar は対象外。それ以外は combo の値 (-1 = 既定 / 0〜9)。
   if (format() == ArchiveCreateWorker::Format::Tar) return -1;
   return m_compressionCombo->currentData().toInt();
+}
+
+QString CreateArchiveDialog::catalogIdForFormat(ArchiveCreateWorker::Format fmt) const {
+  // 作成できる 5 形式は ArchiveFormatCatalog の組み込み形式 ID と 1:1。
+  switch (fmt) {
+    case ArchiveCreateWorker::Format::Zip:    return QStringLiteral("zip");
+    case ArchiveCreateWorker::Format::Tar:    return QStringLiteral("tar");
+    case ArchiveCreateWorker::Format::TarGz:  return QStringLiteral("tar.gz");
+    case ArchiveCreateWorker::Format::TarBz2: return QStringLiteral("tar.bz2");
+    case ArchiveCreateWorker::Format::TarXz:  return QStringLiteral("tar.xz");
+  }
+  return QStringLiteral("zip");
+}
+
+void CreateArchiveDialog::applyFormatDefaults() {
+  // 設定 → アーカイブで形式ごとに保存した「作成時の既定」を初期値にする。
+  // ユーザーがこのダイアログで変えた値は、その回だけの上書きとして扱う
+  // (設定側には書き戻さない)。
+  const ResolvedArchiveFormat resolved =
+    ArchiveFormatCatalog::resolvedFormat(catalogIdForFormat(format()));
+  const int index = m_compressionCombo->findData(resolved.compressionLevel);
+  m_compressionCombo->setCurrentIndex(index >= 0 ? index : 0);
 }
 
 QString CreateArchiveDialog::baseName() const {
@@ -239,6 +267,9 @@ void CreateArchiveDialog::onFormatChanged() {
   m_compressionCombo->setEnabled(compressible);
   m_passwordEdit->setEnabled(isZip);
   m_passwordConfirmEdit->setEnabled(isZip);
+
+  // 形式が変わったら、その形式の既定値を入れ直す。
+  applyFormatDefaults();
 }
 
 void CreateArchiveDialog::tryAccept() {

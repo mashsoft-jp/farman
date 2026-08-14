@@ -13,6 +13,7 @@ class KeybindingTab;
 class AppearanceTab;
 class BehaviorTab;
 class PluginsTab;
+class ArchiveTab;
 class GeneralTab;
 class ExternalAppsTab;
 
@@ -26,6 +27,7 @@ public:
     Behavior,
     Appearance,
     Plugins,
+    Archive,
     ExternalApps,
     Keybindings,
   };
@@ -71,6 +73,7 @@ private:
   AppearanceTab*    m_appearanceTab;
   BehaviorTab*      m_behaviorTab;
   PluginsTab*       m_pluginsTab;
+  ArchiveTab*       m_archiveTab;
   GeneralTab*       m_generalTab;
   ExternalAppsTab*  m_externalAppsTab;
   QDialogButtonBox* m_buttonBox;
