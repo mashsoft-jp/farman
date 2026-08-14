@@ -149,36 +149,23 @@ bool ViewerPanel::viewerKindFromPluginId(const QString& pluginId, ViewerKind& ki
 }
 
 ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
-  // ViewerPanel::openFile() の Auto 分岐と同じルーティング。
-  // External モード (独立ウィンドウ) からも同じ判定を使えるよう静的に切り出した。
-  const QFileInfo fileInfo(filePath);
-  const QString fileName  = fileInfo.fileName();
-  QMimeDatabase mimeDb;
-  const QMimeType mime = mimeDb.mimeTypeForFile(filePath);
-  const Settings& s = Settings::instance();
-
-  if (MediaMatchers::fileNameMatches(s.imageViewerExtensions(), fileName)
-      || MediaMatchers::mimeMatches(s.imageViewerMimePatterns(), mime)) {
-    return ViewerKind::Image;
+  // 判定は ViewerDispatcher::resolvePlugin() に一本化する。
+  //
+  // かつてはここに「画像(拡張子|MIME) → PDF → CSV → Markdown →
+  // テキスト(拡張子|MIME) → バイナリ」という独自の固定チェーンを持っていたが、
+  // resolvePlugin とは規則が違った (MIME をフォールバックではなく拡張子と同列に
+  // 見ていたので、画像の MIME 一致が PDF/CSV/Markdown の拡張子一致に勝った。
+  // プラグインの priority も見ていなかった)。同じファイルでも経路によって選ばれる
+  // ビュアーが変わりうる状態だったので、ルールを 1 本にまとめた。
+  if (IViewerPlugin* plugin =
+        ViewerDispatcher::instance().resolvePlugin(filePath)) {
+    ViewerKind kind;
+    if (viewerKindFromPluginId(plugin->pluginId(), kind)) {
+      return kind;
+    }
   }
-  // PDF はバイナリ判定の前に独立で見る。
-  if (MediaMatchers::fileNameMatches(s.pdfViewerExtensions(), fileName)) {
-    return ViewerKind::Pdf;
-  }
-  // CSV / TSV はテキストビュアーより先に判定 (.csv はテキストにマッチし得るため、
-  // 表形式表示の CSV ビュアーを優先する)。
-  if (MediaMatchers::fileNameMatches(s.csvViewerExtensions(), fileName)) {
-    return ViewerKind::Csv;
-  }
-  // Markdown はテキストビュアーより先に判定 (.md は両方の対象になり得るため、
-  // 整形表示できる Markdown を優先する)。
-  if (MediaMatchers::fileNameMatches(s.markdownViewerExtensions(), fileName)) {
-    return ViewerKind::Markdown;
-  }
-  if (MediaMatchers::fileNameMatches(s.textViewerExtensions(), fileName)
-      || MediaMatchers::mimeMatches(s.textViewerMimePatterns(), mime)) {
-    return ViewerKind::Text;
-  }
+  // 内蔵 ViewerKind を持たないプラグイン (media / 外部) と、どのプラグインにも
+  // 当たらなかった場合は最後のフォールバックであるバイナリで開く。
   return ViewerKind::Binary;
 }
 

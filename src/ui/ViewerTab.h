@@ -72,8 +72,6 @@ private:
   // 拡張子紐付けのヘルパー (旧 ViewersTab から移設)
   QString normalizedExtension(const QString& extension) const;
   QStringList normalizedExtensions(const QString& text) const;
-  QString extensionsTextForPlugin(const QMap<QString, QString>& associations,
-                                  const QString& pluginId) const;
   QStringList defaultExtensionsForPlugin(IViewerPlugin* plugin) const;
   QStringList defaultExtensionsFromList(const QStringList& extensions) const;
 
@@ -90,9 +88,9 @@ private:
   QStringList m_extensionOrder;
   QMap<QString, QStringList> m_extensions;          // pluginId → 現在値
   QMap<QString, QStringList> m_extensionDefaults;   // pluginId → 既定値
-  // 一覧に存在しないプラグインへの紐付け (拡張子 → pluginId)。編集対象外
-  // なので save() でそのまま書き戻す。
-  QMap<QString, QString> m_preservedAssociations;
+  // 一覧に存在しないプラグインのパターン (pluginId → パターン一覧)。編集
+  // 対象外なので save() でそのまま書き戻す。
+  QMap<QString, QStringList> m_preservedPatterns;
 
   bool m_restartRequiredOnSave = false;
 };

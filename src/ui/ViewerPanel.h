@@ -47,6 +47,9 @@ public:
   // 内部の判定で Text / Image / Binary のいずれかに解決して返す。
   // External モード (独立ウィンドウ) でも同じ振り分けを使うので、Inline
   // 専用にせず公開する。
+  // Auto 指定時に使う内蔵ビュアー種別の判定。中身は
+  // ViewerDispatcher::resolvePlugin() への委譲で、内蔵 ViewerKind を持たない
+  // プラグイン (media / 外部) と未解決は Binary を返す。
   static ViewerKind resolveAuto(const QString& filePath);
 
   // pluginId から内蔵 ViewerKind を引く。media_viewer など内蔵種別を持たない

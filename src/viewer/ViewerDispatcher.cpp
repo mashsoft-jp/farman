@@ -344,26 +344,14 @@ IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
     return nullptr;
   }
 
-  const QString fileName  = fileInfo.fileName();
-  const QString extension = fileInfo.suffix().toLower();
-
-  const QString preferredPluginId =
-    Settings::instance().viewerAssociationForExtension(extension);
-  if (!preferredPluginId.isEmpty()) {
-    for (const auto& plugin : m_plugins) {
-      if (plugin->pluginId() == preferredPluginId) {
-        return plugin.get();
-      }
-    }
-    Logger::instance().warn(
-      QStringLiteral("Viewer association for .%1 points to missing plugin '%2'")
-        .arg(extension, preferredPluginId));
-  }
+  const QString fileName = fileInfo.fileName();
 
   // 対応プラグインの選択は 2 段階。いずれも優先度が最も高い (= priority 値が
   // 最小の) ものを選び、同点なら先に登録されたものを使う。
-  //   1. 拡張子で明示的に対応宣言しているプラグイン (最優先)
-  //   2. (1 が無ければ) canHandle が true のプラグイン
+  //   1. ファイルパターンで対応宣言しているプラグイン (最優先)
+  //   2. (1 が無ければ) canHandle が true のプラグイン = 実質 MIME フォールバック
+  // ユーザーが設定で書いたパターンは effectiveFilePatterns() 経由で 1 に入る
+  // ので、全体としては「パターン > MIME > (呼び出し側で) Binary」の順になる。
   // 拡張子一致を MIME 一致より優先するのは、内容スニッフが当てにならない
   // ケースへの対策。例: HEIC は MP4/MOV と同じ ISO BMFF コンテナなので、
   // 拡張子から MIME を確定できない環境 (Windows 等) では内容スニッフで
@@ -373,11 +361,10 @@ IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
 
   for (const auto& plugin : m_plugins) {
     // 対応宣言はファイルパターンとして照合する ("mp4" / "*.tar.gz" /
-    // "Makefile" のいずれの書き方も受ける)。プラグインの
-    // supportedExtensions() は多くが Settings 由来なので、これが
-    // 「設定で書いたパターンが本流の判定にそのまま効く」経路になる。
+    // "Makefile" のいずれの書き方も受ける)。effectiveFilePatterns() が設定の
+    // 上書きを優先するので、ユーザーが書いたパターンがそのままここに効く。
     const bool extMatch =
-      MediaMatchers::fileNameMatches(plugin->supportedExtensions(), fileName);
+      MediaMatchers::fileNameMatches(plugin->effectiveFilePatterns(), fileName);
     if (extMatch) {
       if (plugin->priority() < bestExtPrio) {
         bestByExt = plugin.get();

@@ -630,9 +630,7 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
     if (kind == ViewerPanel::ViewerKind::Auto) {
       // Inline (ViewerPanel::openFile) と同じ判定にするため resolvePlugin()
       // を使う。ViewerDispatcher::createViewer() は未解決時にバイナリ
-      // ビュアーへフォールバックするため、ここで使うと下の resolveAuto()
-      // (Settings の拡張子 / MIME ルーティング) に到達できず、Inline と
-      // 選択結果がズレる。
+      // ビュアーへフォールバックしてしまい、下の resolveAuto() に到達できない。
       auto& dispatcher = ViewerDispatcher::instance();
       if (IViewerPlugin* plugin = dispatcher.resolvePlugin(filePath)) {
         w = plugin->createViewer(filePath, this, dispatcher.pluginContext());

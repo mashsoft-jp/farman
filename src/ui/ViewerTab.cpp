@@ -489,19 +489,6 @@ QStringList ViewerTab::normalizedExtensions(const QString& text) const {
   return result;
 }
 
-QString ViewerTab::extensionsTextForPlugin(
-  const QMap<QString, QString>& associations,
-  const QString& pluginId) const {
-  QStringList extensions;
-  for (auto it = associations.cbegin(); it != associations.cend(); ++it) {
-    if (it.value() == pluginId) {
-      extensions.append(it.key());
-    }
-  }
-  extensions.sort(Qt::CaseInsensitive);
-  return extensions.join(QStringLiteral(", "));
-}
-
 QStringList ViewerTab::defaultExtensionsForPlugin(IViewerPlugin* plugin) const {
   return plugin ? defaultExtensionsFromList(plugin->supportedExtensions()) : QStringList();
 }
@@ -529,31 +516,18 @@ void ViewerTab::loadExtensionState() {
   m_extensionOrder.clear();
   m_extensions.clear();
   m_extensionDefaults.clear();
-  m_preservedAssociations.clear();
+  m_preservedPatterns.clear();
 
-  const QMap<QString, QString> associations =
-    Settings::instance().viewerAssociations();
-  QSet<QString> assignedExtensions;
-  for (auto it = associations.cbegin(); it != associations.cend(); ++it) {
-    assignedExtensions.insert(it.key());
-  }
+  const QMap<QString, QStringList> overrides =
+    Settings::instance().viewerFilePatterns();
 
   auto addEntry = [&](const QString& pluginId, QStringList defaults) {
     if (pluginId.isEmpty() || m_extensions.contains(pluginId)) return;
-    const QStringList explicitExtensions =
-      normalizedExtensions(extensionsTextForPlugin(associations, pluginId));
-    QStringList visible = explicitExtensions;
-    if (visible.isEmpty()) {
-      // 他のプラグインへ明示割り当て済みの拡張子は既定から除いて見せる
-      for (int i = defaults.size() - 1; i >= 0; --i) {
-        if (assignedExtensions.contains(defaults.at(i))) {
-          defaults.removeAt(i);
-        }
-      }
-      visible = defaults;
-    }
+    // 設定に上書きがあればそれを、無ければプラグインの既定を見せる。
+    const QStringList overridden = normalizedExtensions(
+      overrides.value(pluginId).join(QStringLiteral(", ")));
     m_extensionOrder.append(pluginId);
-    m_extensions.insert(pluginId, visible);
+    m_extensions.insert(pluginId, overridden.isEmpty() ? defaults : overridden);
     m_extensionDefaults.insert(pluginId, defaults);
   };
 
@@ -612,11 +586,11 @@ void ViewerTab::loadExtensionState() {
              defaultExtensionsFromList(record.supportedExtensions));
   }
 
-  // 一覧に存在しないプラグインへの紐付けは編集できないので、そのまま
-  // 保持して save() で書き戻す (プラグインを戻したとき設定が残るように)。
-  for (auto it = associations.cbegin(); it != associations.cend(); ++it) {
-    if (!m_extensions.contains(it.value())) {
-      m_preservedAssociations.insert(it.key(), it.value());
+  // 一覧に存在しないプラグインのパターンは編集できないので、そのまま保持して
+  // save() で書き戻す (プラグインを戻したとき設定が残るように)。
+  for (auto it = overrides.cbegin(); it != overrides.cend(); ++it) {
+    if (!m_extensions.contains(it.key())) {
+      m_preservedPatterns.insert(it.key(), it.value());
     }
   }
 }
@@ -647,35 +621,25 @@ void ViewerTab::save() {
     m_restartRequiredOnSave = true;
   }
 
-  // ビュアーの拡張子紐付け (詳細ダイアログで編集した値)。
+  // ビュアーの対象ファイルパターン (詳細ダイアログで編集した値)。
   // 既定に追従しているプラグインは書かず、明示的に変えたものだけ保存する。
-  QMap<QString, QString> associations;
+  QMap<QString, QStringList> patterns;
   for (const QString& pluginId : m_extensionOrder) {
-    // 拡張子を自前管理するプラグインは、グローバル関連付けではなく
-    // 自分の Settings キー (supportedExtensions 経由) で解決するので、
-    // ここでは関連付けを書かない (古い明示割り当ても合わせて落とす)。
+    // パターンを自前管理するプラグインは、ホスト側のこの設定ではなく自分の
+    // Settings キー (supportedExtensions 経由) で解決するのでここでは書かない。
     if (IViewerPlugin* p = ViewerDispatcher::instance().pluginById(pluginId);
         p && p->managesOwnExtensions()) {
       continue;
     }
-    const QStringList extensions = m_extensions.value(pluginId);
-    if (extensions == m_extensionDefaults.value(pluginId)) {
-      continue;
-    }
-    for (const QString& extension : extensions) {
-      if (!associations.contains(extension)) {
-        associations.insert(extension, pluginId);
-      }
-    }
+    const QStringList current = m_extensions.value(pluginId);
+    if (current == m_extensionDefaults.value(pluginId)) continue;
+    if (!current.isEmpty()) patterns.insert(pluginId, current);
   }
-  // 一覧に出ないプラグインの紐付けは最後に (最低優先で) そのまま戻す。
-  for (auto it = m_preservedAssociations.cbegin();
-       it != m_preservedAssociations.cend(); ++it) {
-    if (!associations.contains(it.key())) {
-      associations.insert(it.key(), it.value());
-    }
+  // 一覧に出ないプラグインのぶんはそのまま戻す。
+  for (auto it = m_preservedPatterns.cbegin(); it != m_preservedPatterns.cend(); ++it) {
+    if (!patterns.contains(it.key())) patterns.insert(it.key(), it.value());
   }
-  settings.setViewerAssociations(associations);
+  settings.setViewerFilePatterns(patterns);
 }
 
 } // namespace Farman

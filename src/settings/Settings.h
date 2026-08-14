@@ -264,13 +264,18 @@ public:
   // pluginsDirectory() が空のとき loadPlugins に使う実体。
   static QString defaultPluginsDirectory();
 
-  // 拡張子ごとの既定ビュアープラグイン。キーは小文字・先頭ドットなし
-  // ("mp4" など)、値は IViewerPlugin::pluginId()。空なら自動選択。
-  QMap<QString, QString> viewerAssociations() const;
-  void setViewerAssociations(const QMap<QString, QString>& associations);
-  QString viewerAssociationForExtension(const QString& extension) const;
-  void setViewerAssociationForExtension(const QString& extension,
-                                        const QString& pluginId);
+  // ビュアープラグインごとの対象ファイルパターン (ユーザーが設定で上書きした値)。
+  // キーは IViewerPlugin::pluginId()、値は MediaMatchers::fileNameMatches() が
+  // 解釈するパターン一覧 ("mp4" / "*.tar.gz" / "Makefile")。
+  // 未設定のプラグインはプラグイン自身の supportedExtensions() を使う。
+  //
+  // v0.9.9 までは「拡張子 → pluginId」の対応表 (viewerAssociations) で持って
+  // いたが、キーが拡張子の完全一致だったため glob を書いても効かなかった。
+  // load() で 1 回だけこちらへ移し替える。
+  QMap<QString, QStringList> viewerFilePatterns() const;
+  void setViewerFilePatterns(const QMap<QString, QStringList>& patterns);
+  // 上書きが無ければ空を返す (呼び出し側が supportedExtensions() へフォールバック)。
+  QStringList viewerFilePatternsFor(const QString& pluginId) const;
 
   // ビュアーの表示モード (Inline / External)。Inline はメインウィンドウ内の
   // ViewerPanel を使う現状の挙動、External はファイル毎に独立ウィンドウ。
@@ -425,8 +430,8 @@ public:
 
   // ── CSV / TSV ビュアー設定 ───────────────────────
   // ファイルを開く際に CSV ビュアー (QTableView + 自前パーサ) で処理する拡張子。
-  // 既定は "csv" / "tsv"。テキストビュアー判定より先に走らせる
-  // (resolveAuto の順序で決定)。
+  // 既定は "csv" / "tsv"。テキストビュアーより優先されるかは、双方の
+  // プラグイン priority で決まる (ViewerDispatcher::resolvePlugin)。
   QStringList csvViewerExtensions() const;
   void        setCsvViewerExtensions(const QStringList& exts);
 
@@ -713,8 +718,8 @@ private:
   QString          m_archiveTempDirectory;
   int              m_archivePasswordRetryCount = 3;
   int              m_archiveMaxNestDepth       = 0;   // 0 = 無制限
-  // 拡張子 -> viewer pluginId。空 / 未設定なら priority ベースで自動選択。
-  QMap<QString, QString> m_viewerAssociations;
+  // pluginId -> 対象ファイルパターン。未設定なら supportedExtensions() を使う。
+  QMap<QString, QStringList> m_viewerFilePatterns;
   // ビュアー表示モード。デフォルトは Inline (ビュアーパネルでの表示)。
   ViewerMode       m_viewerMode      = ViewerMode::Inline;
   // ペインごとの表示モード (List / Thumbnail)。
@@ -748,7 +753,7 @@ private:
 
   // Markdown viewer
   // .md / .markdown / .mdown / .mkd を整形 HTML で表示する。
-  // textViewerExtensions より優先される (resolveAuto で Markdown 判定が先)。
+  // textViewerExtensions より優先されるかは、双方のプラグイン priority で決まる。
   QStringList        m_markdownViewerExtensions = {
     "md", "markdown", "mdown", "mkd",
   };

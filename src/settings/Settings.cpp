@@ -158,7 +158,7 @@ void Settings::applyDefaults() {
   m_archiveTempDirectory.clear();
   m_archivePasswordRetryCount = 3;
   m_archiveMaxNestDepth       = 0;
-  m_viewerAssociations.clear();
+  m_viewerFilePatterns.clear();
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
   m_showFileIcons = true;
@@ -1132,35 +1132,28 @@ QString normalizeViewerAssociationExtension(QString extension) {
 
 } // namespace
 
-QMap<QString, QString> Settings::viewerAssociations() const {
-  return m_viewerAssociations;
+QMap<QString, QStringList> Settings::viewerFilePatterns() const {
+  return m_viewerFilePatterns;
 }
 
-void Settings::setViewerAssociations(const QMap<QString, QString>& associations) {
-  m_viewerAssociations.clear();
-  for (auto it = associations.cbegin(); it != associations.cend(); ++it) {
-    const QString extension = normalizeViewerAssociationExtension(it.key());
-    const QString pluginId = it.value().trimmed();
-    if (!extension.isEmpty() && !pluginId.isEmpty()) {
-      m_viewerAssociations.insert(extension, pluginId);
+void Settings::setViewerFilePatterns(const QMap<QString, QStringList>& patterns) {
+  m_viewerFilePatterns.clear();
+  for (auto it = patterns.cbegin(); it != patterns.cend(); ++it) {
+    const QString pluginId = it.key().trimmed();
+    if (pluginId.isEmpty()) continue;
+    QStringList list;
+    for (const QString& raw : it.value()) {
+      const QString pattern = raw.trimmed();
+      if (!pattern.isEmpty() && !list.contains(pattern, Qt::CaseInsensitive)) {
+        list.append(pattern);
+      }
     }
+    if (!list.isEmpty()) m_viewerFilePatterns.insert(pluginId, list);
   }
 }
 
-QString Settings::viewerAssociationForExtension(const QString& extension) const {
-  return m_viewerAssociations.value(normalizeViewerAssociationExtension(extension));
-}
-
-void Settings::setViewerAssociationForExtension(const QString& extension,
-                                                const QString& pluginId) {
-  const QString normalized = normalizeViewerAssociationExtension(extension);
-  if (normalized.isEmpty()) return;
-  const QString trimmedPluginId = pluginId.trimmed();
-  if (trimmedPluginId.isEmpty()) {
-    m_viewerAssociations.remove(normalized);
-  } else {
-    m_viewerAssociations.insert(normalized, trimmedPluginId);
-  }
+QStringList Settings::viewerFilePatternsFor(const QString& pluginId) const {
+  return m_viewerFilePatterns.value(pluginId.trimmed());
 }
 
 QString Settings::defaultPluginsDirectory() {
@@ -2066,11 +2059,29 @@ void Settings::load() {
     }
     setDisabledArchivePlugins(disabled);
   }
-  m_viewerAssociations.clear();
+  m_viewerFilePatterns.clear();
   {
-    const QJsonObject associations = behavior.value("viewerAssociations").toObject();
-    for (auto it = associations.constBegin(); it != associations.constEnd(); ++it) {
-      setViewerAssociationForExtension(it.key(), it.value().toString());
+    const QJsonObject patterns = behavior.value("viewerFilePatterns").toObject();
+    for (auto it = patterns.constBegin(); it != patterns.constEnd(); ++it) {
+      QStringList list;
+      for (const QJsonValue& v : it.value().toArray()) {
+        const QString pattern = v.toString().trimmed();
+        if (!pattern.isEmpty()) list.append(pattern);
+      }
+      if (!list.isEmpty()) m_viewerFilePatterns.insert(it.key().trimmed(), list);
+    }
+    if (patterns.isEmpty()) {
+      // 移行 (〜v0.9.9): 「拡張子 → pluginId」の対応表を pluginId ごとの
+      // パターン一覧へ移し替える。旧形式はキーが拡張子の完全一致だったため、
+      // 設定に glob を書いても効かなかった。
+      const QJsonObject associations = behavior.value("viewerAssociations").toObject();
+      for (auto it = associations.constBegin(); it != associations.constEnd(); ++it) {
+        const QString extension = it.key().trimmed().toLower();
+        const QString pluginId  = it.value().toString().trimmed();
+        if (extension.isEmpty() || pluginId.isEmpty()) continue;
+        QStringList& list = m_viewerFilePatterns[pluginId];
+        if (!list.contains(extension, Qt::CaseInsensitive)) list.append(extension);
+      }
     }
   }
   m_syncBrowseShowDisabledDialog = behavior.value("syncBrowseShowDisabledDialog").toBool(true);
@@ -2826,11 +2837,13 @@ void Settings::save() const {
     behavior["disabledArchivePlugins"] = disabled;
   }
   {
-    QJsonObject associations;
-    for (auto it = m_viewerAssociations.cbegin(); it != m_viewerAssociations.cend(); ++it) {
-      associations[it.key()] = it.value();
+    QJsonObject patterns;
+    for (auto it = m_viewerFilePatterns.cbegin(); it != m_viewerFilePatterns.cend(); ++it) {
+      QJsonArray arr;
+      for (const QString& pattern : it.value()) arr.append(pattern);
+      patterns[it.key()] = arr;
     }
-    behavior["viewerAssociations"] = associations;
+    behavior["viewerFilePatterns"] = patterns;
   }
   behavior["syncBrowseShowDisabledDialog"] = m_syncBrowseShowDisabledDialog;
   behavior["viewerMode"] = (m_viewerMode == ViewerMode::External)

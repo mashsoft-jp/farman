@@ -30,14 +30,20 @@ void syncPluginFromHostSettings() {
                                    settings.logRetentionDays());
 }
 
+QStringList IViewerPlugin::effectiveFilePatterns() const {
+  const QStringList overridden =
+    Settings::instance().viewerFilePatternsFor(pluginId());
+  return overridden.isEmpty() ? supportedExtensions() : overridden;
+}
+
 bool IViewerPlugin::canHandle(const QString& filePath) const {
   const QFileInfo fileInfo(filePath);
 
-  // supportedExtensions() は「拡張子の完全一致リスト」ではなくファイル
-  // パターンのリストとして扱う。"mp4" のような拡張子だけの書き方に加えて
-  // "*.tar.gz" (複合拡張子) や "Makefile" (拡張子無し) も書ける
+  // 対応宣言は「拡張子の完全一致リスト」ではなくファイルパターンのリストと
+  // して扱う。"mp4" のような拡張子だけの書き方に加えて "*.tar.gz" (複合
+  // 拡張子) や "Makefile" (拡張子無し) も書ける
   // (MediaMatchers::fileNameMatches のコメント参照)。
-  if (MediaMatchers::fileNameMatches(supportedExtensions(), fileInfo.fileName())) {
+  if (MediaMatchers::fileNameMatches(effectiveFilePatterns(), fileInfo.fileName())) {
     return true;
   }
 

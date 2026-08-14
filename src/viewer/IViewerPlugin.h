@@ -111,6 +111,13 @@ public:
   virtual QStringList supportedExtensions() const = 0;  // {"txt","log","cpp"}
   virtual QStringList supportedMimeTypes()  const = 0;  // {"text/plain"}
 
+  // 実効の対象ファイルパターン。設定 (Settings::viewerFilePatternsFor) に
+  // ユーザーの上書きがあればそれを、無ければ supportedExtensions() を返す。
+  // 判定は必ずこちらを使うこと。supportedExtensions() を直接見ると、設定で
+  // 書いたパターンが効かない (v0.9.9 以前の不具合)。
+  // 仮想関数ではないので、この追加で ABI (IID) は変わらない。
+  QStringList effectiveFilePatterns() const;
+
   // このファイルを開けるか (より細かい判定が必要な場合に override)
   virtual bool canHandle(const QString& filePath) const;
 
