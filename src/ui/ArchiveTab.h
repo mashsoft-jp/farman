@@ -22,10 +22,13 @@ namespace Farman {
 //     を編集する
 //   - 共通設定 (一時展開先 / パスワード試行回数 / ネスト段数上限)
 //
+// アーカイブプラグインはここで「アーカイブ形式の 1 つ」として扱う。有効 / 無効の
+// 切り替えに加え、ロード状況・エラー・パス等の診断情報も詳細ダイアログで見せる
+// (かつて設定 → プラグインの Archive 一覧が持っていた役割)。
+//
 // 形式の素性は ArchiveFormatCatalog が持ち、このタブは「カタログ既定からの
-// 上書き」だけを Settings へ書き戻す。アーカイブプラグインの有効 / 無効も
-// このタブに一本化しており (設定 → プラグインの Archive 一覧は表示専用)、
-// 書き込み先は既存の Settings::setArchivePluginDisabled と共通。
+// 上書き」だけを Settings へ書き戻す。プラグイン形式の有効 / 無効の書き込み先は
+// 既存の Settings::setArchivePluginDisabled で、ビュアー側とは独立している。
 class ArchiveTab : public QWidget {
   Q_OBJECT
 
@@ -65,6 +68,9 @@ private:
   };
 
   QString patternsDisplayText(const QStringList& patterns) const;
+  // プラグイン形式のロード状態。組み込み形式では使わない。
+  QString pluginStatusText(const ArchivePluginRecord& record) const;
+  QString pluginStatusEmoji(const ArchivePluginRecord& record) const;
   QStringList parsePatterns(const QString& text) const;
   // 形式の由来 (組み込み / プラグイン) の表示文字列。
   QString originText(const ArchiveFormatInfo& info) const;

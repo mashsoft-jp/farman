@@ -169,7 +169,7 @@ QList<QPair<QKeySequence, QString>> defaultBindingList() {
     { QKeySequence(Qt::Key_Question),                  "help.shortcuts" },
     { QKeySequence(Qt::SHIFT | Qt::Key_Question),      "help.shortcuts" },
     { QKeySequence(Qt::SHIFT | Qt::Key_Slash),         "help.shortcuts" },
-    { QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_P),  "help.plugins"   },
+    { QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_P),  "help.viewer_plugins" },
   };
 }
 
@@ -245,6 +245,10 @@ void KeyBindingManager::loadFromSettings() {
   // Ctrl+P が空いていれば自動補完される。既存バインドは保持。
   // version < 19: help.plugins (Ctrl+Shift+P) を新規追加。Help → Plugins...
   // と同じプラグイン一覧 / ロードエラー診断をキーボードから開けるようにする。
+  // version < 20: 設定の「プラグイン」ページを廃止し、ビュアー / アーカイブの
+  // 各ページへ分けたのに合わせ、help.plugins を help.viewer_plugins へ改名。
+  // 旧 ID のバインドは同じキーのまま新 ID へ載せ替える (下の移行処理)。
+  // help.archive_plugins は既定キー無しで新規追加。
   if (version < 13) {
     qDebug() << "KeyBindingManager: migrating bindings from version" << version;
     loadDefaults();
@@ -287,6 +291,19 @@ void KeyBindingManager::loadFromSettings() {
     }
   }
 
+  // version < 20: help.plugins → help.viewer_plugins へ改名。ユーザーが割り当てた
+  // キーをそのまま引き継ぐ (キーは変えず command id だけ差し替える)。
+  if (version < 20) {
+    for (auto it = m_bindings.begin(); it != m_bindings.end(); ++it) {
+      if (it.value() == QStringLiteral("help.plugins")) {
+        it.value() = QStringLiteral("help.viewer_plugins");
+      }
+    }
+    if (savedCommands.remove(QStringLiteral("help.plugins"))) {
+      savedCommands.insert(QStringLiteral("help.viewer_plugins"));
+    }
+  }
+
   // 保存データに含まれない新規コマンドについてはデフォルトを補完する。
   // これにより、アプリアップデートで追加されたコマンドが既存ユーザー環境でも
   // 動作する。保存済みキーと衝突する場合は上書きせずスキップ。
@@ -317,7 +334,7 @@ void KeyBindingManager::saveToSettings() const {
 
   QJsonObject root;
   root["bindings"] = bindings;
-  root["version"] = 19;
+  root["version"] = 20;
 
   QJsonDocument doc(root);
   QString jsonData = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));

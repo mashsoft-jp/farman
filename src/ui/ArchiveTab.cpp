@@ -86,9 +86,10 @@ void ArchiveTab::setupUi() {
   // 一覧と同じ作法 (Enter/Space で詳細、行移動は ↑/↓)。
   m_formatTable = new QTableWidget(formatGroup);
   m_formatTable->setWordWrap(false);
-  m_formatTable->setColumnCount(5);
+  m_formatTable->setColumnCount(6);
   m_formatTable->setHorizontalHeaderLabels({
     tr("Enabled"),
+    tr("Status"),
     tr("Format"),
     tr("Origin"),
     tr("File Name Patterns"),
@@ -252,6 +253,19 @@ QStringList ArchiveTab::parsePatterns(const QString& text) const {
   return patterns;
 }
 
+// プラグイン形式のロード状態。ViewerTab の一覧と同じ絵文字 / 文言に揃える。
+QString ArchiveTab::pluginStatusText(const ArchivePluginRecord& record) const {
+  if (record.loaded) return tr("Loaded");
+  if (record.blockedExternalDisabled) return tr("Blocked (external plugins off)");
+  return record.disabledByUser ? tr("Disabled") : tr("Failed");
+}
+
+QString ArchiveTab::pluginStatusEmoji(const ArchivePluginRecord& record) const {
+  if (record.loaded) return QStringLiteral("✅");
+  if (record.blockedExternalDisabled) return QStringLiteral("🔒");
+  return record.disabledByUser ? QStringLiteral("🚫") : QStringLiteral("❌");
+}
+
 QString ArchiveTab::originText(const ArchiveFormatInfo& info) const {
   return info.source == ArchiveFormatInfo::Source::Plugin ? tr("Plugin")
                                                           : tr("Built-in");
@@ -271,6 +285,19 @@ void ArchiveTab::loadFormatList() {
     enabledItem->setToolTip(tr("Enable/disable can be changed in the Details dialog."));
     m_formatTable->setItem(row, 0, enabledItem);
 
+    // 状態列。組み込み形式は常に使えるので空欄、プラグイン形式だけ
+    // ロード状況 (絵文字) を出す。文言はツールチップと詳細ダイアログで見せる。
+    auto* statusItem = new QTableWidgetItem();
+    statusItem->setTextAlignment(Qt::AlignCenter);
+    if (info.source == ArchiveFormatInfo::Source::Plugin) {
+      statusItem->setText(pluginStatusEmoji(info.pluginRecord));
+      statusItem->setToolTip(pluginStatusText(info.pluginRecord));
+    } else {
+      statusItem->setText(QStringLiteral("-"));
+      statusItem->setToolTip(tr("Built-in formats are always available."));
+    }
+    m_formatTable->setItem(row, 1, statusItem);
+
     auto* nameItem = new QTableWidgetItem(info.displayName);
     QStringList notes;
     if (!info.canCreate)          notes << tr("read-only");
@@ -279,15 +306,15 @@ void ArchiveTab::loadFormatList() {
                            ? info.displayName
                            : tr("%1 (%2)").arg(info.displayName,
                                                notes.join(QStringLiteral(", "))));
-    m_formatTable->setItem(row, 1, nameItem);
+    m_formatTable->setItem(row, 2, nameItem);
 
     auto* originItem = new QTableWidgetItem(originText(info));
     originItem->setToolTip(originItem->text());
-    m_formatTable->setItem(row, 2, originItem);
+    m_formatTable->setItem(row, 3, originItem);
 
     auto* patternsItem = new QTableWidgetItem(patternsDisplayText(state.patterns));
     patternsItem->setToolTip(patternsItem->text());
-    m_formatTable->setItem(row, 3, patternsItem);
+    m_formatTable->setItem(row, 4, patternsItem);
 
     auto* detailsButton = new QPushButton(tr("Details..."), m_formatTable);
     detailsButton->setAutoDefault(false);
@@ -297,15 +324,15 @@ void ArchiveTab::loadFormatList() {
       m_formatTable->selectRow(row);
       showFormatDetails(row);
     });
-    m_formatTable->setCellWidget(row, 4, detailsButton);
+    m_formatTable->setCellWidget(row, 5, detailsButton);
   }
 
   m_formatTable->resizeColumnsToContents();
   m_formatTable->resizeRowsToContents();
   m_formatTable->horizontalHeader()->setStretchLastSection(false);
-  m_formatTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
-  if (auto* button = m_formatTable->cellWidget(0, 4)) {
-    m_formatTable->setColumnWidth(4, button->sizeHint().width() + 8);
+  m_formatTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+  if (auto* button = m_formatTable->cellWidget(0, 5)) {
+    m_formatTable->setColumnWidth(5, button->sizeHint().width() + 8);
   }
 }
 
@@ -335,9 +362,48 @@ void ArchiveTab::showFormatDetails(int row) {
       : tr("When off, files matching the patterns below are treated as "
            "ordinary files."));
   form->addRow(tr("Enabled:"), enabledCheck);
+  // 「有効」は設定値そのもので、実際にロードできたかは上の状態欄が示す。
+  // 外部プラグインの読込みが OFF だと、有効にしていてもロードされない。
+  if (info.source == ArchiveFormatInfo::Source::Plugin
+      && info.pluginRecord.blockedExternalDisabled) {
+    auto* blockedHint = new QLabel(
+      tr("External plugin loading is off. Turn on \"Allow loading external "
+         "plugins\" in Settings → General to load this plugin."), &dialog);
+    blockedHint->setWordWrap(true);
+    blockedHint->setEnabled(false);
+    form->addRow(QString(), blockedHint);
+  }
 
   addField(tr("Format:"), info.displayName);
   addField(tr("Origin:"), originText(info));
+
+  // プラグイン形式は、かつて設定 → プラグインの Archive 一覧で見せていた
+  // 診断情報 (ロード状況 / 版 / 制作者 / パス / エラー全文) をここに出す。
+  if (info.source == ArchiveFormatInfo::Source::Plugin) {
+    const ArchivePluginRecord& rec = info.pluginRecord;
+    addField(tr("Status:"), pluginStatusEmoji(rec) + QStringLiteral(" ")
+                              + pluginStatusText(rec));
+    addField(tr("Priority:"),
+             rec.priority >= 0 ? QString::number(rec.priority) : QString());
+    addField(tr("Distribution:"), rec.origin == ArchivePluginRecord::Origin::Bundled
+                                    ? tr("Bundled") : tr("External"));
+    addField(tr("Plugin ID:"), rec.pluginId);
+    addField(tr("Version:"), rec.version);
+    addField(tr("Author:"), rec.author);
+    if (!rec.authorUrl.isEmpty()) {
+      auto* urlLabel = new QLabel(
+        QStringLiteral("<a href=\"%1\">%1</a>").arg(rec.authorUrl.toHtmlEscaped()),
+        &dialog);
+      urlLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+      urlLabel->setOpenExternalLinks(true);
+      urlLabel->setWordWrap(true);
+      form->addRow(tr("Author URL:"), urlLabel);
+    }
+    addField(tr("Path:"), rec.filePath);
+    if (!rec.errorReason.isEmpty() && !rec.disabledByUser) {
+      addField(tr("Error:"), rec.errorReason);
+    }
+  }
 
   // 対応拡張子。ファイル名全体に対する glob なので "*.tar.gz" のような
   // 複合拡張子も書ける。
@@ -441,7 +507,7 @@ void ArchiveTab::showFormatDetails(int row) {
   if (auto* item = m_formatTable->item(row, 0)) {
     item->setCheckState(state.enabled ? Qt::Checked : Qt::Unchecked);
   }
-  if (auto* item = m_formatTable->item(row, 3)) {
+  if (auto* item = m_formatTable->item(row, 4)) {
     item->setText(patternsDisplayText(state.patterns));
     item->setToolTip(item->text());
   }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ArchiveDispatcher.h"
+
 #include <QList>
 #include <QString>
 #include <QStringList>
@@ -70,6 +72,11 @@ struct ArchiveFormatInfo {
 
   // Source::Plugin のときのプラグイン ID (= id と同じ値)。Builtin では空。
   QString pluginId;
+
+  // Source::Plugin のときのロード結果 (状態 / バージョン / 作者 / パス /
+  // エラー全文)。設定 → アーカイブの詳細ダイアログが診断情報として見せる。
+  // かつてプラグイン一覧タブが持っていた情報を、形式一覧に統合したもの。
+  ArchivePluginRecord pluginRecord;
 };
 
 // カタログ定義に Settings の上書きを重ねた「実効設定」。

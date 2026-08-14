@@ -147,14 +147,17 @@ const ArchiveFormatInfo* findBuiltin(const QString& id) {
 QList<ArchiveFormatInfo> allFormats() {
   QList<ArchiveFormatInfo> list = builtinFormats();
 
-  // プラグイン形式を同じ一覧に合流させる。ロードに失敗したプラグインは形式と
-  // しては存在しないので載せない (状況は設定 → プラグインの一覧側で見せる)。
+  // プラグイン形式を同じ一覧に合流させる。ロードできなかったもの (ユーザーが
+  // 無効化した / 外部プラグイン読込みが OFF / ロード失敗) も載せる。載せないと
+  // 一度無効にしたプラグインが一覧から消えて再有効化できなくなるし、ロード
+  // エラーにも気づけない。実際の状態は pluginRecord 側で見せる。
   for (const ArchivePluginRecord& rec : ArchiveDispatcher::instance().pluginRecords()) {
-    if (!rec.loaded || rec.pluginId.isEmpty()) continue;
+    if (rec.pluginId.isEmpty()) continue;  // ID 不明では設定に紐付けられない
 
     ArchiveFormatInfo f;
-    f.id          = rec.pluginId;
-    f.pluginId    = rec.pluginId;
+    f.id           = rec.pluginId;
+    f.pluginId     = rec.pluginId;
+    f.pluginRecord = rec;
     f.displayName = rec.pluginName.isEmpty() ? rec.pluginId : rec.pluginName;
     f.source      = ArchiveFormatInfo::Source::Plugin;
     // プラグインは「ロードされている = 読める」ことが確認済みなので既定で有効。
@@ -173,7 +176,8 @@ QList<ArchiveFormatInfo> allFormats() {
       if (e.startsWith(QLatin1Char('.'))) e = e.mid(1);
       f.defaultPatterns << (QStringLiteral("*.") + e);
     }
-    if (f.defaultPatterns.isEmpty()) continue;
+    // 拡張子が取れないほど早い段階で失敗したプラグインもあるが、その場合でも
+    // 一覧には出す (パターンが無いので認識には寄与しない)。
 
     list << f;
   }

@@ -136,7 +136,7 @@ qt_add_executable(farman
   src/ui/ProgressDialog.cpp
   src/ui/SettingsDialog.cpp
   src/ui/ShortcutListDialog.cpp
-  src/ui/PluginsTab.cpp
+  src/ui/ViewerTab.cpp
   src/ui/ArchiveTab.cpp
   src/ui/UpdateAvailableDialog.cpp
   src/ui/WhatsNewDialog.cpp

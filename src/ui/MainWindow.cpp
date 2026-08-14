@@ -1570,12 +1570,21 @@ void MainWindow::registerCommands() {
   ));
 
   registry.registerCommand(std::make_shared<LambdaCommand>(
-    "help.plugins",
-    tr("Plugins..."),
-    [this]() { showPluginsDialog(); },
+    "help.viewer_plugins",
+    tr("Viewer Plugins..."),
+    [this]() { showViewerPluginsSettings(); },
     "help",
-    tr("Open plugin settings: load status, enable/disable, directory, and "
-       "viewer associations.")
+    tr("Open viewer plugin settings: load status, enable/disable, and "
+       "file type associations.")
+  ));
+
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "help.archive_plugins",
+    tr("Archive Plugins..."),
+    [this]() { showArchivePluginsSettings(); },
+    "help",
+    tr("Open archive settings: supported formats, including archive plugins "
+       "and their load status.")
   ));
 
   registry.registerCommand(std::make_shared<LambdaCommand>(
@@ -1874,7 +1883,8 @@ void MainWindow::createMenus() {
   QMenu* helpMenu = bar->addMenu(tr("&Help"));
   // キーバインド一覧 (`?` キー)
   addCmd(helpMenu, "help.shortcuts", tr("Keybinding List"), /*global=*/true);
-  addCmd(helpMenu, "help.plugins", tr("Plugins..."), /*global=*/true);
+  addCmd(helpMenu, "help.viewer_plugins",  tr("Viewer Plugins..."),  /*global=*/true);
+  addCmd(helpMenu, "help.archive_plugins", tr("Archive Plugins..."), /*global=*/true);
   helpMenu->addSeparator();
   // アップデート内容の再表示 (起動時の自動表示と同じダイアログ)。
   addCmd(helpMenu, "help.whats_new", tr("What's New..."), /*global=*/true);
@@ -2110,7 +2120,7 @@ void MainWindow::createMainToolBar() {
 
   m_toolbar->addSeparator();
   addBtn("help.shortcuts",          tr("Keybindings"),  QStringLiteral("shortcuts.svg"));
-  addBtn("help.plugins",            tr("Plugins"),      QStringLiteral("plugins.svg"));
+  addBtn("help.viewer_plugins",     tr("Plugins"),      QStringLiteral("plugins.svg"));
   addBtn("app.settings",            tr("Settings"),     QStringLiteral("settings.svg"));
 
   // 右端に「ツールバーを閉じる (×)」ボタン。残りスペースを expanding な
@@ -2248,11 +2258,17 @@ void MainWindow::showAboutDialog() {
   }
 }
 
-void MainWindow::showPluginsDialog() {
-  // プラグイン関連 (ディレクトリ / ロード状況 / 有効・無効 / 拡張子の紐付け)
-  // は Settings → Plugins ページに集約した。Help → Plugins... やツールバーの
+void MainWindow::showViewerPluginsSettings() {
+  // ビュアープラグイン (ロード状況 / 有効・無効 / 拡張子の紐付け) は
+  // Settings → Viewer ページが持つ。Help → Viewer Plugins... やツールバーの
   // Plugins ボタンからは、そのページを直接開く。
-  showSettingsDialog(SettingsDialog::Page::Plugins);
+  showSettingsDialog(SettingsDialog::Page::Viewer);
+}
+
+void MainWindow::showArchivePluginsSettings() {
+  // アーカイブプラグインは「アーカイブ形式の 1 つ」として Settings → Archive
+  // ページの形式一覧が扱う (組み込み形式と同じ場所で有効 / 無効を切り替える)。
+  showSettingsDialog(SettingsDialog::Page::Archive);
 }
 
 void MainWindow::showThirdPartyLicenses() {

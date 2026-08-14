@@ -1,7 +1,6 @@
 #pragma once
 
 #include "viewer/ViewerDispatcher.h"
-#include "core/ArchiveDispatcher.h"
 
 #include <QList>
 #include <QMap>
@@ -13,7 +12,6 @@ class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
-class QTabWidget;
 class QTableWidget;
 class QToolButton;
 
@@ -21,27 +19,24 @@ namespace Farman {
 
 class IViewerPlugin;
 
-// 設定 → Plugins ページ。プラグインに関する設定と診断情報を 1 箇所に集約する:
-//   - プラグインディレクトリ (旧 General → Viewer Plugins)
-//   - インストール済みプラグイン: 種別ごとのタブに分けた一覧。ロード状況 +
-//     外部プラグインの有効 / 無効。各行の「詳細...」ダイアログで区分・
-//     プラグイン ID・パス・エラー全文を確認でき、ビュアーは拡張子の紐付け
-//     もそこで編集する (旧 Help → Plugins... ダイアログと
-//     旧 Viewers → Viewer Associations を統合)
+// 設定 → Viewer ページ。ビュアープラグインに関する診断情報と設定を集約する:
+//   - インストール済みビュアープラグインの一覧 (ロード状況 + 有効 / 無効)
+//   - 各行の「詳細...」ダイアログで区分・プラグイン ID・パス・エラー全文を確認し、
+//     拡張子の紐付けと、プラグインが持つ設定ページもそこで編集する
 //
-// 現状はビュアープラグインのみなのでタブは「Viewer」だけ。将来ビュアー以外
-// のプラグイン種別 (Content / FS / Archive) が増えたら種別ごとにタブを追加
-// して出し分ける方針 (SPEC.md プラグインシステム「拡張余地」参照)。
-class PluginsTab : public QWidget {
+// プラグインの置き場所 (外部プラグインの読込み許可・プラグインディレクトリ) は
+// ビュアー / アーカイブに共通なので「全般」タブが持つ。アーカイブプラグインは
+// アーカイブ形式の一種として「アーカイブ」タブが管理する。
+class ViewerTab : public QWidget {
   Q_OBJECT
 
 public:
-  explicit PluginsTab(QWidget* parent = nullptr);
-  ~PluginsTab() override = default;
+  explicit ViewerTab(QWidget* parent = nullptr);
+  ~ViewerTab() override = default;
 
   void save();
-  // 直前の save() で「次回起動から反映」の変更 (有効/無効・ディレクトリ) が
-  // あったか。SettingsDialog が Apply/OK 後の通知に使う。
+  // 直前の save() で「次回起動から反映」の変更 (有効/無効) があったか。
+  // SettingsDialog が Apply/OK 後の通知に使う。
   bool restartRequiredOnSave() const { return m_restartRequiredOnSave; }
 
 protected:
@@ -57,24 +52,15 @@ private:
   void setupUi();
   void loadSettings();
   void loadPluginList();
-  void loadArchivePluginList();  // Archive タブ (アーカイブプラグイン一覧)
   void loadExtensionState();
 
   // プラグイン一覧の「詳細...」ダイアログ。一覧には最低限の列しか出さない
   // ので、区分・プラグイン ID・パス・エラー全文はこちらで見せる。
-  // 外部プラグインの有効 / 無効の切り替えと、ビュアーの拡張子紐付けの
-  // 確認・変更もここで行う (一覧は表示のみ)。
-  // 詳細ダイアログ。設定 UI を持つプラグインは設定ページをこの中に埋め込む。
+  // 有効 / 無効の切り替えと拡張子紐付けの確認・変更もここで行う (一覧は表示
+  // のみ)。設定 UI を持つプラグインは設定ページをこの中に埋め込む。
   void showPluginDetails(int row);
-  // Archive タブの「詳細...」ダイアログ (Viewer と同趣旨)。
-  void showArchivePluginDetails(int row);
   QString pluginStatusText(const PluginRecord& record) const;
   QString pluginStatusEmoji(const PluginRecord& record) const;
-  QString archivePluginStatusText(const ArchivePluginRecord& record) const;
-  QString archivePluginStatusEmoji(const ArchivePluginRecord& record) const;
-  bool isArchivePluginDisabled(const QString& pluginId) const {
-    return m_disabledArchivePluginIds.contains(pluginId.trimmed().toLower());
-  }
   QString extensionsDisplayText(const PluginRecord& record) const;
   void updatePluginTablePalette(bool focused);
   // m_disabledPluginIds は小文字正規化済み。ロード側
@@ -91,26 +77,13 @@ private:
   QStringList defaultExtensionsForPlugin(IViewerPlugin* plugin) const;
   QStringList defaultExtensionsFromList(const QStringList& extensions) const;
 
-  // プラグインディレクトリ
-  QCheckBox*   m_allowExternalPluginsCheck = nullptr;
-  QLineEdit*   m_pluginsDirectoryEdit    = nullptr;
-  QToolButton* m_pluginsDirectoryBrowse  = nullptr;
-  QToolButton* m_pluginsDirectoryOpen    = nullptr;
-  QToolButton* m_pluginsDirectoryDefault = nullptr;
-
-  // インストール済みプラグイン (種別ごとのタブ)
-  QTabWidget*   m_pluginTabs  = nullptr;
-  QTableWidget* m_pluginTable = nullptr;  // Viewer タブの一覧
-  QTableWidget* m_archiveTable = nullptr; // Archive タブの一覧 (読み取り専用)
+  QTableWidget* m_pluginTable = nullptr;
   // 一覧の行番号 → レコード。詳細ダイアログの表示に使う。
   QList<PluginRecord> m_pluginRecords;
-  QList<ArchivePluginRecord> m_archiveRecords;
 
   // プラグインの有効 / 無効の編集状態 (無効化する pluginId の集合、
   // 小文字正規化済み)。詳細ダイアログで編集し、save() で Settings に書き戻す。
   QSet<QString> m_disabledPluginIds;
-  // アーカイブプラグインの有効 / 無効の編集状態 (無効化する pluginId、小文字正規化)。
-  QSet<QString> m_disabledArchivePluginIds;
 
   // ビュアーの拡張子紐付けの編集状態 (詳細ダイアログで編集し save() で保存)。
   // m_extensionOrder は save() の競合解決 (同じ拡張子は先勝ち) の優先順。

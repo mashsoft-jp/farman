@@ -18,6 +18,8 @@
 #include <QDir>
 #include <QLabel>
 #include <QStyle>
+#include <QDesktopServices>
+#include <QUrl>
 
 namespace Farman {
 
@@ -336,6 +338,94 @@ void GeneralTab::setupUi() {
 
   mainLayout->addWidget(autoUpdateGroup);
 
+  // ── プラグイン (ビュアー / アーカイブ共通の置き場所) ──
+  // 個々のプラグインの有効 / 無効は「ビュアー」「アーカイブ」の各タブが持つ。
+  // ここは「そもそも外部を読み込むか / どこから読み込むか」だけを扱う。
+  QGroupBox* pluginGroup = new QGroupBox(tr("Plugins"), this);
+  QVBoxLayout* pluginLayout = new QVBoxLayout(pluginGroup);
+
+  m_allowExternalPluginsCheck =
+    new QCheckBox(tr("Allow loading external plugins"), pluginGroup);
+  m_allowExternalPluginsCheck->setToolTip(
+    tr("When enabled, plugins placed in the directory below are loaded at "
+       "startup. External plugins are third-party native code and run with "
+       "the same privileges as Farman — only enable this if you trust their "
+       "source. Changes take effect on next launch."));
+  pluginLayout->addWidget(m_allowExternalPluginsCheck);
+
+  QLabel* pluginSecurityHint = new QLabel(
+    tr("⚠ External plugins are native code and run with full application "
+       "privileges. Only enable plugins from sources you trust."), pluginGroup);
+  pluginSecurityHint->setWordWrap(true);
+  pluginSecurityHint->setEnabled(false);
+  pluginLayout->addWidget(pluginSecurityHint);
+
+  QLabel* pluginDirHint = new QLabel(
+    tr("External plugins are loaded on startup from this directory "
+       "(viewers/ and archives/ subdirectories). Leave empty to use the "
+       "default user plugins directory."), pluginGroup);
+  pluginDirHint->setWordWrap(true);
+  pluginLayout->addWidget(pluginDirHint);
+
+  QWidget* pluginDirRow = new QWidget(pluginGroup);
+  QHBoxLayout* pluginDirRowLayout = new QHBoxLayout(pluginDirRow);
+  pluginDirRowLayout->setContentsMargins(0, 0, 0, 0);
+
+  m_pluginsDirectoryEdit = new QLineEdit(pluginGroup);
+  m_pluginsDirectoryEdit->setPlaceholderText(Settings::defaultPluginsDirectory());
+  m_pluginsDirectoryEdit->setToolTip(
+    tr("Directory containing external plugins (.dylib, .so, .dll). "
+       "Changes take effect on next launch."));
+  m_pluginsDirectoryBrowse = new QToolButton(pluginGroup);
+  m_pluginsDirectoryBrowse->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
+  m_pluginsDirectoryBrowse->setToolTip(tr("Choose plugins directory..."));
+  m_pluginsDirectoryOpen = new QToolButton(pluginGroup);
+  m_pluginsDirectoryOpen->setIcon(style()->standardIcon(QStyle::SP_DirOpenIcon));
+  m_pluginsDirectoryOpen->setText(tr("Open"));
+  m_pluginsDirectoryOpen->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  m_pluginsDirectoryOpen->setToolTip(
+    tr("Open the plugins directory in Finder / Explorer."));
+  m_pluginsDirectoryDefault = new QToolButton(pluginGroup);
+  m_pluginsDirectoryDefault->setText(tr("Default"));
+  m_pluginsDirectoryDefault->setToolTip(
+    tr("Use the default user plugins directory."));
+
+  pluginDirRowLayout->addWidget(new QLabel(tr("Directory:"), pluginGroup));
+  pluginDirRowLayout->addWidget(m_pluginsDirectoryEdit, 1);
+  pluginDirRowLayout->addWidget(m_pluginsDirectoryBrowse);
+  pluginDirRowLayout->addWidget(m_pluginsDirectoryOpen);
+  pluginDirRowLayout->addWidget(m_pluginsDirectoryDefault);
+  pluginLayout->addWidget(pluginDirRow);
+
+  // プラグインディレクトリを Finder / エクスプローラーで開く。空欄なら既定
+  // ディレクトリを開く。dll/dylib/so を手で置きに行くとき用。無ければ作る。
+  connect(m_pluginsDirectoryOpen, &QToolButton::clicked, this, [this]() {
+    QString dir = m_pluginsDirectoryEdit->text().trimmed();
+    if (dir.isEmpty()) dir = Settings::defaultPluginsDirectory();
+    QDir().mkpath(dir);
+    QDir().mkpath(dir + QStringLiteral("/viewers"));
+    QDir().mkpath(dir + QStringLiteral("/archives"));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+  });
+  connect(m_pluginsDirectoryBrowse, &QToolButton::clicked, this, [this]() {
+    const QString start = m_pluginsDirectoryEdit->text().isEmpty()
+                          ? Settings::defaultPluginsDirectory()
+                          : m_pluginsDirectoryEdit->text();
+    // 開始ディレクトリが無いとダイアログが別の場所 (作業ディレクトリ等) に
+    // フォールバックし、ユーザーが置き場所を誤解する。無ければ作っておく。
+    if (!QDir(start).exists()) QDir().mkpath(start);
+    const QString selected = QFileDialog::getExistingDirectory(
+      this, tr("Choose plugins directory"), start,
+      QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    if (!selected.isEmpty()) {
+      m_pluginsDirectoryEdit->setText(selected);
+    }
+  });
+  connect(m_pluginsDirectoryDefault, &QToolButton::clicked,
+          m_pluginsDirectoryEdit, &QLineEdit::clear);
+
+  mainLayout->addWidget(pluginGroup);
+
   // ── 設定全体のエクスポート / インポート (マシン間移行用) ──
   // ブックマーク / ユーザ定義コマンド / カラースキーム / 全ての Settings
   // 値を 1 ファイルにまとめて移行できる。中身は settings.json そのもの
@@ -370,6 +460,8 @@ void GeneralTab::setupUi() {
 }
 
 void GeneralTab::loadSettings() {
+  m_allowExternalPluginsCheck->setChecked(Settings::instance().allowExternalPlugins());
+  m_pluginsDirectoryEdit->setText(Settings::instance().pluginsDirectory());
   auto& settings = Settings::instance();
 
   auto selectModeByData = [](QComboBox* combo, int value) {
@@ -491,6 +583,19 @@ void GeneralTab::save() {
   settings.setLogDirectory(m_logDirectoryEdit->text().trimmed());
   settings.setLogRetentionDays(
     m_logRetentionForeverCheck->isChecked() ? 0 : m_logRetentionDaysSpin->value());
+
+  // プラグインの読込み設定 (どちらも次回起動から反映)。
+  m_pluginLoadSettingsChangedOnSave = false;
+  const bool allowExternal = m_allowExternalPluginsCheck->isChecked();
+  if (allowExternal != settings.allowExternalPlugins()) {
+    settings.setAllowExternalPlugins(allowExternal);
+    m_pluginLoadSettingsChangedOnSave = true;
+  }
+  const QString newPluginsDirectory = m_pluginsDirectoryEdit->text().trimmed();
+  if (newPluginsDirectory != settings.pluginsDirectory()) {
+    settings.setPluginsDirectory(newPluginsDirectory);
+    m_pluginLoadSettingsChangedOnSave = true;
+  }
 }
 
 void GeneralTab::onWindowSizeModeChanged(int index) {

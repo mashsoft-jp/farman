@@ -16,6 +16,7 @@ namespace Farman {
 //   - ウィンドウサイズ / 位置
 //   - UI 言語、終了時の確認
 //   - ログ表示 / ログファイル出力 (パス・保持日数)
+//   - プラグインの読込み設定 (外部プラグインの許可・プラグインディレクトリ)
 // 共通点: ファイル一覧の操作中に逐次 ON/OFF するような項目ではなく、
 //         アプリ全体の挙動を決める「設定」寄りの項目を集めている。
 class GeneralTab : public QWidget {
@@ -37,6 +38,13 @@ public:
   // 直前の save() で言語設定が変更されたか。SettingsDialog 側で
   // 「再起動するか確認」ダイアログを出すために使う。
   bool languageChangedOnSave() const { return m_languageChangedOnSave; }
+
+  // 直前の save() でプラグインの読込み設定 (外部プラグインの許可 /
+  // プラグインディレクトリ) が変更されたか。どちらも起動時に一括ロードする
+  // 都合で次回起動から反映されるため、SettingsDialog が再起動を確認する。
+  bool pluginLoadSettingsChangedOnSave() const {
+    return m_pluginLoadSettingsChangedOnSave;
+  }
 
 private slots:
   void onWindowSizeModeChanged(int index);
@@ -101,6 +109,16 @@ private:
 
   // 直前の save() で言語が変更されたか
   bool         m_languageChangedOnSave     = false;
+
+  // ── プラグイン (ビュアー / アーカイブ共通の置き場所) ──
+  // 個々のプラグインの有効 / 無効は「ビュアー」「アーカイブ」の各タブが持つ。
+  // ここは「どこから読み込むか / そもそも外部を読み込むか」だけを扱う。
+  QCheckBox*   m_allowExternalPluginsCheck = nullptr;
+  QLineEdit*   m_pluginsDirectoryEdit      = nullptr;
+  QToolButton* m_pluginsDirectoryBrowse    = nullptr;
+  QToolButton* m_pluginsDirectoryOpen      = nullptr;
+  QToolButton* m_pluginsDirectoryDefault   = nullptr;
+  bool         m_pluginLoadSettingsChangedOnSave = false;
 
   // ── 自動アップデート (SPEC.md "自動アップデート" 節) ──
   // checkOnStartup: 起動時に最大 1 日 1 回 GitHub をチェック

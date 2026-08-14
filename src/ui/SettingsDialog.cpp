@@ -2,7 +2,7 @@
 #include "KeybindingTab.h"
 #include "AppearanceTab.h"
 #include "BehaviorTab.h"
-#include "PluginsTab.h"
+#include "ViewerTab.h"
 #include "ArchiveTab.h"
 #include "GeneralTab.h"
 #include "ExternalAppsTab.h"
@@ -73,7 +73,7 @@ SettingsDialog::SettingsDialog(const QString& leftCurrentPath,
   , m_keybindingTab(nullptr)
   , m_appearanceTab(nullptr)
   , m_behaviorTab(nullptr)
-  , m_pluginsTab(nullptr)
+  , m_viewerTab(nullptr)
   , m_archiveTab(nullptr)
   , m_externalAppsTab(nullptr)
   , m_buttonBox(nullptr)
@@ -122,7 +122,7 @@ void SettingsDialog::setupUi() {
   m_keybindingTab   = new KeybindingTab(this);
   m_appearanceTab   = new AppearanceTab(this);
   m_behaviorTab     = new BehaviorTab(this);
-  m_pluginsTab      = new PluginsTab(this);
+  m_viewerTab       = new ViewerTab(this);
   m_archiveTab      = new ArchiveTab(this);
   m_generalTab      = new GeneralTab(m_leftCurrentPath, m_rightCurrentPath,
                                      m_currentWindowSize, m_currentWindowPosition,
@@ -147,7 +147,7 @@ void SettingsDialog::setupUi() {
   addPage(m_generalTab,      tr("1. General"));
   addPage(m_behaviorTab,     tr("2. Behavior"));
   addPage(m_appearanceTab,   tr("3. Appearance"));
-  addPage(m_pluginsTab,      tr("4. Plugins"));
+  addPage(m_viewerTab,       tr("4. Viewer"));
   addPage(m_archiveTab,      tr("5. Archive"));
   addPage(m_externalAppsTab, tr("6. External Apps"));
   addPage(m_keybindingTab,   tr("7. Keybindings"));
@@ -163,7 +163,7 @@ void SettingsDialog::setupUi() {
   // StrongFocus を設定する。Tab キーで全項目を辿れるようにするのが目的。
   const QList<QWidget*> tabRoots = {
     m_generalTab, m_behaviorTab, m_appearanceTab,
-    m_pluginsTab, m_archiveTab, m_externalAppsTab, m_keybindingTab
+    m_viewerTab, m_archiveTab, m_externalAppsTab, m_keybindingTab
   };
   for (QWidget* root : tabRoots) {
     const auto widgets = root->findChildren<QWidget*>();
@@ -286,7 +286,7 @@ void SettingsDialog::onApply() {
   m_keybindingTab->save();
   m_appearanceTab->save();
   m_behaviorTab->save();
-  m_pluginsTab->save();
+  m_viewerTab->save();
   m_archiveTab->save();
   m_generalTab->save();
   m_externalAppsTab->save();
@@ -308,8 +308,9 @@ void SettingsDialog::onApply() {
   // プラグインの有効/無効・ディレクトリは次回起動から反映されるため、
   // 再起動するか確認し、Yes なら即再起動する。
   // Y/N の単押し対応のため独自の confirm() ヘルパを使う。
-  if (m_pluginsTab->restartRequiredOnSave()
-      || m_archiveTab->restartRequiredOnSave()) {
+  if (m_viewerTab->restartRequiredOnSave()
+      || m_archiveTab->restartRequiredOnSave()
+      || m_generalTab->pluginLoadSettingsChangedOnSave()) {
     if (confirm(this,
                 tr("Plugins"),
                 tr("Plugin changes will take effect after restarting farman.\n"
