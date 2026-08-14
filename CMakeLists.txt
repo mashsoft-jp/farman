@@ -169,6 +169,7 @@ qt_add_executable(farman
   src/core/AppPresets.cpp
   src/core/ArchiveContext.cpp
   src/core/ArchiveDispatcher.cpp
+  src/core/ArchiveFormatCatalog.cpp
   src/core/IArchivePlugin.cpp
   src/core/ArchiveEntryName.cpp
   src/core/ThumbnailCache.cpp

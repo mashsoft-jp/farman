@@ -12,6 +12,7 @@
 #include <QSize>
 #include <QPoint>
 #include <QList>
+#include <optional>
 
 namespace Farman {
 
@@ -26,6 +27,33 @@ struct Bookmark {
 
 // ColorRule / CategoryColor は ColorScheme から参照する都合で types.h に
 // 移動済み。ここでは types.h の定義をそのまま使う。
+
+// アーカイブ形式 1 つ分の「ユーザーによる上書き」。
+//
+// 既定値そのものは ArchiveFormatCatalog (core) が持ち、ここにはユーザーが
+// 明示的に変えた項目だけを std::optional で保持する。既定と同じ値を書き戻さない
+// ことで、カタログ側の既定 (対応拡張子や既定で有効かどうか) が将来変わったとき、
+// ユーザーが触っていない形式は新しい既定に自動追従する。
+struct ArchiveFormatOverride {
+  // 認識対象にするか。プラグイン形式では使わない (プラグインの有効 / 無効は
+  // disabledArchivePlugins 側に一本化する)。
+  std::optional<bool>        enabled;
+  // 対応拡張子。ファイル名全体に対する glob ("*.tar.gz")。
+  std::optional<QStringList> patterns;
+  // 作成時の既定圧縮レベル。-1 は「形式の既定」。
+  std::optional<int>         compressionLevel;
+  // 作成時の既定暗号化方式。"" = なし / "aes256" / "zipcrypt"。
+  std::optional<QString>     encryption;
+  // エントリ名の文字コード。"" = 自動判別 (UTF-8 として妥当なら UTF-8、
+  // でなければ Shift_JIS)。それ以外は QTextCodec 名 ("Shift_JIS" など)。
+  std::optional<QString>     filenameEncoding;
+
+  // 1 項目も設定されていない (= 保存する必要がない) か。
+  bool isEmpty() const {
+    return !enabled && !patterns && !compressionLevel && !encryption
+        && !filenameEncoding;
+  }
+};
 
 // ペインごとの設定
 // バイナリビュアー設定のシリアライズ補助
@@ -210,6 +238,28 @@ public:
   void setDisabledArchivePlugins(const QStringList& pluginIds);
   bool isArchivePluginDisabled(const QString& pluginId) const;
   void setArchivePluginDisabled(const QString& pluginId, bool disabled);
+
+  // ── アーカイブ ─────────────────────────────
+  // 形式ごとの上書き設定。キーは ArchiveFormatInfo::id ("zip" / "tar.gz" /
+  // プラグインは pluginId)。カタログ既定と同じ形式はキー自体を持たない。
+  QMap<QString, ArchiveFormatOverride> archiveFormatOverrides() const;
+  void setArchiveFormatOverrides(const QMap<QString, ArchiveFormatOverride>& overrides);
+  ArchiveFormatOverride archiveFormatOverride(const QString& formatId) const;
+  // 空 (isEmpty()) の上書きを渡すとそのキーを取り除く。
+  void setArchiveFormatOverride(const QString& formatId,
+                                const ArchiveFormatOverride& override);
+
+  // アーカイブを一時展開する先。空 = QStandardPaths::TempLocation。
+  QString archiveTempDirectory() const;
+  void    setArchiveTempDirectory(const QString& dir);
+
+  // 暗号化アーカイブのパスワード入力をやり直せる回数。既定 3。
+  int  archivePasswordRetryCount() const;
+  void setArchivePasswordRetryCount(int count);
+
+  // アーカイブ内アーカイブを何段まで潜れるか。0 = 無制限 (既定)。
+  int  archiveMaxNestDepth() const;
+  void setArchiveMaxNestDepth(int depth);
   // 既定のプラグインディレクトリを返す (= 上記の OS 別 path)。
   // pluginsDirectory() が空のとき loadPlugins に使う実体。
   static QString defaultPluginsDirectory();
@@ -657,6 +707,12 @@ private:
   QStringList      m_disabledViewerPlugins;
   // 起動時に登録しないアーカイブプラグイン ID。
   QStringList      m_disabledArchivePlugins;
+  // アーカイブ形式ごとの上書き設定 (キー = ArchiveFormatInfo::id)。
+  QMap<QString, ArchiveFormatOverride> m_archiveFormatOverrides;
+  // アーカイブの一時展開先。空 = QStandardPaths::TempLocation。
+  QString          m_archiveTempDirectory;
+  int              m_archivePasswordRetryCount = 3;
+  int              m_archiveMaxNestDepth       = 0;   // 0 = 無制限
   // 拡張子 -> viewer pluginId。空 / 未設定なら priority ベースで自動選択。
   QMap<QString, QString> m_viewerAssociations;
   // ビュアー表示モード。デフォルトは Inline (ビュアーパネルでの表示)。

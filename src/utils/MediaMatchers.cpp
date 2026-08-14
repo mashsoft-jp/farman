@@ -9,15 +9,15 @@
 namespace Farman {
 namespace MediaMatchers {
 
-bool extensionMatches(const QStringList& patterns, const QString& extension) {
+bool globMatches(const QStringList& patterns, const QString& text) {
   auto patternMatches = [&](const QString& p) {
     if (p.contains(QLatin1Char('*')) || p.contains(QLatin1Char('?'))) {
       QRegularExpression re(
         QRegularExpression::wildcardToRegularExpression(p),
         QRegularExpression::CaseInsensitiveOption);
-      return re.match(extension).hasMatch();
+      return re.match(text).hasMatch();
     }
-    return extension.compare(p, Qt::CaseInsensitive) == 0;
+    return text.compare(p, Qt::CaseInsensitive) == 0;
   };
 
   bool anyInclude = false;
@@ -37,6 +37,10 @@ bool extensionMatches(const QStringList& patterns, const QString& extension) {
   }
   if (!anyInclude) return false;
   return included;
+}
+
+bool extensionMatches(const QStringList& patterns, const QString& extension) {
+  return globMatches(patterns, extension);
 }
 
 bool mimeMatches(const QStringList& patterns, const QMimeType& mime) {

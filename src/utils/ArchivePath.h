@@ -1,28 +1,34 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 
 namespace Farman::ArchivePath {
 
 // "/abs/path/to/x.zip!/inner/dir" 形式を扱うユーティリティ。
 // 通常 FS では使われない `!` を区切りに、アーカイブ内仮想 FS を表現する。
 
-// 拡張子だけでアーカイブ判定 (実在チェックはしない)。
-// 対応: .zip / .tar / .tar.gz / .tgz / .tar.bz2 / .tbz2 / .tar.xz / .txz
-// これに加え、registerArchiveExtension() で登録された拡張子 (アーカイブプラグイン
-// が名乗るもの、例 .lzh) も合致する。
+// ファイル名だけでアーカイブ判定 (実在チェックはしない)。
+// 判定は setArchivePatterns() で流し込まれた「現在有効な形式のファイル名 glob」
+// に対して行う。未注入のときは組み込み既定 (.zip / .tar / .tar.gz / .tgz /
+// .tar.bz2 / .tbz2 / .tar.xz / .txz) にフォールバックする。
 bool isArchiveExtension(const QString& path);
 
-// アーカイブプラグインが扱う拡張子を実行時に登録する。dotExt は ".lzh" のように
-// 先頭ドット付きで渡す (無くても補う)。main() が ArchiveDispatcher からロードした
-// プラグインの拡張子を起動時に流し込む。utils 層がコア (ArchiveDispatcher) に
-// 依存しないよう、逆に main 側から注入する形をとる。
-void registerArchiveExtension(const QString& dotExt);
+// 現在有効なアーカイブ形式のファイル名 glob パターン ("*.tar.gz" 形式) を
+// 流し込む。組み込み形式・プラグイン形式・ユーザーが設定で上書きした拡張子を
+// 解決した結果を、core 側の ArchiveFormatCatalog が起動時と設定変更時に渡す。
+// utils 層がコア (ArchiveDispatcher / Settings) に依存しないよう、逆に呼び出し側
+// から注入する形をとる。空リストを渡すと組み込み既定に戻る。
+void setArchivePatterns(const QStringList& globPatterns);
 
-// ファイル名からアーカイブ拡張子 (組み込み + registerArchiveExtension で登録した
-// プラグイン拡張子) を剥がしたベース名を返す。展開時の既定フォルダ名などに使う。
-// 最長一致を優先する (例 "x.tar.gz" → "x"、"x.lzh" → "x")。合致しなければ元の
-// fileName をそのまま返す。fileName はパスではなくファイル名部分を渡すこと。
+// 現在有効なパターン (setArchivePatterns() 未注入なら組み込み既定) を返す。
+QStringList archivePatterns();
+
+// ファイル名からアーカイブ拡張子を剥がしたベース名を返す。展開時の既定フォルダ名
+// などに使う。最長一致を優先する (例 "x.tar.gz" → "x"、"x.lzh" → "x")。
+// 剥がせるのは "*.tar.gz" のように `*` 1 個 + 固定文字列という形のパターンだけで、
+// 途中にワイルドカードを含むパターンは対象外。合致しなければ元の fileName を
+// そのまま返す。fileName はパスではなくファイル名部分を渡すこと。
 QString archiveBaseName(const QString& fileName);
 
 struct Split {

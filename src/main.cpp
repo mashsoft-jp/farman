@@ -14,6 +14,7 @@
 #include "ui/MainWindow.h"
 #include "viewer/ViewerDispatcher.h"
 #include "core/ArchiveDispatcher.h"
+#include "core/ArchiveFormatCatalog.h"
 #include "utils/ArchivePath.h"
 #include "settings/Settings.h"
 
@@ -238,19 +239,18 @@ int main(int argc, char *argv[]) {
   });
 
   // アーカイブ (非ビュアー) プラグイン基盤を初期化。ビュアーと同じ外部プラグイン
-  // ディレクトリ配下の archives/ サブディレクトリから IArchivePlugin を読み込み、
-  // 名乗る拡張子 (例 .lzh) を ArchivePath へ登録して、その拡張子のアーカイブ
-  // ブラウジング / 展開を有効化する。
+  // ディレクトリ配下の archives/ サブディレクトリから IArchivePlugin を読み込む。
   Farman::ArchivePluginContext archiveCtx;
   archiveCtx.farmanVersion = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
   Farman::ArchiveDispatcher::instance().setContext(archiveCtx);
   Farman::ArchiveDispatcher::instance().registerBundledPlugins();
   Farman::ArchiveDispatcher::instance().loadPlugins(
     QDir(extPluginsRoot + QStringLiteral("/archives")));
-  for (const QString& dotExt :
-       Farman::ArchiveDispatcher::instance().registeredDotExtensions()) {
-    Farman::ArchivePath::registerArchiveExtension(dotExt);
-  }
+
+  // 組み込み形式 + ロード済みプラグイン形式 + 設定の上書きを合成した「有効な
+  // 拡張子パターン」を ArchivePath へ流し込み、アーカイブブラウジング / 展開の
+  // ルーティングを有効化する。プラグインのロード後に呼ぶ必要がある。
+  Farman::ArchiveFormatCatalog::applyToArchivePath();
 
   int exitCode = 0;
   {

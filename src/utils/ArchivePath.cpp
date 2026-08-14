@@ -1,62 +1,72 @@
 #include "ArchivePath.h"
+#include "MediaMatchers.h"
 #include <QDir>
+#include <QFileInfo>
 #include <QStringList>
 
 namespace Farman::ArchivePath {
 
 namespace {
 
-// アーカイブとして扱う拡張子のリスト (大文字小文字無視)。
-// 順序は長いもの優先 (.tar.gz が .tar より先にマッチしてほしい)。
-const QStringList& archiveExtensions() {
-  static const QStringList exts = {
-    QStringLiteral(".tar.gz"), QStringLiteral(".tar.bz2"), QStringLiteral(".tar.xz"),
-    QStringLiteral(".tgz"),    QStringLiteral(".tbz2"),    QStringLiteral(".txz"),
-    QStringLiteral(".tar"),    QStringLiteral(".zip"),
+// setArchivePatterns() 未注入のときのフォールバック。
+// v0.9.9 まで組み込みで認識していた形式と同じ内容で、単体テストや、まだカタログ
+// を流し込んでいない起動シーケンスの途中でも従来どおり動くようにするためのもの。
+const QStringList& defaultPatterns() {
+  static const QStringList pats = {
+    QStringLiteral("*.tar.gz"), QStringLiteral("*.tar.bz2"), QStringLiteral("*.tar.xz"),
+    QStringLiteral("*.tgz"),    QStringLiteral("*.tbz2"),    QStringLiteral("*.txz"),
+    QStringLiteral("*.tar"),    QStringLiteral("*.zip"),
   };
-  return exts;
+  return pats;
 }
 
-// プラグインが実行時に登録した拡張子 (先頭ドット付き)。registerArchiveExtension()
-// で追加される。組み込みリストと違い可変だが、登録は起動時 (プラグインロード直後)
-// に一度だけ行い、以後は読み取り専用として扱う想定。
-QStringList& pluginExtensions() {
-  static QStringList exts;
-  return exts;
+// core 側 (ArchiveFormatCatalog) が注入した、現在有効な形式のパターン。
+// 起動時に一度、以後は設定変更のたびに差し替えられる。
+QStringList& injectedPatterns() {
+  static QStringList pats;
+  return pats;
+}
+
+// "*.tar.gz" のように「先頭の `*` + 固定文字列」という形のパターンから、
+// 剥がせる固定部分 (".tar.gz") を取り出す。途中にワイルドカードを含むものや
+// `*` で始まらないものは剥がしようがないので空を返す。
+QString strippableSuffix(const QString& pattern) {
+  if (!pattern.startsWith(QLatin1Char('*'))) return {};
+  const QString tail = pattern.mid(1);
+  if (tail.isEmpty()) return {};
+  if (tail.contains(QLatin1Char('*')) || tail.contains(QLatin1Char('?'))) return {};
+  return tail;
 }
 
 } // namespace
 
-void registerArchiveExtension(const QString& dotExt) {
-  if (dotExt.isEmpty()) return;
-  const QString e =
-    dotExt.startsWith(QLatin1Char('.')) ? dotExt : (QLatin1Char('.') + dotExt);
-  if (!pluginExtensions().contains(e, Qt::CaseInsensitive)) {
-    pluginExtensions().append(e);
-  }
+void setArchivePatterns(const QStringList& globPatterns) {
+  injectedPatterns() = globPatterns;
+}
+
+QStringList archivePatterns() {
+  return injectedPatterns().isEmpty() ? defaultPatterns() : injectedPatterns();
 }
 
 bool isArchiveExtension(const QString& path) {
-  for (const QString& e : archiveExtensions()) {
-    if (path.endsWith(e, Qt::CaseInsensitive)) return true;
-  }
-  for (const QString& e : pluginExtensions()) {
-    if (path.endsWith(e, Qt::CaseInsensitive)) return true;
-  }
-  return false;
+  // パターンはファイル名全体に対する glob なので、ディレクトリ部分を落として
+  // から照合する (パス中の `.zip` ディレクトリ名などに引っかからないように)。
+  const QString fileName = QFileInfo(path).fileName();
+  if (fileName.isEmpty()) return false;
+  return MediaMatchers::globMatches(archivePatterns(), fileName);
 }
 
 QString archiveBaseName(const QString& fileName) {
-  // 組み込み + プラグイン登録の全拡張子から、末尾に一致する最長のものを剥がす
-  // (".tar.gz" を ".tar" より優先させるため、長さ降順で最初に一致したものを採用)。
+  // 有効な全パターンのうち、末尾に一致する最長の固定サフィックスを剥がす
+  // (".tar.gz" を ".tar" より優先させるため、最長一致を採用する)。
   QString best;
-  auto consider = [&](const QString& e) {
-    if (fileName.endsWith(e, Qt::CaseInsensitive) && e.size() > best.size()) {
-      best = e;
+  for (const QString& pattern : archivePatterns()) {
+    const QString suffix = strippableSuffix(pattern);
+    if (suffix.isEmpty()) continue;
+    if (fileName.endsWith(suffix, Qt::CaseInsensitive) && suffix.size() > best.size()) {
+      best = suffix;
     }
-  };
-  for (const QString& e : archiveExtensions()) consider(e);
-  for (const QString& e : pluginExtensions()) consider(e);
+  }
 
   if (best.isEmpty() || best.size() >= fileName.size()) return fileName;
   QString baseName = fileName;

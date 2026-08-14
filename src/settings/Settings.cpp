@@ -154,6 +154,10 @@ void Settings::applyDefaults() {
   m_pluginsDirectory.clear();
   m_disabledViewerPlugins.clear();
   m_disabledArchivePlugins.clear();
+  m_archiveFormatOverrides.clear();
+  m_archiveTempDirectory.clear();
+  m_archivePasswordRetryCount = 3;
+  m_archiveMaxNestDepth       = 0;
   m_viewerAssociations.clear();
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
@@ -1044,6 +1048,62 @@ void Settings::setArchivePluginDisabled(const QString& pluginId, bool disabled) 
     }
   }
   setDisabledArchivePlugins(ids);
+}
+
+// ── アーカイブ形式ごとの上書き設定 ─────────────────────
+QMap<QString, ArchiveFormatOverride> Settings::archiveFormatOverrides() const {
+  return m_archiveFormatOverrides;
+}
+
+void Settings::setArchiveFormatOverrides(
+    const QMap<QString, ArchiveFormatOverride>& overrides) {
+  m_archiveFormatOverrides.clear();
+  for (auto it = overrides.cbegin(); it != overrides.cend(); ++it) {
+    const QString id = it.key().trimmed();
+    if (id.isEmpty() || it.value().isEmpty()) continue;
+    m_archiveFormatOverrides.insert(id, it.value());
+  }
+}
+
+ArchiveFormatOverride Settings::archiveFormatOverride(const QString& formatId) const {
+  return m_archiveFormatOverrides.value(formatId.trimmed());
+}
+
+void Settings::setArchiveFormatOverride(const QString& formatId,
+                                        const ArchiveFormatOverride& override) {
+  const QString id = formatId.trimmed();
+  if (id.isEmpty()) return;
+  if (override.isEmpty()) {
+    m_archiveFormatOverrides.remove(id);
+  } else {
+    m_archiveFormatOverrides.insert(id, override);
+  }
+}
+
+// ── アーカイブの共通設定 ──────────────────────────
+QString Settings::archiveTempDirectory() const {
+  return m_archiveTempDirectory;
+}
+
+void Settings::setArchiveTempDirectory(const QString& dir) {
+  m_archiveTempDirectory = dir.trimmed();
+}
+
+int Settings::archivePasswordRetryCount() const {
+  return m_archivePasswordRetryCount;
+}
+
+void Settings::setArchivePasswordRetryCount(int count) {
+  // 0 回 (= 一度も入力させない) は意味がないので下限 1。上限は現実的な範囲で。
+  m_archivePasswordRetryCount = qBound(1, count, 99);
+}
+
+int Settings::archiveMaxNestDepth() const {
+  return m_archiveMaxNestDepth;
+}
+
+void Settings::setArchiveMaxNestDepth(int depth) {
+  m_archiveMaxNestDepth = qBound(0, depth, 99);   // 0 = 無制限
 }
 
 namespace {
@@ -2107,6 +2167,41 @@ void Settings::load() {
   }
   m_defaultBookmarksInstalled = behavior.value("defaultBookmarksInstalled").toBool(false);
 
+  // Load archive settings
+  // 形式ごとの上書きは「書かれている項目だけ」を読む。未設定の項目は
+  // ArchiveFormatCatalog の既定にフォールバックする (std::optional のまま残す)。
+  m_archiveFormatOverrides.clear();
+  {
+    const QJsonObject archive = root.value("archive").toObject();
+
+    const QJsonObject formats = archive.value("formats").toObject();
+    for (auto it = formats.constBegin(); it != formats.constEnd(); ++it) {
+      const QString id = it.key().trimmed();
+      if (id.isEmpty()) continue;
+      const QJsonObject o = it.value().toObject();
+
+      ArchiveFormatOverride ov;
+      if (o.contains("enabled"))          ov.enabled = o.value("enabled").toBool();
+      if (o.contains("compressionLevel")) ov.compressionLevel = o.value("compressionLevel").toInt(-1);
+      if (o.contains("encryption"))       ov.encryption = o.value("encryption").toString();
+      if (o.contains("filenameEncoding")) ov.filenameEncoding = o.value("filenameEncoding").toString();
+      if (o.contains("patterns")) {
+        QStringList list;
+        for (const QJsonValue& v : o.value("patterns").toArray()) {
+          const QString s = v.toString().trimmed();
+          if (!s.isEmpty()) list.append(s);
+        }
+        ov.patterns = list;
+      }
+
+      if (!ov.isEmpty()) m_archiveFormatOverrides.insert(id, ov);
+    }
+
+    setArchiveTempDirectory(archive.value("tempDirectory").toString());
+    setArchivePasswordRetryCount(archive.value("passwordRetryCount").toInt(3));
+    setArchiveMaxNestDepth(archive.value("maxNestDepth").toInt(0));
+  }
+
   // Load log settings
   QJsonObject logObj = root.value("log").toObject();
   m_logVisible    = logObj.value("visible").toBool(true);
@@ -2775,6 +2870,38 @@ void Settings::save() const {
   }
   behavior["defaultBookmarksInstalled"] = m_defaultBookmarksInstalled;
   root["behavior"] = behavior;
+
+  // Save archive settings
+  // 形式は「既定から変えた項目だけ」を書く。触っていない形式はキー自体を作らず、
+  // カタログ側の既定 (対応拡張子・既定で有効かどうか) の変更に追従させる。
+  {
+    QJsonObject archive;
+
+    QJsonObject formats;
+    for (auto it = m_archiveFormatOverrides.cbegin();
+         it != m_archiveFormatOverrides.cend(); ++it) {
+      const ArchiveFormatOverride& ov = it.value();
+      if (ov.isEmpty()) continue;
+
+      QJsonObject o;
+      if (ov.enabled)          o["enabled"]          = *ov.enabled;
+      if (ov.compressionLevel) o["compressionLevel"] = *ov.compressionLevel;
+      if (ov.encryption)       o["encryption"]       = *ov.encryption;
+      if (ov.filenameEncoding) o["filenameEncoding"] = *ov.filenameEncoding;
+      if (ov.patterns) {
+        QJsonArray arr;
+        for (const QString& p : *ov.patterns) arr.append(p);
+        o["patterns"] = arr;
+      }
+      formats[it.key()] = o;
+    }
+    if (!formats.isEmpty()) archive["formats"] = formats;
+
+    archive["tempDirectory"]      = m_archiveTempDirectory;
+    archive["passwordRetryCount"] = m_archivePasswordRetryCount;
+    archive["maxNestDepth"]       = m_archiveMaxNestDepth;
+    root["archive"] = archive;
+  }
 
   // Save log settings
   {
