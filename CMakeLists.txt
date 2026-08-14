@@ -10,7 +10,7 @@ if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum macOS deployment target")
 endif()
 
-project(farman VERSION 0.9.9 LANGUAGES CXX)
+project(farman VERSION 0.9.10 LANGUAGES CXX)
 
 # Windows (vcpkg + MSBuild): 各ターゲットのビルド後に vcpkg が依存 DLL を出力先へ
 # コピーする (applocal deps)。全プラグインが同じ plugins/viewers/ 出力先へ同じ

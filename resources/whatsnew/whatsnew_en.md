@@ -1,75 +1,14 @@
-# What's New in farman 0.9.9
+# What's New in farman 0.9.10
 
-### 3D model viewer (FBX) support
+(This release is still in development. Replace this with the actual changes
+before releasing.)
 
-With the external plugin **farman-plugin-3d**, farman can now display
-`.fbx` 3D models inside the app.
+### New Archive settings tab (planned)
 
-- Supports textures (external and embedded), skeletal animation, multiple
-  materials, a floor grid, wireframe display, and bone (skeleton) display.
-- Rotate, pan, and zoom with the mouse or keyboard.
-- The plugin is not bundled with farman. Download the build for your OS,
-  place it in the `viewers/` folder of farman's external plugin directory,
-  turn on "Allow loading external plugins" under Settings > Plugins, then
-  restart farman.
-- FBX is supported first; other formats such as obj / glTF are planned.
+### More archive formats supported (planned)
 
-### Directory sizes in the Size column (computed in the background)
-
-- The file list can now compute the recursive total size of directories in
-  the background and show it in the Size column.
-- Directories now always show "&lt;DIR&gt;" in the Type column (regardless of
-  whether directory-size calculation is enabled).
-- Off by default. Enable it under Settings > Behavior > Directory Size.
-- Choose "Recompute every time" or "Cache for a period", and set how long the
-  cache stays valid (a change to a directory's timestamp always triggers a
-  recompute).
-- Force a recompute with the toolbar button or `Ctrl+Shift+R`.
-- Not computed while the Size column is hidden.
-
-### Binary viewer improvements
-
-- Rewritten with custom rendering so **gigabyte-class files** open quickly and
-  display correctly all the way to the end: only the visible rows are read
-  instead of loading the whole file.
-- Added jump-to-hex-address. The maximum valid address is shown next to the
-  input, and out-of-range addresses are rejected as you type.
-- Added search. Toggle between hex and text with radio buttons; hex input
-  follows the display unit ("12 34 56" for 1-byte, "1234 5678" for 2-byte,
-  endian-aware). Press Enter or Next / Prev to search forward / backward. Hits
-  are highlighted in both the hex and text columns. Shortcuts: Cmd/Ctrl+F to
-  focus search, Cmd+G / F3 find next, Cmd+Shift+G / Shift+F3 find previous,
-  Cmd/Ctrl+J to focus the address field, Cmd/Ctrl+1-4 to change the unit,
-  Cmd/Ctrl+E to toggle endianness, and Cmd/Ctrl+Shift+E to focus the encoding.
-
-### Customizable viewer shortcuts
-
-- The keyboard shortcuts of each bundled viewer (Text / CSV·TSV / Markdown /
-  PDF / Image / Binary / Media) — toggles, zoom, focus search, unit switch, and
-  so on — can now be reassigned per viewer from the main settings
-  (Settings → Keybindings).
-- The same key can map to a different action in a different viewer; conflicts
-  are detected within a viewer.
-- Shortcuts of external viewer plugins (such as the 3D model viewer) can be
-  edited from the same screen.
-- The list can get long, so a filter box at the top lets you quickly find
-  entries by command name, assigned key, or viewer name.
-- Navigation keys (close with Esc/Enter, Enter / Shift+Enter in the search
-  field, cursor movement, etc.) stay fixed.
-
-### Localized viewer names and title-bar display
-
-- Bundled viewer names now follow the UI language (e.g. "テキストビュアー" in
-  Japanese), so the Plugins settings list is consistent.
-- While a viewer is open, the title bar shows "farman — <viewer name>".
+### Browsing nested archives (planned)
 
 ### Bug fixes
 
-- Fixed an issue where the cursor on the last file could be scrolled out of
-  view after returning from an inline viewer to the file list.
-- Fixed an issue where the last row could fail to render after scrolling near
-  the end of a large file.
-
-### Other
-
-- Stability improvements and bug fixes
+- Fixed the English What's New dialog being cut off partway through.
