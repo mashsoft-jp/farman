@@ -371,6 +371,8 @@ set(FARMAN_PLUGIN_COMMON_SOURCES
   src/utils/EnterClickFilter.cpp
   # setMarkdown に渡す前の raw HTML 無害化。Markdown ビュアープラグインが使う。
   src/utils/MarkdownSanitize.cpp
+  # 対象ファイルパターンの照合。IViewerPlugin::canHandle() が使う。
+  src/utils/MediaMatchers.cpp
   # ショートカットのコマンドカタログ（プラグインの取得 API 実装で使う）と、
   # 本体から push された割当を保持するローカルホルダ（ビュアーのディスパッチで使う）。
   src/keybinding/ViewerCommands.cpp

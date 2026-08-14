@@ -18,6 +18,21 @@ namespace MediaMatchers {
 // 共通のマッチ規則をここに置いて両者から使う。
 bool globMatches(const QStringList& patterns, const QString& text);
 
+// ファイル名パターンリストに対するマッチ判定。ビュアー / アーカイブの
+// 「対象ファイルパターン」設定はすべてこれで判定する。
+//
+// 1 つのパターンは、**ファイル名全体**と**拡張子**のどちらかに一致すれば
+// マッチとみなす。これにより 1 つの書式で 3 通りの書き方ができる:
+//   - "mp4"       … 拡張子だけを書く従来の書き方 (= 拡張子に一致)
+//   - "*.tar.gz"  … 複合拡張子。ファイル名全体に対する glob
+//   - "Makefile"  … 拡張子を持たないファイル。ファイル名全体に一致
+// "!pat" 接頭辞の除外も同じ規則で効く (例: "*.txt !*.min.txt")。
+//
+// 拡張子は QFileInfo::suffix() (最後の 1 段) と completeSuffix() (最初のドット
+// 以降すべて) の両方を見る。前者だけだと "a.tar.gz" に対して "tar.gz" と
+// 書けず、後者だけだと "a.b.txt" に対して "txt" と書けないため。
+bool fileNameMatches(const QStringList& patterns, const QString& fileName);
+
 // 拡張子パターンリストに対するマッチ判定 (globMatches の拡張子向け別名)。
 // パターンは小文字の拡張子 ("png", "jp*g") とワイルドカード (`*`, `?`) を
 // サポート。"!ext" 接頭辞は除外パターンで、マッチした時点で false を返す。

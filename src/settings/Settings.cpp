@@ -207,7 +207,11 @@ void Settings::applyDefaults() {
   m_textViewerLineNumberBg    = QColor(0xF0, 0xF0, 0xF0);
 
   // ── 画像ビュアー ─────────────────
-  m_imageViewerExtensions       = { "png", "jp*g", "gif", "bmp", "svg", "webp", "ico", "tif*" };
+  // psd は ImageView が合成プレビューに対応 (PsdReader)。heic / heif は動画と
+  // 同じ ISO BMFF コンテナで内容スニッフが当てにならず、拡張子で明示しないと
+  // メディアビュアーに奪われるため必ず入れておく。
+  m_imageViewerExtensions       = { "png", "jp*g", "gif", "bmp", "svg", "webp",
+                                    "ico", "tif*", "psd", "heic", "heif" };
   m_imageViewerMimePatterns     = { "image/*" };
   m_imageViewerZoomPercent      = 100;
   m_imageViewerFitToWindow      = true;
@@ -1113,6 +1117,10 @@ namespace {
 // 適用されていないリビジョンで新規追加された拡張子だけをマージするのに使う
 // (ユーザーが明示的に削除した拡張子は復活させない。詳細は load() を参照)。
 constexpr int kMediaExtensionsRevision = 2;
+
+// 画像ビュアーの既定対応拡張子のリビジョン。メディアビュアーと同じ仕組みで、
+// 新しい既定拡張子を追加するたびに増やす。
+constexpr int kImageExtensionsRevision = 2;
 
 QString normalizeViewerAssociationExtension(QString extension) {
   extension = extension.trimmed().toLower();
@@ -2329,7 +2337,25 @@ void Settings::load() {
       const QString s = v.toString().trimmed();
       if (!s.isEmpty()) list.append(s);
     }
-    if (!list.isEmpty()) m_imageViewerExtensions = list;
+    if (!list.isEmpty()) {
+      m_imageViewerExtensions = list;
+      // 既存ユーザーの保存済みリストに、まだ適用されていないリビジョンで新規
+      // 追加された既定拡張子だけをマージする (メディアビュアーと同じ扱い)。
+      // ユーザーが意図的に削除した拡張子は復活させない。
+      static const QMap<int, QStringList> kImageExtAddedInRevision = {
+        // revision 2 (farman 0.9.10): それまで ImageViewerPlugin 側にコード固定で
+        // 持っていた psd / heic / heif を設定側の既定へ移した分。
+        {2, {"psd", "heic", "heif"}},
+      };
+      const int savedRev = imageViewer.value("extensionsRevision").toInt(1);
+      for (int r = savedRev + 1; r <= kImageExtensionsRevision; ++r) {
+        for (const QString& ext : kImageExtAddedInRevision.value(r)) {
+          if (!m_imageViewerExtensions.contains(ext, Qt::CaseInsensitive)) {
+            m_imageViewerExtensions.append(ext);
+          }
+        }
+      }
+    }
   }
   if (imageViewer.contains("mimePatterns")) {
     QStringList list;
@@ -2988,6 +3014,7 @@ void Settings::save() const {
     for (const QString& s : m_imageViewerExtensions) arr.append(s);
     imageViewer["extensions"] = arr;
   }
+  imageViewer["extensionsRevision"] = kImageExtensionsRevision;
   {
     QJsonArray arr;
     for (const QString& s : m_imageViewerMimePatterns) arr.append(s);

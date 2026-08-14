@@ -45,8 +45,9 @@ TextViewerSettingsPage::TextViewerSettingsPage(QWidget* parent)
 
   m_extensionsEdit = new QLineEdit(this);
   m_extensionsEdit->setToolTip(
-    tr("Comma, semicolon, or space separated extensions without leading dots."));
-  form->addRow(tr("Extensions:"), m_extensionsEdit);
+    tr("Comma, semicolon, or space separated patterns. Write an extension "
+    "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+  form->addRow(tr("File patterns:"), m_extensionsEdit);
 
   m_encodingCombo = new QComboBox(this);
   m_encodingCombo->setEditable(true);

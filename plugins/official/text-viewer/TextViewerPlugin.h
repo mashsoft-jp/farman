@@ -1,6 +1,7 @@
 #pragma once
 
 #include "viewer/IViewerPlugin.h"
+#include "settings/Settings.h"
 #include <QObject>
 #include <QCoreApplication>
 
@@ -24,16 +25,11 @@ public:
   QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
   int priority() const override { return 99998; }
 
+  // 対象ファイルパターン。既定一覧は Settings が持ち、設定 → ビュアーの
+  // 詳細ダイアログから変更できる。ここでコード固定の一覧を返していた頃は、
+  // 設定で増減しても本流の判定 (ViewerDispatcher::resolvePlugin) に効かなかった。
   QStringList supportedExtensions() const override {
-    return {
-      "txt", "log",
-      "cpp", "h", "hpp", "c", "cc", "cxx",
-      "py", "js", "ts", "java", "cs",
-      "html", "htm", "css", "json", "xml",
-      "sh", "bash", "zsh", "fish",
-      "rs", "go", "rb", "php", "pl", "pm",
-      "yaml", "yml", "toml", "ini", "conf", "cfg"
-    };
+    return Settings::instance().textViewerExtensions();
   }
 
   QStringList supportedMimeTypes() const override {

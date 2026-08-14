@@ -1,6 +1,7 @@
 #pragma once
 
 #include "viewer/IViewerPlugin.h"
+#include "settings/Settings.h"
 #include <QObject>
 #include <QCoreApplication>
 
@@ -24,19 +25,13 @@ public:
   QString authorUrl() const override { return QStringLiteral("https://www.mashsoft.co.jp"); }
   int priority() const override { return 99997; }
 
+  // 対象ファイルパターン。既定一覧 (png / jpg / ... に加えて、合成プレビュー
+  // 対応の psd と、動画と同じ ISO BMFF で内容スニッフが当てにならない
+  // heic / heif) は Settings が持ち、設定 → ビュアーの詳細ダイアログから
+  // 変更できる。ここでコード固定の一覧を返していた頃は、設定で増減しても
+  // 本流の判定 (ViewerDispatcher::resolvePlugin) に効かなかった。
   QStringList supportedExtensions() const override {
-    return {
-      "png", "jpg", "jpeg", "gif", "bmp",
-      "svg", "webp", "ico", "tiff", "tif",
-      // PSD は ImageView が合成プレビューに対応している (PsdReader)。
-      // プラグイン化の際に拡張子へ入れ忘れていたため、バイナリビュアーに
-      // 奪われて開けなくなっていた。
-      "psd",
-      // HEIC / HEIF は MP4/MOV と同じ ISO BMFF コンテナのため、拡張子で
-      // 明示宣言しておかないと内容スニッフで動画扱いされ media_viewer に
-      // 奪われる (resolvePlugin が拡張子一致を最優先するので静止画へ回る)。
-      "heic", "heif"
-    };
+    return Settings::instance().imageViewerExtensions();
   }
 
   QStringList supportedMimeTypes() const override {

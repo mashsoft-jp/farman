@@ -62,7 +62,7 @@ void ViewerTab::setupUi() {
     tr("Status"),
     tr("Name"),
     tr("Version"),
-    tr("Extensions"),
+    tr("File Patterns"),
     QString()
   });
   m_pluginTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -385,12 +385,13 @@ void ViewerTab::showPluginDetails(int row) {
     extensionsEdit = new QLineEdit(&dialog);
     extensionsEdit->setText(
       m_extensions.value(rec.pluginId).join(QStringLiteral(", ")));
-    extensionsEdit->setPlaceholderText(tr("mp4, mkv"));
+    extensionsEdit->setPlaceholderText(tr("mp4, *.tar.gz, Makefile"));
     extensionsEdit->setToolTip(
-      tr("Comma, semicolon, or space separated extensions without leading dots."));
-    form->addRow(tr("Extensions:"), extensionsEdit);
+      tr("Comma, semicolon, or space separated patterns. Write an extension "
+         "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+    form->addRow(tr("File patterns:"), extensionsEdit);
   } else {
-    addField(tr("Extensions:"),
+    addField(tr("File patterns:"),
              rec.supportedExtensions.join(QStringLiteral(", ")));
   }
 

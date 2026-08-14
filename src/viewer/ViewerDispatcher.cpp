@@ -1,6 +1,7 @@
 #include "ViewerDispatcher.h"
 #include "core/Logger.h"
 #include "settings/Settings.h"
+#include "utils/MediaMatchers.h"
 #include "utils/PluginCompat.h"
 #include <QApplication>
 #include <QCoreApplication>
@@ -343,7 +344,8 @@ IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
     return nullptr;
   }
 
-  QString extension = fileInfo.suffix().toLower();
+  const QString fileName  = fileInfo.fileName();
+  const QString extension = fileInfo.suffix().toLower();
 
   const QString preferredPluginId =
     Settings::instance().viewerAssociationForExtension(extension);
@@ -370,9 +372,12 @@ IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
   IViewerPlugin* bestByMatch = nullptr;  int bestMatchPrio = std::numeric_limits<int>::max();
 
   for (const auto& plugin : m_plugins) {
+    // 対応宣言はファイルパターンとして照合する ("mp4" / "*.tar.gz" /
+    // "Makefile" のいずれの書き方も受ける)。プラグインの
+    // supportedExtensions() は多くが Settings 由来なので、これが
+    // 「設定で書いたパターンが本流の判定にそのまま効く」経路になる。
     const bool extMatch =
-      !extension.isEmpty()
-      && plugin->supportedExtensions().contains(extension, Qt::CaseInsensitive);
+      MediaMatchers::fileNameMatches(plugin->supportedExtensions(), fileName);
     if (extMatch) {
       if (plugin->priority() < bestExtPrio) {
         bestByExt = plugin.get();

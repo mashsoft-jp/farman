@@ -1,6 +1,7 @@
 #include "ViewerPanel.h"
 #include "core/Logger.h"
 #include "settings/Settings.h"
+#include "utils/MediaMatchers.h"
 #include "utils/CancellableLoadPage.h"   // logViewerLoadResult
 #include "viewer/BinaryView.h"
 #include "viewer/CsvView.h"
@@ -137,62 +138,6 @@ void ViewerPanel::setupUi() {
   m_stack->addWidget(m_loadingPage);
 }
 
-namespace {
-
-// 拡張子パターン (大文字小文字無視) とマッチするか。
-//   - `*` / `?` を含む場合はグロブとして解釈 (例: "c*" は "c", "cc", "cpp" などに一致)
-//   - `!` プレフィックスは除外パターン (例: "c* !class" は class を除く c 系拡張子)
-//   - 除外がマッチすると即座に不一致確定
-//   - 通常パターンが 1 つもなければ何もマッチしない
-bool extensionMatches(const QStringList& patterns, const QString& extension) {
-  auto patternMatches = [&](const QString& p) {
-    if (p.contains(QLatin1Char('*')) || p.contains(QLatin1Char('?'))) {
-      QRegularExpression re(
-        QRegularExpression::wildcardToRegularExpression(p),
-        QRegularExpression::CaseInsensitiveOption);
-      return re.match(extension).hasMatch();
-    }
-    return extension.compare(p, Qt::CaseInsensitive) == 0;
-  };
-
-  bool anyInclude = false;
-  bool included   = false;
-  for (const QString& raw : patterns) {
-    QString p = raw.trimmed();
-    if (p.isEmpty()) continue;
-    const bool isExclude = p.startsWith(QLatin1Char('!'));
-    if (isExclude) {
-      p = p.mid(1).trimmed();
-      if (p.isEmpty()) continue;
-      if (patternMatches(p)) return false;  // 除外マッチで即不一致
-    } else {
-      anyInclude = true;
-      if (patternMatches(p)) included = true;
-    }
-  }
-  return anyInclude && included;
-}
-
-// MIME パターンとマッチするか。末尾 `*` で前方一致、それ以外は完全一致
-// または inherits 判定。
-bool mimeMatches(const QStringList& patterns, const QMimeType& mime) {
-  const QString name = mime.name();
-  for (const QString& p : patterns) {
-    const QString trimmed = p.trimmed();
-    if (trimmed.isEmpty()) continue;
-    if (trimmed.endsWith(QLatin1Char('*'))) {
-      const QString prefix = trimmed.left(trimmed.size() - 1);
-      if (name.startsWith(prefix, Qt::CaseInsensitive)) return true;
-    } else {
-      if (name.compare(trimmed, Qt::CaseInsensitive) == 0) return true;
-      if (mime.inherits(trimmed)) return true;
-    }
-  }
-  return false;
-}
-
-} // anonymous namespace
-
 bool ViewerPanel::viewerKindFromPluginId(const QString& pluginId, ViewerKind& kind) {
   if (pluginId == QLatin1String("text_viewer"))     { kind = ViewerKind::Text;     return true; }
   if (pluginId == QLatin1String("image_viewer"))    { kind = ViewerKind::Image;    return true; }
@@ -207,31 +152,31 @@ ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
   // ViewerPanel::openFile() の Auto 分岐と同じルーティング。
   // External モード (独立ウィンドウ) からも同じ判定を使えるよう静的に切り出した。
   const QFileInfo fileInfo(filePath);
-  const QString extension = fileInfo.suffix().toLower();
+  const QString fileName  = fileInfo.fileName();
   QMimeDatabase mimeDb;
   const QMimeType mime = mimeDb.mimeTypeForFile(filePath);
   const Settings& s = Settings::instance();
 
-  if (extensionMatches(s.imageViewerExtensions(), extension)
-      || mimeMatches(s.imageViewerMimePatterns(), mime)) {
+  if (MediaMatchers::fileNameMatches(s.imageViewerExtensions(), fileName)
+      || MediaMatchers::mimeMatches(s.imageViewerMimePatterns(), mime)) {
     return ViewerKind::Image;
   }
   // PDF はバイナリ判定の前に独立で見る。
-  if (extensionMatches(s.pdfViewerExtensions(), extension)) {
+  if (MediaMatchers::fileNameMatches(s.pdfViewerExtensions(), fileName)) {
     return ViewerKind::Pdf;
   }
   // CSV / TSV はテキストビュアーより先に判定 (.csv はテキストにマッチし得るため、
   // 表形式表示の CSV ビュアーを優先する)。
-  if (extensionMatches(s.csvViewerExtensions(), extension)) {
+  if (MediaMatchers::fileNameMatches(s.csvViewerExtensions(), fileName)) {
     return ViewerKind::Csv;
   }
   // Markdown はテキストビュアーより先に判定 (.md は両方の対象になり得るため、
   // 整形表示できる Markdown を優先する)。
-  if (extensionMatches(s.markdownViewerExtensions(), extension)) {
+  if (MediaMatchers::fileNameMatches(s.markdownViewerExtensions(), fileName)) {
     return ViewerKind::Markdown;
   }
-  if (extensionMatches(s.textViewerExtensions(), extension)
-      || mimeMatches(s.textViewerMimePatterns(), mime)) {
+  if (MediaMatchers::fileNameMatches(s.textViewerExtensions(), fileName)
+      || MediaMatchers::mimeMatches(s.textViewerMimePatterns(), mime)) {
     return ViewerKind::Text;
   }
   return ViewerKind::Binary;

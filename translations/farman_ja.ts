@@ -1170,9 +1170,8 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>アーカイブ形式</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="76"/>
         <source>Formats that are turned on are recognized by their file name and can be browsed like a folder. Use &quot;Details...&quot; to change the file name patterns and the defaults used when creating an archive. Turning a plugin format on or off takes effect after restarting farman.</source>
-        <translation>有効にした形式は、ファイル名で認識されフォルダのように開けるようになります。「詳細...」でファイル名パターンと、アーカイブ作成時の既定値を変更できます。プラグイン形式の有効 / 無効の変更は farman の再起動後に反映されます。</translation>
+        <translation type="vanished">有効にした形式は、ファイル名で認識されフォルダのように開けるようになります。「詳細...」でファイル名パターンと、アーカイブ作成時の既定値を変更できます。プラグイン形式の有効 / 無効の変更は farman の再起動後に反映されます。</translation>
     </message>
     <message>
         <location filename="../src/ui/ArchiveTab.cpp" line="91"/>
@@ -1195,9 +1194,18 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>区分</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="95"/>
         <source>File Name Patterns</source>
-        <translation>ファイル名パターン</translation>
+        <translation type="vanished">ファイル名パターン</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ArchiveTab.cpp" line="76"/>
+        <source>Formats that are turned on are recognized by their file name and can be browsed like a folder. Use &quot;Details...&quot; to change the file patterns and the defaults used when creating an archive. Turning a plugin format on or off takes effect after restarting farman.</source>
+        <translation>有効にした形式は、ファイル名で認識されフォルダのように開けるようになります。「詳細...」でファイルパターンと、アーカイブ作成時の既定値を変更できます。プラグイン形式の有効 / 無効の変更は farman の再起動後に反映されます。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ArchiveTab.cpp" line="95"/>
+        <source>File Patterns</source>
+        <translation>ファイルパターン</translation>
     </message>
     <message>
         <location filename="../src/ui/ArchiveTab.cpp" line="113"/>
@@ -1417,8 +1425,17 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/ArchiveTab.cpp" line="415"/>
+        <source>File patterns for this format, separated by commas. Wildcards (* and ?) can be used, e.g. &quot;*.tar.gz&quot;.</source>
+        <translation>この形式のファイルパターンです。カンマ区切りで指定し、ワイルドカード (* と ?) が使えます (例: &quot;*.tar.gz&quot;)。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ArchiveTab.cpp" line="426"/>
+        <source>File patterns:</source>
+        <translation>ファイルパターン:</translation>
+    </message>
+    <message>
         <source>File name patterns for this format, separated by commas. Wildcards (* and ?) can be used, e.g. &quot;*.tar.gz&quot;.</source>
-        <translation>この形式のファイル名パターンです。カンマ区切りで指定し、ワイルドカード (* と ?) が使えます (例: &quot;*.tar.gz&quot;)。</translation>
+        <translation type="vanished">この形式のファイル名パターンです。カンマ区切りで指定し、ワイルドカード (* と ?) が使えます (例: &quot;*.tar.gz&quot;)。</translation>
     </message>
     <message>
         <location filename="../src/ui/ArchiveTab.cpp" line="419"/>
@@ -1426,9 +1443,8 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>この形式の既定のパターンに戻します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="426"/>
         <source>File name patterns:</source>
-        <translation>ファイル名パターン:</translation>
+        <translation type="vanished">ファイル名パターン:</translation>
     </message>
     <message>
         <location filename="../src/ui/ArchiveTab.cpp" line="434"/>
@@ -2980,47 +2996,55 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::CsvViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="36"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
-        <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
+        <translation type="vanished">先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="37"/>
         <source>Extensions:</source>
-        <translation>拡張子:</translation>
+        <translation type="vanished">拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="39"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="36"/>
+        <source>Comma, semicolon, or space separated patterns. Write an extension (mp4), a glob (*.tar.gz), or a whole file name (Makefile).</source>
+        <translation>カンマ、セミコロン、または空白区切りでパターンを入力します。拡張子 (mp4)、glob (*.tar.gz)、ファイル名そのもの (Makefile) のいずれの書き方もできます。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="38"/>
+        <source>File patterns:</source>
+        <translation>ファイルパターン:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="40"/>
         <source>Auto detect</source>
         <translation>自動判別</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="40"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="41"/>
         <source>Comma ( , )</source>
         <translation>カンマ ( , )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="41"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="42"/>
         <source>Tab ( \t )</source>
         <translation>タブ ( \t )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="42"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="43"/>
         <source>Semicolon ( ; )</source>
         <translation>セミコロン ( ; )</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="43"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="44"/>
         <source>Column separator used when a file is opened</source>
         <translation>ファイルを開くときに使う列の区切り文字</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="44"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="45"/>
         <source>Delimiter:</source>
         <translation>区切り:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="47"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="48"/>
         <source>Treat first row as header</source>
         <translation>先頭行をヘッダとして扱う</translation>
     </message>
@@ -3029,17 +3053,17 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation type="vanished">ショートカット</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="66"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="67"/>
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="68"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="69"/>
         <source>Choose the font for the CSV / TSV table</source>
         <translation>CSV / TSV 表のフォントを選択</translation>
     </message>
     <message>
-        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="72"/>
+        <location filename="../plugins/official/csv-viewer/CsvViewerSettingsPage.cpp" line="73"/>
         <source>CSV / TSV Viewer Font</source>
         <translation>CSV / TSV ビュアーフォント</translation>
     </message>
@@ -4887,37 +4911,35 @@ What would you like to do?</source>
 <context>
     <name>Farman::ImageViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="57"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="58"/>
         <source>Zoom:</source>
         <translation>ズーム:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="56"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="57"/>
         <source>Default zoom factor (used when &apos;Fit to window&apos; is off)</source>
         <translation>既定のズーム倍率 (「ウィンドウに合わせる」OFF 時に使用)</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="48"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
-        <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
+        <translation type="vanished">先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="49"/>
         <source>Extensions:</source>
-        <translation>拡張子:</translation>
+        <translation type="vanished">拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="60"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="61"/>
         <source>Fit image to window</source>
         <translation>画像をウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="61"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="62"/>
         <source>Scale the image to fit within the viewer; zoom factor is ignored while this is on.</source>
         <translation>画像をビュアーに収まるよう拡大縮小します。ON の間はズーム倍率は無視されます。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="66"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="67"/>
         <source>Play animation (GIF / WebP)</source>
         <translation>アニメーションを再生 (GIF / WebP)</translation>
     </message>
@@ -4926,58 +4948,68 @@ What would you like to do?</source>
         <translation type="vanished">ショートカット</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="97"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="48"/>
+        <source>Comma, semicolon, or space separated patterns. Write an extension (mp4), a glob (*.tar.gz), or a whole file name (Makefile).</source>
+        <translation>カンマ、セミコロン、または空白区切りでパターンを入力します。拡張子 (mp4)、glob (*.tar.gz)、ファイル名そのもの (Makefile) のいずれの書き方もできます。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="50"/>
+        <source>File patterns:</source>
+        <translation>ファイルパターン:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="98"/>
         <source>Transparency</source>
         <translation>透明部分</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="102"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="103"/>
         <source>Checker</source>
         <translation>チェッカー</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="108"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="109"/>
         <source>Checker Color 1</source>
         <translation>チェッカー色 1</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="109"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="110"/>
         <source>Checker Color 2</source>
         <translation>チェッカー色 2</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="110"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="111"/>
         <source>Color 1:</source>
         <translation>色 1:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="112"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="113"/>
         <source>Color 2:</source>
         <translation>色 2:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="119"/>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="132"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="120"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="133"/>
         <source>Solid Color</source>
         <translation>単色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="122"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="123"/>
         <source>Theme:</source>
         <translation>テーマ:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="123"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="124"/>
         <source>Light</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="124"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="125"/>
         <source>Dark</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="133"/>
+        <location filename="../plugins/official/image-viewer/ImageViewerSettingsPage.cpp" line="134"/>
         <source>Color:</source>
         <translation>色:</translation>
     </message>
@@ -6359,22 +6391,20 @@ Reason: %1</source>
 <context>
     <name>Farman::MarkdownViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="40"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
-        <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
+        <translation type="vanished">先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="41"/>
         <source>Extensions:</source>
-        <translation>拡張子:</translation>
+        <translation type="vanished">拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="44"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="45"/>
         <source>Show raw source instead of preview</source>
         <translation>プレビューではなくソースを表示する</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="46"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="47"/>
         <source>Open documents as plain Markdown text rather than rendered HTML.</source>
         <translation>整形済み HTML ではなく Markdown のソーステキストで開きます。</translation>
     </message>
@@ -6383,72 +6413,82 @@ Reason: %1</source>
         <translation type="vanished">ショートカット</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="68"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="40"/>
+        <source>Comma, semicolon, or space separated patterns. Write an extension (mp4), a glob (*.tar.gz), or a whole file name (Makefile).</source>
+        <translation>カンマ、セミコロン、または空白区切りでパターンを入力します。拡張子 (mp4)、glob (*.tar.gz)、ファイル名そのもの (Makefile) のいずれの書き方もできます。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="42"/>
+        <source>File patterns:</source>
+        <translation>ファイルパターン:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="69"/>
         <source>Font &amp;&amp; Colors (per theme)</source>
         <translation>フォントと配色 (テーマ別)</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="73"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="74"/>
         <source>Theme:</source>
         <translation>テーマ:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="74"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="75"/>
         <source>Light</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="75"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="76"/>
         <source>Dark</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="82"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="83"/>
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="84"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="85"/>
         <source>Choose the body font for the Markdown viewer</source>
         <translation>Markdown ビュアーの本文フォントを選択</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="88"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="89"/>
         <source>Markdown Viewer Font</source>
         <translation>Markdown ビュアーフォント</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="100"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="101"/>
         <source>Text:</source>
         <translation>文字色:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="103"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="104"/>
         <source>Text Color</source>
         <translation>文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="106"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="107"/>
         <source>Background:</source>
         <translation>背景色:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="109"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="110"/>
         <source>Background Color</source>
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="112"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="113"/>
         <source>Link:</source>
         <translation>リンク色:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="115"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="116"/>
         <source>Link Color</source>
         <translation>リンク色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="121"/>
+        <location filename="../plugins/official/markdown-viewer/MarkdownViewerSettingsPage.cpp" line="122"/>
         <source>Leave a color as &quot;(none)&quot; to follow the theme&apos;s default.</source>
         <translation>色を「(none)」のままにするとテーマの既定色に従います。</translation>
     </message>
@@ -6793,52 +6833,60 @@ The format or codec is not supported on this platform.</source>
 <context>
     <name>Farman::MediaViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="38"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
-        <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
+        <translation type="vanished">先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="39"/>
         <source>Extensions:</source>
-        <translation>拡張子:</translation>
+        <translation type="vanished">拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="43"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="38"/>
+        <source>Comma, semicolon, or space separated patterns. Write an extension (mp4), a glob (*.tar.gz), or a whole file name (Makefile).</source>
+        <translation>カンマ、セミコロン、または空白区切りでパターンを入力します。拡張子 (mp4)、glob (*.tar.gz)、ファイル名そのもの (Makefile) のいずれの書き方もできます。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="40"/>
+        <source>File patterns:</source>
+        <translation>ファイルパターン:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="44"/>
         <source>Initial playback volume</source>
         <translation>再生開始時の音量</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="44"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="45"/>
         <source>Volume:</source>
         <translation>音量:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="51"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="52"/>
         <source>Default zoom factor (used when &apos;Fit video to window&apos; is off)</source>
         <translation>既定のズーム倍率 (「動画をウィンドウに合わせる」OFF 時に使用)</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="52"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="53"/>
         <source>Zoom:</source>
         <translation>ズーム:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="55"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="56"/>
         <source>Fit video to window</source>
         <translation>動画をウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="56"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="57"/>
         <source>Scale the video to fit within the viewer; zoom factor is ignored while this is on.</source>
         <translation>動画をビュアーに収まるよう拡大縮小します。ON の間はズーム倍率は無視されます。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="61"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="62"/>
         <source>Start playback automatically</source>
         <translation>自動的に再生を開始する</translation>
     </message>
     <message>
-        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="64"/>
+        <location filename="../plugins/official/media-viewer/MediaViewerSettingsPage.cpp" line="65"/>
         <source>Loop playback</source>
         <translation>ループ再生</translation>
     </message>
@@ -7087,47 +7135,55 @@ The format or codec is not supported on this platform.</source>
 <context>
     <name>Farman::PdfViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="30"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
-        <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
+        <translation type="vanished">先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="31"/>
         <source>Extensions:</source>
-        <translation>拡張子:</translation>
+        <translation type="vanished">拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="33"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="30"/>
+        <source>Comma, semicolon, or space separated patterns. Write an extension (mp4), a glob (*.tar.gz), or a whole file name (Makefile).</source>
+        <translation>カンマ、セミコロン、または空白区切りでパターンを入力します。拡張子 (mp4)、glob (*.tar.gz)、ファイル名そのもの (Makefile) のいずれの書き方もできます。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="32"/>
+        <source>File patterns:</source>
+        <translation>ファイルパターン:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="34"/>
         <source>Actual size</source>
         <translation>等倍</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="34"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="35"/>
         <source>Fit width</source>
         <translation>幅に合わせる</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="35"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="36"/>
         <source>Fit page</source>
         <translation>ページ全体</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="36"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="37"/>
         <source>How the page is scaled when a document is opened</source>
         <translation>ドキュメントを開いたときのページの拡大率</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="37"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="38"/>
         <source>Default fit:</source>
         <translation>既定の表示:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="40"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="41"/>
         <source>Continuous scrolling</source>
         <translation>連続スクロール</translation>
     </message>
     <message>
-        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="42"/>
+        <location filename="../plugins/official/pdf-viewer/PdfViewerSettingsPage.cpp" line="43"/>
         <source>Scroll through all pages continuously instead of one page at a time.</source>
         <translation>1 ページずつではなく全ページを連続してスクロールします。</translation>
     </message>
@@ -8495,32 +8551,30 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::TextViewerSettingsPage</name>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="48"/>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
-        <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
+        <translation type="vanished">先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="49"/>
         <source>Extensions:</source>
-        <translation>拡張子:</translation>
+        <translation type="vanished">拡張子:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="57"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="58"/>
         <source>Default encoding for opening text files. &apos;Auto&apos; detects the encoding from the file content.</source>
         <translation>テキストファイルを開く際の既定エンコーディング。「Auto」はファイル内容から自動判別します。</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="60"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="61"/>
         <source>Encoding:</source>
         <translation>エンコーディング:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="64"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="65"/>
         <source>Show line numbers</source>
         <translation>行番号を表示</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="66"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="67"/>
         <source>Word wrap</source>
         <translation>折り返し</translation>
     </message>
@@ -8529,92 +8583,102 @@ Keybindings are not affected.</source>
         <translation type="vanished">ショートカット</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="93"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="48"/>
+        <source>Comma, semicolon, or space separated patterns. Write an extension (mp4), a glob (*.tar.gz), or a whole file name (Makefile).</source>
+        <translation>カンマ、セミコロン、または空白区切りでパターンを入力します。拡張子 (mp4)、glob (*.tar.gz)、ファイル名そのもの (Makefile) のいずれの書き方もできます。</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="50"/>
+        <source>File patterns:</source>
+        <translation>ファイルパターン:</translation>
+    </message>
+    <message>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="94"/>
         <source>Font &amp;&amp; Colors (per theme)</source>
         <translation>フォントと配色 (テーマ別)</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="98"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="99"/>
         <source>Theme:</source>
         <translation>テーマ:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="99"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="100"/>
         <source>Light</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="100"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="101"/>
         <source>Dark</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="107"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="108"/>
         <source>Font:</source>
         <translation>フォント:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="109"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="110"/>
         <source>Choose the font for the text viewer</source>
         <translation>テキストビュアーのフォントを選択</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="113"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="114"/>
         <source>Text Viewer Font</source>
         <translation>テキストビュアーフォント</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="138"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="139"/>
         <source>Foreground</source>
         <translation>文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="139"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="140"/>
         <source>Background</source>
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="155"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="156"/>
         <source>Normal:</source>
         <translation>通常:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="157"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="158"/>
         <source>Normal Foreground</source>
         <translation>通常文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="157"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="158"/>
         <source>Normal Background</source>
         <translation>通常背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="158"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="159"/>
         <source>Selected:</source>
         <translation>選択中:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="160"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="161"/>
         <source>Selected Foreground</source>
         <translation>選択中文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="160"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="161"/>
         <source>Selected Background</source>
         <translation>選択中背景色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="161"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="162"/>
         <source>Line Number:</source>
         <translation>行番号:</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="163"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="164"/>
         <source>Line Number Foreground</source>
         <translation>行番号文字色</translation>
     </message>
     <message>
-        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="163"/>
+        <location filename="../plugins/official/text-viewer/TextViewerSettingsPage.cpp" line="164"/>
         <source>Line Number Background</source>
         <translation>行番号背景色</translation>
     </message>
@@ -8774,53 +8838,53 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::ViewerDispatcher</name>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="185"/>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="253"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="186"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="254"/>
         <source>External plugins are disabled (enable in Settings &gt; Plugins)</source>
         <translation>外部プラグインは無効です (設定 &gt; プラグイン で有効化してください)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="204"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="205"/>
         <source>This plugin requires farman %1 or later (current %2).</source>
         <translation>このプラグインには farman %1 以降が必要です (現在 %2)。</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="227"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="228"/>
         <source>Not an IViewerPlugin (wrong IID?)</source>
         <translation>IViewerPlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="268"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="269"/>
         <source>Invalid priority %1 (external plugins must use 0-9999)</source>
         <translation>優先度 %1 は不正です (外部プラグインは 0〜9999 を指定してください)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="283"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="284"/>
         <source>Missing author information (external plugins must declare author())</source>
         <translation>制作者情報がありません (外部プラグインは author() を宣言する必要があります)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="295"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="296"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="493"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="498"/>
         <source>null plugin instance</source>
         <translation>プラグインインスタンスが null</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="502"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="507"/>
         <source>duplicate plugin id (already registered)</source>
         <translation>プラグイン ID が重複 (既に登録済み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="515"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="520"/>
         <source>initialize() returned false</source>
         <translation>initialize() が失敗を返しました</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="530"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="535"/>
         <source>bundled</source>
         <translation>同梱</translation>
     </message>
@@ -8832,13 +8896,13 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::ViewerPanel</name>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="95"/>
-        <location filename="../src/ui/ViewerPanel.cpp" line="400"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="96"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="345"/>
         <source>Loading...</source>
         <translation>読み込み中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="123"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="124"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
@@ -8895,9 +8959,13 @@ Keybindings are not affected.</source>
         <translation>バージョン</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerTab.cpp" line="65"/>
         <source>Extensions</source>
-        <translation>拡張子</translation>
+        <translation type="vanished">拡張子</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ViewerTab.cpp" line="65"/>
+        <source>File Patterns</source>
+        <translation>ファイルパターン</translation>
     </message>
     <message>
         <location filename="../src/ui/ViewerTab.cpp" line="191"/>
@@ -9033,32 +9101,44 @@ Keybindings are not affected.</source>
     </message>
     <message>
         <location filename="../src/ui/ViewerTab.cpp" line="388"/>
-        <source>mp4, mkv</source>
-        <translation>mp4, mkv</translation>
+        <source>mp4, *.tar.gz, Makefile</source>
+        <translation>mp4, *.tar.gz, Makefile</translation>
     </message>
     <message>
         <location filename="../src/ui/ViewerTab.cpp" line="390"/>
+        <source>Comma, semicolon, or space separated patterns. Write an extension (mp4), a glob (*.tar.gz), or a whole file name (Makefile).</source>
+        <translation>カンマ、セミコロン、または空白区切りでパターンを入力します。拡張子 (mp4)、glob (*.tar.gz)、ファイル名そのもの (Makefile) のいずれの書き方もできます。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ViewerTab.cpp" line="392"/>
+        <location filename="../src/ui/ViewerTab.cpp" line="394"/>
+        <source>File patterns:</source>
+        <translation>ファイルパターン:</translation>
+    </message>
+    <message>
+        <source>mp4, mkv</source>
+        <translation type="vanished">mp4, mkv</translation>
+    </message>
+    <message>
         <source>Comma, semicolon, or space separated extensions without leading dots.</source>
-        <translation>先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
+        <translation type="vanished">先頭のドットを付けず、カンマ、セミコロン、または空白区切りで拡張子を入力します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerTab.cpp" line="391"/>
-        <location filename="../src/ui/ViewerTab.cpp" line="393"/>
         <source>Extensions:</source>
-        <translation>拡張子:</translation>
+        <translation type="vanished">拡張子:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerTab.cpp" line="397"/>
+        <location filename="../src/ui/ViewerTab.cpp" line="398"/>
         <source>Path:</source>
         <translation>パス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerTab.cpp" line="399"/>
+        <location filename="../src/ui/ViewerTab.cpp" line="400"/>
         <source>Error:</source>
         <translation>エラー:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerTab.cpp" line="407"/>
+        <location filename="../src/ui/ViewerTab.cpp" line="408"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
@@ -9457,72 +9537,72 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1494"/>
+        <location filename="../src/settings/Settings.cpp" line="1502"/>
         <source>Home</source>
         <translation>ホーム</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1496"/>
+        <location filename="../src/settings/Settings.cpp" line="1504"/>
         <source>Desktop</source>
         <translation>デスクトップ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1498"/>
+        <location filename="../src/settings/Settings.cpp" line="1506"/>
         <source>Documents</source>
         <translation>ドキュメント</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1500"/>
+        <location filename="../src/settings/Settings.cpp" line="1508"/>
         <source>Downloads</source>
         <translation>ダウンロード</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1502"/>
+        <location filename="../src/settings/Settings.cpp" line="1510"/>
         <source>Pictures</source>
         <translation>ピクチャ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1504"/>
+        <location filename="../src/settings/Settings.cpp" line="1512"/>
         <source>Music</source>
         <translation>ミュージック</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1506"/>
+        <location filename="../src/settings/Settings.cpp" line="1514"/>
         <source>Movies</source>
         <translation>ムービー</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1759"/>
+        <location filename="../src/settings/Settings.cpp" line="1767"/>
         <source>Settings file does not exist yet.</source>
         <translation>設定ファイルがまだ存在しません。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1764"/>
+        <location filename="../src/settings/Settings.cpp" line="1772"/>
         <source>Cannot overwrite existing file: %1</source>
         <translation>既存ファイルを上書きできません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1768"/>
+        <location filename="../src/settings/Settings.cpp" line="1776"/>
         <source>Failed to copy settings to: %1</source>
         <translation>設定ファイルのコピーに失敗しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1788"/>
+        <location filename="../src/settings/Settings.cpp" line="1796"/>
         <source>Not a valid JSON settings file: %1</source>
         <translation>有効な JSON 設定ファイルではありません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1794"/>
+        <location filename="../src/settings/Settings.cpp" line="1802"/>
         <source>Missing &quot;version&quot; field — not a farman settings file?</source>
         <translation>「version」フィールドがありません — farman の設定ファイルではない可能性があります。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1803"/>
+        <location filename="../src/settings/Settings.cpp" line="1811"/>
         <source>Cannot replace existing settings file: %1</source>
         <translation>既存の設定ファイルを置き換えられません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1807"/>
+        <location filename="../src/settings/Settings.cpp" line="1815"/>
         <source>Failed to install imported settings file</source>
         <translation>インポートした設定ファイルの適用に失敗しました</translation>
     </message>
@@ -9552,7 +9632,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>未知の外部コマンド: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1779"/>
+        <location filename="../src/settings/Settings.cpp" line="1787"/>
         <location filename="../src/settings/PresetIO.cpp" line="21"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>
@@ -10085,7 +10165,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
 <context>
     <name>ViewerNames</name>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="248"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="193"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="180"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="180"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="180"/>
@@ -10098,7 +10178,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>テキストビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="251"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="196"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="192"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="192"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="192"/>
@@ -10111,7 +10191,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>画像ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="254"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="199"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="195"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="195"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="195"/>
@@ -10124,7 +10204,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>バイナリビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="257"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="202"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="186"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="186"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="186"/>
@@ -10137,7 +10217,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>Markdown ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="260"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="205"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="189"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="189"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="189"/>
@@ -10150,7 +10230,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>PDF ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="263"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="208"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="183"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="183"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="183"/>
@@ -10163,7 +10243,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>CSV/TSV ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/ViewerPanel.cpp" line="266"/>
+        <location filename="../src/ui/ViewerPanel.cpp" line="211"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="198"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="198"/>
         <location filename="../src/keybinding/ViewerCommands.cpp" line="198"/>

@@ -1,9 +1,10 @@
 #pragma once
 
-// プラグインの設定ページ (IPluginSettingsPage) で拡張子一覧を編集するための
-// 小さなヘルパ。ホスト側 PluginsTab の normalizedExtensions と同じ正規化
+// プラグインの設定ページ (IPluginSettingsPage) で対象ファイルパターンを編集する
+// ための小さなヘルパ。ホスト側 ViewerTab の normalizedExtensions と同じ正規化
 // (小文字化・先頭ドット除去) を行い、glob パターン (例: "c*", "!class",
-// "jp*g") はそのまま保持する。各公式ビュアーの設定ページが共有する。
+// "jp*g", "*.tar.gz") はそのまま保持する。各公式ビュアーの設定ページが共有する。
+// 判定側の規則は MediaMatchers::fileNameMatches() を参照。
 
 #include <QRegularExpression>
 #include <QString>

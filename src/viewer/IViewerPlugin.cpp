@@ -7,6 +7,7 @@
 
 #include "core/Logger.h"
 #include "settings/Settings.h"
+#include "utils/MediaMatchers.h"
 
 namespace Farman {
 
@@ -30,11 +31,13 @@ void syncPluginFromHostSettings() {
 }
 
 bool IViewerPlugin::canHandle(const QString& filePath) const {
-  QFileInfo fileInfo(filePath);
-  QString extension = fileInfo.suffix().toLower();
+  const QFileInfo fileInfo(filePath);
 
-  if (!extension.isEmpty() &&
-      supportedExtensions().contains(extension, Qt::CaseInsensitive)) {
+  // supportedExtensions() は「拡張子の完全一致リスト」ではなくファイル
+  // パターンのリストとして扱う。"mp4" のような拡張子だけの書き方に加えて
+  // "*.tar.gz" (複合拡張子) や "Makefile" (拡張子無し) も書ける
+  // (MediaMatchers::fileNameMatches のコメント参照)。
+  if (MediaMatchers::fileNameMatches(supportedExtensions(), fileInfo.fileName())) {
     return true;
   }
 

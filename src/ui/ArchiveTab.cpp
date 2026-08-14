@@ -74,7 +74,7 @@ void ArchiveTab::setupUi() {
 
   auto* hint = new QLabel(
     tr("Formats that are turned on are recognized by their file name and can "
-       "be browsed like a folder. Use \"Details...\" to change the file name "
+       "be browsed like a folder. Use \"Details...\" to change the file "
        "patterns and the defaults used when creating an archive. Turning a "
        "plugin format on or off takes effect after restarting farman."),
     formatGroup);
@@ -92,7 +92,7 @@ void ArchiveTab::setupUi() {
     tr("Status"),
     tr("Format"),
     tr("Origin"),
-    tr("File Name Patterns"),
+    tr("File Patterns"),
     QString()
   });
   m_formatTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -412,8 +412,8 @@ void ArchiveTab::showFormatDetails(int row) {
   patternsLayout->setContentsMargins(0, 0, 0, 0);
   auto* patternsEdit = new QLineEdit(patternsDisplayText(state.patterns), &dialog);
   patternsEdit->setToolTip(
-    tr("File name patterns for this format, separated by commas. "
-       "Wildcards (* and ?) can be used, e.g. \"*.tar.gz\"."));
+    tr("File patterns for this format, separated by commas. Wildcards "
+       "(* and ?) can be used, e.g. \"*.tar.gz\"."));
   auto* patternsDefault = new QToolButton(&dialog);
   patternsDefault->setText(tr("Default"));
   patternsDefault->setToolTip(tr("Restore the default patterns for this format."));
@@ -423,7 +423,7 @@ void ArchiveTab::showFormatDetails(int row) {
   });
   patternsLayout->addWidget(patternsEdit, 1);
   patternsLayout->addWidget(patternsDefault);
-  form->addRow(tr("File name patterns:"), patternsRow);
+  form->addRow(tr("File patterns:"), patternsRow);
 
   // ── 作成時の既定 ──
   // 読取専用の形式では作成系の項目自体を出さない (出しても効かないので)。

@@ -45,8 +45,9 @@ ImageViewerSettingsPage::ImageViewerSettingsPage(QWidget* parent)
   form->setContentsMargins(0, 0, 0, 0);
   m_extensionsEdit = new QLineEdit(this);
   m_extensionsEdit->setToolTip(
-    tr("Comma, semicolon, or space separated extensions without leading dots."));
-  form->addRow(tr("Extensions:"), m_extensionsEdit);
+    tr("Comma, semicolon, or space separated patterns. Write an extension "
+    "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+  form->addRow(tr("File patterns:"), m_extensionsEdit);
   m_zoomCombo = new QComboBox(this);
   m_zoomCombo->setEditable(true);
   for (int p : { 25, 50, 75, 100, 200 }) {
