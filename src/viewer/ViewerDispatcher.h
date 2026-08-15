@@ -50,13 +50,6 @@ public:
   // Appearance の再適用を通知する。
   void notifyAppearanceChanged(const PluginAppearance& appearance);
 
-  // 固定 (コア) ビュアープラグインか。テキスト / 画像 / バイナリ /
-  // メディア (動画・音声) はアプリ本体のフォールバック経路を兼ねるため
-  // 常に有効で、ユーザーは無効化できない。それ以外の同梱プラグイン
-  // (PDF / CSV / Markdown) は外部プラグインと同様に有効 / 無効を
-  // 切り替えられる。
-  static bool isCoreViewerPlugin(const QString& pluginId);
-
   // 同梱公式ビュアープラグインの登録（起動時に呼ぶ）
   void registerBundledPlugins();
 

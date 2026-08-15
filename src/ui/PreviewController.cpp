@@ -125,6 +125,7 @@ PreviewResult runPreviewLoad(QString             filePath,
         r.errorReason = QObject::tr("Failed to load CSV.");
       }
       return r;
+    case ViewerPanel::ViewerKind::None:
     case ViewerPanel::ViewerKind::Auto:
     default:
       r.kind = PreviewResult::Kind::Unsupported;

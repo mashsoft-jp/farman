@@ -27,7 +27,10 @@ class ViewerPanel : public QWidget {
 public:
   // どのビュアーで開くかを呼び出し側から強制したい場合に使う。
   // Auto は拡張子・MIME ルーティングに従う通常動作。
-  enum class ViewerKind { Auto, Text, Image, Binary, Markdown, Pdf, Csv };
+  // None = どのビュアーも対応しない (該当プラグインが全て無効な場合を含む)。
+  // このときは何も開かない。Auto は「自動判定してほしい」という入力用の値で、
+  // 判定結果としては返らない。
+  enum class ViewerKind { Auto, None, Text, Image, Binary, Markdown, Pdf, Csv };
 
   explicit ViewerPanel(QWidget* parent = nullptr);
   ~ViewerPanel() override;
@@ -48,8 +51,8 @@ public:
   // External モード (独立ウィンドウ) でも同じ振り分けを使うので、Inline
   // 専用にせず公開する。
   // Auto 指定時に使う内蔵ビュアー種別の判定。中身は
-  // ViewerDispatcher::resolvePlugin() への委譲で、内蔵 ViewerKind を持たない
-  // プラグイン (media / 外部) と未解決は Binary を返す。
+  // ViewerDispatcher::resolvePlugin() への委譲。内蔵 ViewerKind を持たない
+  // プラグイン (media / 外部) と、どれも対応しない場合は None を返す。
   static ViewerKind resolveAuto(const QString& filePath);
 
   // pluginId から内蔵 ViewerKind を引く。media_viewer など内蔵種別を持たない

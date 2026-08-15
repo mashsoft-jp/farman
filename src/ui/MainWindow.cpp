@@ -553,6 +553,7 @@ QString viewerIdForKind(ViewerPanel::ViewerKind kind) {
     case ViewerPanel::ViewerKind::Text:     return QStringLiteral("text");
     case ViewerPanel::ViewerKind::Image:    return QStringLiteral("image");
     case ViewerPanel::ViewerKind::Binary:   return QStringLiteral("binary");
+    case ViewerPanel::ViewerKind::None:     return QString();
     case ViewerPanel::ViewerKind::Markdown: return QStringLiteral("markdown");
     case ViewerPanel::ViewerKind::Pdf:      return QStringLiteral("pdf");
     case ViewerPanel::ViewerKind::Csv:      return QStringLiteral("csv");
@@ -667,6 +668,12 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       case ViewerPanel::ViewerKind::Csv:
         w = new CsvViewerWindow(filePath, shownPath, this);
         break;
+      case ViewerPanel::ViewerKind::None:
+        // 対応するビュアーが無い (該当プラグインが全て無効な場合を含む)。
+        // ウィンドウを作らずに何も開かない。
+        Logger::instance().info(
+          QStringLiteral("No viewer available for: %1").arg(shownPath));
+        return;
       case ViewerPanel::ViewerKind::Auto:
         /* unreachable */ break;
     }

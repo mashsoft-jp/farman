@@ -68,18 +68,6 @@ void ViewerDispatcher::notifyAppearanceChanged(
   }
 }
 
-bool ViewerDispatcher::isCoreViewerPlugin(const QString& pluginId) {
-  // テキスト / 画像 / バイナリ / メディアはフォールバック経路を兼ねる
-  // 固定ビュアーとして常に有効にする (ヘッダコメント参照)。
-  static const QSet<QString> coreIds = {
-    QStringLiteral("text_viewer"),
-    QStringLiteral("image_viewer"),
-    QStringLiteral("binary_viewer"),
-    QStringLiteral("media_viewer"),
-  };
-  return coreIds.contains(pluginId);
-}
-
 void ViewerDispatcher::shutdownPlugins() {
   // initialize() が成功した (= 登録済みの) プラグインだけが対象。
   // 無効化や検証エラーで登録前に弾いたものは initialize していないので
@@ -289,8 +277,7 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
           .arg(rec.pluginId, fileInfo.fileName()));
       continue;
     }
-    if (!isCoreViewerPlugin(rec.pluginId)
-        && Settings::instance().isViewerPluginDisabled(rec.pluginId)) {
+    if (Settings::instance().isViewerPluginDisabled(rec.pluginId)) {
       rec.loaded = false;
       rec.disabledByUser = true;
       rec.errorReason = tr("Disabled by user");

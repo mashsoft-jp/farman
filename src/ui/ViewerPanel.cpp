@@ -165,8 +165,10 @@ ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
     }
   }
   // 内蔵 ViewerKind を持たないプラグイン (media / 外部) と、どのプラグインにも
-  // 当たらなかった場合は最後のフォールバックであるバイナリで開く。
-  return ViewerKind::Binary;
+  // 当たらなかった場合は None。後者にはバイナリビュアーを無効にしている場合も
+  // 含まれる (かつてはここで無条件にバイナリへ倒していたため、全て無効にしても
+  // バイナリだけ開くという分かりにくい挙動になっていた)。
+  return ViewerKind::None;
 }
 
 namespace {
@@ -205,6 +207,7 @@ QString kindToPluginId(ViewerPanel::ViewerKind kind) {
     case ViewerPanel::ViewerKind::Text:     return QStringLiteral("text_viewer");
     case ViewerPanel::ViewerKind::Image:    return QStringLiteral("image_viewer");
     case ViewerPanel::ViewerKind::Binary:   return QStringLiteral("binary_viewer");
+    case ViewerPanel::ViewerKind::None:     return QString();
     case ViewerPanel::ViewerKind::Markdown: return QStringLiteral("markdown_viewer");
     case ViewerPanel::ViewerKind::Pdf:      return QStringLiteral("pdf_viewer");
     case ViewerPanel::ViewerKind::Csv:      return QStringLiteral("csv_viewer");
@@ -253,6 +256,12 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
       }
     } else {
       kind = resolveAuto(pathForStatus);
+      if (kind == ViewerKind::None) {
+        // 何も開かないと理由が分からないのでログに残す。ダイアログは出さない
+        // (ファイルを開こうとするたびに出るのは煩わしいため)。
+        Logger::instance().info(
+          QStringLiteral("No viewer available for: %1").arg(pathForStatus));
+      }
     }
   }
 
@@ -266,6 +275,7 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
     case ViewerKind::Text:     ok = openTextFile(filePath, pathForStatus);     break;
     case ViewerKind::Image:    ok = openImageFile(filePath, pathForStatus);    break;
     case ViewerKind::Binary:   ok = openBinaryFile(filePath, pathForStatus);   break;
+    case ViewerKind::None:     /* 対応するビュアーが無い。何も開かない */ break;
     case ViewerKind::Markdown: ok = openMarkdownFile(filePath, pathForStatus); break;
     case ViewerKind::Pdf:      ok = openPdfFile(filePath, pathForStatus);      break;
     case ViewerKind::Csv:      ok = openCsvFile(filePath, pathForStatus);      break;

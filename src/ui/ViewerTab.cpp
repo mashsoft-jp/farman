@@ -45,8 +45,8 @@ void ViewerTab::setupUi() {
 
   auto* listHint = new QLabel(
     tr("Plugins are loaded on startup. Enable/disable changes take effect "
-       "after restarting farman. The core viewer plugins (Text / Image / "
-       "Binary / Media) are always enabled."),
+       "after restarting farman. If you disable every plugin, no viewer opens "
+       "at all — not even the binary viewer."),
     listGroup);
   listHint->setWordWrap(true);
   listLayout->addWidget(listHint);
@@ -56,8 +56,8 @@ void ViewerTab::setupUi() {
   m_allCheck = new QCheckBox(tr("Enable all"), listGroup);
   m_allCheck->setTristate(true);
   m_allCheck->setToolTip(
-    tr("Enable or disable every plugin in the list at once. The core viewer "
-       "plugins are always enabled and are not affected."));
+    tr("Enable or disable every plugin in the list at once. With all of them "
+       "off, no viewer opens at all."));
   connect(m_allCheck, &QCheckBox::clicked, this, [this]() {
     // 三状態の巡回 (未チェック → 中間 → チェック) には任せず、現在の一覧の
     // 状態から次を決める。中間表示から 1 回で全 ON / 全 OFF にできる。
@@ -215,10 +215,11 @@ void ViewerTab::loadPluginList() {
 
   for (int row = 0; row < records.size(); ++row) {
     const PluginRecord& rec = records[row];
-    // コア (固定) ビュアー以外は同梱 / 外部を問わず切り替え可能。
-    const bool toggleable =
-      !rec.pluginId.isEmpty()
-      && !ViewerDispatcher::isCoreViewerPlugin(rec.pluginId);
+    // ID が取れたプラグインは同梱 / 外部を問わず切り替えられる。テキスト /
+    // 画像 / バイナリ / メディアも例外にしない。以前はこの 4 つを「常に有効」
+    // として除外していたが、「すべて無効」にしてもバイナリビュアーだけ開く、
+    // という分かりにくい挙動になっていた。
+    const bool toggleable = !rec.pluginId.isEmpty();
     // 有効 / 無効はこの一覧で直接切り替えられる (詳細ダイアログでも変更可)。
     // チェックは「ユーザーの有効 / 無効設定」そのもので、実際にロードできたか
     // は隣の状態列が示す (外部プラグイン読込みが OFF のときは、有効にして
@@ -230,9 +231,8 @@ void ViewerTab::loadPluginList() {
     enabledItem->setCheckState(
       toggleable && isPluginDisabled(rec.pluginId) ? Qt::Unchecked : Qt::Checked);
     if (!toggleable) {
-      enabledItem->setToolTip(rec.pluginId.isEmpty()
-                                ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
-                                : tr("This core viewer plugin is always enabled."));
+      enabledItem->setToolTip(
+        tr("Plugin ID is unavailable, so this plugin cannot be toggled."));
     } else if (rec.blockedExternalDisabled) {
       enabledItem->setToolTip(
         tr("External plugin loading is off. Turn on \"Allow loading external "
@@ -356,10 +356,7 @@ void ViewerTab::setPluginEnabled(int row, bool enabled) {
 bool ViewerTab::allToggleableEnabled() const {
   bool anyToggleable = false;
   for (const PluginRecord& rec : m_pluginRecords) {
-    if (rec.pluginId.isEmpty()
-        || ViewerDispatcher::isCoreViewerPlugin(rec.pluginId)) {
-      continue;
-    }
+    if (rec.pluginId.isEmpty()) continue;
     anyToggleable = true;
     if (isPluginDisabled(rec.pluginId)) return false;
   }
@@ -372,10 +369,7 @@ void ViewerTab::updateAllCheckState() {
   int toggleable = 0;
   int enabled    = 0;
   for (const PluginRecord& rec : m_pluginRecords) {
-    if (rec.pluginId.isEmpty()
-        || ViewerDispatcher::isCoreViewerPlugin(rec.pluginId)) {
-      continue;
-    }
+    if (rec.pluginId.isEmpty()) continue;
     ++toggleable;
     if (!isPluginDisabled(rec.pluginId)) ++enabled;
   }
@@ -426,9 +420,7 @@ void ViewerTab::showPluginDetails(int row) {
 
   // 有効 / 無効の切り替え (一覧は表示のみで、変更はここで行う)。
   // コア (固定) ビュアーと ID 不明のプラグインは切り替え不可。
-  const bool enabledEditable =
-    !rec.pluginId.isEmpty()
-    && !ViewerDispatcher::isCoreViewerPlugin(rec.pluginId);
+  const bool enabledEditable = !rec.pluginId.isEmpty();
   auto* enabledCheck = new QCheckBox(&dialog);
   enabledCheck->setChecked(
     !(enabledEditable && isPluginDisabled(rec.pluginId)));
@@ -696,9 +688,8 @@ void ViewerTab::save() {
   auto& settings = Settings::instance();
   m_restartRequiredOnSave = false;
 
-  // プラグインの有効 / 無効 (次回起動から有効)。編集は詳細ダイアログで
-  // 行い、ここでは一覧に出ているプラグインの分だけ書き換える。
-  // コア (固定) ビュアーは常に有効なので、設定に残っていても取り除く。
+  // プラグインの有効 / 無効 (次回起動から有効)。編集は一覧のチェックと詳細
+  // ダイアログで行い、ここでは一覧に出ているプラグインの分だけ書き換える。
   QStringList disabled = settings.disabledViewerPlugins();
   for (const PluginRecord& rec : m_pluginRecords) {
     if (rec.pluginId.isEmpty()) continue;
@@ -706,8 +697,7 @@ void ViewerTab::save() {
     disabled.removeIf([&rec](const QString& id) {
       return id.trimmed().compare(rec.pluginId, Qt::CaseInsensitive) == 0;
     });
-    if (!ViewerDispatcher::isCoreViewerPlugin(rec.pluginId)
-        && isPluginDisabled(rec.pluginId)) {
+    if (isPluginDisabled(rec.pluginId)) {
       disabled.append(rec.pluginId);
     }
   }
