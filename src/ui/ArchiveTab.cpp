@@ -188,21 +188,34 @@ void ArchiveTab::setupUi() {
   auto* limitsLayout = new QHBoxLayout(limitsRow);
   limitsLayout->setContentsMargins(0, 0, 0, 0);
 
+  // 入力枠の幅は、そこに出うる一番長い文字列から決める。数値だけなら既定幅で
+  // 足りるが、ネスト段数は specialValueText ("無制限") を出すので、既定のままだと
+  // 見切れる。翻訳で文言が変わってもフォントを変えても破綻しないよう実測する。
+  auto widenSpin = [](QSpinBox* spin, const QString& widestText) {
+    // 上下ボタンと内側の余白ぶん。実測値ではなく余裕をもった固定値でよい。
+    constexpr int kArrowsAndPadding = 40;
+    spin->setMinimumWidth(
+      spin->fontMetrics().horizontalAdvance(widestText) + kArrowsAndPadding);
+  };
+
   m_passwordRetrySpin = new QSpinBox(commonGroup);
   m_passwordRetrySpin->setRange(1, 99);
   m_passwordRetrySpin->setToolTip(
     tr("How many times the password prompt is shown again after a wrong "
        "password before giving up."));
+  widenSpin(m_passwordRetrySpin, QStringLiteral("999"));
   limitsLayout->addWidget(m_passwordRetrySpin);
 
   limitsLayout->addSpacing(24);
 
+  const QString unlimitedText = tr("Unlimited");
   m_maxNestDepthSpin = new QSpinBox(commonGroup);
   m_maxNestDepthSpin->setRange(0, 99);
-  m_maxNestDepthSpin->setSpecialValueText(tr("Unlimited"));
+  m_maxNestDepthSpin->setSpecialValueText(unlimitedText);
   m_maxNestDepthSpin->setToolTip(
     tr("How many levels of archive-inside-archive can be opened. "
        "0 means unlimited."));
+  widenSpin(m_maxNestDepthSpin, unlimitedText);
   auto* nestLabel = new QLabel(tr("Maximum nesting depth:"), commonGroup);
   nestLabel->setBuddy(m_maxNestDepthSpin);
   limitsLayout->addWidget(nestLabel);
