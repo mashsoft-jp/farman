@@ -335,7 +335,8 @@ void PreviewController::onDebounceTimeout() {
                                 ? m_pendingArchiveEntryPath
                                 : m_pendingFilePath;
   if (m_pendingFileSize > maxBytes
-      && ViewerPanel::resolveAuto(pathForKind) == ViewerPanel::ViewerKind::Image) {
+      && ViewerPanel::resolveAuto(m_pendingFilePath, pathForKind)
+           == ViewerPanel::ViewerKind::Image) {
     m_pane->showUnsupported(tr("File too large to preview (%1).\n"
                                "Press Enter to open in viewer.")
                               .arg(humanReadableSize(m_pendingFileSize)));

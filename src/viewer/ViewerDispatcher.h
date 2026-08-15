@@ -62,8 +62,16 @@ public:
   // プラグインディレクトリからロード
   void loadPlugins(const QDir& pluginDir);
 
-  // ファイルに対応するビュアーを返す（nullptr = 対応なし）
-  IViewerPlugin* resolvePlugin(const QString& filePath) const;
+  // このファイルを開けるプラグインを返す (無ければ nullptr)。
+  //
+  // filePath:    実際に読み込むディスク上のパス。存在チェックと、MIME
+  //              フォールバックの内容判定に使う。
+  // routingPath: 名前で振り分けるときに使うパス。空なら filePath を使う。
+  //              アーカイブ内エントリは一時展開したファイルを開くので、実体の
+  //              名前ではなく "x.zip!/inner.txt" の側で振り分ける必要がある。
+  //              このパスはディスク上に存在しなくてよい。
+  IViewerPlugin* resolvePlugin(const QString& filePath,
+                               const QString& routingPath = QString()) const;
 
   // pluginId からロード済みプラグイン本体を返す (無ければ nullptr)。
   // PluginsTab の詳細ダイアログが設定 UI を呼び出すのに使う。

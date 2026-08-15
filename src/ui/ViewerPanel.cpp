@@ -148,7 +148,8 @@ bool ViewerPanel::viewerKindFromPluginId(const QString& pluginId, ViewerKind& ki
   return false;
 }
 
-ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
+ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath,
+                                                 const QString& routingPath) {
   // 判定は ViewerDispatcher::resolvePlugin() に一本化する。
   //
   // かつてはここに「画像(拡張子|MIME) → PDF → CSV → Markdown →
@@ -158,7 +159,7 @@ ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath) {
   // プラグインの priority も見ていなかった)。同じファイルでも経路によって選ばれる
   // ビュアーが変わりうる状態だったので、ルールを 1 本にまとめた。
   if (IViewerPlugin* plugin =
-        ViewerDispatcher::instance().resolvePlugin(filePath)) {
+        ViewerDispatcher::instance().resolvePlugin(filePath, routingPath)) {
     ViewerKind kind;
     if (viewerKindFromPluginId(plugin->pluginId(), kind)) {
       return kind;
@@ -240,7 +241,10 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
   // 拡張子 / MIME ルーティングは「表示用パス」を尊重 (アーカイブ内エントリの
   // 元拡張子で振り分けたいので)。
   if (kind == ViewerKind::Auto) {
-    IViewerPlugin* plugin = ViewerDispatcher::instance().resolvePlugin(pathForStatus);
+    // 実体は filePath、振り分けは表示用パスの名前で行う (アーカイブ内エントリ
+    // は一時展開したファイルを開くため)。
+    IViewerPlugin* plugin =
+      ViewerDispatcher::instance().resolvePlugin(filePath, pathForStatus);
     if (plugin) {
       if (ViewerDispatcher::instance().isExternalPlugin(plugin->pluginId())) {
         const bool ok = openPluginFile(plugin, filePath, pathForStatus);
@@ -255,13 +259,7 @@ bool ViewerPanel::openFile(const QString& filePath, ViewerKind kind,
         return ok;
       }
     } else {
-      kind = resolveAuto(pathForStatus);
-      if (kind == ViewerKind::None) {
-        // 何も開かないと理由が分からないのでログに残す。ダイアログは出さない
-        // (ファイルを開こうとするたびに出るのは煩わしいため)。
-        Logger::instance().info(
-          QStringLiteral("No viewer available for: %1").arg(pathForStatus));
-      }
+      kind = resolveAuto(filePath, pathForStatus);
     }
   }
 

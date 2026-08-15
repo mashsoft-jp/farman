@@ -603,6 +603,18 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   // 表示用パス: 指定なしなら filePath をそのまま使う。
   // (外部ビュアーウィンドウのタイトルにも反映)
   const QString shownPath = displayPath.isEmpty() ? filePath : displayPath;
+
+  // 対応するビュアーが無いなら、ここで打ち切る。
+  // 判定を後ろ (ViewerPanel::openFile) に任せると、ビュアーパネルへ切り替えて
+  // 読み込み表示を出したあとに戻ることになり、一瞬ちらつく。開くものが無いと
+  // 分かっている場合は画面を一切触らない。
+  if (kind == ViewerPanel::ViewerKind::Auto
+      && !ViewerDispatcher::instance().resolvePlugin(filePath, shownPath)) {
+    Logger::instance().info(
+      QStringLiteral("No viewer available for: %1").arg(shownPath));
+    return;
+  }
+
   // ビュアー表示モード (Inline / External) によって振り分ける。
   // External 時は独立ウィジェットを起こす。Inline 時は従来通り内蔵パネル。
   const ViewerMode mode = Settings::instance().viewerMode();
@@ -633,7 +645,7 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
       // を使う。ViewerDispatcher::createViewer() は未解決時にバイナリ
       // ビュアーへフォールバックしてしまい、下の resolveAuto() に到達できない。
       auto& dispatcher = ViewerDispatcher::instance();
-      if (IViewerPlugin* plugin = dispatcher.resolvePlugin(filePath)) {
+      if (IViewerPlugin* plugin = dispatcher.resolvePlugin(filePath, shownPath)) {
         w = plugin->createViewer(filePath, this, dispatcher.pluginContext());
         if (w) {
           pluginNameForExternal = plugin->pluginName();
@@ -646,7 +658,7 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
     // ViewerDispatcher を通し、外部プラグインとユーザー関連付けを反映する。
     ViewerPanel::ViewerKind effective = kind;
     if (!w && effective == ViewerPanel::ViewerKind::Auto) {
-      effective = ViewerPanel::resolveAuto(filePath);
+      effective = ViewerPanel::resolveAuto(filePath, shownPath);
     }
 
     switch (effective) {
@@ -669,10 +681,8 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
         w = new CsvViewerWindow(filePath, shownPath, this);
         break;
       case ViewerPanel::ViewerKind::None:
-        // 対応するビュアーが無い (該当プラグインが全て無効な場合を含む)。
-        // ウィンドウを作らずに何も開かない。
-        Logger::instance().info(
-          QStringLiteral("No viewer available for: %1").arg(shownPath));
+        // 対応するビュアーが無い。通常は先頭の早期リターンで弾かれるが、
+        // 明示的なビュアー指定で来た場合の保険として残す。
         return;
       case ViewerPanel::ViewerKind::Auto:
         /* unreachable */ break;

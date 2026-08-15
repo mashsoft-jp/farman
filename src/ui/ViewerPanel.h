@@ -53,7 +53,10 @@ public:
   // Auto 指定時に使う内蔵ビュアー種別の判定。中身は
   // ViewerDispatcher::resolvePlugin() への委譲。内蔵 ViewerKind を持たない
   // プラグイン (media / 外部) と、どれも対応しない場合は None を返す。
-  static ViewerKind resolveAuto(const QString& filePath);
+  // routingPath は名前で振り分けるときに使うパス (空なら filePath)。
+  // アーカイブ内エントリは "x.zip!/inner.txt" 側の名前で判定する必要がある。
+  static ViewerKind resolveAuto(const QString& filePath,
+                                const QString& routingPath = QString());
 
   // pluginId から内蔵 ViewerKind を引く。media_viewer など内蔵種別を持たない
   // プラグインは false を返す (埋め込み経路で開く)。

@@ -321,17 +321,23 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
              : QStringLiteral("external")));
 }
 
-IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath) const {
+IViewerPlugin* ViewerDispatcher::resolvePlugin(const QString& filePath,
+                                               const QString& routingPath) const {
   if (filePath.isEmpty()) {
     return nullptr;
   }
 
-  QFileInfo fileInfo(filePath);
-  if (!fileInfo.exists() || !fileInfo.isFile()) {
+  // ディレクトリはビュアーの対象外。ただし「存在しないパス」では弾かない。
+  // アーカイブ内エントリの表示パス ("x.zip!/inner.txt") はディスク上に無く、
+  // 名前だけで振り分ける必要があるため (実体は一時展開したファイル)。
+  const QFileInfo fileInfo(filePath);
+  if (fileInfo.exists() && !fileInfo.isFile()) {
     return nullptr;
   }
 
-  const QString fileName = fileInfo.fileName();
+  // 名前による判定は routingPath 側で行う。指定が無ければ filePath の名前。
+  const QString fileName =
+    QFileInfo(routingPath.isEmpty() ? filePath : routingPath).fileName();
 
   // 対応プラグインの選択は 2 段階。いずれも優先度が最も高い (= priority 値が
   // 最小の) ものを選び、同点なら先に登録されたものを使う。
