@@ -17,6 +17,15 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
+# UTF-8 ロケールを強制する。
+# libarchive の 7zip ライタはエントリ名をロケールの文字コード経由で UTF-16LE へ
+# 変換するため、C / POSIX ロケールで走らせると非 ASCII の名前が変換できず
+# 「A filename cannot be converted to UTF-16LE」で**壊れたまま書き出される**
+# (作成は成功扱いになり、読み出し時に "unreadable filename" でスキップされる)。
+# LANG 未設定の環境 (CI やエディタの統合ターミナル等) で踏むので明示する。
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
 # Homebrew の libarchive を優先する。macOS 同梱の bsdtar (libarchive 3.7.4) は
 # zstd / lz4 コーデックと 7zip 書き出しを持たないため。
 BSDTAR=/opt/homebrew/opt/libarchive/bin/bsdtar
