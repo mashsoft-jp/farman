@@ -1,0 +1,3 @@
+# 動作確認用のテストデータはリリースの配布物には要らない。
+# GitHub のソース zip / tar.gz (= git archive) から除外する。
+testdata/ export-ignore
