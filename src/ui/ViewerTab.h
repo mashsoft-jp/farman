@@ -62,6 +62,11 @@ private:
   // 有効 / 無効の変更を編集状態と一覧表示の両方へ反映する。一覧のチェック
   // ボックスと詳細ダイアログの両方から呼ぶ。
   void setPluginEnabled(int row, bool enabled);
+  // 一覧の上の「すべて有効」チェックの表示を、各行の状態から作り直す。
+  // 全部有効なら Checked、全部無効なら Unchecked、混在なら PartiallyChecked。
+  void updateAllCheckState();
+  // 切り替え可能な行が 1 つでもあり、そのすべてが有効か。
+  bool allToggleableEnabled() const;
   QString pluginStatusText(const PluginRecord& record) const;
   QString pluginStatusEmoji(const PluginRecord& record) const;
   QString extensionsDisplayText(const PluginRecord& record) const;
@@ -78,6 +83,8 @@ private:
   QStringList defaultExtensionsForPlugin(IViewerPlugin* plugin) const;
   QStringList defaultExtensionsFromList(const QStringList& extensions) const;
 
+  // 一覧の全行をまとめて有効 / 無効にする三状態チェック。
+  QCheckBox*    m_allCheck    = nullptr;
   QTableWidget* m_pluginTable = nullptr;
   // 一覧の行番号 → レコード。詳細ダイアログの表示に使う。
   QList<PluginRecord> m_pluginRecords;

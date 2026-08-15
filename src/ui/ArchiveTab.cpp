@@ -19,6 +19,7 @@
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QSet>
+#include <QSignalBlocker>
 #include <QSpinBox>
 #include <QStandardPaths>
 #include <QStyle>
@@ -82,6 +83,23 @@ void ArchiveTab::setupUi() {
     formatGroup);
   hint->setWordWrap(true);
   formatLayout->addWidget(hint);
+
+  // 一覧の全行をまとめて切り替えるチェック。三状態で、混在なら中間表示にする。
+  // 対象は切り替え可能な行だけ (ID を取得できなかったプラグイン行は対象外)。
+  m_allCheck = new QCheckBox(tr("Enable all"), formatGroup);
+  m_allCheck->setTristate(true);
+  m_allCheck->setToolTip(
+    tr("Enable or disable every format in the list at once."));
+  connect(m_allCheck, &QCheckBox::clicked, this, [this]() {
+    // 三状態の巡回 (未チェック → 中間 → チェック) には任せず、現在の一覧の
+    // 状態から次を決める。中間表示から 1 回で全 ON / 全 OFF にできる。
+    const bool enableAll = !allToggleableEnabled();
+    for (int row = 0; row < m_formats.size(); ++row) {
+      setFormatEnabled(row, enableAll);   // 切り替え不可な行は中で弾かれる
+    }
+    updateAllCheckState();
+  });
+  formatLayout->addWidget(m_allCheck);
 
   // 一覧は最低限の列 (有効 / 形式 / 由来 / 拡張子) に絞り、作成時の既定値など
   // は各行右端の「詳細...」ボタンで開くダイアログで見せる。PluginsTab の
@@ -318,6 +336,41 @@ void ArchiveTab::setFormatEnabled(int row, bool enabled) {
       m_populating = wasPopulating;
     }
   }
+  updateAllCheckState();
+}
+
+bool ArchiveTab::allToggleableEnabled() const {
+  bool anyToggleable = false;
+  for (const FormatState& state : m_formats) {
+    if (!isToggleable(state)) continue;
+    anyToggleable = true;
+    if (!state.enabled) return false;
+  }
+  return anyToggleable;
+}
+
+void ArchiveTab::updateAllCheckState() {
+  if (!m_allCheck) return;
+
+  int toggleable = 0;
+  int enabled    = 0;
+  for (const FormatState& state : m_formats) {
+    if (!isToggleable(state)) continue;
+    ++toggleable;
+    if (state.enabled) ++enabled;
+  }
+
+  // 表示合わせなのでシグナルは止める (clicked は飛ばないが setCheckState で
+  // stateChanged が飛ぶため、将来そちらに繋いだときの誤動作を防ぐ)。
+  QSignalBlocker blocker(m_allCheck);
+  m_allCheck->setEnabled(toggleable > 0);
+  if (toggleable == 0 || enabled == 0) {
+    m_allCheck->setCheckState(Qt::Unchecked);
+  } else if (enabled == toggleable) {
+    m_allCheck->setCheckState(Qt::Checked);
+  } else {
+    m_allCheck->setCheckState(Qt::PartiallyChecked);
+  }
 }
 
 // プラグイン形式のロード状態。ViewerTab の一覧と同じ絵文字 / 文言に揃える。
@@ -410,6 +463,7 @@ void ArchiveTab::loadFormatList() {
   }
 
   m_populating = false;
+  updateAllCheckState();
 
   m_formatTable->resizeColumnsToContents();
   m_formatTable->resizeRowsToContents();

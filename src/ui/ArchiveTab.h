@@ -8,6 +8,7 @@
 #include <QString>
 #include <QWidget>
 
+class QCheckBox;
 class QLineEdit;
 class QSpinBox;
 class QTableWidget;
@@ -58,6 +59,11 @@ private:
   // 有効 / 無効の変更を編集状態と一覧表示の両方へ反映する。一覧のチェック
   // ボックスと詳細ダイアログの両方から呼ぶ。
   void setFormatEnabled(int row, bool enabled);
+  // 一覧の上の「すべて有効」チェックの表示を、各行の状態から作り直す。
+  // 全部有効なら Checked、全部無効なら Unchecked、混在なら PartiallyChecked。
+  void updateAllCheckState();
+  // 切り替え可能な行が 1 つでもあり、そのすべてが有効か。
+  bool allToggleableEnabled() const;
 
   // 編集中の 1 形式ぶんの状態。カタログ既定と一致する項目は save() で
   // 上書きとして書かない (既定への追従を保つため)。
@@ -80,6 +86,8 @@ private:
   // 形式の由来 (組み込み / プラグイン) の表示文字列。
   QString originText(const ArchiveFormatInfo& info) const;
 
+  // 一覧の全行をまとめて有効 / 無効にする三状態チェック。
+  QCheckBox*        m_allCheck    = nullptr;
   // 形式一覧 (行番号 → 編集状態)。
   QTableWidget*     m_formatTable = nullptr;
   QList<FormatState> m_formats;

@@ -19,6 +19,7 @@
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QSet>
+#include <QSignalBlocker>
 #include <QStyle>
 #include <QTableWidget>
 #include <QTableWidgetItem>
@@ -49,6 +50,27 @@ void ViewerTab::setupUi() {
     listGroup);
   listHint->setWordWrap(true);
   listLayout->addWidget(listHint);
+
+  // 一覧の全行をまとめて切り替えるチェック。三状態で、混在なら中間表示にする。
+  // 対象は切り替え可能な行だけ (コアビュアーと ID 不明のプラグインは対象外)。
+  m_allCheck = new QCheckBox(tr("Enable all"), listGroup);
+  m_allCheck->setTristate(true);
+  m_allCheck->setToolTip(
+    tr("Enable or disable every plugin in the list at once. The core viewer "
+       "plugins are always enabled and are not affected."));
+  connect(m_allCheck, &QCheckBox::clicked, this, [this]() {
+    // 三状態の巡回 (未チェック → 中間 → チェック) には任せず、現在の一覧の
+    // 状態から次を決める。中間表示から 1 回で全 ON / 全 OFF にできる。
+    const bool enableAll = !allToggleableEnabled();
+    for (int row = 0; row < m_pluginRecords.size(); ++row) {
+      if (auto* item = m_pluginTable->item(row, 0);
+          item && (item->flags() & Qt::ItemIsUserCheckable)) {
+        setPluginEnabled(row, enableAll);
+      }
+    }
+    updateAllCheckState();
+  });
+  listLayout->addWidget(m_allCheck);
 
   // 一覧は最低限の列 (有効 / 状態 / 名前 / 拡張子) に絞り、区分・プラグイン
   // ID・パス・エラー全文は各行右端の「詳細...」ボタンで開くダイアログで
@@ -265,6 +287,7 @@ void ViewerTab::loadPluginList() {
   }
 
   m_populating = false;
+  updateAllCheckState();
 
   m_pluginTable->resizeColumnsToContents();
   m_pluginTable->resizeRowsToContents();
@@ -326,6 +349,47 @@ void ViewerTab::setPluginEnabled(int row, bool enabled) {
       item->setCheckState(state);
       m_populating = wasPopulating;
     }
+  }
+  updateAllCheckState();
+}
+
+bool ViewerTab::allToggleableEnabled() const {
+  bool anyToggleable = false;
+  for (const PluginRecord& rec : m_pluginRecords) {
+    if (rec.pluginId.isEmpty()
+        || ViewerDispatcher::isCoreViewerPlugin(rec.pluginId)) {
+      continue;
+    }
+    anyToggleable = true;
+    if (isPluginDisabled(rec.pluginId)) return false;
+  }
+  return anyToggleable;
+}
+
+void ViewerTab::updateAllCheckState() {
+  if (!m_allCheck) return;
+
+  int toggleable = 0;
+  int enabled    = 0;
+  for (const PluginRecord& rec : m_pluginRecords) {
+    if (rec.pluginId.isEmpty()
+        || ViewerDispatcher::isCoreViewerPlugin(rec.pluginId)) {
+      continue;
+    }
+    ++toggleable;
+    if (!isPluginDisabled(rec.pluginId)) ++enabled;
+  }
+
+  // 表示合わせなのでシグナルは止める (clicked は飛ばないが setCheckState で
+  // stateChanged が飛ぶため、将来そちらに繋いだときの誤動作を防ぐ)。
+  QSignalBlocker blocker(m_allCheck);
+  m_allCheck->setEnabled(toggleable > 0);
+  if (toggleable == 0 || enabled == 0) {
+    m_allCheck->setCheckState(Qt::Unchecked);
+  } else if (enabled == toggleable) {
+    m_allCheck->setCheckState(Qt::Checked);
+  } else {
+    m_allCheck->setCheckState(Qt::PartiallyChecked);
   }
 }
 
