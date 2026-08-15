@@ -182,12 +182,20 @@ void ArchiveTab::setupUi() {
   connect(m_tempDirectoryDefault, &QToolButton::clicked,
           m_tempDirectoryEdit, &QLineEdit::clear);
 
+  // 回数と段数はどちらも小さな数値なので 1 行に並べる。フォームの
+  // AllNonFixedFieldsGrow で横いっぱいに伸びないよう、末尾に stretch を置く。
+  auto* limitsRow = new QWidget(commonGroup);
+  auto* limitsLayout = new QHBoxLayout(limitsRow);
+  limitsLayout->setContentsMargins(0, 0, 0, 0);
+
   m_passwordRetrySpin = new QSpinBox(commonGroup);
   m_passwordRetrySpin->setRange(1, 99);
   m_passwordRetrySpin->setToolTip(
     tr("How many times the password prompt is shown again after a wrong "
        "password before giving up."));
-  commonForm->addRow(tr("Password attempts:"), m_passwordRetrySpin);
+  limitsLayout->addWidget(m_passwordRetrySpin);
+
+  limitsLayout->addSpacing(24);
 
   m_maxNestDepthSpin = new QSpinBox(commonGroup);
   m_maxNestDepthSpin->setRange(0, 99);
@@ -195,7 +203,13 @@ void ArchiveTab::setupUi() {
   m_maxNestDepthSpin->setToolTip(
     tr("How many levels of archive-inside-archive can be opened. "
        "0 means unlimited."));
-  commonForm->addRow(tr("Maximum nesting depth:"), m_maxNestDepthSpin);
+  auto* nestLabel = new QLabel(tr("Maximum nesting depth:"), commonGroup);
+  nestLabel->setBuddy(m_maxNestDepthSpin);
+  limitsLayout->addWidget(nestLabel);
+  limitsLayout->addWidget(m_maxNestDepthSpin);
+
+  limitsLayout->addStretch(1);
+  commonForm->addRow(tr("Password attempts:"), limitsRow);
 
   mainLayout->addWidget(commonGroup);
 }
