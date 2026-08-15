@@ -70,6 +70,8 @@ private:
     QString     filenameEncoding;
   };
 
+  // 有効 / 無効を切り替えられる行か (プラグイン ID を取得できた行だけ)。
+  bool isToggleable(const FormatState& state) const;
   QString patternsDisplayText(const QStringList& patterns) const;
   // プラグイン形式のロード状態。組み込み形式では使わない。
   QString pluginStatusText(const ArchivePluginRecord& record) const;

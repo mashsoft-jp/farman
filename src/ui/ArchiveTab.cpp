@@ -8,6 +8,7 @@
 #include <QDir>
 #include <QEvent>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -17,6 +18,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QSet>
 #include <QSpinBox>
 #include <QStandardPaths>
 #include <QStyle>
@@ -242,6 +244,33 @@ void ArchiveTab::loadSettings() {
     state.filenameEncoding = r.filenameEncoding;
     m_formats.append(state);
   }
+
+  // カタログが形式にできなかったアーカイブプラグインも一覧に出す。
+  // 外部プラグインの読込みが OFF のときやロードに失敗したときは dlopen して
+  // いないので pluginId を取得できず、形式としては成立しない。ここで落とすと
+  // 「プラグインを置いたのに設定のどこにも出てこない」状態になり、ビュアー
+  // 一覧の挙動 (ブロック中の行をそのまま出す) とも食い違うため、切り替え
+  // できない診断専用の行として並べる。
+  QSet<QString> listedPluginIds;
+  for (const FormatState& state : m_formats) {
+    if (!state.resolved.info.pluginId.isEmpty()) {
+      listedPluginIds.insert(state.resolved.info.pluginId);
+    }
+  }
+  for (const ArchivePluginRecord& rec : ArchiveDispatcher::instance().pluginRecords()) {
+    if (!rec.pluginId.isEmpty() && listedPluginIds.contains(rec.pluginId)) continue;
+    if (!rec.pluginId.isEmpty()) continue;  // ID があるものはカタログ側に出ている
+
+    FormatState state;
+    state.resolved.info.source       = ArchiveFormatInfo::Source::Plugin;
+    state.resolved.info.pluginRecord = rec;
+    state.resolved.info.displayName  = rec.pluginName.isEmpty()
+                                         ? QFileInfo(rec.filePath).fileName()
+                                         : rec.pluginName;
+    state.enabled = false;   // ID が無いので有効 / 無効を保存できない
+    m_formats.append(state);
+  }
+
   loadFormatList();
 
   m_tempDirectoryEdit->setText(settings.archiveTempDirectory());
@@ -267,10 +296,17 @@ QStringList ArchiveTab::parsePatterns(const QString& text) const {
   return patterns;
 }
 
+// 有効 / 無効を切り替えられる行か。プラグイン ID を取得できなかった行
+// (外部プラグイン読込みが OFF / ロード失敗) は設定に紐付けられないので不可。
+bool ArchiveTab::isToggleable(const FormatState& state) const {
+  return !state.resolved.info.id.isEmpty();
+}
+
 // 一覧のチェックボックス / 詳細ダイアログのどちらから変更しても、同じ編集
 // 状態 (FormatState::enabled) と同じ表示 (一覧のチェック) を更新する。
 void ArchiveTab::setFormatEnabled(int row, bool enabled) {
   if (row < 0 || row >= m_formats.size()) return;
+  if (!isToggleable(m_formats[row])) return;
   m_formats[row].enabled = enabled;
 
   if (auto* item = m_formatTable->item(row, 0)) {
@@ -312,15 +348,23 @@ void ArchiveTab::loadFormatList() {
     const ArchiveFormatInfo& info = state.resolved.info;
 
     // 有効 / 無効はこの一覧で直接切り替えられる (詳細ダイアログでも変更可)。
+    const bool toggleable = isToggleable(state);
     auto* enabledItem = new QTableWidgetItem();
-    enabledItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable
-                          | Qt::ItemIsUserCheckable);
+    Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    if (toggleable) flags |= Qt::ItemIsUserCheckable;
+    enabledItem->setFlags(flags);
     enabledItem->setCheckState(state.enabled ? Qt::Checked : Qt::Unchecked);
-    enabledItem->setToolTip(
-      info.source == ArchiveFormatInfo::Source::Plugin
-        ? tr("Click to enable/disable. Takes effect after restarting farman.")
-        : tr("Click to enable/disable. When off, files matching the patterns "
-             "are treated as ordinary files."));
+    if (!toggleable) {
+      enabledItem->setToolTip(
+        tr("Plugin ID is unavailable, so this plugin cannot be toggled."));
+    } else if (info.source == ArchiveFormatInfo::Source::Plugin) {
+      enabledItem->setToolTip(
+        tr("Click to enable/disable. Takes effect after restarting farman."));
+    } else {
+      enabledItem->setToolTip(
+        tr("Click to enable/disable. When off, files matching the patterns "
+           "are treated as ordinary files."));
+    }
     m_formatTable->setItem(row, 0, enabledItem);
 
     // 状態列。組み込み形式は常に使えるので空欄、プラグイン形式だけ
@@ -394,13 +438,17 @@ void ArchiveTab::showFormatDetails(int row) {
     form->addRow(label, v);
   };
 
+  const bool toggleable = isToggleable(state);
   auto* enabledCheck = new QCheckBox(&dialog);
   enabledCheck->setChecked(state.enabled);
+  enabledCheck->setEnabled(toggleable);
   enabledCheck->setToolTip(
-    info.source == ArchiveFormatInfo::Source::Plugin
-      ? tr("Changes take effect after restarting farman.")
-      : tr("When off, files matching the patterns below are treated as "
-           "ordinary files."));
+    !toggleable
+      ? tr("Plugin ID is unavailable, so this plugin cannot be toggled.")
+      : (info.source == ArchiveFormatInfo::Source::Plugin
+           ? tr("Changes take effect after restarting farman.")
+           : tr("When off, files matching the patterns below are treated as "
+                "ordinary files.")));
   form->addRow(tr("Enabled:"), enabledCheck);
   // 「有効」は設定値そのもので、実際にロードできたかは上の状態欄が示す。
   // 外部プラグインの読込みが OFF だと、有効にしていてもロードされない。
@@ -446,11 +494,15 @@ void ArchiveTab::showFormatDetails(int row) {
   }
 
   // 対応拡張子。ファイル名全体に対する glob なので "*.tar.gz" のような
-  // 複合拡張子も書ける。
+  // 複合拡張子も書ける。ID を取得できなかった行は保存先が無いので編集させない。
+  QLineEdit* patternsEdit = nullptr;
+  if (!toggleable) {
+    addField(tr("File patterns:"), patternsDisplayText(state.patterns));
+  } else {
   auto* patternsRow = new QWidget(&dialog);
   auto* patternsLayout = new QHBoxLayout(patternsRow);
   patternsLayout->setContentsMargins(0, 0, 0, 0);
-  auto* patternsEdit = new QLineEdit(patternsDisplayText(state.patterns), &dialog);
+  patternsEdit = new QLineEdit(patternsDisplayText(state.patterns), &dialog);
   patternsEdit->setToolTip(
     tr("File patterns for this format, separated by commas. Wildcards "
        "(* and ?) can be used, e.g. \"*.tar.gz\"."));
@@ -464,6 +516,7 @@ void ArchiveTab::showFormatDetails(int row) {
   patternsLayout->addWidget(patternsEdit, 1);
   patternsLayout->addWidget(patternsDefault);
   form->addRow(tr("File patterns:"), patternsRow);
+  }
 
   // ── 作成時の既定 ──
   // 読取専用の形式では作成系の項目自体を出さない (出しても効かないので)。
@@ -536,10 +589,12 @@ void ArchiveTab::showFormatDetails(int row) {
   if (dialog.exec() != QDialog::Accepted) return;
 
   setFormatEnabled(row, enabledCheck->isChecked());
-  // 空にされた場合は「何も認識しない」ではなく既定に戻す (誤操作で形式が
-  // まるごと消えるのを避ける)。明示的に無効化したいなら Enabled を外す。
-  const QStringList patterns = parsePatterns(patternsEdit->text());
-  state.patterns = patterns.isEmpty() ? info.defaultPatterns : patterns;
+  if (patternsEdit) {
+    // 空にされた場合は「何も認識しない」ではなく既定に戻す (誤操作で形式が
+    // まるごと消えるのを避ける)。明示的に無効化したいなら Enabled を外す。
+    const QStringList patterns = parsePatterns(patternsEdit->text());
+    state.patterns = patterns.isEmpty() ? info.defaultPatterns : patterns;
+  }
   if (compressionCombo) state.compressionLevel = compressionCombo->currentData().toInt();
   if (encryptionCombo)  state.encryption       = encryptionCombo->currentData().toString();
   if (encodingCombo)    state.filenameEncoding = encodingCombo->currentData().toString();
@@ -561,6 +616,9 @@ void ArchiveTab::save() {
 
   for (const FormatState& state : m_formats) {
     const ArchiveFormatInfo& info = state.resolved.info;
+    // ID を取得できなかった診断専用の行 (ブロック中 / ロード失敗) は、
+    // 設定に紐付けられないので書き戻さない。
+    if (info.id.isEmpty()) continue;
 
     if (info.source == ArchiveFormatInfo::Source::Plugin) {
       // プラグイン形式の有効 / 無効は disabledArchivePlugins に一本化する。
