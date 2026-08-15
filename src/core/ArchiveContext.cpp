@@ -1,4 +1,6 @@
 #include "ArchiveContext.h"
+#include "ArchiveFormatCatalog.h"
+#include "utils/ArchivePath.h"
 #include "ArchiveDispatcher.h"
 #include "ArchiveEntryName.h"
 #include "IArchivePlugin.h"
@@ -11,6 +13,35 @@
 #include <archive_entry.h>
 
 namespace Farman {
+
+namespace {
+
+// 単一ファイル圧縮 (.gz / .xz など、tar を伴わないもの) を読むための設定。
+//
+// libarchive はこの手のファイルを "raw" フォーマットとして 1 エントリの書庫の
+// ように読める。ただし raw は中身を問わず何でも受け入れる catch-all なので、
+// archive_read_support_format_all() には含まれていない。無条件に足すと壊れた
+// zip まで「1 エントリの書庫」として開けてしまうため、カタログ上その拡張子が
+// 単一ファイル圧縮として有効になっているときにだけ足す。
+void addFormatSupport(struct archive* a, const QString& archivePath) {
+  archive_read_support_format_all(a);
+  if (ArchiveFormatCatalog::isSingleFileCompression(archivePath)) {
+    archive_read_support_format_raw(a);
+  }
+  archive_read_support_filter_all(a);
+}
+
+// raw で読んだエントリの表示名。libarchive は "data" という固定名を返すので、
+// アーカイブ名から圧縮拡張子を剥がした名前 ("hello.txt.gz" → "hello.txt") に
+// 置き換える。ユーザーから見て自然な名前にするため。
+QString singleFileEntryName(const QString& archivePath) {
+  const QString fileName = QFileInfo(archivePath).fileName();
+  const QString base     = ArchivePath::archiveBaseName(fileName);
+  return base.isEmpty() ? fileName : base;
+}
+
+} // namespace
+
 
 namespace {
 
@@ -133,9 +164,11 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
     return ctx;
   }
 
+  const bool isSingleFile =
+    ArchiveFormatCatalog::isSingleFileCompression(archivePath);
+
   struct archive* a = archive_read_new();
-  archive_read_support_format_all(a);
-  archive_read_support_filter_all(a);
+  addFormatSupport(a, archivePath);
 
 #ifdef Q_OS_WIN
   const int openResult = archive_read_open_filename_w(a, asWChar(archivePath), 64 * 1024);
@@ -190,7 +223,12 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
       ctx->hasEncryptedEntries = true;
     }
 
-    const QString path = readEntryPath(entry);
+    QString path = readEntryPath(entry);
+    // raw (単一ファイル圧縮) は名前を持たず libarchive が "data" を返す。
+    // ユーザーから見て自然な名前 ("hello.txt.gz" → "hello.txt") に置き換える。
+    if (isSingleFile) {
+      path = singleFileEntryName(archivePath);
+    }
     if (path.isEmpty()) continue;  // ルート自身などはスキップ
     // Zip Slip 防衛: `..` / NUL を含むエントリはモデルに取り込まない。
     // (展開時点でもチェックするが、一覧表示・コピー先パス組み立ての段階でも
@@ -278,8 +316,7 @@ bool ArchiveContext::extractEntryTo(const QString& entryPath,
   }
 
   struct archive* a = archive_read_new();
-  archive_read_support_format_all(a);
-  archive_read_support_filter_all(a);
+  addFormatSupport(a, archivePath);
   // 暗号化エントリ用パスワードを設定 (空文字列は無視される)。
   if (!password.isEmpty()) {
     archive_read_add_passphrase(a, password.toUtf8().constData());
@@ -305,8 +342,13 @@ bool ArchiveContext::extractEntryTo(const QString& entryPath,
     if (r < ARCHIVE_WARN) break;
     if (r < ARCHIVE_OK)  continue;
 
-    const QString name = readEntryPath(entry);
-    if (name != entryPath) continue;
+    // raw (単一ファイル圧縮) は libarchive が "data" を返すので、一覧側で
+    // 付け替えた名前 (singleFileEntryName) と一致しない。エントリは 1 つしか
+    // 無いので名前の照合はせず、そのまま書き出す。
+    if (!ArchiveFormatCatalog::isSingleFileCompression(archivePath)) {
+      const QString name = readEntryPath(entry);
+      if (name != entryPath) continue;
+    }
 
     found = true;
     QFile out(destPath);
@@ -352,8 +394,7 @@ bool ArchiveContext::verifyPassword(const QString& archivePath,
   // 暗号化エントリが 1 件も無いアーカイブでは「password が要らない」ので
   // 検証成功扱い (true)。
   struct archive* a = archive_read_new();
-  archive_read_support_format_all(a);
-  archive_read_support_filter_all(a);
+  addFormatSupport(a, archivePath);
   if (!password.isEmpty()) {
     archive_read_add_passphrase(a, password.toUtf8().constData());
   }

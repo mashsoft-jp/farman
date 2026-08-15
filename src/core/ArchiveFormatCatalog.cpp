@@ -3,6 +3,9 @@
 #include "ArchiveDispatcher.h"
 #include "settings/Settings.h"
 #include "utils/ArchivePath.h"
+#include "utils/MediaMatchers.h"
+
+#include <QFileInfo>
 
 #include <QCoreApplication>
 
@@ -237,6 +240,17 @@ QStringList activePatterns() {
     }
   }
   return patterns;
+}
+
+bool isSingleFileCompression(const QString& fileName) {
+  const QString name = QFileInfo(fileName).fileName();
+  if (name.isEmpty()) return false;
+
+  for (const ResolvedArchiveFormat& r : resolvedFormats()) {
+    if (!r.enabled || !r.info.singleFileCompression) continue;
+    if (MediaMatchers::fileNameMatches(r.patterns, name)) return true;
+  }
+  return false;
 }
 
 void applyToArchivePath() {

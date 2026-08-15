@@ -125,6 +125,16 @@ ResolvedArchiveFormat resolvedFormat(const QString& id, bool* found = nullptr);
 // 有効な形式のパターンを 1 本のリストにまとめたもの。
 QStringList activePatterns();
 
+// このファイルが「単一ファイル圧縮」(tar を伴わない .gz / .xz など、中身が
+// 1 エントリだけ) として有効になっている形式か。
+//
+// libarchive はこの手のファイルを raw フォーマットとして読むが、raw は何でも
+// 受け入れる catch-all なので archive_read_support_format_all() には含まれない
+// (含めると壊れた書庫まで「1 エントリの書庫」として開けてしまう)。そのため
+// 読み取り側は、このファイルが単一ファイル圧縮だと分かっているときにだけ raw を
+// 有効にする。その判定に使う。
+bool isSingleFileCompression(const QString& fileName);
+
 // activePatterns() を ArchivePath へ流し込む。起動時 (プラグインロード後) と、
 // 設定が変わったときに呼ぶ。utils 層をコアに依存させないための注入口。
 void applyToArchivePath();
