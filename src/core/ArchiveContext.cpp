@@ -31,6 +31,28 @@ void addFormatSupport(struct archive* a, const QString& archivePath) {
   archive_read_support_filter_all(a);
 }
 
+// サイズ未設定のエントリを、実際に伸長して数えるときの上限 (圧縮後サイズ)。
+// これを超えるものは「数えるためだけに全体を伸長する」コストが見合わないので
+// 不明 (-1) のままにする。
+constexpr qint64 kMeasureMaxCompressedBytes = 32LL * 1024 * 1024;
+
+// 現在のエントリのデータを読み飛ばしながらバイト数を数える。読み切れなければ
+// -1 (不明)。呼び出した時点で archive_read_next_header 直後であること。
+qint64 measureEntrySize(struct archive* a, std::atomic<bool>* cancelFlag) {
+  qint64 total = 0;
+  const void* buf = nullptr;
+  size_t      sz  = 0;
+  la_int64_t  off = 0;
+  while (true) {
+    if (cancelFlag && cancelFlag->load()) return -1;
+    const int r = archive_read_data_block(a, &buf, &sz, &off);
+    if (r == ARCHIVE_EOF) break;
+    if (r < ARCHIVE_OK)   return -1;
+    total += static_cast<qint64>(sz);
+  }
+  return total;
+}
+
 // raw で読んだエントリの表示名。libarchive は "data" という固定名を返すので、
 // アーカイブ名から圧縮拡張子を剥がした名前 ("hello.txt.gz" → "hello.txt") に
 // 置き換える。ユーザーから見て自然な名前にするため。
@@ -240,7 +262,22 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
     const int slash  = path.lastIndexOf(QLatin1Char('/'));
     e.name           = (slash < 0) ? path : path.mid(slash + 1);
     e.isDir          = (archive_entry_filetype(entry) == AE_IFDIR);
-    e.size           = e.isDir ? -1 : static_cast<qint64>(archive_entry_size(entry));
+    // サイズはヘッダに入っているときだけ信用する。raw (単一ファイル圧縮) の
+    // ように伸長後サイズを持たない形式では archive_entry_size() が 0 を返すため、
+    // そのまま使うと「0 バイト」と嘘の表示になる。未設定は -1 (不明) にする。
+    if (e.isDir) {
+      e.size = -1;
+    } else if (archive_entry_size_is_set(entry)) {
+      e.size = static_cast<qint64>(archive_entry_size(entry));
+    } else {
+      e.size = -1;
+      // 単一ファイル圧縮は中身が 1 つだけなので、小さいものはその場で伸長して
+      // 実サイズを数える (書庫を開いた時点で読み切れる範囲に限る)。大きいものは
+      // 数えるだけのために全体を伸長するのは割に合わないので不明のままにする。
+      if (isSingleFile && QFileInfo(archivePath).size() <= kMeasureMaxCompressedBytes) {
+        e.size = measureEntrySize(a, cancelFlag);
+      }
+    }
     e.compressedSize = -1;  // libarchive は per-entry の圧縮後サイズを安定に提供しない
     const time_t mt  = archive_entry_mtime(entry);
     e.mtime          = (mt > 0) ? QDateTime::fromSecsSinceEpoch(mt) : QDateTime();

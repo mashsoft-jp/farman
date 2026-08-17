@@ -832,6 +832,10 @@ QVariant FileListModel::data(const QModelIndex& index, int role) const {
           }
           return QString();
         } else {
+          // 書庫のエントリはサイズが分からないことがある (単一ファイル圧縮の
+          // ように伸長後サイズをヘッダに持たない形式)。0 と出すと嘘になるので
+          // 「不明」を示す "-" にする。
+          if (item->size() < 0) return QStringLiteral("-");
           return formatSizeText(item->size());
         }
       case LastModified: {
