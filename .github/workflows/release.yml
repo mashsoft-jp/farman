@@ -51,6 +51,7 @@ jobs:
   check:
     name: Pre-release checks
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -69,6 +70,10 @@ jobs:
     name: ${{ matrix.name }}
     needs: check
     runs-on: ${{ matrix.os }}
+    # ジョブごとの上限。既定は 6 時間で、ランナー側の不調でビルドがハングすると
+    # そのまま 6 時間ぶん課金される (実際に macOS ジョブで発生した)。通常の所要
+    # 時間に十分な余裕を足した値を matrix 側に持たせている。
+    timeout-minutes: ${{ matrix.timeout_minutes }}
     strategy:
       # 1 OS が落ちても他 OS の成果物は確保したい (片肺リリース判定は
       # 後段の release ジョブで人間が draft を見て判断する想定)。
@@ -76,6 +81,8 @@ jobs:
       matrix:
         include:
           - name: macOS (arm64)
+            # 通常 10 分前後。dmg 生成と署名ぶん build.yml より余裕を持たせる
+            timeout_minutes: 60
             os: macos-latest
             qt_host: mac
             qt_arch: clang_64
@@ -83,6 +90,8 @@ jobs:
             artifact_path: build/farman.dmg
 
           - name: Linux (x86_64)
+            # 通常 10 分前後。AppImage / deb 生成ぶんの余裕込み
+            timeout_minutes: 60
             # build.yml と同様 22.04 を明示 (AppImage の glibc 互換のため)
             os: ubuntu-22.04
             qt_host: linux
@@ -92,6 +101,8 @@ jobs:
             artifact_path: linux-dist
 
           - name: Windows (x86_64)
+            # vcpkg キャッシュが無い初回はフルビルドで 30 分前後
+            timeout_minutes: 90
             os: windows-latest
             qt_host: windows
             qt_arch: win64_msvc2022_64
@@ -763,6 +774,7 @@ jobs:
     name: Publish GitHub Release
     needs: build
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
     permissions:
       contents: write
     steps:

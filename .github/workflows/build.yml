@@ -48,6 +48,10 @@ jobs:
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    # ジョブごとの上限。既定は 6 時間で、ランナー側の不調でビルドがハングすると
+    # そのまま 6 時間ぶん課金される (実際に macOS ジョブで発生した)。通常の所要
+    # 時間に十分な余裕を足した値を matrix 側に持たせている。
+    timeout-minutes: ${{ matrix.timeout_minutes }}
     strategy:
       # 1 つコケても他 OS は最後まで走らせる。
       # 1 push で 3 OS 分のエラーをまとめて確認できるほうが効率的。
@@ -55,6 +59,8 @@ jobs:
       matrix:
         include:
           - name: macOS (arm64)
+            # 通常 10 分前後。ハング検出用の上限 (既定の 6 時間は長すぎる)
+            timeout_minutes: 45
             os: macos-latest
             qt_host: mac
             qt_arch: clang_64
@@ -63,6 +69,8 @@ jobs:
             artifact_name: farman-macos
 
           - name: Linux (x86_64)
+            # 通常 10 分前後
+            timeout_minutes: 45
             # 古めの glibc に揃えるため明示的に 22.04 を使う (ubuntu-latest は
             # 現在 24.04 → AppImage を 22.04 系の Linux で起動すると glibc 2.38
             # 未満を要求するエラーになる)。Apple/MS のように latest 追従しないのは
@@ -75,6 +83,8 @@ jobs:
             artifact_name: farman-linux
 
           - name: Windows (x86_64)
+            # vcpkg キャッシュが無い初回はフルビルドで 30 分前後
+            timeout_minutes: 90
             os: windows-latest
             qt_host: windows
             qt_arch: win64_msvc2022_64
