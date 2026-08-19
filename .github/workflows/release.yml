@@ -140,22 +140,35 @@ jobs:
             libgl1-mesa-dev \
             libxkbcommon-dev
 
-      # vcpkg binary cache (GitHub Actions Cache バックエンド) で
-      # 2 回目以降の Windows ビルド時間を 12〜15 分 → 3〜5 分に短縮する。
-      - name: Setup vcpkg binary cache env (Windows)
+      # vcpkg binary cache。2 回目以降の Windows ビルドで、依存ライブラリの
+      # ソースビルド (libarchive / libheif / OpenSSL 等) を丸ごと省く。
+      #
+      # 以前は vcpkg の `x-gha` バックエンド (GitHub Actions Cache 直結) を使って
+      # いたが、vcpkg 側で削除された ("The 'x-gha' binary caching backend has been
+      # removed")。警告が出るだけで失敗しないため気付きにくく、実際には毎回
+      # フルビルドしていた。vcpkg 標準の `files` バックエンド (既定) が使う
+      # ディレクトリを actions/cache で丸ごと保存する方式に切り替える。
+      #
+      # キャッシュキーはワークフロー自体とトリプレット定義のハッシュ。導入する
+      # パッケージを変えたらキーが変わって作り直される。
+      - name: Restore vcpkg binary cache (Windows)
         if: runner.os == 'Windows'
-        uses: actions/github-script@v7
+        uses: actions/cache@v6
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ${{ github.workspace }}\vcpkg-binary-cache
+          key: vcpkg-${{ runner.os }}-release-${{ hashFiles('.github/workflows/release.yml', 'ci/vcpkg-triplets/**') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-release-
 
       - name: Install deps (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+          # 既定の files バックエンドの保存先。上の actions/cache と同じパスを
+          # 指す。vcpkg はディレクトリが無いとエラーになるので先に作る。
+          VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-binary-cache
         run: |
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
           # libheif は libde265 (HEVC デコーダ) をコア依存として常に含む。
           # farman は HEIC を「読む」だけなのでエンコーダ (x265) は不要なので
           # [core] でデフォルトフィーチャー (x265) を無効化する。

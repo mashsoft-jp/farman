@@ -127,27 +127,31 @@ jobs:
             libgl1-mesa-dev \
             libxkbcommon-dev
 
-      # vcpkg binary cache 用の token を環境変数として export する。
-      # GitHub Actions Cache (x-gha バックエンド) を使うのに必要。
-      # 初回ジョブ: libarchive / OpenSSL 等のソースビルドで 12〜15 分かかるが、
-      # 2 回目以降は cache から復元されて 3〜5 分まで縮む。
-      - name: Setup vcpkg binary cache env (Windows)
+      # vcpkg binary cache。2 回目以降の Windows ビルドで、依存ライブラリの
+      # ソースビルドを丸ごと省く (release.yml と同じ方式・別キー)。
+      #
+      # 以前使っていた vcpkg の `x-gha` バックエンドは vcpkg 側で削除済み。
+      # 警告が出るだけで失敗しないため気付きにくく、実際には毎回フルビルドして
+      # いた。vcpkg 標準の `files` バックエンドの保存先を actions/cache で
+      # 丸ごと保存する方式に切り替える。
+      - name: Restore vcpkg binary cache (Windows)
         if: runner.os == 'Windows'
-        uses: actions/github-script@v7
+        uses: actions/cache@v6
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ${{ github.workspace }}\vcpkg-binary-cache
+          key: vcpkg-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-build-
 
       - name: Install deps (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          # `clear;x-gha,readwrite` = 既定の cache 設定を捨てて、GitHub Actions
-          # Cache を読み書き両用で使う。`readwrite` で初回 build が cache を
-          # populate、以後の build は cache hit で skip する。
-          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+          # 既定の files バックエンドの保存先。上の actions/cache と同じパスを
+          # 指す。vcpkg はディレクトリが無いとエラーになるので先に作る。
+          VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-binary-cache
         run: |
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
           # windows-latest には vcpkg プリインストール済み (環境変数 VCPKG_INSTALLATION_ROOT)
           vcpkg install libarchive:x64-windows uchardet:x64-windows
           # 後段の cmake configure 用に VCPKG_ROOT を露出
