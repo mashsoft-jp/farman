@@ -88,7 +88,7 @@ bool informWithSuppress(QWidget* parent,
 //
 // CursorPolicy: ダイアログを開いた直後の入力欄カーソル位置／選択状態。
 //  - SelectAll: 既定。defaultValue 全体を選択 (新規入力で上書きしやすい)
-//  - BeforeExtension: 拡張子の手前 = 最初に出てくる '.' の直前にカーソル、
+//  - BeforeExtension: 拡張子の手前 = 最後の '.' の直前にカーソル、
 //      かつそこまでのベース名を選択状態にする。
 //      ("foo.tar.gz" なら "foo" を選択、カーソルは最初の '.' の直前)
 //      リネーム向け。先頭が '.' のドットファイル ('.gitignore' 等) は

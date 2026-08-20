@@ -250,19 +250,16 @@ QString inputText(QWidget* parent,
   auto* edit = new QLineEdit(defaultValue, &dlg);
   edit->setFocusPolicy(Qt::StrongFocus);
   if (cursor == TextInputCursor::BeforeExtension) {
-    // ベース名を選択しつつカーソルを拡張子の手前に置く。
-    // 先頭 '.' (ドットファイル) は拡張子としてではなくベース名の一部とみなす。
+    // ベース名を選択しつつカーソルを拡張子の手前に置く。拡張子は「最後の '.'
+    // 以降」とみなす。先頭 '.' (ドットファイル) は拡張子ではなくベース名の一部。
     //   "foo.txt"      → "foo" を選択、カーソルは '.' の直前
-    //   "foo.tar.gz"   → "foo" を選択 (最初の '.' の直前)
+    //   "foo.tar.gz"   → "foo.tar" を選択 (最後の '.' の直前)
     //   ".gitignore"   → 全選択 (拡張子とみなさない)
     //   "Makefile"     → 全選択 ('.' なし)
     // ダイアログ show() 直後に Qt が selectAll を再適用してくることが
     // あるので、QTimer で次のイベントループまで遅延してから上書きする。
-    int extPos = -1;
-    for (int i = 1; i < defaultValue.length(); ++i) {
-      if (defaultValue.at(i) == QLatin1Char('.')) { extPos = i; break; }
-    }
-    const int pos = (extPos > 0) ? extPos : defaultValue.length();
+    const int lastDot = defaultValue.lastIndexOf(QLatin1Char('.'));
+    const int pos = (lastDot > 0) ? lastDot : defaultValue.length();
     QTimer::singleShot(0, edit, [edit, pos]() {
       edit->setFocus();
       // setSelection(start, length) は選択範囲を設定すると同時に

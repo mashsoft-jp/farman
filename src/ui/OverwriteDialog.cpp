@@ -97,13 +97,11 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
 
   // 初期選択: ベース名を選択しつつカーソルを拡張子の手前に置く。
   // 拡張子はそのまま残しつつ、ユーザーがすぐにベース名だけタイプし直せるようにする。
+  // 拡張子は「最後の '.' 以降」とみなす ("foo.tar.gz" なら "foo.tar" を選択)。
   // 先頭 '.' (dot-file) は拡張子としてではなくベース名の一部とみなす。
-  // CreateArchiveDialog の初期ファイル名や inputText(BeforeExtension) と同じ挙動。
-  int extPos = -1;
-  for (int i = 1; i < m_originalName.length(); ++i) {
-    if (m_originalName[i] == QLatin1Char('.')) { extPos = i; break; }
-  }
-  const int basenameLen = (extPos > 0) ? extPos : m_originalName.length();
+  // inputText(BeforeExtension) と同じ規則。
+  const int lastDot = m_originalName.lastIndexOf(QLatin1Char('.'));
+  const int basenameLen = (lastDot > 0) ? lastDot : m_originalName.length();
   QTimer::singleShot(0, m_renameEdit, [this, basenameLen]() {
     m_renameEdit->setFocus();
     // setSelection(start, length) はカーソルを選択末尾に置くので別途
