@@ -73,6 +73,18 @@ public:
   IViewerPlugin* resolvePlugin(const QString& filePath,
                                const QString& routingPath = QString()) const;
 
+  // フォールバック用の Binary ビュアーを返す (無効・未ロードなら nullptr)。
+  //
+  // Binary ビュアーはどのファイルパターン・MIME にもマッチしない
+  // (canHandle 常に false) ので resolvePlugin() では決して選ばれない。
+  // 「他のどのビュアーも対応しないファイル」の受け皿として、呼び出し側が
+  // resolvePlugin() が nullptr を返したあとに明示的に使う。
+  //
+  // 無効化されたプラグインはそもそも m_plugins に載らないので、戻り値が
+  // nullptr であることが「Binary ビュアーが無効」を意味する。ビュアーを全部
+  // 無効にしたときに Binary だけ開いてしまわないのはこのため。
+  IViewerPlugin* binaryFallbackPlugin() const;
+
   // pluginId からロード済みプラグイン本体を返す (無ければ nullptr)。
   // PluginsTab の詳細ダイアログが設定 UI を呼び出すのに使う。
   IViewerPlugin* pluginById(const QString& pluginId) const;

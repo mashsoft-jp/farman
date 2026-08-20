@@ -644,8 +644,15 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   // 判定を後ろ (ViewerPanel::openFile) に任せると、ビュアーパネルへ切り替えて
   // 読み込み表示を出したあとに戻ることになり、一瞬ちらつく。開くものが無いと
   // 分かっている場合は画面を一切触らない。
+  //
+  // 判定は resolveAuto() で行う。resolvePlugin() だけを見ると、どのビュアーの
+  // ファイルパターンにも当たらないファイル (.dmg など) を Binary ビュアーが
+  // 有効でも「開けない」と判断してしまう。ここで打ち切るのは、Binary ビュアーも
+  // 含めて本当に開き先が無いとき (= None) だけにする。
   if (kind == ViewerPanel::ViewerKind::Auto
-      && !ViewerDispatcher::instance().resolvePlugin(filePath, shownPath)) {
+      && !ViewerDispatcher::instance().resolvePlugin(filePath, shownPath)
+      && ViewerPanel::resolveAuto(filePath, shownPath)
+           == ViewerPanel::ViewerKind::None) {
     Logger::instance().info(
       QStringLiteral("No viewer available for: %1").arg(shownPath));
     return;

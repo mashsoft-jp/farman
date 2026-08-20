@@ -158,17 +158,24 @@ ViewerPanel::ViewerKind ViewerPanel::resolveAuto(const QString& filePath,
   // 見ていたので、画像の MIME 一致が PDF/CSV/Markdown の拡張子一致に勝った。
   // プラグインの priority も見ていなかった)。同じファイルでも経路によって選ばれる
   // ビュアーが変わりうる状態だったので、ルールを 1 本にまとめた。
-  if (IViewerPlugin* plugin =
-        ViewerDispatcher::instance().resolvePlugin(filePath, routingPath)) {
+  ViewerDispatcher& dispatcher = ViewerDispatcher::instance();
+  if (IViewerPlugin* plugin = dispatcher.resolvePlugin(filePath, routingPath)) {
     ViewerKind kind;
     if (viewerKindFromPluginId(plugin->pluginId(), kind)) {
       return kind;
     }
+    // 内蔵 ViewerKind を持たないプラグイン (media / 外部) は None を返す
+    // (呼び出し側がプラグイン経路で表示する)。
+    return ViewerKind::None;
   }
-  // 内蔵 ViewerKind を持たないプラグイン (media / 外部) と、どのプラグインにも
-  // 当たらなかった場合は None。後者にはバイナリビュアーを無効にしている場合も
-  // 含まれる (かつてはここで無条件にバイナリへ倒していたため、全て無効にしても
-  // バイナリだけ開くという分かりにくい挙動になっていた)。
+
+  // どのビュアーのファイルパターンにも当たらなかったファイル (.dmg など) は、
+  // Binary ビュアーが有効ならそこで開く。無効なら None = 何も開かない
+  // (かつてはここで無条件にバイナリへ倒していたため、ビュアーを全て無効に
+  // してもバイナリだけは開くという分かりにくい挙動になっていた)。
+  if (dispatcher.binaryFallbackPlugin()) {
+    return ViewerKind::Binary;
+  }
   return ViewerKind::None;
 }
 

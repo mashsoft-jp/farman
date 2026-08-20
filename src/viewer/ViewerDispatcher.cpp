@@ -384,9 +384,16 @@ QWidget* ViewerDispatcher::createViewer(
   }
 
   // どのビュアーも対応しない場合は Binary ビュアーへフォールバック
-  for (const auto& p : m_plugins) {
-    if (p->pluginId() == QLatin1String("binary_viewer")) {
-      return p->createViewer(filePath, parent, m_context);
+  if (IViewerPlugin* binary = binaryFallbackPlugin()) {
+    return binary->createViewer(filePath, parent, m_context);
+  }
+  return nullptr;
+}
+
+IViewerPlugin* ViewerDispatcher::binaryFallbackPlugin() const {
+  for (const auto& plugin : m_plugins) {
+    if (plugin && plugin->pluginId() == QLatin1String("binary_viewer")) {
+      return plugin.get();
     }
   }
   return nullptr;
