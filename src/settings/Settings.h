@@ -206,6 +206,13 @@ public:
   QString         customInitialPath(PaneType pane)          const;
   void            setCustomInitialPath(PaneType pane, const QString& path);
 
+  // 複数選択時に「パスをコピー」「ファイル名をコピー」で使う区切り。
+  // パスと名前で共通。実際の区切り文字は copySeparatorText() が返す。
+  CopySeparator copySeparator()         const;
+  void setCopySeparator(CopySeparator sep);
+  // copySeparator() に対応する実際の文字列 (",", ", ", "\n", "\r\n", "\r")。
+  QString copySeparatorText()           const;
+
   bool confirmOnExit()                  const;
   void setConfirmOnExit(bool confirm);
 
@@ -694,6 +701,8 @@ private:
   QString          m_customInitialPath[static_cast<int>(PaneType::Count)];
 
   bool             m_confirmOnExit   = false;
+  // 複数選択時のコピー区切り (パス / 名前で共通)。
+  CopySeparator    m_copySeparator = CopySeparator::Comma;
   bool             m_singleInstance  = true;
   // 外部プラグインの読込み許可 (既定 OFF)。次回起動時に反映。
   bool             m_allowExternalPlugins = false;

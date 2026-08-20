@@ -73,6 +73,17 @@ enum class DirSizeCacheMode {
   Cached   // 一度算出したら一定時間 (directorySizeCacheSeconds) キャッシュを使う
 };
 
+// 複数のファイルを選択して「パスをコピー」「ファイル名をコピー」したときの
+// 区切り。改行系は貼り付け先の流儀に合わせて選べるようにしてある。
+// 既定はカンマ (OS に依存せず、どこに貼っても同じ結果になるため)。
+enum class CopySeparator {
+  Comma,       // ","
+  CommaSpace,  // ", "
+  Lf,          // "\n"   macOS / Linux / 多くのエディタ
+  CrLf,        // "\r\n" Windows のメモ帳など
+  Cr           // "\r"   旧 Mac 系
+};
+
 // 属性フィルタのフラグ
 enum class AttrFilter : quint32 {
   None        = 0x00,

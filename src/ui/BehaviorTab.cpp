@@ -202,6 +202,35 @@ void BehaviorTab::setupUi() {
 
   fileOpsLayout->addWidget(excludeCell, 2, 0, 1, 2);
 
+  // 複数選択して「パスをコピー」「ファイル名をコピー」したときの区切り。
+  // パスと名前で共通。既定はカンマ (OS に依存せず、どこに貼っても同じ結果)。
+  m_copySeparatorCombo = new QComboBox(this);
+  m_copySeparatorCombo->addItem(tr("Comma (,)"),
+                                static_cast<int>(CopySeparator::Comma));
+  m_copySeparatorCombo->addItem(tr("Comma + space (, )"),
+                                static_cast<int>(CopySeparator::CommaSpace));
+  m_copySeparatorCombo->addItem(tr("Newline (LF)"),
+                                static_cast<int>(CopySeparator::Lf));
+  m_copySeparatorCombo->addItem(tr("Newline (CRLF)"),
+                                static_cast<int>(CopySeparator::CrLf));
+  m_copySeparatorCombo->addItem(tr("Newline (CR)"),
+                                static_cast<int>(CopySeparator::Cr));
+  m_copySeparatorCombo->setToolTip(
+    tr("Separator used when copying the paths or names of several selected "
+       "files at once. Note that a comma is ambiguous if a file name itself "
+       "contains one; a newline never is."));
+
+  QWidget* copySepCell = new QWidget(this);
+  QHBoxLayout* copySepCellLayout = new QHBoxLayout(copySepCell);
+  copySepCellLayout->setContentsMargins(0, 0, 0, 0);
+  auto* copySepLabel = new QLabel(tr("Separator for copying paths / names:"), this);
+  copySepLabel->setBuddy(m_copySeparatorCombo);
+  copySepCellLayout->addWidget(copySepLabel);
+  copySepCellLayout->addWidget(m_copySeparatorCombo);
+  copySepCellLayout->addStretch(1);
+
+  fileOpsLayout->addWidget(copySepCell, 3, 0, 1, 2);
+
   mainLayout->addWidget(fileOpsGroup);
 
   // ─── List Display グループ: ファイルサイズ / 日時 の表示形式 ───
@@ -510,6 +539,11 @@ void BehaviorTab::loadSettings() {
   m_defaultDeleteToTrashCheck->setChecked(settings.defaultDeleteToTrash());
   m_progressAutoCloseCheck->setChecked(settings.progressAutoClose());
   m_searchExcludeDirsEdit->setText(settings.searchExcludeDirs().join(QLatin1Char(' ')));
+  {
+    const int idx = m_copySeparatorCombo->findData(
+      static_cast<int>(settings.copySeparator()));
+    m_copySeparatorCombo->setCurrentIndex(idx >= 0 ? idx : 0);
+  }
 
   // List display formats (Dual / Single)
   auto applySizeFormat = [](QComboBox* combo, FileSizeFormat fmt) {
@@ -625,6 +659,8 @@ void BehaviorTab::save() {
     const QStringList excludeList = m_searchExcludeDirsEdit->text().trimmed()
       .split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
     settings.setSearchExcludeDirs(excludeList);
+    settings.setCopySeparator(static_cast<CopySeparator>(
+      m_copySeparatorCombo->currentData().toInt()));
   }
 
   // Save list display formats (Dual / Single)

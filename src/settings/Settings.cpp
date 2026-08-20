@@ -149,6 +149,7 @@ void Settings::applyDefaults() {
   m_customInitialPath[static_cast<int>(PaneType::Left)].clear();
   m_customInitialPath[static_cast<int>(PaneType::Right)].clear();
   m_confirmOnExit = false;
+  m_copySeparator = CopySeparator::Comma;
   m_singleInstance = true;
   m_allowExternalPlugins = false;
   m_pluginsDirectory.clear();
@@ -848,6 +849,26 @@ void Settings::setCustomInitialPath(PaneType pane, const QString& path) {
   int idx = static_cast<int>(pane);
   if (idx < 0 || idx >= static_cast<int>(PaneType::Count)) return;
   m_customInitialPath[idx] = path;
+}
+
+// ── 複数選択時のコピー区切り ──────────────────────
+CopySeparator Settings::copySeparator() const {
+  return m_copySeparator;
+}
+
+void Settings::setCopySeparator(CopySeparator sep) {
+  m_copySeparator = sep;
+}
+
+QString Settings::copySeparatorText() const {
+  switch (m_copySeparator) {
+    case CopySeparator::Comma:      return QStringLiteral(",");
+    case CopySeparator::CommaSpace: return QStringLiteral(", ");
+    case CopySeparator::Lf:         return QStringLiteral("\n");
+    case CopySeparator::CrLf:       return QStringLiteral("\r\n");
+    case CopySeparator::Cr:         return QStringLiteral("\r");
+  }
+  return QStringLiteral(",");
 }
 
 bool Settings::confirmOnExit() const {
@@ -2038,6 +2059,14 @@ void Settings::load() {
   // Load behavior settings
   QJsonObject behavior = root.value("behavior").toObject();
   m_confirmOnExit = behavior.value("confirmOnExit").toBool(false);
+  {
+    const QString sep = behavior.value("copySeparator").toString("comma");
+    if      (sep == QLatin1String("commaSpace")) m_copySeparator = CopySeparator::CommaSpace;
+    else if (sep == QLatin1String("lf"))         m_copySeparator = CopySeparator::Lf;
+    else if (sep == QLatin1String("crlf"))       m_copySeparator = CopySeparator::CrLf;
+    else if (sep == QLatin1String("cr"))         m_copySeparator = CopySeparator::Cr;
+    else                                         m_copySeparator = CopySeparator::Comma;
+  }
   m_singleInstance = behavior.value("singleInstance").toBool(true);
   m_allowExternalPlugins = behavior.value("allowExternalPlugins").toBool(false);
   m_pluginsDirectory = behavior.value("pluginsDirectory").toString();
@@ -2819,6 +2848,12 @@ void Settings::save() const {
   // Save behavior settings
   QJsonObject behavior;
   behavior["confirmOnExit"] = m_confirmOnExit;
+  behavior["copySeparator"] =
+    (m_copySeparator == CopySeparator::CommaSpace) ? QStringLiteral("commaSpace")
+  : (m_copySeparator == CopySeparator::Lf)         ? QStringLiteral("lf")
+  : (m_copySeparator == CopySeparator::CrLf)       ? QStringLiteral("crlf")
+  : (m_copySeparator == CopySeparator::Cr)         ? QStringLiteral("cr")
+                                                   : QStringLiteral("comma");
   behavior["singleInstance"] = m_singleInstance;
   behavior["allowExternalPlugins"] = m_allowExternalPlugins;
   behavior["pluginsDirectory"] = m_pluginsDirectory;

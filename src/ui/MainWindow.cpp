@@ -1275,8 +1275,9 @@ void MainWindow::registerCommands() {
       QStringList paths;
       paths.reserve(targets.size());
       for (const FileItem* it : targets) paths.append(it->absolutePath());
-      // 複数のときは 1 行 1 パス。エディタや端末にそのまま貼れる形にする。
-      QGuiApplication::clipboard()->setText(paths.join(QLatin1Char('\n')));
+      // 区切りは設定で選べる (カンマ / カンマ+スペース / 改行 LF・CRLF・CR)。
+      QGuiApplication::clipboard()->setText(
+        paths.join(Settings::instance().copySeparatorText()));
       Logger::instance().info(
         QStringLiteral("Path copied (%1): %2")
           .arg(paths.size()).arg(paths.join(QStringLiteral(", "))));
@@ -1293,7 +1294,8 @@ void MainWindow::registerCommands() {
       QStringList names;
       names.reserve(targets.size());
       for (const FileItem* it : targets) names.append(it->name());
-      QGuiApplication::clipboard()->setText(names.join(QLatin1Char('\n')));
+      QGuiApplication::clipboard()->setText(
+        names.join(Settings::instance().copySeparatorText()));
       Logger::instance().info(
         QStringLiteral("Name copied (%1): %2")
           .arg(names.size()).arg(names.join(QStringLiteral(", "))));
