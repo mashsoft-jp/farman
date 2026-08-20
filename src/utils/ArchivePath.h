@@ -41,7 +41,33 @@ struct Split {
 };
 
 // "x.zip!/inner" をパース。`!` の手前が isArchiveExtension に合致しなければ valid=false。
+//
+// 入れ子アーカイブ ("a.zip!/d/inner.zip!/sub") では **最内 1 段** を切り出す:
+//   archivePath = "a.zip!/d/inner.zip" (それ自体が入れ子の指定)
+//   innerPath   = "/sub"
+// つまり archivePath は「実 FS 上のパス」とは限らない。libarchive に渡す実体が
+// 要る場面では ArchiveContext::readPath() を使うこと。
 Split splitArchivePath(const QString& path);
+
+// 入れ子アーカイブのパスを段ごとに分解した結果。
+//   "/abs/a.zip!/d/inner.zip!/sub" →
+//     rootPath      = "/abs/a.zip"     (実 FS 上のアーカイブ)
+//     innerArchives = ["d/inner.zip"]  (外側から順、先頭 '/' なし)
+//     innerPath     = "/sub"           (最内アーカイブ内の現在位置)
+struct NestedSplit {
+  QString     rootPath;
+  QStringList innerArchives;
+  QString     innerPath;
+  bool        valid = false;
+};
+
+// アーカイブパスを段ごとに分解する。アーカイブパスでなければ valid=false。
+NestedSplit splitNestedArchivePath(const QString& path);
+
+// 入れ子の深さ。通常 FS のパスと 1 段だけのアーカイブパスは 0、
+// アーカイブの中のアーカイブに入っていれば 1、そのまた中なら 2。
+// 設定「ネスト段数上限」と同じ数え方 (= アーカイブ内アーカイブを何回開いたか)。
+int archiveNestingLevel(const QString& path);
 
 // archive + inner → "x.zip!/inner"。
 //   inner == "" / "/" の場合は "x.zip!/" を返す。

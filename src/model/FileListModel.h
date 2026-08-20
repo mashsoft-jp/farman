@@ -136,9 +136,16 @@ public:
   // 書込ガード (コピー先・移動・削除等) や、ディレクトリ比較の発動可否を
   // 判定する窓口として使う。
   bool isInArchiveMode() const { return m_archiveContext != nullptr; }
-  // 現在開いているアーカイブの絶対パス (ローカル FS 上の元 zip)。
-  // アーカイブモード以外では空。
+  // 現在開いているアーカイブのパス。入れ子アーカイブでは
+  // "a.zip!/d/inner.zip" のような**論理パス**で、実 FS 上には無い。
+  // 表示・ナビゲーションに使う。アーカイブモード以外では空。
   QString archivePath() const;
+  // libarchive に渡せる実体のパス。入れ子アーカイブでは一時展開した実ファイル、
+  // それ以外は archivePath と同じ。展開ワーカーに渡すのはこちら。
+  QString archiveReadPath() const;
+  // チェーンの一番外側 = 実 FS 上に置かれているアーカイブのパス。
+  // 「アーカイブが置かれているディレクトリ」を求めるときに使う。
+  QString archiveRootPath() const;
   // アーカイブ内の「カレント」パス。先頭 '/' 必須、ルートは "/"。
   // アーカイブモード以外では空。
   QString archiveInnerPath() const { return m_archiveInnerPath; }

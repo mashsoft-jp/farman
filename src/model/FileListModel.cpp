@@ -1,6 +1,7 @@
 #include "FileListModel.h"
 #include "settings/Settings.h"
 #include "core/ArchiveContext.h"
+#include "core/NestedArchive.h"
 #include "core/DirectorySizeCache.h"
 #include "core/ThumbnailCache.h"
 #include "utils/ArchivePath.h"
@@ -288,6 +289,17 @@ QString FileListModel::archivePath() const {
   return m_archiveContext ? m_archiveContext->archivePath : QString();
 }
 
+QString FileListModel::archiveReadPath() const {
+  return m_archiveContext ? m_archiveContext->readPath() : QString();
+}
+
+QString FileListModel::archiveRootPath() const {
+  if (!m_archiveContext) return QString();
+  const auto ns =
+    ArchivePath::splitNestedArchivePath(m_archiveContext->archivePath);
+  return ns.valid ? ns.rootPath : m_archiveContext->archivePath;
+}
+
 namespace {
 
 // アーカイブをワーカースレッドで開き、メインスレッドのイベントループを
@@ -297,8 +309,11 @@ namespace {
 // 自動表示され、ユーザーは Cancel ボタンで打ち切れる。 ArchiveContext::load
 // は cancelFlag / entriesRead のポインタを受け取り、各エントリ反復で確認する。
 // errorOut にはパスワード付き検出・キャンセル・open 失敗のメッセージが書き込まれる。
+// archivePath は表示・ナビゲーション用の論理パス。入れ子アーカイブでは
+// localPath に一時展開した実ファイルを渡す (空なら archivePath 自身が実体)。
 std::shared_ptr<ArchiveContext> loadArchiveBlocking(const QString& archivePath,
-                                                    QString* errorOut) {
+                                                    QString* errorOut,
+                                                    const QString& localPath = QString()) {
   // ロード中の進捗ダイアログ。setMinimumDuration(500ms) により、500ms 以内に
   // 完了する小さなアーカイブでは表示されず、ちらつきが起きない。
   QProgressDialog progress(
@@ -325,8 +340,10 @@ std::shared_ptr<ArchiveContext> loadArchiveBlocking(const QString& archivePath,
   });
   labelTimer.start();
 
-  auto future = QtConcurrent::run(&ArchiveContext::load,
-    archivePath, errorOut, &cancelFlag, &entriesRead);
+  auto future = QtConcurrent::run([&]() {
+    return ArchiveContext::load(archivePath, errorOut, &cancelFlag, &entriesRead,
+                                localPath);
+  });
   QFutureWatcher<std::shared_ptr<ArchiveContext>> watcher;
   QEventLoop loop;
   QObject::connect(&watcher, &QFutureWatcher<std::shared_ptr<ArchiveContext>>::finished,
@@ -344,6 +361,96 @@ std::shared_ptr<ArchiveContext> loadArchiveBlocking(const QString& archivePath,
   return watcher.result();
 }
 
+// 暗号化アーカイブならパスワードを訊いて ctx->password に入れる。
+// 入力できた (または不要だった) なら true。キャンセル / 回数超過で false。
+bool promptPasswordIfNeeded(const std::shared_ptr<ArchiveContext>& ctx,
+                            QString* errorOut) {
+  if (!ctx->hasEncryptedEntries || !ctx->password.isEmpty()) return true;
+
+  QWidget* parent = QApplication::activeWindow();
+  // 表示するのは論理パスの名前 (入れ子なら一時ファイル名ではなく
+  // "inner.zip" と出したい)。検証は実体に対して行う。
+  const QString archiveName = QFileInfo(ctx->archivePath).fileName();
+  const QString readFrom    = ctx->readPath();
+  // 試行回数は設定 → アーカイブ「パスワード試行回数」(既定 3)。
+  const int maxAttempts = Settings::instance().archivePasswordRetryCount();
+  QString prompt = QObject::tr("Enter password for %1:").arg(archiveName);
+  for (int attempt = 0; attempt < maxAttempts; ++attempt) {
+    bool ok = false;
+    const QString pw = QInputDialog::getText(parent,
+      QObject::tr("Password Required"), prompt, QLineEdit::Password,
+      QString(), &ok);
+    if (!ok) {
+      if (errorOut) *errorOut = QObject::tr("Password input cancelled.");
+      return false;
+    }
+    if (ArchiveContext::verifyPassword(readFrom, pw)) {
+      ctx->password = pw;
+      return true;
+    }
+    // 失敗 → 再入力プロンプトに切替
+    prompt = QObject::tr("Wrong password. Enter password for %1:").arg(archiveName);
+    if (attempt + 1 >= maxAttempts) {
+      warn(parent, QObject::tr("Cannot Open Archive"),
+           QObject::tr("Wrong password (%n attempt(s)). Giving up.",
+                       nullptr, maxAttempts));
+      if (errorOut) {
+        *errorOut = QObject::tr("Wrong password (gave up after %n attempt(s)).",
+                                nullptr, maxAttempts);
+      }
+      return false;
+    }
+  }
+  return false;
+}
+
+// 論理パス (入れ子アーカイブを含む) からコンテキストを作る。
+//
+// "a.zip!/d/inner.zip" のような入れ子は、外側を開いて inner.zip を一時
+// ディレクトリへ書き出してから、その実ファイルを開く。外側がさらに入れ子
+// なら再帰する。段ごとに暗号化されていれば段ごとにパスワードを訊く。
+//
+// 一度実体化した内側アーカイブは NestedArchive にキャッシュされるので、
+// 入り直したときは外側を開き直さない (大元のアーカイブが更新されていた
+// ときだけ展開し直す)。
+std::shared_ptr<ArchiveContext> loadArchiveSpec(const QString& spec,
+                                                QString* errorOut) {
+  QString localPath;
+  const auto outer = ArchivePath::splitArchivePath(spec);
+  if (outer.valid) {
+    // spec 自身が入れ子 = 実 FS 上に無いので、まず実体を用意する。
+    localPath = NestedArchive::cachedLocalPath(spec);
+    if (localPath.isEmpty()) {
+      auto outerCtx = loadArchiveSpec(outer.archivePath, errorOut);
+      if (!outerCtx) return nullptr;
+
+      QString entry = outer.innerPath;
+      while (entry.startsWith(QLatin1Char('/'))) entry.remove(0, 1);
+
+      const QString dest = NestedArchive::reserveLocalPath(spec);
+      if (dest.isEmpty()) {
+        if (errorOut) {
+          *errorOut = QObject::tr("Failed to prepare temp directory for archive.");
+        }
+        return nullptr;
+      }
+      if (!outerCtx->extractEntryTo(entry, dest)) {
+        if (errorOut) {
+          *errorOut = QObject::tr("Failed to extract '%1' from archive").arg(entry);
+        }
+        return nullptr;
+      }
+      NestedArchive::registerLocalPath(spec, dest);
+      localPath = dest;
+    }
+  }
+
+  auto ctx = loadArchiveBlocking(spec, errorOut, localPath);
+  if (!ctx) return nullptr;
+  if (!promptPasswordIfNeeded(ctx, errorOut)) return nullptr;
+  return ctx;
+}
+
 } // namespace
 
 bool FileListModel::setPath(const QString& path) {
@@ -355,11 +462,21 @@ bool FileListModel::setPath(const QString& path) {
   const auto split = ArchivePath::splitArchivePath(path);
   if (split.valid) {
     // アーカイブモードに入る (or 中で移動)
+    // ネスト段数の上限 (設定 → アーカイブ、0 = 無制限)。アドレスバーへ直接
+    // 深いパスを打たれた場合もここで止める。
+    const int maxNest = Settings::instance().archiveMaxNestDepth();
+    if (maxNest > 0 && ArchivePath::archiveNestingLevel(path) > maxNest) {
+      m_lastLoadError =
+        tr("Nesting depth limit reached (%n level(s)).", nullptr, maxNest);
+      emit loadFailed(path, m_lastLoadError);
+      return false;
+    }
+
     std::shared_ptr<ArchiveContext> ctx = m_archiveContext;
     if (!ctx || ctx->archivePath != split.archivePath) {
       // 同じアーカイブを既に開いていなければ新規ロード
       QString loadErr;
-      ctx = loadArchiveBlocking(split.archivePath, &loadErr);
+      ctx = loadArchiveSpec(split.archivePath, &loadErr);
       if (!ctx) {
         m_lastLoadError = loadErr.isEmpty()
           ? tr("Failed to open archive: %1").arg(split.archivePath)
@@ -367,47 +484,8 @@ bool FileListModel::setPath(const QString& path) {
         emit loadFailed(path, m_lastLoadError);
         return false;
       }
-      // 暗号化アーカイブの場合はパスワードを入力させて検証する。
-      // 取得後 ctx->password に保存し、以後 extractEntryTo /
-      // ArchiveExtractEntriesWorker でそれを使う。Cancel された場合は
-      // load 失敗扱いで通常 FS に戻る。
-      if (ctx->hasEncryptedEntries && ctx->password.isEmpty()) {
-        QWidget* parent = QApplication::activeWindow();
-        const QString archiveName = QFileInfo(split.archivePath).fileName();
-        // 試行回数は設定 → アーカイブ「パスワード試行回数」(既定 3)。
-        const int maxAttempts = Settings::instance().archivePasswordRetryCount();
-        QString prompt = tr("Enter password for %1:").arg(archiveName);
-        for (int attempt = 0; attempt < maxAttempts; ++attempt) {
-          bool ok = false;
-          const QString pw = QInputDialog::getText(parent,
-            tr("Password Required"),
-            prompt,
-            QLineEdit::Password,
-            QString(),
-            &ok);
-          if (!ok) {
-            m_lastLoadError = tr("Password input cancelled.");
-            emit loadFailed(path, m_lastLoadError);
-            return false;
-          }
-          if (ArchiveContext::verifyPassword(split.archivePath, pw)) {
-            ctx->password = pw;
-            break;
-          }
-          // 失敗 → 再入力プロンプトに切替
-          prompt = tr("Wrong password. Enter password for %1:").arg(archiveName);
-          if (attempt + 1 >= maxAttempts) {
-            warn(parent,
-              tr("Cannot Open Archive"),
-              tr("Wrong password (%n attempt(s)). Giving up.", nullptr, maxAttempts));
-            m_lastLoadError =
-              tr("Wrong password (gave up after %n attempt(s)).", nullptr, maxAttempts);
-            emit loadFailed(path, m_lastLoadError);
-            return false;
-          }
-        }
-      }
     }
+
     if (!ctx->isValidDirectory(split.innerPath)) {
       m_lastLoadError = tr("Path not found in archive: %1").arg(split.innerPath);
       emit loadFailed(path, m_lastLoadError);

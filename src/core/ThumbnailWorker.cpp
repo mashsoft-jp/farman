@@ -1,5 +1,6 @@
 #include "ThumbnailWorker.h"
 #include "core/ArchiveEntryName.h"
+#include "core/NestedArchive.h"
 #include <QFileInfo>
 #include "utils/ArchivePath.h"
 
@@ -106,7 +107,17 @@ void ThumbnailWorker::process(ThumbnailKey key, quint64 requestGen) {
     // アーカイブ内: libarchive で entry を抽出してメモリ image にする。
     // QImageReader の setScaledSize は使えない (ファイルパス入力ではない) ので
     // 後段で QImage::scaled を呼んで target 内に収める。
-    img = loadImageFromArchive(split.archivePath, split.innerPath);
+    //
+    // 入れ子アーカイブでは split.archivePath が論理パスでディスク上に無いので、
+    // 一時展開済みの実体を引く。まだ展開されていなければサムネイルは諦める
+    // (ここで展開すると、ブラウズしていないアーカイブまで開いてしまう)。
+    QString archiveFile = split.archivePath;
+    if (ArchivePath::splitArchivePath(archiveFile).valid) {
+      archiveFile = NestedArchive::cachedLocalPath(split.archivePath);
+    }
+    if (!archiveFile.isEmpty()) {
+      img = loadImageFromArchive(archiveFile, split.innerPath);
+    }
   } else {
     // 通常 FS: QImageReader 経由で scale ヒント付き decode。
     QImageReader reader(key.path);

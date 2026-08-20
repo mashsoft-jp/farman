@@ -20,7 +20,14 @@ namespace Farman {
 class ArchiveContext {
 public:
   // ── 公開フィールド ────────────────────────────
-  QString                       archivePath;    // アーカイブ自体の絶対パス
+  // アーカイブ自体の絶対パス。入れ子アーカイブでは
+  // "a.zip!/d/inner.zip" のような**論理パス**が入る (実 FS 上には無い)。
+  // 表示・ナビゲーションはこちらを使う。
+  QString                       archivePath;
+  // libarchive に渡す実体のパス。入れ子アーカイブのときだけ、一時展開した
+  // 実ファイルの場所が入る。空なら archivePath そのものが実体。
+  // **読み書きするときは必ず readPath() を経由すること。**
+  QString                       localPath;
   QHash<QString, ArchiveEntry>  entries;        // pathInArchive (先頭 '/' なし) → entry
   QDateTime                     archiveMtime;   // 元アーカイブの mtime (再ロード判定用)
 
@@ -34,6 +41,11 @@ public:
   // ユーザーが入力したパスワード。プロセスメモリ内のみ。永続化しない。
   QString                       password;
 
+  // libarchive に渡す実体のパス。入れ子でなければ archivePath と同じ。
+  QString readPath() const {
+    return localPath.isEmpty() ? archivePath : localPath;
+  }
+
   // ── ファクトリ ────────────────────────────────
   // libarchive で archivePath を開いて全エントリのメタデータを列挙する。
   // 失敗時は nullptr。
@@ -46,11 +58,15 @@ public:
   //   し、true ならその場で打ち切って nullptr を返す (errorOut は cancel メッセージ)。
   // entriesRead (任意): nullptr 以外を渡すと、エントリ 1 件処理するごとに ++ する。
   //   UI スレッド側で QTimer + QProgressDialog 経由で「N entries read」表示に使える。
+  //
+  // localPath (任意): archivePath が入れ子アーカイブの論理パスのときに、
+  //   実体として読む一時ファイルを渡す。空なら archivePath 自身を読む。
   static std::shared_ptr<ArchiveContext> load(
     const QString&         archivePath,
     QString*               errorOut    = nullptr,
     std::atomic<bool>*     cancelFlag  = nullptr,
-    std::atomic<int>*      entriesRead = nullptr);
+    std::atomic<int>*      entriesRead = nullptr,
+    const QString&         localPath   = QString());
 
   // ── クエリ ────────────────────────────────────
   // innerDir は "/" (ルート) または "/foo" / "/foo/bar" の形式。

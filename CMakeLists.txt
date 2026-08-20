@@ -173,6 +173,7 @@ qt_add_executable(farman
   src/core/ArchiveFormatCatalog.cpp
   src/core/IArchivePlugin.cpp
   src/core/ArchiveEntryName.cpp
+  src/core/NestedArchive.cpp
   src/core/ThumbnailCache.cpp
   src/core/ThumbnailWorker.cpp
   src/core/DirectorySizeCache.cpp

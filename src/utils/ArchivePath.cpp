@@ -76,16 +76,26 @@ QString archiveBaseName(const QString& fileName) {
 
 Split splitArchivePath(const QString& path) {
   Split s;
-  const int sep = path.indexOf(QLatin1Char('!'));
+  // 入れ子アーカイブ ("a.zip!/d/inner.zip!/sub") があるので、区切りは
+  // **最も後ろ**の `!` から探す。これで archivePath 側に外側の段が丸ごと
+  // 残り、innerPath は必ず「最内アーカイブの中のパス」になる。
+  //
+  // 後ろから順に試すのは、アーカイブ内エントリ名に `!` が含まれる場合
+  // ("a.zip!/foo!bar.txt") に、その `!` を区切りと誤認しないため。左側が
+  // アーカイブ名として成立する位置が見つかった時点で確定する。
+  int sep = -1;
+  for (int i = path.lastIndexOf(QLatin1Char('!')); i >= 0;
+       i = path.lastIndexOf(QLatin1Char('!'), i - 1)) {
+    if (isArchiveExtension(path.left(i))) {
+      sep = i;
+      break;
+    }
+  }
   if (sep < 0) {
     s.archivePath = path;
-    return s;  // valid=false
+    return s;  // valid=false (`!` が無い / あっても拡張子が違うので通常パス扱い)
   }
   const QString archive = path.left(sep);
-  if (!isArchiveExtension(archive)) {
-    s.archivePath = path;
-    return s;  // valid=false (`!` を含むが拡張子が違うので通常パス扱い)
-  }
   QString inner = path.mid(sep + 1);
   if (inner.isEmpty() || !inner.startsWith(QLatin1Char('/'))) {
     inner = QStringLiteral("/") + inner;
@@ -106,6 +116,35 @@ QString joinArchivePath(const QString& archivePath, const QString& innerPath) {
     inner = QStringLiteral("/") + inner;
   }
   return archivePath + QLatin1Char('!') + inner;
+}
+
+NestedSplit splitNestedArchivePath(const QString& path) {
+  NestedSplit ns;
+  const Split innermost = splitArchivePath(path);
+  if (!innermost.valid) return ns;  // valid=false
+
+  ns.innerPath = innermost.innerPath;
+
+  // 最内から外へ 1 段ずつ剥がしていく。剥がした「アーカイブ内パス」は
+  // 逆順に積まれるので、最後に外側から並ぶよう反転する。
+  QString spec = innermost.archivePath;
+  while (true) {
+    const Split outer = splitArchivePath(spec);
+    if (!outer.valid) break;
+    // outer.innerPath は先頭 '/' 付き。エントリのキーは '/' なし形式に揃える。
+    QString entry = outer.innerPath;
+    while (entry.startsWith(QLatin1Char('/'))) entry.remove(0, 1);
+    ns.innerArchives.prepend(entry);
+    spec = outer.archivePath;
+  }
+  ns.rootPath = spec;
+  ns.valid    = true;
+  return ns;
+}
+
+int archiveNestingLevel(const QString& path) {
+  const NestedSplit ns = splitNestedArchivePath(path);
+  return ns.valid ? ns.innerArchives.size() : 0;
 }
 
 QString parentInnerPath(const QString& innerPath) {

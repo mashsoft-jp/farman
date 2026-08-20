@@ -1054,12 +1054,26 @@ void FileManagerPanel::handleEnterKey() {
     return;
   }
 
-  // ファイル: アーカイブ拡張子なら中に潜る (通常 FS 上のアーカイブのみ)。
-  if (!model->isInArchiveMode() &&
-      ArchivePath::isArchiveExtension(item->absolutePath())) {
-    const QString archiveRootPath =
+  // ファイル: アーカイブ拡張子なら中に潜る。
+  // アーカイブの中のアーカイブ (入れ子) も同じ経路で開く。item->absolutePath()
+  // は既に "<外側>!/<エントリ>" 形式なので、そこへさらに "!/" を足すだけで
+  // 内側のルートを指す論理パスになる。実体化 (一時展開) は FileListModel が
+  // 面倒を見る。
+  if (ArchivePath::isArchiveExtension(item->absolutePath())) {
+    const QString targetPath =
       ArchivePath::joinArchivePath(item->absolutePath(), QStringLiteral("/"));
-    if (navigatePane(m_activePane, archiveRootPath)) {
+
+    // ネスト段数の上限 (設定 → アーカイブ、0 = 無制限)。移動先のパスから
+    // 数えるので、通常 FS 上のアーカイブを開くときは常に 0 段で素通しになる。
+    const int maxNest = Settings::instance().archiveMaxNestDepth();
+    if (maxNest > 0 && ArchivePath::archiveNestingLevel(targetPath) > maxNest) {
+      warn(this, tr("Cannot Open Archive"),
+        tr("Cannot open an archive nested deeper than %n level(s). "
+           "The limit can be changed in Settings > Archive.", nullptr, maxNest));
+      return;
+    }
+
+    if (navigatePane(m_activePane, targetPath)) {
       updatePathSignal();
     } else {
       // open 失敗 (パスワード付き / フォーマット非対応 / キャンセル等)。
@@ -1152,7 +1166,33 @@ void FileManagerPanel::handleBackspaceKey() {
   if (model->isInArchiveMode()) {
     const QString archiveAbs    = model->archivePath();
     const QString innerCurrent  = model->archiveInnerPath();
-    if (innerCurrent.isEmpty() || innerCurrent == QStringLiteral("/")) {
+    const auto outerSplit = ArchivePath::splitArchivePath(archiveAbs);
+    const bool atArchiveRoot =
+      innerCurrent.isEmpty() || innerCurrent == QStringLiteral("/");
+
+    if (atArchiveRoot && outerSplit.valid) {
+      // 入れ子アーカイブのルート → 1 つ外側のアーカイブの、この
+      // アーカイブが入っていたディレクトリへ戻る。カーソルは、いま出てきた
+      // アーカイブ自身に合わせる。
+      const QString target = ArchivePath::joinArchivePath(
+        outerSplit.archivePath, ArchivePath::parentInnerPath(outerSplit.innerPath));
+      const QString childName = ArchivePath::innerBaseName(outerSplit.innerPath);
+      if (navigatePane(m_activePane, target)) {
+        if (!childName.isEmpty()) {
+          FileListModel* parentModel = pane->model();
+          for (int i = 0; i < parentModel->rowCount(); ++i) {
+            const FileItem* it = parentModel->itemAt(i);
+            if (it && it->name() == childName) {
+              const QModelIndex idx = parentModel->index(i, 0);
+              pane->view()->setCurrentIndex(idx);
+              pane->view()->scrollTo(idx, QAbstractItemView::EnsureVisible);
+              break;
+            }
+          }
+        }
+        updatePathSignal();
+      }
+    } else if (atArchiveRoot) {
       // アーカイブを抜ける。
       // ".zip" を持つファイルと同名のディレクトリ ("foo.zip" と "foo/") が
       // 並んでいる場合、name() 比較だと拡張子付きのファイル名と
@@ -1614,7 +1654,9 @@ void FileManagerPanel::copySelectedFiles() {
   if (isDualPaneMode()) {
     destDir = destPane->currentPath();
   } else if (srcModel->isInArchiveMode()) {
-    destDir = QFileInfo(srcModel->archivePath()).absolutePath();
+    // 入れ子アーカイブでは archivePath() が論理パスなので、実 FS 上に
+    // 置かれている一番外側のアーカイブから親ディレクトリを求める。
+    destDir = QFileInfo(srcModel->archiveRootPath()).absolutePath();
   } else {
     destDir = srcPane->currentPath();
   }
@@ -1656,7 +1698,8 @@ void FileManagerPanel::copySelectedFiles() {
     }
     if (selFiles.isEmpty() && selDirs.isEmpty()) return;
 
-    const QString archiveAbs   = srcModel->archivePath();
+    // libarchive に渡すので実体のパス (入れ子なら一時展開したファイル)。
+    const QString archiveAbs   = srcModel->archiveReadPath();
     // カレントアーカイブ内ディレクトリを worker に渡す (先頭 '/' は付かない形式)。
     QString innerCurrent = srcModel->archiveInnerPath();
     while (innerCurrent.startsWith(QLatin1Char('/'))) innerCurrent.remove(0, 1);
@@ -1869,7 +1912,9 @@ void FileManagerPanel::moveSelectedFiles() {
   if (isDualPaneMode()) {
     destDir = destPane->currentPath();
   } else if (srcModel->isInArchiveMode()) {
-    destDir = QFileInfo(srcModel->archivePath()).absolutePath();
+    // 入れ子アーカイブでは archivePath() が論理パスなので、実 FS 上に
+    // 置かれている一番外側のアーカイブから親ディレクトリを求める。
+    destDir = QFileInfo(srcModel->archiveRootPath()).absolutePath();
   } else {
     destDir = srcPane->currentPath();
   }

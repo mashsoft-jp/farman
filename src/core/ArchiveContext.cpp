@@ -163,10 +163,15 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
   const QString&         archivePath,
   QString*               errorOut,
   std::atomic<bool>*     cancelFlag,
-  std::atomic<int>*      entriesRead) {
+  std::atomic<int>*      entriesRead,
+  const QString&         localPath) {
   auto ctx = std::make_shared<ArchiveContext>();
   ctx->archivePath  = archivePath;
-  ctx->archiveMtime = QFileInfo(archivePath).lastModified();
+  ctx->localPath    = localPath;
+  // 実体を読むのは readPath()。入れ子アーカイブでは archivePath は論理パスで、
+  // ディスク上に無いので、ここから下は readPath 側だけを見る。
+  const QString readFrom = ctx->readPath();
+  ctx->archiveMtime = QFileInfo(readFrom).lastModified();
 
   // ── アーカイブプラグイン委譲 ──────────────────
   // 拡張子をアーカイブプラグイン (例 lzh) が所有していれば、エントリ列挙を
@@ -174,8 +179,8 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
   // 合成ディレクトリ生成といったセキュリティ整形は finalizeEntriesInto (ホスト側)
   // で行う。
   if (IArchivePlugin* plugin =
-        ArchiveDispatcher::instance().pluginForPath(archivePath)) {
-    ArchiveListResult res = plugin->listEntries(archivePath, cancelFlag, entriesRead);
+        ArchiveDispatcher::instance().pluginForPath(readFrom)) {
+    ArchiveListResult res = plugin->listEntries(readFrom, cancelFlag, entriesRead);
     if (!res.ok) {
       if (errorOut) {
         *errorOut = res.error.isEmpty()
@@ -201,9 +206,9 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
   addFormatSupport(a, archivePath);
 
 #ifdef Q_OS_WIN
-  const int openResult = archive_read_open_filename_w(a, asWChar(archivePath), 64 * 1024);
+  const int openResult = archive_read_open_filename_w(a, asWChar(readFrom), 64 * 1024);
 #else
-  const int openResult = archive_read_open_filename(a, archivePath.toUtf8().constData(), 64 * 1024);
+  const int openResult = archive_read_open_filename(a, readFrom.toUtf8().constData(), 64 * 1024);
 #endif
   if (openResult != ARCHIVE_OK) {
     if (errorOut) {
@@ -282,7 +287,7 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
       // 単一ファイル圧縮は中身が 1 つだけなので、小さいものはその場で伸長して
       // 実サイズを数える (書庫を開いた時点で読み切れる範囲に限る)。大きいものは
       // 数えるだけのために全体を伸長するのは割に合わないので不明のままにする。
-      if (isSingleFile && QFileInfo(archivePath).size() <= kMeasureMaxCompressedBytes) {
+      if (isSingleFile && QFileInfo(readFrom).size() <= kMeasureMaxCompressedBytes) {
         e.size = measureEntrySize(a, cancelFlag);
       }
     }
@@ -353,11 +358,14 @@ bool ArchiveContext::extractEntryTo(const QString& entryPath,
   QFileInfo destInfo(destPath);
   if (!QDir().mkpath(destInfo.absolutePath())) return false;
 
+  // 入れ子アーカイブでは archivePath は論理パスなので、実体は readPath()。
+  const QString readFrom = readPath();
+
   // アーカイブプラグインが所有する拡張子なら、1 エントリ展開もそこへ委譲する。
   // entryPath の安全性 (`..`/NUL 拒否) は上で検査済み。
   if (IArchivePlugin* plugin =
         ArchiveDispatcher::instance().pluginForPath(archivePath)) {
-    return plugin->extractEntry(archivePath, entryPath, destPath, password);
+    return plugin->extractEntry(readFrom, entryPath, destPath, password);
   }
 
   // 一覧側 (load) と同じ文字コードで名前を復号しないと、entryPath と照合
@@ -373,10 +381,10 @@ bool ArchiveContext::extractEntryTo(const QString& entryPath,
   }
 
 #ifdef Q_OS_WIN
-  const int openResult = archive_read_open_filename_w(a, asWChar(archivePath), 64 * 1024);
+  const int openResult = archive_read_open_filename_w(a, asWChar(readFrom), 64 * 1024);
 #else
   const int openResult = archive_read_open_filename(
-    a, archivePath.toUtf8().constData(), 64 * 1024);
+    a, readFrom.toUtf8().constData(), 64 * 1024);
 #endif
   if (openResult != ARCHIVE_OK) {
     archive_read_free(a);
