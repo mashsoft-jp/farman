@@ -108,6 +108,7 @@ QList<QPair<QKeySequence, QString>> defaultBindingList() {
     { QKeySequence(Qt::CTRL | Qt::Key_R),    "file.bulk_rename" },
     { QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R), "file.recompute_dir_sizes" },
     { QKeySequence(Qt::CTRL | Qt::Key_C),    "file.copy_path"   },
+    { QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C), "file.copy_name" },
     { QKeySequence(Qt::Key_N), "file.newfile"    },
     { QKeySequence(Qt::Key_A), "file.attributes" },
     { QKeySequence(Qt::Key_F), "file.search"     },
@@ -245,6 +246,9 @@ void KeyBindingManager::loadFromSettings() {
   // Ctrl+P が空いていれば自動補完される。既存バインドは保持。
   // version < 19: help.plugins (Ctrl+Shift+P) を新規追加。Help → Plugins...
   // と同じプラグイン一覧 / ロードエラー診断をキーボードから開けるようにする。
+  // version < 21: file.copy_name (Ctrl+Shift+C) を新規追加。ファイル名だけを
+  // クリップボードへコピーする。下の merge ロジックで Ctrl+Shift+C が空いて
+  // いれば自動補完される (既に別コマンドへ割り当て済みならキー無しのまま)。
   // version < 20: 設定の「プラグイン」ページを廃止し、ビュアー / アーカイブの
   // 各ページへ分けたのに合わせ、help.plugins を help.viewer_plugins へ改名。
   // 旧 ID のバインドは同じキーのまま新 ID へ載せ替える (下の移行処理)。
@@ -334,7 +338,7 @@ void KeyBindingManager::saveToSettings() const {
 
   QJsonObject root;
   root["bindings"] = bindings;
-  root["version"] = 20;
+  root["version"] = 21;
 
   QJsonDocument doc(root);
   QString jsonData = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));

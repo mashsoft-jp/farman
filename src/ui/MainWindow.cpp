@@ -1244,19 +1244,59 @@ void MainWindow::registerCommands() {
     "file"
   ));
 
+  // パス / 名前のコピーは対象の集め方が同じなので、選択の解決だけ共通化する。
+  // 選択があれば選択中のすべて (一覧の並び順)、無ければカーソル行の 1 件。
+  // ".." は対象外 (コピーしても意味がないため)。
+  auto collectCopyTargets = [this]() -> QList<const FileItem*> {
+    QList<const FileItem*> targets;
+    auto* pane  = m_fileManagerPanel->activePane();
+    auto* model = pane->model();
+    for (const FileItem* it : model->selectedItems()) {
+      if (it && !it->isDotDot()) targets.append(it);
+    }
+    if (targets.isEmpty()) {
+      const QModelIndex idx = pane->view()->currentIndex();
+      if (idx.isValid()) {
+        if (const FileItem* it = model->itemAt(idx.row());
+            it && !it->isDotDot()) {
+          targets.append(it);
+        }
+      }
+    }
+    return targets;
+  };
+
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "file.copy_path",
     tr("Copy Path"),
-    [this]() {
-      auto* pane  = m_fileManagerPanel->activePane();
-      auto* model = pane->model();
-      const QModelIndex idx = pane->view()->currentIndex();
-      if (!idx.isValid()) return;
-      const FileItem* item = model->itemAt(idx.row());
-      if (!item) return;
-      const QString path = item->absolutePath();
-      QGuiApplication::clipboard()->setText(path);
-      Logger::instance().info(QStringLiteral("Path copied: %1").arg(path));
+    [collectCopyTargets]() {
+      const QList<const FileItem*> targets = collectCopyTargets();
+      if (targets.isEmpty()) return;
+      QStringList paths;
+      paths.reserve(targets.size());
+      for (const FileItem* it : targets) paths.append(it->absolutePath());
+      // 複数のときは 1 行 1 パス。エディタや端末にそのまま貼れる形にする。
+      QGuiApplication::clipboard()->setText(paths.join(QLatin1Char('\n')));
+      Logger::instance().info(
+        QStringLiteral("Path copied (%1): %2")
+          .arg(paths.size()).arg(paths.join(QStringLiteral(", "))));
+    },
+    "file"
+  ));
+
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "file.copy_name",
+    tr("Copy Name"),
+    [collectCopyTargets]() {
+      const QList<const FileItem*> targets = collectCopyTargets();
+      if (targets.isEmpty()) return;
+      QStringList names;
+      names.reserve(targets.size());
+      for (const FileItem* it : targets) names.append(it->name());
+      QGuiApplication::clipboard()->setText(names.join(QLatin1Char('\n')));
+      Logger::instance().info(
+        QStringLiteral("Name copied (%1): %2")
+          .arg(names.size()).arg(names.join(QStringLiteral(", "))));
     },
     "file"
   ));
@@ -1714,6 +1754,7 @@ void MainWindow::createMenus() {
   addCmd(fileMenu, "file.rename",     tr("Rename"));
   addCmd(fileMenu, "file.bulk_rename", tr("Bulk Rename..."));
   addCmd(fileMenu, "file.copy_path",  tr("Copy Path"));
+  addCmd(fileMenu, "file.copy_name",  tr("Copy Name"));
   fileMenu->addSeparator();
   addCmd(fileMenu, "file.copy",       tr("Copy"));
   addCmd(fileMenu, "file.move",       tr("Move"));

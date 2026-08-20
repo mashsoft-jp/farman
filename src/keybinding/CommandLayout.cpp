@@ -42,6 +42,7 @@ QList<GroupSpec> groupTemplate() {
         QStringLiteral("file.mkdir"), QStringLiteral("file.newfile"),
         QStringLiteral("file.delete"), QStringLiteral("file.rename"),
         QStringLiteral("file.bulk_rename"), QStringLiteral("file.copy_path"),
+        QStringLiteral("file.copy_name"),
         QStringLiteral("file.attributes"), QStringLiteral("file.pack"),
         QStringLiteral("file.unpack"), QStringLiteral("file.execute"),
         QStringLiteral("file.recompute_dir_sizes") } },
