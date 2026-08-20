@@ -813,12 +813,18 @@ void MainWindow::showViewerWith(const QString& filePath, ViewerPanel::ViewerKind
   m_viewerPanel->setFocus();
 }
 
-void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pluginId) {
+void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pluginId,
+                                      const QString& displayPath) {
+  // 表示用パス: 指定なしなら filePath をそのまま使う。アーカイブ内エントリでは
+  // filePath が一時展開先なので、タイトル / ステータスバーには表示用パス
+  // ("<archive>!/<inner>") を出す。
+  const QString shownPath = displayPath.isEmpty() ? filePath : displayPath;
+
   // 内蔵 ViewerKind を持つプラグインは従来の経路 (専用ウィンドウ / 内蔵ビュー) で
   // 開く。検索バー等を備えた既存ビューをそのまま使えるようにするため。
   ViewerPanel::ViewerKind kind;
   if (ViewerPanel::viewerKindFromPluginId(pluginId, kind)) {
-    showViewerWith(filePath, kind);
+    showViewerWith(filePath, kind, shownPath);
     return;
   }
 
@@ -838,7 +844,7 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
     if (inner->property("farman_loadFailed").toBool()) {
       delete inner;
       Logger::instance().warn(
-        QStringLiteral("Viewer load failed (external): %1").arg(filePath));
+        QStringLiteral("Viewer load failed (external): %1").arg(shownPath));
       return;
     }
     // 既存の External ウィンドウがあればジオメトリを引き継いで破棄 (showViewerWith
@@ -862,7 +868,7 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
       // 埋め込み QWidget は ExternalPluginViewerWindow でラップする。内蔵ビュアー
       // ウィンドウと挙動を揃える (Esc/Enter で閉じる + 既定サイズ + プラグイン名の
       // ステータスバー)。showViewerWith() の Auto 経路と同じラッパを使う。
-      auto* wrap = new ExternalPluginViewerWindow(inner, QFileInfo(filePath).fileName(),
+      auto* wrap = new ExternalPluginViewerWindow(inner, QFileInfo(shownPath).fileName(),
                                                   plugin->pluginName());
       wrap->setAttribute(Qt::WA_DeleteOnClose);
       wrap->setWindowFlag(Qt::Window, true);
@@ -888,7 +894,7 @@ void MainWindow::showViewerWithPlugin(const QString& filePath, const QString& pl
   updatePaneMenuActionsEnabled();
   if (m_toolbar) m_toolbar->setVisible(false);
   updateStatusBar();
-  if (!m_viewerPanel->openWithPlugin(filePath, pluginId)) {
+  if (!m_viewerPanel->openWithPlugin(filePath, pluginId, shownPath)) {
     showFileManager();
     return;
   }
@@ -1419,7 +1425,17 @@ void MainWindow::registerCommands() {
       if (!idx.isValid()) return;
       const FileItem* item = model->itemAt(idx.row());
       if (!item || item->isDir()) return;
-      const QString path = item->absolutePath();
+
+      // 表示用パスと、実際に読むパスを分ける。アーカイブ内エントリは
+      // ディスク上に無いので、Enter の経路と同じく一時ファイルへ展開してから
+      // ビュアーに渡す (これが無いと、明示的にビュアーを選んだときだけ
+      // 「開けない / 中身が空」になる)。
+      const QString shownPath = item->absolutePath();
+      QString path = shownPath;
+      if (model->isInArchiveMode()) {
+        path = m_fileManagerPanel->extractArchiveEntryToTemp(item);
+        if (path.isEmpty()) return;
+      }
 
       // 登録済みビュアープラグイン (同梱 + 外部) から動的にメニューを生成する。
       // これにより media_viewer やユーザーの外部プラグインも明示選択できる。
@@ -1432,8 +1448,8 @@ void MainWindow::registerCommands() {
         }
         const QString id   = rec.pluginId;
         const QString name = rec.pluginName.isEmpty() ? id : rec.pluginName;
-        menu.addAction(name, this, [this, path, id]() {
-          showViewerWithPlugin(path, id);
+        menu.addAction(name, this, [this, path, shownPath, id]() {
+          showViewerWithPlugin(path, id, shownPath);
         });
       }
       if (menu.isEmpty()) {

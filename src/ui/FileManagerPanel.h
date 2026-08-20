@@ -10,6 +10,7 @@ class QKeyEvent;
 
 namespace Farman {
 
+class FileItem;
 class FileListPane;
 class FileListModel;
 class LogPane;
@@ -34,6 +35,12 @@ public:
   QString currentPath() const;
   QString leftPath() const;
   QString rightPath() const;
+
+  // アーカイブ内エントリをセッション一時ディレクトリへ展開し、その実パスを
+  // 返す (失敗 / 対象外なら空)。アーカイブ内のファイルはディスク上に無いので、
+  // ビュアーに渡す前に必ずこれを通す。Enter で開く経路 (handleEnterKey) と、
+  // 明示的にビュアーを選ぶ経路 (MainWindow の view.choose) の両方から使う。
+  QString extractArchiveEntryToTemp(const FileItem* item);
 
   // ペイン操作
   void setActivePane(PaneType pane);

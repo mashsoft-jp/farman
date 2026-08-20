@@ -59,7 +59,11 @@ private:
   void showViewerWith(const QString& filePath, ViewerPanel::ViewerKind kind,
                       const QString& displayPath = {});
   // 指定 pluginId のビュアーで開く（"Open With Viewer..." の動的メニューから使う）。
-  void showViewerWithPlugin(const QString& filePath, const QString& pluginId);
+  // pluginId のビュアーで filePath を開く (ビュアーを明示指定する経路)。
+  // displayPath: タイトル / ステータスバーに出すパス。アーカイブ内エントリの
+  //   ように filePath が一時展開先のときに、元のパスを見せるために使う。
+  void showViewerWithPlugin(const QString& filePath, const QString& pluginId,
+                            const QString& displayPath = QString());
   // page 指定でそのカテゴリを選択した状態で開く (既定は General)。
   void showSettingsDialog(
     SettingsDialog::Page page = SettingsDialog::Page::General);

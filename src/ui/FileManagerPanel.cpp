@@ -1095,50 +1095,9 @@ void FileManagerPanel::handleEnterKey() {
   }
 
   // アーカイブ内のファイル: 一時ファイルに展開してビュアーで開く (Phase B)。
-  // 一時ファイルはセッション一時ディレクトリ (QTemporaryDir) 配下に置き、
-  // アプリ終了時に丸ごと削除する (= QTemporaryDir のデストラクタに任せる)。
-  // 同じエントリを再度開いた場合は既存ファイルを上書き再展開する (シンプル化)。
   if (model->isInArchiveMode() && !item->isDir()) {
-    const ArchiveEntry* ae = item->archiveEntry();
-    const ArchiveContext* ctx = model->archiveContext();
-    if (!ae || !ctx) return;
-
-    // セッション一時ディレクトリ (アプリ生存中だけ存在、終了時に削除)。
-    // 置き場所は設定 → アーカイブ「一時ディレクトリ」。関数内 static なので
-    // 一度作ったら動かない = 設定変更は次回起動から効く。
-    static QTemporaryDir sessionTempDir(
-      Settings::instance().effectiveArchiveTempDirectory()
-        + QStringLiteral("/farman-arch-XXXXXX"));
-    if (!sessionTempDir.isValid()) {
-      Logger::instance().error(
-        tr("Failed to create temp directory for archive extract"));
-      return;
-    }
-
-    // アーカイブごとに sub directory を作っておく (複数アーカイブ並行表示時の
-    // パス衝突回避 + ファイル名・パス階層をなるべく保存して viewer に渡す)。
-    const QByteArray hash = QCryptographicHash::hash(
-      ctx->archivePath.toUtf8(), QCryptographicHash::Sha1).toHex().left(8);
-    const QString tempRoot = sessionTempDir.path()
-      + QStringLiteral("/") + QString::fromLatin1(hash);
-    // Zip Slip 対策: ビュアー用 temp 展開先も `..` / 絶対パス / `\` 経由の
-    // 脱出を拒否する safeJoinExtractPath 経由にする。展開 worker 側と同じ
-    // 防御線を temp 展開経路にも揃える狙い。
-    const QString tempPath = ArchivePath::safeJoinExtractPath(
-      tempRoot, ae->pathInArchive);
-    if (tempPath.isEmpty()) {
-      Logger::instance().error(
-        tr("Refused unsafe archive entry path: %1").arg(ae->pathInArchive));
-      return;
-    }
-
-    if (!ctx->extractEntryTo(ae->pathInArchive, tempPath)) {
-      Logger::instance().error(
-        tr("Failed to extract '%1' from archive").arg(ae->pathInArchive));
-      return;
-    }
-    Logger::instance().info(
-      tr("Extracted archive entry to temp: %1").arg(ae->pathInArchive));
+    const QString tempPath = extractArchiveEntryToTemp(item);
+    if (tempPath.isEmpty()) return;
     // 表示用パスはアーカイブ内パス "<archive>!/<inner>" にする (ステータス
     // バーやビュアーのタイトルに一時パスが見えるのを避ける)。
     emit fileActivated(tempPath, item->absolutePath());
@@ -1147,6 +1106,52 @@ void FileManagerPanel::handleEnterKey() {
 
   // 通常ファイル: シグナルを発行 (MainWindow がビュアーを開く)
   emit fileActivated(item->absolutePath());
+}
+
+QString FileManagerPanel::extractArchiveEntryToTemp(const FileItem* item) {
+  if (!item || item->isDir()) return {};
+  const ArchiveEntry*   ae  = item->archiveEntry();
+  const ArchiveContext* ctx = item->archiveContext();
+  if (!ae || !ctx) return {};
+
+  // セッション一時ディレクトリ (アプリ生存中だけ存在、終了時に丸ごと削除)。
+  // 置き場所は設定 → アーカイブ「一時ディレクトリ」。関数内 static なので
+  // 一度作ったら動かない = 設定変更は次回起動から効く。
+  static QTemporaryDir sessionTempDir(
+    Settings::instance().effectiveArchiveTempDirectory()
+      + QStringLiteral("/farman-arch-XXXXXX"));
+  if (!sessionTempDir.isValid()) {
+    Logger::instance().error(
+      tr("Failed to create temp directory for archive extract"));
+    return {};
+  }
+
+  // アーカイブごとに sub directory を作っておく (複数アーカイブ並行表示時の
+  // パス衝突回避 + ファイル名・パス階層をなるべく保存して viewer に渡す)。
+  const QByteArray hash = QCryptographicHash::hash(
+    ctx->archivePath.toUtf8(), QCryptographicHash::Sha1).toHex().left(8);
+  const QString tempRoot = sessionTempDir.path()
+    + QStringLiteral("/") + QString::fromLatin1(hash);
+  // Zip Slip 対策: ビュアー用 temp 展開先も `..` / 絶対パス / `\` 経由の
+  // 脱出を拒否する safeJoinExtractPath 経由にする。展開 worker 側と同じ
+  // 防御線を temp 展開経路にも揃える狙い。
+  const QString tempPath = ArchivePath::safeJoinExtractPath(
+    tempRoot, ae->pathInArchive);
+  if (tempPath.isEmpty()) {
+    Logger::instance().error(
+      tr("Refused unsafe archive entry path: %1").arg(ae->pathInArchive));
+    return {};
+  }
+
+  // 同じエントリを再度開いた場合は既存ファイルを上書き再展開する (シンプル化)。
+  if (!ctx->extractEntryTo(ae->pathInArchive, tempPath)) {
+    Logger::instance().error(
+      tr("Failed to extract '%1' from archive").arg(ae->pathInArchive));
+    return {};
+  }
+  Logger::instance().info(
+    tr("Extracted archive entry to temp: %1").arg(ae->pathInArchive));
+  return tempPath;
 }
 
 void FileManagerPanel::handleBackspaceKey() {

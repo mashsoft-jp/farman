@@ -41,6 +41,9 @@ public:
   const ArchiveEntry* archiveEntry() const {
     return m_archiveEntry.has_value() ? &m_archiveEntry.value() : nullptr;
   }
+  // このエントリが属するアーカイブ。通常 FS なら nullptr。
+  // raw pointer は呼び出し中のみ有効 (実体は shared_ptr が保持)。
+  const ArchiveContext* archiveContext() const { return m_archiveContext.get(); }
 
   // 選択状態
   bool isSelected() const;
