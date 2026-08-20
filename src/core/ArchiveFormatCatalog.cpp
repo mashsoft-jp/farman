@@ -1,6 +1,7 @@
 #include "ArchiveFormatCatalog.h"
 
 #include "ArchiveDispatcher.h"
+#include "ArchiveEntryName.h"
 #include "settings/Settings.h"
 #include "utils/ArchivePath.h"
 #include "utils/MediaMatchers.h"
@@ -255,6 +256,16 @@ bool isSingleFileCompression(const QString& fileName) {
 
 void applyToArchivePath() {
   ArchivePath::setArchivePatterns(activePatterns());
+
+  // エントリ名の文字コード指定も同じタイミングで流し込む。指定のある形式
+  // (= 自動判別以外) だけを渡すので、既定のままなら空リストになり、復号側は
+  // 従来どおり全部自動判別で動く。
+  QList<FilenameEncodingRule> rules;
+  for (const ResolvedArchiveFormat& r : resolvedFormats()) {
+    if (!r.enabled || r.filenameEncoding.isEmpty()) continue;
+    rules.append({r.patterns, r.filenameEncoding});
+  }
+  setFilenameEncodingRules(rules);
 }
 
 }  // namespace ArchiveFormatCatalog

@@ -21,9 +21,10 @@ inline const wchar_t* asWChar(const QString& s) {
 }
 #endif
 
-QString readEntryPath(struct archive_entry* entry) {
+// encoding は形式ごとの「ファイル名の文字コード」設定 (空 = 自動判別)。
+QString readEntryPath(struct archive_entry* entry, const QString& encoding) {
   // CP932 (Shift-JIS) 等の非 UTF-8 zip でも文字化けしないよう共通ヘルパで判定。
-  QString path = decodeArchiveEntryName(entry);
+  QString path = decodeArchiveEntryName(entry, encoding);
   while (path.size() > 0 && path.endsWith(QLatin1Char('/'))) path.chop(1);
   while (path.size() > 0 && path.startsWith(QLatin1Char('/'))) path.remove(0, 1);
   return path;
@@ -191,6 +192,11 @@ void ArchiveExtractEntriesWorker::run() {
 
   // 書き出し先 (disk) を準備。Permissions / ACL / FFLAGS は反映、Time は反映する。
   // SECURE_SYMLINKS は Zip Slip 対策 (link → 外部パス + 後続エントリで脱出)。
+  // エントリ名の文字コードは形式ごとの設定 (空 = 自動判別)。ループ内で
+  // 毎回引かないよう、ここで 1 回だけ引く。
+  const QString nameEncoding =
+    filenameEncodingFor(QFileInfo(m_archivePath).fileName());
+
   struct archive* dst = archive_write_disk_new();
   archive_write_disk_set_options(dst,
     ARCHIVE_EXTRACT_TIME    | ARCHIVE_EXTRACT_PERM |
@@ -219,7 +225,7 @@ void ArchiveExtractEntriesWorker::run() {
     }
     if (r < ARCHIVE_OK)  continue;
 
-    const QString entryPath = readEntryPath(entry);
+    const QString entryPath = readEntryPath(entry, nameEncoding);
     if (entryPath.isEmpty()) continue;
 
     // 抽出対象か判定:

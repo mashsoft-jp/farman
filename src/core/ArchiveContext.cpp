@@ -75,10 +75,13 @@ inline const wchar_t* asWChar(const QString& s) {
 
 // libarchive のエントリパス (アーカイブの内部表現) を取得して
 // 「先頭 '/' なし、末尾 '/' なし」のキー文字列に整える。
-QString readEntryPath(struct archive_entry* entry) {
+// encoding は設定 → アーカイブの形式ごとの「ファイル名の文字コード」。
+// 空なら従来どおり自動判別する。アーカイブ 1 つにつき 1 回引いた値を
+// 呼び出し側から渡す。
+QString readEntryPath(struct archive_entry* entry, const QString& encoding) {
   // UTF-8 フラグ無しの CP932 (Shift-JIS) zip 等でも文字化けしないよう、
   // 共通ヘルパでエンコーディングを判定して QString 化する。
-  QString path = decodeArchiveEntryName(entry);
+  QString path = decodeArchiveEntryName(entry, encoding);
   // 末尾 '/' (ディレクトリ表記) を落とす
   while (path.size() > 0 && path.endsWith(QLatin1Char('/'))) {
     path.chop(1);
@@ -189,6 +192,11 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
   const bool isSingleFile =
     ArchiveFormatCatalog::isSingleFileCompression(archivePath);
 
+  // エントリ名の文字コードは形式ごとの設定 (空 = 自動判別)。エントリのループ
+  // 内で毎回引くとパターン照合が効いてくるので、ここで 1 回だけ引く。
+  const QString nameEncoding =
+    filenameEncodingFor(QFileInfo(archivePath).fileName());
+
   struct archive* a = archive_read_new();
   addFormatSupport(a, archivePath);
 
@@ -245,7 +253,7 @@ std::shared_ptr<ArchiveContext> ArchiveContext::load(
       ctx->hasEncryptedEntries = true;
     }
 
-    QString path = readEntryPath(entry);
+    QString path = readEntryPath(entry, nameEncoding);
     // raw (単一ファイル圧縮) は名前を持たず libarchive が "data" を返す。
     // ユーザーから見て自然な名前 ("hello.txt.gz" → "hello.txt") に置き換える。
     if (isSingleFile) {
@@ -352,6 +360,11 @@ bool ArchiveContext::extractEntryTo(const QString& entryPath,
     return plugin->extractEntry(archivePath, entryPath, destPath, password);
   }
 
+  // 一覧側 (load) と同じ文字コードで名前を復号しないと、entryPath と照合
+  // できない。
+  const QString nameEncoding =
+    filenameEncodingFor(QFileInfo(archivePath).fileName());
+
   struct archive* a = archive_read_new();
   addFormatSupport(a, archivePath);
   // 暗号化エントリ用パスワードを設定 (空文字列は無視される)。
@@ -383,7 +396,7 @@ bool ArchiveContext::extractEntryTo(const QString& entryPath,
     // 付け替えた名前 (singleFileEntryName) と一致しない。エントリは 1 つしか
     // 無いので名前の照合はせず、そのまま書き出す。
     if (!ArchiveFormatCatalog::isSingleFileCompression(archivePath)) {
-      const QString name = readEntryPath(entry);
+      const QString name = readEntryPath(entry, nameEncoding);
       if (name != entryPath) continue;
     }
 

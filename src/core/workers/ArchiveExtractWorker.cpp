@@ -135,6 +135,11 @@ void ArchiveExtractWorker::run() {
     return;
   }
 
+  // エントリ名の文字コードは形式ごとの設定 (空 = 自動判別)。ループ内で
+  // 毎回引かないよう、ここで 1 回だけ引く。
+  const QString nameEncoding =
+    filenameEncodingFor(QFileInfo(m_archivePath).fileName());
+
   struct archive* dst = archive_write_disk_new();
   // SECURE_SYMLINKS: 出力パス上にユーザーが書き込めない symlink があったら
   // 展開を拒否する。これがないと「先に link/ → /tmp/x を仕込み、後続で
@@ -171,7 +176,7 @@ void ArchiveExtractWorker::run() {
     // エントリ名は UTF-8 フラグ無しの CP932 (Shift-JIS) zip でも文字化けしない
     // よう共通ヘルパで判定して QString 化する。宛先 path も下でこの UTF-8 /
     // wchar_t からセットするので、write-disk 段で日本語ファイル名が化けない。
-    const QString origName = decodeArchiveEntryName(entry);
+    const QString origName = decodeArchiveEntryName(entry, nameEncoding);
     // Zip Slip 対策: `..` / 絶対パス / outputDir を抜け出すエントリは拒否。
     // 危険エントリを 1 件でも含むアーカイブは「正常終了」にせず、操作全体を
     // 失敗扱いにする (UI 側で errorOccurred を表示しなくても、最終的な

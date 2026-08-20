@@ -1,5 +1,7 @@
 #include "ArchiveEntryName.h"
 
+#include "utils/MediaMatchers.h"
+
 #include <QByteArray>
 #include <QStringDecoder>
 #include <QTextCodec>
@@ -10,6 +12,12 @@
 namespace Farman {
 
 namespace {
+
+// 形式ごとの文字コードルール。setFilenameEncodingRules() で差し替える。
+QList<FilenameEncodingRule>& encodingRules() {
+  static QList<FilenameEncodingRule> rules;
+  return rules;
+}
 
 // 生バイト列を「UTF-8 として妥当ならそのまま、そうでなければ Shift_JIS」で
 // 復号する。Shift_JIS でも解釈できなければ最後にロケール依存で復号する。
@@ -33,9 +41,47 @@ QString decodeBytesBestEffort(const QByteArray& raw) {
   return QString::fromLocal8Bit(raw);
 }
 
+// ユーザーが形式に指定した文字コードで復号する。コーデックを引けなければ
+// null QString を返し、呼び出し側が自動判別へ倒す。
+QString decodeBytesWith(const QByteArray& raw, const QString& encoding) {
+  if (encoding.compare(QLatin1String("UTF-8"), Qt::CaseInsensitive) == 0) {
+    return QString::fromUtf8(raw);
+  }
+  if (QTextCodec* codec = QTextCodec::codecForName(encoding.toLatin1())) {
+    return codec->toUnicode(raw);
+  }
+  return QString();
+}
+
+// 指定があればその文字コードで、無ければ自動判別で復号する。
+QString decodeBytes(const QByteArray& raw, const QString& encoding) {
+  if (!encoding.isEmpty()) {
+    const QString decoded = decodeBytesWith(raw, encoding);
+    if (!decoded.isNull()) return decoded;
+  }
+  return decodeBytesBestEffort(raw);
+}
+
 } // namespace
 
-QString decodeArchiveEntryName(struct archive_entry* entry) {
+void setFilenameEncodingRules(const QList<FilenameEncodingRule>& rules) {
+  encodingRules() = rules;
+}
+
+QString filenameEncodingFor(const QString& archiveFileName) {
+  if (archiveFileName.isEmpty()) return QString();
+  for (const FilenameEncodingRule& rule : encodingRules()) {
+    // 自動判別の形式はルールとして持たない (空 = 指定なし)。
+    if (rule.encoding.isEmpty()) continue;
+    if (MediaMatchers::fileNameMatches(rule.patterns, archiveFileName)) {
+      return rule.encoding;
+    }
+  }
+  return QString();
+}
+
+QString decodeArchiveEntryName(struct archive_entry* entry,
+                               const QString& encoding) {
   if (!entry) return QString();
 
   // 生の格納バイト列を取得し、自前でエンコーディングを判定する
@@ -46,10 +92,10 @@ QString decodeArchiveEntryName(struct archive_entry* entry) {
   // 経路を全プラットフォームで使う (Windows の "C" ロケール下でも
   // archive_entry_pathname() は生バイトを返す)。
   if (const char* name = archive_entry_pathname(entry)) {
-    return decodeBytesBestEffort(QByteArray(name));
+    return decodeBytes(QByteArray(name), encoding);
   }
   if (const char* uname = archive_entry_pathname_utf8(entry)) {
-    return decodeBytesBestEffort(QByteArray(uname));
+    return decodeBytes(QByteArray(uname), encoding);
   }
 #ifdef Q_OS_WIN
   // 生バイトがどうしても取れないときだけワイド版にフォールバック。

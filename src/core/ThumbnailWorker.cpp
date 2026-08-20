@@ -1,5 +1,6 @@
 #include "ThumbnailWorker.h"
 #include "core/ArchiveEntryName.h"
+#include <QFileInfo>
 #include "utils/ArchivePath.h"
 
 #include <QBuffer>
@@ -39,6 +40,9 @@ QImage loadImageFromArchive(const QString& archivePath, const QString& innerPath
 
   // innerPath は ArchivePath で先頭 "/" 必須。アーカイブ entry 名は通常 "/" 無し
   // (Zip 形式) なので比較時は先頭 "/" を除いた形に揃える。
+  const QString nameEncoding =
+    filenameEncodingFor(QFileInfo(archivePath).fileName());
+
   QString needle = innerPath;
   if (needle.startsWith(QLatin1Char('/'))) needle = needle.mid(1);
 
@@ -47,7 +51,7 @@ QImage loadImageFromArchive(const QString& archivePath, const QString& innerPath
   while (archive_read_next_header(src, &entry) == ARCHIVE_OK) {
     // 一覧側 (ArchiveContext) と同じ判定で復号し、CP932 zip でも needle と一致
     // させる。末尾/先頭 '/' は付かない前提 (readEntryPath と同様)。
-    QString name = decodeArchiveEntryName(entry);
+    QString name = decodeArchiveEntryName(entry, nameEncoding);
     while (name.endsWith(QLatin1Char('/'))) name.chop(1);
     while (name.startsWith(QLatin1Char('/'))) name.remove(0, 1);
     if (name != needle) {
