@@ -1701,6 +1701,10 @@ void FileManagerPanel::copySelectedFiles() {
             .arg(ok ? QStringLiteral("done") : QStringLiteral("failed"))
             .arg(totalCount)
             .arg(archiveAbs));
+        if (ok) {
+          emit actionCompleted(
+            tr("Extracted %n item(s) from archive", nullptr, totalCount));
+        }
         // 反対パネル (展開先) だけ refresh。srcPane はアーカイブのままなので
         // 内容は変わらない。
         destPane->setPath(destPane->currentPath());
@@ -1772,6 +1776,10 @@ void FileManagerPanel::copySelectedFiles() {
         .arg(success ? QStringLiteral("done") : QStringLiteral("failed"))
         .arg(copiedCount)
         .arg(copiedDest));
+    if (success) {
+      emit actionCompleted(tr("Copied %n item(s) to %1", nullptr, copiedCount)
+                             .arg(QDir::toNativeSeparators(copiedDest)));
+    }
 
     // Save cursor positions
     QModelIndex srcCurrentIndex = srcPane->view()->currentIndex();
@@ -1922,6 +1930,10 @@ void FileManagerPanel::moveSelectedFiles() {
         .arg(success ? QStringLiteral("done") : QStringLiteral("failed"))
         .arg(movedCount)
         .arg(movedDest));
+    if (success) {
+      emit actionCompleted(tr("Moved %n item(s) to %1", nullptr, movedCount)
+                             .arg(QDir::toNativeSeparators(movedDest)));
+    }
 
     // Save cursor positions
     QModelIndex srcCurrentIndex = srcPane->view()->currentIndex();
@@ -2100,6 +2112,11 @@ void FileManagerPanel::deleteSelectedFiles() {
         .arg(delToTrash ? QStringLiteral("Trash") : QStringLiteral("Delete"))
         .arg(success ? QStringLiteral("done") : QStringLiteral("failed"))
         .arg(delCount));
+    if (success) {
+      emit actionCompleted(delToTrash
+        ? tr("Moved %n item(s) to Trash", nullptr, delCount)
+        : tr("Deleted %n item(s)", nullptr, delCount));
+    }
 
     // Save cursor position
     QModelIndex srcCurrentIndex = srcPane->view()->currentIndex();
@@ -2250,6 +2267,7 @@ void FileManagerPanel::createFile() {
   }
   file.close();
   Logger::instance().info(QStringLiteral("Created file: %1").arg(newFilePath));
+  emit actionCompleted(tr("Created file: %1").arg(QFileInfo(newFilePath).fileName()));
 
   // リフレッシュして新規ファイルにカーソルを移動
   srcPane->setPath(currentPath);
@@ -2387,6 +2405,10 @@ void FileManagerPanel::createArchive() {
       QStringLiteral("Archive %1: %2")
         .arg(ok ? QStringLiteral("created") : QStringLiteral("create failed"))
         .arg(outputPath));
+    if (ok) {
+      emit actionCompleted(
+        tr("Created archive: %1").arg(QFileInfo(outputPath).fileName()));
+    }
     // 出力先が src/dest どちらかのペインと一致していれば refresh してカーソル移動
     const QString outputDir = QFileInfo(outputPath).absolutePath();
     const QString fileName  = QFileInfo(outputPath).fileName();
@@ -2518,6 +2540,10 @@ void FileManagerPanel::extractArchive() {
       QStringLiteral("Archive %1: %2")
         .arg(ok ? QStringLiteral("extracted") : QStringLiteral("extract failed"))
         .arg(archivePath));
+    if (ok) {
+      emit actionCompleted(
+        tr("Extracted archive: %1").arg(QFileInfo(archivePath).fileName()));
+    }
     // 完了時のダイアログ開閉は ProgressDialog 側 (auto-close チェックの状態で判断) に任せる
     // 展開したサブディレクトリを含む親ディレクトリと一致するペインを refresh し、
     // サブディレクトリ名にカーソルを合わせる
@@ -2683,6 +2709,9 @@ void FileManagerPanel::bulkRenameItems() {
   if (ng > 0) {
     warn(this, tr("Bulk Rename"),
       tr("%1 file(s) renamed, %2 failed.").arg(ok).arg(ng));
+  } else if (ok > 0) {
+    // 失敗があった場合は上のダイアログで知らせているので、ここは成功時だけ。
+    emit actionCompleted(tr("Renamed %n item(s)", nullptr, ok));
   }
 
   // ペインを再読み込みしてカーソルを保持
@@ -2770,6 +2799,7 @@ void FileManagerPanel::renameItem() {
     return;
   }
   Logger::instance().info(QStringLiteral("Rename: %1 → %2").arg(oldName, newName));
+  emit actionCompleted(tr("Renamed: %1 → %2").arg(oldName, newName));
 
   // Refresh and move cursor to renamed item
   QString currentPath = srcPane->currentPath();

@@ -143,6 +143,9 @@ signals:
   void activeFocusedPathChanged(const QString& path);
   // ステータスバー連携用: アクティブペインの要約 (件数 / 選択数 / サイズ)。
   void activeSummaryChanged(const QString& summary);
+  // ステータスバー連携用: コピー / 移動 / 削除 / リネーム等が完了したときに、
+  // 実行した内容を短く知らせる文言。MainWindow がパス表示の位置へ一時的に出す。
+  void actionCompleted(const QString& message);
   // 同期ブラウズの ON/OFF が切り替わったとき (UI 更新トリガ)。
   void syncBrowseChanged(bool enabled);
   // ディレクトリ比較モードの ON/OFF が切り替わったとき (メニュー・ステータス

@@ -312,6 +312,8 @@ void MainWindow::setupUi() {
     m_fmStatusSummary = summary;
     if (m_stack->currentWidget() == m_fileManagerPanel) updateStatusBar();
   });
+  connect(m_fileManagerPanel, &FileManagerPanel::actionCompleted,
+          this, &MainWindow::flashStatusMessage);
   connect(m_viewerPanel, &ViewerPanel::viewerStatusChanged,
           this, [this](const QString& path, const QString& summary) {
     m_viewerStatusPath = path;
@@ -347,12 +349,38 @@ void MainWindow::updateStatusBar() {
   const bool fm = (m_stack && m_stack->currentWidget() == m_fileManagerPanel);
   const QString& path    = fm ? m_fmStatusPath    : m_viewerStatusPath;
   const QString& summary = fm ? m_fmStatusSummary : m_viewerStatusSummary;
-  m_statusPathLabel->setText(path);
-  m_statusPathLabel->setToolTip(path);
+  // アクション完了メッセージ表示中は、その間だけパスの代わりに出す。
+  // カーソル移動などで updateStatusBar が呼ばれてもメッセージが消えないよう、
+  // 消すのはタイマー満了時だけにしている。
+  const bool flashing = !m_statusFlashText.isEmpty();
+  m_statusPathLabel->setText(flashing ? m_statusFlashText : path);
+  m_statusPathLabel->setToolTip(flashing ? m_statusFlashText : path);
   m_statusSummaryLabel->setText(summary);
   // ディスク使用量はファイルマネージャ表示中だけ意味を持つ (ビュアーは単一
   // ファイルを開いているだけなのでボリューム情報は表示しない)。
   if (m_statusDiskLabel) m_statusDiskLabel->setVisible(fm);
+}
+
+void MainWindow::flashStatusMessage(const QString& message) {
+  if (message.isEmpty()) return;
+
+  // 実行した操作をその場で知らせるためのもの。数秒で元のパス表示へ戻す。
+  // 短すぎると読み落とし、長すぎるとパスが見えない時間が続くので 4 秒。
+  constexpr int kFlashMs = 4000;
+
+  if (!m_statusFlashTimer) {
+    m_statusFlashTimer = new QTimer(this);
+    m_statusFlashTimer->setSingleShot(true);
+    connect(m_statusFlashTimer, &QTimer::timeout, this, [this]() {
+      m_statusFlashText.clear();
+      updateStatusBar();
+    });
+  }
+
+  m_statusFlashText = message;
+  updateStatusBar();
+  // 連続で実行されたときは新しいメッセージから数え直す。
+  m_statusFlashTimer->start(kFlashMs);
 }
 
 namespace {
@@ -1269,7 +1297,7 @@ void MainWindow::registerCommands() {
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "file.copy_path",
     tr("Copy Path"),
-    [collectCopyTargets]() {
+    [this, collectCopyTargets]() {
       const QList<const FileItem*> targets = collectCopyTargets();
       if (targets.isEmpty()) return;
       QStringList paths;
@@ -1278,6 +1306,9 @@ void MainWindow::registerCommands() {
       // 区切りは設定で選べる (カンマ / カンマ+スペース / 改行 LF・CRLF・CR)。
       QGuiApplication::clipboard()->setText(
         paths.join(Settings::instance().copySeparatorText()));
+      flashStatusMessage(paths.size() == 1
+        ? tr("Copied path: %1").arg(paths.first())
+        : tr("Copied %n path(s)", nullptr, paths.size()));
       Logger::instance().info(
         QStringLiteral("Path copied (%1): %2")
           .arg(paths.size()).arg(paths.join(QStringLiteral(", "))));
@@ -1288,7 +1319,7 @@ void MainWindow::registerCommands() {
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "file.copy_name",
     tr("Copy Name"),
-    [collectCopyTargets]() {
+    [this, collectCopyTargets]() {
       const QList<const FileItem*> targets = collectCopyTargets();
       if (targets.isEmpty()) return;
       QStringList names;
@@ -1296,6 +1327,9 @@ void MainWindow::registerCommands() {
       for (const FileItem* it : targets) names.append(it->name());
       QGuiApplication::clipboard()->setText(
         names.join(Settings::instance().copySeparatorText()));
+      flashStatusMessage(names.size() == 1
+        ? tr("Copied name: %1").arg(names.first())
+        : tr("Copied %n name(s)", nullptr, names.size()));
       Logger::instance().info(
         QStringLiteral("Name copied (%1): %2")
           .arg(names.size()).arg(names.join(QStringLiteral(", "))));

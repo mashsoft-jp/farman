@@ -94,6 +94,9 @@ private:
   // どちらのパネルがアクティブかでステータスバーの表示元を切り替えるため、
   // それぞれの最新ステータスをキャッシュしておく
   void updateStatusBar();
+  // ステータスバーのパス表示位置に、アクションの完了を一時的に知らせる。
+  // 実行した操作が分かるようにするためのもので、一定時間で元のパス表示へ戻る。
+  void flashStatusMessage(const QString& message);
   // ステータスバー右側のディスク使用量表示を更新する。
   // アクティブペインのカレントパスから QStorageInfo を引いて
   // 「N GB free / M GB (P% used)」を表示。5 秒タイマーでも自動再計算。
@@ -113,6 +116,10 @@ private:
   QTimer*      m_resizeSizeHideTimer    = nullptr;
 
   QLabel*      m_statusPathLabel        = nullptr;
+  // アクション完了時にパス表示の位置へ一時的に出すメッセージ。空でないあいだは
+  // パスの代わりにこちらを表示し、m_statusFlashTimer の満了で元に戻す。
+  QString      m_statusFlashText;
+  QTimer*      m_statusFlashTimer       = nullptr;
   QLabel*      m_statusSummaryLabel     = nullptr;
   QLabel*      m_statusSyncBrowseLabel  = nullptr;
   // ディレクトリ比較モード中のインジケータ ("Compare: SizeMtime" 等)。
