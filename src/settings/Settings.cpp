@@ -150,6 +150,7 @@ void Settings::applyDefaults() {
   m_customInitialPath[static_cast<int>(PaneType::Right)].clear();
   m_confirmOnExit = false;
   m_copySeparator = CopySeparator::Comma;
+  m_actionStatusSeconds = 4;
   m_singleInstance = true;
   m_allowExternalPlugins = false;
   m_pluginsDirectory.clear();
@@ -849,6 +850,16 @@ void Settings::setCustomInitialPath(PaneType pane, const QString& path) {
   int idx = static_cast<int>(pane);
   if (idx < 0 || idx >= static_cast<int>(PaneType::Count)) return;
   m_customInitialPath[idx] = path;
+}
+
+// ── アクション完了通知の表示秒数 ────────────────────
+int Settings::actionStatusSeconds() const {
+  return m_actionStatusSeconds;
+}
+
+void Settings::setActionStatusSeconds(int seconds) {
+  // 0 は「表示しない」。上限は現実的な範囲で切る。
+  m_actionStatusSeconds = qBound(0, seconds, 60);
 }
 
 // ── 複数選択時のコピー区切り ──────────────────────
@@ -2067,6 +2078,7 @@ void Settings::load() {
     else if (sep == QLatin1String("cr"))         m_copySeparator = CopySeparator::Cr;
     else                                         m_copySeparator = CopySeparator::Comma;
   }
+  setActionStatusSeconds(behavior.value("actionStatusSeconds").toInt(4));
   m_singleInstance = behavior.value("singleInstance").toBool(true);
   m_allowExternalPlugins = behavior.value("allowExternalPlugins").toBool(false);
   m_pluginsDirectory = behavior.value("pluginsDirectory").toString();
@@ -2854,6 +2866,7 @@ void Settings::save() const {
   : (m_copySeparator == CopySeparator::CrLf)       ? QStringLiteral("crlf")
   : (m_copySeparator == CopySeparator::Cr)         ? QStringLiteral("cr")
                                                    : QStringLiteral("comma");
+  behavior["actionStatusSeconds"] = m_actionStatusSeconds;
   behavior["singleInstance"] = m_singleInstance;
   behavior["allowExternalPlugins"] = m_allowExternalPlugins;
   behavior["pluginsDirectory"] = m_pluginsDirectory;

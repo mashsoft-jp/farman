@@ -213,6 +213,10 @@ public:
   // copySeparator() に対応する実際の文字列 (",", ", ", "\n", "\r\n", "\r")。
   QString copySeparatorText()           const;
 
+  // アクション完了時にステータスバーへ出す通知の表示秒数。0 なら表示しない。
+  int  actionStatusSeconds()            const;
+  void setActionStatusSeconds(int seconds);
+
   bool confirmOnExit()                  const;
   void setConfirmOnExit(bool confirm);
 
@@ -703,6 +707,8 @@ private:
   bool             m_confirmOnExit   = false;
   // 複数選択時のコピー区切り (パス / 名前で共通)。
   CopySeparator    m_copySeparator = CopySeparator::Comma;
+  // アクション完了通知の表示秒数 (0 = 表示しない)。
+  int              m_actionStatusSeconds = 4;
   bool             m_singleInstance  = true;
   // 外部プラグインの読込み許可 (既定 OFF)。次回起動時に反映。
   bool             m_allowExternalPlugins = false;

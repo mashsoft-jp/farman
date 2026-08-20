@@ -364,9 +364,17 @@ void MainWindow::updateStatusBar() {
 void MainWindow::flashStatusMessage(const QString& message) {
   if (message.isEmpty()) return;
 
-  // 実行した操作をその場で知らせるためのもの。数秒で元のパス表示へ戻す。
-  // 短すぎると読み落とし、長すぎるとパスが見えない時間が続くので 4 秒。
-  constexpr int kFlashMs = 4000;
+  // 表示秒数は設定で変えられる (設定 → 動作 → ファイル操作)。0 は「表示しない」。
+  const int seconds = Settings::instance().actionStatusSeconds();
+  if (seconds <= 0) {
+    // 表示しない設定。既に出ているメッセージがあれば消してパス表示に戻す。
+    if (!m_statusFlashText.isEmpty()) {
+      m_statusFlashText.clear();
+      if (m_statusFlashTimer) m_statusFlashTimer->stop();
+      updateStatusBar();
+    }
+    return;
+  }
 
   if (!m_statusFlashTimer) {
     m_statusFlashTimer = new QTimer(this);
@@ -380,7 +388,7 @@ void MainWindow::flashStatusMessage(const QString& message) {
   m_statusFlashText = message;
   updateStatusBar();
   // 連続で実行されたときは新しいメッセージから数え直す。
-  m_statusFlashTimer->start(kFlashMs);
+  m_statusFlashTimer->start(seconds * 1000);
 }
 
 namespace {

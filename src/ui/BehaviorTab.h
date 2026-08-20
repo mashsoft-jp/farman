@@ -48,6 +48,8 @@ private:
   QLineEdit*  m_searchExcludeDirsEdit;
   // 複数選択して「パスをコピー」「ファイル名をコピー」したときの区切り。
   QComboBox*  m_copySeparatorCombo = nullptr;
+  // アクション完了通知をステータスバーに出す秒数 (0 = 表示しない)。
+  QSpinBox*   m_actionStatusSecondsSpin = nullptr;
 
   // List display formats (per dual / single pane)
   QComboBox*  m_fileSizeFormatDualCombo        = nullptr;

@@ -227,6 +227,30 @@ void BehaviorTab::setupUi() {
   copySepLabel->setBuddy(m_copySeparatorCombo);
   copySepCellLayout->addWidget(copySepLabel);
   copySepCellLayout->addWidget(m_copySeparatorCombo);
+
+  copySepCellLayout->addSpacing(24);
+
+  // コピー / 移動 / リネーム等が終わったときに、ステータスバーのパス表示位置へ
+  // 実行内容を一時的に出す。その表示秒数。0 は「表示しない」。
+  m_actionStatusSecondsSpin = new QSpinBox(this);
+  m_actionStatusSecondsSpin->setRange(0, 60);
+  m_actionStatusSecondsSpin->setSuffix(tr(" sec"));
+  const QString noticeOffText = tr("Do not show");
+  m_actionStatusSecondsSpin->setSpecialValueText(noticeOffText);
+  m_actionStatusSecondsSpin->setToolTip(
+    tr("How long the status bar shows what was just done (copy, move, delete, "
+       "rename, ...) in place of the current path. 0 means no notice."));
+  // specialValueText が見切れないよう、出うる一番長い文字列から幅を決める。
+  {
+    constexpr int kArrowsAndPadding = 40;
+    m_actionStatusSecondsSpin->setMinimumWidth(
+      m_actionStatusSecondsSpin->fontMetrics().horizontalAdvance(noticeOffText)
+        + kArrowsAndPadding);
+  }
+  auto* noticeLabel = new QLabel(tr("Show completed action for:"), this);
+  noticeLabel->setBuddy(m_actionStatusSecondsSpin);
+  copySepCellLayout->addWidget(noticeLabel);
+  copySepCellLayout->addWidget(m_actionStatusSecondsSpin);
   copySepCellLayout->addStretch(1);
 
   fileOpsLayout->addWidget(copySepCell, 3, 0, 1, 2);
@@ -544,6 +568,7 @@ void BehaviorTab::loadSettings() {
       static_cast<int>(settings.copySeparator()));
     m_copySeparatorCombo->setCurrentIndex(idx >= 0 ? idx : 0);
   }
+  m_actionStatusSecondsSpin->setValue(settings.actionStatusSeconds());
 
   // List display formats (Dual / Single)
   auto applySizeFormat = [](QComboBox* combo, FileSizeFormat fmt) {
@@ -661,6 +686,7 @@ void BehaviorTab::save() {
     settings.setSearchExcludeDirs(excludeList);
     settings.setCopySeparator(static_cast<CopySeparator>(
       m_copySeparatorCombo->currentData().toInt()));
+    settings.setActionStatusSeconds(m_actionStatusSecondsSpin->value());
   }
 
   // Save list display formats (Dual / Single)
