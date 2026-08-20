@@ -264,6 +264,12 @@ public:
   QString archiveTempDirectory() const;
   void    setArchiveTempDirectory(const QString& dir);
 
+  // 実際に使う一時展開先。archiveTempDirectory() が空、または作れない
+  // ディレクトリを指しているときはシステムの一時ディレクトリを返す。
+  // 一時展開先を作る側は必ずこちらを使うこと (設定値の空 / 不正の扱いを
+  // 1 箇所に閉じ込めるため)。
+  QString effectiveArchiveTempDirectory() const;
+
   // 暗号化アーカイブのパスワード入力をやり直せる回数。既定 3。
   int  archivePasswordRetryCount() const;
   void setArchivePasswordRetryCount(int count);

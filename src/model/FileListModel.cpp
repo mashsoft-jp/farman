@@ -374,8 +374,10 @@ bool FileListModel::setPath(const QString& path) {
       if (ctx->hasEncryptedEntries && ctx->password.isEmpty()) {
         QWidget* parent = QApplication::activeWindow();
         const QString archiveName = QFileInfo(split.archivePath).fileName();
+        // 試行回数は設定 → アーカイブ「パスワード試行回数」(既定 3)。
+        const int maxAttempts = Settings::instance().archivePasswordRetryCount();
         QString prompt = tr("Enter password for %1:").arg(archiveName);
-        for (int attempt = 0; attempt < 3; ++attempt) {
+        for (int attempt = 0; attempt < maxAttempts; ++attempt) {
           bool ok = false;
           const QString pw = QInputDialog::getText(parent,
             tr("Password Required"),
@@ -394,11 +396,12 @@ bool FileListModel::setPath(const QString& path) {
           }
           // 失敗 → 再入力プロンプトに切替
           prompt = tr("Wrong password. Enter password for %1:").arg(archiveName);
-          if (attempt == 2) {
+          if (attempt + 1 >= maxAttempts) {
             warn(parent,
               tr("Cannot Open Archive"),
-              tr("Wrong password (3 attempts). Giving up."));
-            m_lastLoadError = tr("Wrong password (gave up after 3 attempts).");
+              tr("Wrong password (%n attempt(s)). Giving up.", nullptr, maxAttempts));
+            m_lastLoadError =
+              tr("Wrong password (gave up after %n attempt(s)).", nullptr, maxAttempts);
             emit loadFailed(path, m_lastLoadError);
             return false;
           }

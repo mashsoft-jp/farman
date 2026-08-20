@@ -1125,6 +1125,26 @@ void Settings::setArchiveTempDirectory(const QString& dir) {
   m_archiveTempDirectory = dir.trimmed();
 }
 
+QString Settings::effectiveArchiveTempDirectory() const {
+  const QString fallback =
+    QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+  const QString configured = m_archiveTempDirectory;
+  if (configured.isEmpty()) return fallback;
+
+  // 設定された場所が消えている / 作れない (外付けを外した、権限が無い等) と、
+  // 展開先が無いまま「アーカイブが開けない」だけになってしまう。作れるかを
+  // ここで確かめて、駄目ならシステムの一時ディレクトリへ落とす。
+  QDir dir(configured);
+  if (dir.exists() || QDir().mkpath(configured)) {
+    return configured;
+  }
+  // ここは Logger (core) を使わない。Logger 側が Settings::logDirectory() を
+  // 引くので、設定層から呼び返すと初期化順の依存が生まれる。
+  qWarning() << "Archive temp directory unusable, falling back to" << fallback
+             << "(configured:" << configured << ")";
+  return fallback;
+}
+
 int Settings::archivePasswordRetryCount() const {
   return m_archivePasswordRetryCount;
 }

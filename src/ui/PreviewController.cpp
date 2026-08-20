@@ -356,7 +356,8 @@ void PreviewController::onDebounceTimeout() {
     // セッションで余計な temp dir を作らないため)。
     if (!m_archiveTempDir) {
       m_archiveTempDir = std::make_unique<QTemporaryDir>(
-        QDir::tempPath() + QStringLiteral("/farman-preview-arch-XXXXXX"));
+        Settings::instance().effectiveArchiveTempDirectory()
+          + QStringLiteral("/farman-preview-arch-XXXXXX"));
     }
     if (!m_archiveTempDir->isValid()) {
       m_pane->showUnsupported(tr("Failed to prepare temp directory for archive."));

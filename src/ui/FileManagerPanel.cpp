@@ -1090,8 +1090,11 @@ void FileManagerPanel::handleEnterKey() {
     if (!ae || !ctx) return;
 
     // セッション一時ディレクトリ (アプリ生存中だけ存在、終了時に削除)。
+    // 置き場所は設定 → アーカイブ「一時ディレクトリ」。関数内 static なので
+    // 一度作ったら動かない = 設定変更は次回起動から効く。
     static QTemporaryDir sessionTempDir(
-      QDir::tempPath() + QStringLiteral("/farman-arch-XXXXXX"));
+      Settings::instance().effectiveArchiveTempDirectory()
+        + QStringLiteral("/farman-arch-XXXXXX"));
     if (!sessionTempDir.isValid()) {
       Logger::instance().error(
         tr("Failed to create temp directory for archive extract"));
@@ -2501,12 +2504,14 @@ void FileManagerPanel::extractArchive() {
   // 暗号化アーカイブの場合はパスワードを入力させて検証する。
   // verifyPassword(_, "") は「暗号化なし、もしくは空パスワードで復号できる」
   // ときに true を返すので、false なら password 入力が必要。
-  // 個別エントリ展開 (FileListModel::setPath 側) と同じ 3 回リトライ仕様。
+  // 個別エントリ展開 (FileListModel::setPath 側) と同じリトライ仕様。
+  // 回数は設定 → アーカイブ「パスワード試行回数」(既定 3)。
   QString password;
   if (!ArchiveContext::verifyPassword(archivePath, QString())) {
     const QString archiveName = QFileInfo(archivePath).fileName();
+    const int maxAttempts = Settings::instance().archivePasswordRetryCount();
     QString prompt = tr("Enter password for %1:").arg(archiveName);
-    for (int attempt = 0; attempt < 3; ++attempt) {
+    for (int attempt = 0; attempt < maxAttempts; ++attempt) {
       bool ok = false;
       const QString pw = QInputDialog::getText(this,
         tr("Password Required"),
@@ -2520,10 +2525,10 @@ void FileManagerPanel::extractArchive() {
         break;
       }
       prompt = tr("Wrong password. Enter password for %1:").arg(archiveName);
-      if (attempt == 2) {
+      if (attempt + 1 >= maxAttempts) {
         warn(this,
           tr("Cannot Extract Archive"),
-          tr("Wrong password (3 attempts). Giving up."));
+          tr("Wrong password (%n attempt(s)). Giving up.", nullptr, maxAttempts));
         return;
       }
     }
