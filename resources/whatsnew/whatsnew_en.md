@@ -42,6 +42,22 @@
 - Extensions you added or removed in the settings did not always affect which
   viewer was chosen. They now take effect as written.
 
+### File list operations
+
+- "Copy Path" now copies the paths of **all selected files** at once
+  (previously it copied only the item under the cursor).
+- Added an action that copies just the **file names** instead of the paths
+  (default shortcut Shift+Ctrl+C, Shift+Cmd+C on macOS).
+- The separator used when copying several entries is configurable: comma,
+  comma + space, or a newline (LF / CRLF / CR). Settings → Behavior →
+  File Operations.
+- After a copy, move, delete or rename, the status bar briefly shows what was
+  done in place of the current path. The duration is configurable, and 0
+  turns the notice off.
+- Changed what gets selected when renaming: for files, everything up to the
+  **last** dot ("photo.tar.gz" selects "photo.tar"); for directories, the whole
+  name (dots in a directory name are not an extension).
+
 ### Bug fixes
 
 - Fixed the English What's New dialog being cut off partway through, and made
