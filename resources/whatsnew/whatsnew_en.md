@@ -74,3 +74,5 @@
   Markdown rendering in general immune to the same kind of truncation.
 - With every viewer plugin disabled, only the binary viewer used to open. Now
   nothing opens at all.
+- Fixed "Open With Viewer..." (Shift+Ctrl+Enter, Cmd+Enter on macOS) on a file
+  inside an archive: it showed empty content or failed to open.
