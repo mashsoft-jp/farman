@@ -2748,9 +2748,10 @@ void FileManagerPanel::renameItem() {
   // `item` を参照すると use-after-free になるので、以降は退避値のみを使う。
   const bool itemIsDir = item->isDir();
 
-  // Ask for new name. リネームではカーソルを末尾ではなく拡張子の手前に
-  // 置く (例: "foo.txt" を選んだ状態で `r` を押すと、カーソルは "foo" の
-  // 直後)。コピー衝突時の OverwriteDialog のリネーム入力欄と同じ挙動。
+  // Ask for new name. ファイルはカーソルを末尾ではなく拡張子の手前に置く
+  // (例: "foo.txt" を選んだ状態で `r` を押すと "foo" が選択される)。
+  // ディレクトリは名前中のドットに拡張子としての意味が無い ("photos.2024" など)
+  // ので全体を選択する。コピー衝突時の OverwriteDialog のリネーム入力欄も同じ。
   bool ok = false;
   QString newName = inputText(
     this,
@@ -2758,7 +2759,7 @@ void FileManagerPanel::renameItem() {
     tr("Enter new name:"),
     oldName,
     &ok,
-    TextInputCursor::BeforeExtension
+    itemIsDir ? TextInputCursor::SelectAll : TextInputCursor::BeforeExtension
   );
 
   if (!ok || newName.isEmpty() || newName == oldName) {

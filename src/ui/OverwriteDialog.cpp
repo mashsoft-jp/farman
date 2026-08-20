@@ -100,8 +100,12 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
   // 拡張子は「最後の '.' 以降」とみなす ("foo.tar.gz" なら "foo.tar" を選択)。
   // 先頭 '.' (dot-file) は拡張子としてではなくベース名の一部とみなす。
   // inputText(BeforeExtension) と同じ規則。
+  // ディレクトリは名前中のドットに拡張子としての意味が無い ("photos.2024" など)
+  // ので全体を選択する。
+  const bool isDir = QFileInfo(dstPath).isDir();
   const int lastDot = m_originalName.lastIndexOf(QLatin1Char('.'));
-  const int basenameLen = (lastDot > 0) ? lastDot : m_originalName.length();
+  const int basenameLen =
+    (!isDir && lastDot > 0) ? lastDot : m_originalName.length();
   QTimer::singleShot(0, m_renameEdit, [this, basenameLen]() {
     m_renameEdit->setFocus();
     // setSelection(start, length) はカーソルを選択末尾に置くので別途

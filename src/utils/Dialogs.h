@@ -90,10 +90,10 @@ bool informWithSuppress(QWidget* parent,
 //  - SelectAll: 既定。defaultValue 全体を選択 (新規入力で上書きしやすい)
 //  - BeforeExtension: 拡張子の手前 = 最後の '.' の直前にカーソル、
 //      かつそこまでのベース名を選択状態にする。
-//      ("foo.tar.gz" なら "foo" を選択、カーソルは最初の '.' の直前)
-//      リネーム向け。先頭が '.' のドットファイル ('.gitignore' 等) は
-//      拡張子として扱わず、その後の `.` を見る (見つからなければ全選択)。
-//      アーカイブ作成 / OverwriteDialog のリネーム入力欄も同じ挙動。
+//      ("foo.tar.gz" なら "foo.tar" を選択、カーソルは最後の '.' の直前)
+//      ファイルのリネーム向け。先頭が '.' のドットファイル ('.gitignore' 等) は
+//      拡張子として扱わないので全選択になる。
+//      ディレクトリ名は拡張子に意味が無いので、呼び出し側が SelectAll を渡す。
 enum class TextInputCursor {
   SelectAll,
   BeforeExtension,
