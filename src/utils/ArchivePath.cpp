@@ -142,6 +142,27 @@ NestedSplit splitNestedArchivePath(const QString& path) {
   return ns;
 }
 
+QString displayPath(const QString& path) {
+  // 区切りが無ければ通常のパス。splitNestedArchivePath は glob 照合をするので、
+  // 大多数を占める通常パスは先に弾いておく。
+  if (!path.contains(QLatin1Char('!'))) return path;
+
+  const NestedSplit ns = splitNestedArchivePath(path);
+  if (!ns.valid) return path;
+
+  static const QString sep = QStringLiteral(" > ");
+  QString out = ns.rootPath;
+  for (const QString& inner : ns.innerArchives) {
+    out += sep + inner;
+  }
+  QString tail = ns.innerPath;
+  while (tail.startsWith(QLatin1Char('/'))) tail.remove(0, 1);
+  if (!tail.isEmpty()) {
+    out += sep + tail;
+  }
+  return out;
+}
+
 int archiveNestingLevel(const QString& path) {
   const NestedSplit ns = splitNestedArchivePath(path);
   return ns.valid ? ns.innerArchives.size() : 0;

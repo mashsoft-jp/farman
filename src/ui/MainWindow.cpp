@@ -21,6 +21,7 @@
 #include "../keybinding/ICommand.h"
 #include "../core/DirectoryHistory.h"
 #include "../model/FileListModel.h"
+#include "../utils/ArchivePath.h"
 #include "../utils/Dialogs.h"
 #include "../utils/FarmanMessageBox.h"
 #include "../utils/EnterClickFilter.h"
@@ -353,8 +354,10 @@ void MainWindow::updateStatusBar() {
   // カーソル移動などで updateStatusBar が呼ばれてもメッセージが消えないよう、
   // 消すのはタイマー満了時だけにしている。
   const bool flashing = !m_statusFlashText.isEmpty();
-  m_statusPathLabel->setText(flashing ? m_statusFlashText : path);
-  m_statusPathLabel->setToolTip(flashing ? m_statusFlashText : path);
+  // アーカイブ内のパスはアドレスバーと同じ " > " 区切りで見せる。
+  const QString shownPath = ArchivePath::displayPath(path);
+  m_statusPathLabel->setText(flashing ? m_statusFlashText : shownPath);
+  m_statusPathLabel->setToolTip(flashing ? m_statusFlashText : shownPath);
   m_statusSummaryLabel->setText(summary);
   // ディスク使用量はファイルマネージャ表示中だけ意味を持つ (ビュアーは単一
   // ファイルを開いているだけなのでボリューム情報は表示しない)。

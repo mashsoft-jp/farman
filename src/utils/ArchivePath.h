@@ -74,6 +74,16 @@ int archiveNestingLevel(const QString& path);
 //   inner が "/" で始まらない場合は補う。
 QString joinArchivePath(const QString& archivePath, const QString& innerPath);
 
+// 表示用のパス文字列。アーカイブの区切り `!` を " > " に置き換え、各段の
+// 先頭 `/` を落とす。アーカイブパスでなければそのまま返す。
+//   "/abs/a.zip!/"                    → "/abs/a.zip"
+//   "/abs/a.zip!/level1"              → "/abs/a.zip > level1"
+//   "/abs/a.zip!/d/in.zip!/sub/x.txt" → "/abs/a.zip > d/in.zip > sub/x.txt"
+//
+// **表示専用**。ここから元のパスは復元できないので、コピー・ナビゲーション・
+// ログには使わないこと。
+QString displayPath(const QString& path);
+
 // アーカイブ内パスのうち親側を返す。
 //   "/foo/bar" → "/foo"
 //   "/foo"     → "/"

@@ -8,6 +8,7 @@
 #include "BookmarkEditDialog.h"
 #include "model/FileListModel.h"
 #include "settings/Settings.h"
+#include "utils/ArchivePath.h"
 #include "core/BookmarkManager.h"
 #include "keybinding/CommandRegistry.h"
 #include "utils/Dialogs.h"
@@ -566,6 +567,11 @@ QString FileListPane::currentPath() const {
 void FileListPane::enterAddressEdit() {
   if (!m_addressEdit || m_addressEditing) return;
   m_addressEditing = true;
+  // 編集中は実際のパスに戻す。表示用の " > " 区切りは元のパスに復元できない
+  // ので、そのまま編集させると壊れたパスを掴ませることになる。
+  if (m_model) {
+    m_addressEdit->setText(m_model->currentPath());
+  }
   m_addressEdit->setReadOnly(false);
   m_addressEdit->setFrame(true);
   m_addressEdit->setCursor(Qt::IBeamCursor);
@@ -579,7 +585,7 @@ void FileListPane::leaveAddressEdit(bool restoreText) {
   m_addressEdit->setReadOnly(true);
   m_addressEdit->setFrame(false);
   if (restoreText && m_model) {
-    m_addressEdit->setText(m_model->currentPath());
+    m_addressEdit->setText(ArchivePath::displayPath(m_model->currentPath()));
   }
   m_addressEdit->deselect();
 }
@@ -1037,7 +1043,7 @@ bool FileListPane::setPath(const QString& path) {
   const bool wasInArchive = m_model && m_model->isInArchiveMode();
   bool result = m_model->setPath(path);
   if (result) {
-    m_addressEdit->setText(m_model->currentPath());
+    m_addressEdit->setText(ArchivePath::displayPath(m_model->currentPath()));
     refreshBookmarkIndicator();
     // アーカイブモード切替に伴うアドレスバー色変更を反映
     const bool nowInArchive = m_model->isInArchiveMode();
