@@ -42,6 +42,16 @@
 - Extensions you added or removed in the settings did not always affect which
   viewer was chosen. They now take effect as written.
 
+### Archives
+
+- **Archives inside archives** now open with Enter, to any depth (the depth
+  limit is configurable). Backspace or ".." walks back out one level at a time.
+- The per-format "File name encoding" setting is now actually used when
+  reading entry names — useful for older zips without the UTF-8 flag, where
+  auto-detection guesses wrong.
+- The "Temporary directory" and "Password attempts" settings are now applied
+  as well (a change to the temporary directory takes effect at next start).
+
 ### File list operations
 
 - "Copy Path" now copies the paths of **all selected files** at once
