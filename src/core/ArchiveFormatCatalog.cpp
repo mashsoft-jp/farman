@@ -247,7 +247,20 @@ bool isSingleFileCompression(const QString& fileName) {
   const QString name = QFileInfo(fileName).fileName();
   if (name.isEmpty()) return false;
 
-  for (const ResolvedArchiveFormat& r : resolvedFormats()) {
+  const QList<ResolvedArchiveFormat> formats = resolvedFormats();
+
+  // コンテナ形式が先。単一ファイル圧縮のパターンは短い接尾辞なので、
+  // コンテナ形式のファイル名にも当たってしまう ("x.tar.gz" は gzip の
+  // "*.gz" にも一致する)。単一ファイル圧縮と判定すると読み取り側が raw を
+  // 有効にし、エントリ名を「圧縮拡張子を剥がした 1 個の名前」に置き換えて
+  // しまうので、tar の中身が全部 1 エントリに潰れる。コンテナ形式に一致する
+  // 名前は、単一ファイル圧縮ではないと先に決めてしまう。
+  for (const ResolvedArchiveFormat& r : formats) {
+    if (!r.enabled || r.info.singleFileCompression) continue;
+    if (MediaMatchers::fileNameMatches(r.patterns, name)) return false;
+  }
+
+  for (const ResolvedArchiveFormat& r : formats) {
     if (!r.enabled || !r.info.singleFileCompression) continue;
     if (MediaMatchers::fileNameMatches(r.patterns, name)) return true;
   }
