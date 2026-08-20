@@ -227,8 +227,9 @@ void BehaviorTab::setupUi() {
   copySepLabel->setBuddy(m_copySeparatorCombo);
   copySepCellLayout->addWidget(copySepLabel);
   copySepCellLayout->addWidget(m_copySeparatorCombo);
+  copySepCellLayout->addStretch(1);
 
-  copySepCellLayout->addSpacing(24);
+  fileOpsLayout->addWidget(copySepCell, 3, 0, 1, 2);
 
   // コピー / 移動 / リネーム等が終わったときに、ステータスバーのパス表示位置へ
   // 実行内容を一時的に出す。その表示秒数。0 は「表示しない」。
@@ -247,13 +248,16 @@ void BehaviorTab::setupUi() {
       m_actionStatusSecondsSpin->fontMetrics().horizontalAdvance(noticeOffText)
         + kArrowsAndPadding);
   }
+  QWidget* noticeCell = new QWidget(this);
+  QHBoxLayout* noticeCellLayout = new QHBoxLayout(noticeCell);
+  noticeCellLayout->setContentsMargins(0, 0, 0, 0);
   auto* noticeLabel = new QLabel(tr("Show completed action for:"), this);
   noticeLabel->setBuddy(m_actionStatusSecondsSpin);
-  copySepCellLayout->addWidget(noticeLabel);
-  copySepCellLayout->addWidget(m_actionStatusSecondsSpin);
-  copySepCellLayout->addStretch(1);
+  noticeCellLayout->addWidget(noticeLabel);
+  noticeCellLayout->addWidget(m_actionStatusSecondsSpin);
+  noticeCellLayout->addStretch(1);
 
-  fileOpsLayout->addWidget(copySepCell, 3, 0, 1, 2);
+  fileOpsLayout->addWidget(noticeCell, 4, 0, 1, 2);
 
   mainLayout->addWidget(fileOpsGroup);
 
