@@ -41,6 +41,8 @@
   - `Makefile` … a file with no extension
 - Extensions you added or removed in the settings did not always affect which
   viewer was chosen. They now take effect as written.
+- The built-in defaults are now written in pattern form (`*.png`) as well. Your
+  existing settings are converted automatically on upgrade.
 
 ### Archives
 
