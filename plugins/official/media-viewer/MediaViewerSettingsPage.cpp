@@ -20,9 +20,9 @@ constexpr bool kDefAutoplay   = true;
 constexpr bool kDefFit        = true;
 constexpr int  kDefZoom       = 100;
 const QStringList kDefExtensions = {
-  "mp4", "mov", "m4v", "webm", "avi", "mkv",
-  "wmv", "mpg", "mpeg", "m2v", "m2ts", "mts", "ts",
-  "wav", "mp3", "m4a", "flac", "ogg", "aac", "wma",
+  "*.mp4", "*.mov", "*.m4v", "*.webm", "*.avi", "*.mkv",
+  "*.wmv", "*.mpg", "*.mpeg", "*.m2v", "*.m2ts", "*.mts", "*.ts",
+  "*.wav", "*.mp3", "*.m4a", "*.flac", "*.ogg", "*.aac", "*.wma",
 };
 } // namespace
 
@@ -35,8 +35,9 @@ MediaViewerSettingsPage::MediaViewerSettingsPage(QWidget* parent)
   form->setContentsMargins(0, 0, 0, 0);
   m_extensionsEdit = new QLineEdit(this);
   m_extensionsEdit->setToolTip(
-    tr("Comma, semicolon, or space separated patterns. Write an extension "
-    "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+    tr("Comma, semicolon, or space separated patterns matched against the "
+    "file name (*.mp4, *.tar.gz, Makefile). Prefix with ! to exclude "
+    "(!*.min.js). A bare extension (mp4) also works."));
   form->addRow(tr("File patterns:"), m_extensionsEdit);
   m_volumeSpin = new QSpinBox(this);
   m_volumeSpin->setRange(0, 100);

@@ -15,7 +15,7 @@ namespace {
 // 既定値 (Settings の初期値と一致させる)。
 constexpr bool             kDefContinuous = true;
 constexpr PdfViewerFitMode kDefFitMode    = PdfViewerFitMode::ActualSize;
-const QStringList          kDefExtensions = { "pdf" };
+const QStringList          kDefExtensions = { "*.pdf" };
 } // namespace
 
 PdfViewerSettingsPage::PdfViewerSettingsPage(QWidget* parent)
@@ -27,8 +27,9 @@ PdfViewerSettingsPage::PdfViewerSettingsPage(QWidget* parent)
   form->setContentsMargins(0, 0, 0, 0);
   m_extensionsEdit = new QLineEdit(this);
   m_extensionsEdit->setToolTip(
-    tr("Comma, semicolon, or space separated patterns. Write an extension "
-    "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+    tr("Comma, semicolon, or space separated patterns matched against the "
+    "file name (*.mp4, *.tar.gz, Makefile). Prefix with ! to exclude "
+    "(!*.min.js). A bare extension (mp4) also works."));
   form->addRow(tr("File patterns:"), m_extensionsEdit);
   m_fitCombo = new QComboBox(this);
   m_fitCombo->addItem(tr("Actual size"), static_cast<int>(PdfViewerFitMode::ActualSize));

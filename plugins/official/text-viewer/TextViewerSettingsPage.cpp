@@ -24,15 +24,16 @@
 namespace Farman {
 
 namespace {
-// 既定の対応拡張子 (Settings::m_textViewerExtensions と一致させる)。
+// 既定の対象ファイルパターン (Settings::m_textViewerExtensions と一致させる)。
 const QStringList kDefExtensions = {
-  "txt", "log",
-  "c*", "!class", "!cab", "!chm", "!com",
-  "h", "hpp",
-  "py", "js", "ts", "java", "rs", "go", "rb", "php", "pl", "pm",
-  "htm*", "json", "xml",
-  "*sh", "fish",
-  "yml", "yaml", "toml", "ini"
+  "*.txt", "*.log",
+  "*.c*", "!*.class", "!*.cab", "!*.chm", "!*.com",
+  "*.h", "*.hpp",
+  "*.py", "*.js", "*.ts", "*.java", "*.rs", "*.go", "*.rb", "*.php",
+  "*.pl", "*.pm",
+  "*.htm*", "*.json", "*.xml",
+  "*.*sh", "*.fish",
+  "*.yml", "*.yaml", "*.toml", "*.ini"
 };
 } // namespace
 
@@ -45,8 +46,9 @@ TextViewerSettingsPage::TextViewerSettingsPage(QWidget* parent)
 
   m_extensionsEdit = new QLineEdit(this);
   m_extensionsEdit->setToolTip(
-    tr("Comma, semicolon, or space separated patterns. Write an extension "
-    "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+    tr("Comma, semicolon, or space separated patterns matched against the "
+    "file name (*.mp4, *.tar.gz, Makefile). Prefix with ! to exclude "
+    "(!*.min.js). A bare extension (mp4) also works."));
   form->addRow(tr("File patterns:"), m_extensionsEdit);
 
   m_encodingCombo = new QComboBox(this);

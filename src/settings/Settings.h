@@ -55,6 +55,14 @@ struct ArchiveFormatOverride {
   }
 };
 
+// 拡張子として書かれたパターンを、ファイル名全体に対する glob へ直す。
+//   "txt" → "*.txt" / "c*" → "*.c*" / "!class" → "!*.class"
+// 既に "*." で始まるものやパスらしきものはそのまま返す。
+// ビュアーの「対象ファイルパターン」は設定 → アーカイブと同じ glob 書式で
+// 持つので、拡張子しか返さないプラグインの既定値をこれで揃える。
+QString     extensionPatternToFileNamePattern(const QString& pattern);
+QStringList extensionPatternsToFileNamePatterns(const QStringList& patterns);
+
 // ペインごとの設定
 // バイナリビュアー設定のシリアライズ補助
 int                binaryViewerUnitToBytes(BinaryViewerUnit unit);
@@ -858,12 +866,13 @@ private:
   QColor           m_markdownViewerLink;  // 無効色ならパレット既定 (テーマ追従)
   // Media viewer
   // メディア (動画 + 音声)。プラットフォームのデコーダ依存だが既定一覧を持つ。
+  // ファイル名全体に対する glob で書く (他のビュアーの既定と同じ書式)。
   QStringList      m_mediaViewerExtensions = {
     // 動画
-    "mp4", "mov", "m4v", "webm", "avi", "mkv",
-    "wmv", "mpg", "mpeg", "m2v", "m2ts", "mts", "ts",
+    "*.mp4", "*.mov", "*.m4v", "*.webm", "*.avi", "*.mkv",
+    "*.wmv", "*.mpg", "*.mpeg", "*.m2v", "*.m2ts", "*.mts", "*.ts",
     // 音声
-    "wav", "mp3", "m4a", "flac", "ogg", "aac", "wma",
+    "*.wav", "*.mp3", "*.m4a", "*.flac", "*.ogg", "*.aac", "*.wma",
   };
   int              m_mediaViewerVolume   = 80;
   bool             m_mediaViewerLoop     = false;

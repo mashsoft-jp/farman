@@ -27,9 +27,10 @@ constexpr bool kDefFit          = true;
 constexpr bool kDefAnimation    = false;
 const QColor   kDefChecker1(0xC8, 0xC8, 0xC8);
 const QColor   kDefChecker2(0xF0, 0xF0, 0xF0);
-// 既定の対応拡張子 (Settings::m_imageViewerExtensions と一致させる)。
+// 既定の対象ファイルパターン (Settings::m_imageViewerExtensions と一致させる)。
 const QStringList kDefExtensions = {
-  "png", "jp*g", "gif", "bmp", "svg", "webp", "ico", "tif*", "psd"
+  "*.png", "*.jp*g", "*.gif", "*.bmp", "*.svg", "*.webp", "*.ico", "*.tif*",
+  "*.psd", "*.heic", "*.heif"
 };
 } // namespace
 
@@ -45,8 +46,9 @@ ImageViewerSettingsPage::ImageViewerSettingsPage(QWidget* parent)
   form->setContentsMargins(0, 0, 0, 0);
   m_extensionsEdit = new QLineEdit(this);
   m_extensionsEdit->setToolTip(
-    tr("Comma, semicolon, or space separated patterns. Write an extension "
-    "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+    tr("Comma, semicolon, or space separated patterns matched against the "
+    "file name (*.mp4, *.tar.gz, Makefile). Prefix with ! to exclude "
+    "(!*.min.js). A bare extension (mp4) also works."));
   form->addRow(tr("File patterns:"), m_extensionsEdit);
   m_zoomCombo = new QComboBox(this);
   m_zoomCombo->setEditable(true);

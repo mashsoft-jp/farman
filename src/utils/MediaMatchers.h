@@ -33,12 +33,6 @@ bool globMatches(const QStringList& patterns, const QString& text);
 // 書けず、後者だけだと "a.b.txt" に対して "txt" と書けないため。
 bool fileNameMatches(const QStringList& patterns, const QString& fileName);
 
-// 拡張子パターンリストに対するマッチ判定 (globMatches の拡張子向け別名)。
-// パターンは小文字の拡張子 ("png", "jp*g") とワイルドカード (`*`, `?`) を
-// サポート。"!ext" 接頭辞は除外パターンで、マッチした時点で false を返す。
-// 通常パターンが 1 つでも書かれているのにどれも一致しないと false を返す。
-bool extensionMatches(const QStringList& patterns, const QString& extension);
-
 // MIME タイプ名のマッチ判定。
 // パターン末尾の `*` は prefix match、それ以外は完全一致 / inherits の両方を
 // チェックする (例: "text/*" / "image/png" / "application/json")。

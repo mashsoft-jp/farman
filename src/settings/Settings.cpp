@@ -181,21 +181,27 @@ void Settings::applyDefaults() {
   m_typeAheadIncludeDotfiles  = true;
 
   // ── Markdown ビュアー ─────────────
-  m_markdownViewerExtensions = { "md", "markdown", "mdown", "mkd" };
+  // 以下の「対象ファイルパターン」はファイル名全体に対する glob で書く
+  // (設定 → アーカイブの形式ごとのパターンと同じ書式)。拡張子だけを書いても
+  // MediaMatchers::fileNameMatches が拡張子とも照合するので動くが、
+  // "c*" のような拡張子グロブは**ファイル名全体**にも一致してしまう
+  // ("cabinet.zip" が拾われる) ため、既定は必ず "*." を付けた形にする。
+  m_markdownViewerExtensions = { "*.md", "*.markdown", "*.mdown", "*.mkd" };
 
-  m_pdfViewerExtensions = { "pdf" };
+  m_pdfViewerExtensions = { "*.pdf" };
 
-  m_csvViewerExtensions = { "csv", "tsv" };
+  m_csvViewerExtensions = { "*.csv", "*.tsv" };
 
   // ── テキストビュアー ─────────────
   m_textViewerExtensions = {
-    "txt", "log",
-    "c*", "!class", "!cab", "!chm", "!com",
-    "h", "hpp",
-    "py", "js", "ts", "java", "rs", "go", "rb", "php", "pl", "pm",
-    "htm*", "json", "xml",
-    "*sh", "fish",
-    "yml", "yaml", "toml", "ini"
+    "*.txt", "*.log",
+    "*.c*", "!*.class", "!*.cab", "!*.chm", "!*.com",
+    "*.h", "*.hpp",
+    "*.py", "*.js", "*.ts", "*.java", "*.rs", "*.go", "*.rb", "*.php",
+    "*.pl", "*.pm",
+    "*.htm*", "*.json", "*.xml",
+    "*.*sh", "*.fish",
+    "*.yml", "*.yaml", "*.toml", "*.ini"
   };
   m_textViewerMimePatterns    = { "text/*", "text/plain" };
   m_textViewerEncoding        = QStringLiteral("Auto");
@@ -212,8 +218,9 @@ void Settings::applyDefaults() {
   // psd は ImageView が合成プレビューに対応 (PsdReader)。heic / heif は動画と
   // 同じ ISO BMFF コンテナで内容スニッフが当てにならず、拡張子で明示しないと
   // メディアビュアーに奪われるため必ず入れておく。
-  m_imageViewerExtensions       = { "png", "jp*g", "gif", "bmp", "svg", "webp",
-                                    "ico", "tif*", "psd", "heic", "heif" };
+  m_imageViewerExtensions       = { "*.png", "*.jp*g", "*.gif", "*.bmp", "*.svg",
+                                    "*.webp", "*.ico", "*.tif*", "*.psd",
+                                    "*.heic", "*.heif" };
   m_imageViewerMimePatterns     = { "image/*" };
   m_imageViewerZoomPercent      = 100;
   m_imageViewerFitToWindow      = true;
@@ -1183,6 +1190,48 @@ QString normalizeViewerAssociationExtension(QString extension) {
 }
 
 } // namespace
+
+// 拡張子として書かれたパターンを、ファイル名全体に対する glob へ直す。
+//   "txt"    → "*.txt"
+//   "c*"     → "*.c*"
+//   "!class" → "!*.class"
+// 既に "*." や "*" で始まるもの、パスらしきものはそのまま返す。
+//
+// v0.9.10 で照合を MediaMatchers::fileNameMatches (ファイル名全体 / 拡張子の
+// どちらに一致しても可) へ統一したが、既定値は拡張子のまま残っていた。書式が
+// 設定 → アーカイブのパターンと不揃いなうえ、"c*" のような拡張子グロブが
+// ファイル名全体にも一致して "cabinet.zip" まで拾ってしまうため、glob へ寄せる。
+QString extensionPatternToFileNamePattern(const QString& pattern) {
+  QString p = pattern.trimmed();
+  if (p.isEmpty()) return p;
+
+  QString prefix;
+  if (p.startsWith(QLatin1Char('!'))) {
+    prefix = QStringLiteral("!");
+    p = p.mid(1).trimmed();
+    if (p.isEmpty()) return QString();
+  }
+  // 既にファイル名パターンとして書かれているものは触らない。
+  if (p.startsWith(QLatin1String("*.")) || p.startsWith(QLatin1String("*/"))
+      || p.contains(QLatin1Char('/'))) {
+    return prefix + p;
+  }
+  while (p.startsWith(QLatin1Char('.'))) p.remove(0, 1);
+  if (p.isEmpty()) return QString();
+  return prefix + QStringLiteral("*.") + p;
+}
+
+QStringList extensionPatternsToFileNamePatterns(const QStringList& patterns) {
+  QStringList out;
+  for (const QString& p : patterns) {
+    const QString converted = extensionPatternToFileNamePattern(p);
+    if (!converted.isEmpty() && !out.contains(converted, Qt::CaseInsensitive)) {
+      out.append(converted);
+    }
+  }
+  return out;
+}
+
 
 QMap<QString, QStringList> Settings::viewerFilePatterns() const {
   return m_viewerFilePatterns;
@@ -2778,6 +2827,22 @@ void Settings::load() {
     applyThemeFields(m_lastEffective == ThemeMode::Light ? m_lightScheme : m_darkScheme);
   }
 
+  // version < 6: ビュアーの「対象拡張子」を、ファイル名全体に対する glob
+  // ("*.png") へ書式統一する。設定 → アーカイブのファイルパターンと書式を
+  // 揃えるのが主目的だが、"c*" のような拡張子グロブがファイル名全体にも
+  // 一致してしまう問題 ("cabinet.zip" をテキストビュアーが拾う) も同時に直る。
+  if (fileVersion < 6) {
+    m_textViewerExtensions     = extensionPatternsToFileNamePatterns(m_textViewerExtensions);
+    m_imageViewerExtensions    = extensionPatternsToFileNamePatterns(m_imageViewerExtensions);
+    m_mediaViewerExtensions    = extensionPatternsToFileNamePatterns(m_mediaViewerExtensions);
+    m_pdfViewerExtensions      = extensionPatternsToFileNamePatterns(m_pdfViewerExtensions);
+    m_csvViewerExtensions      = extensionPatternsToFileNamePatterns(m_csvViewerExtensions);
+    m_markdownViewerExtensions = extensionPatternsToFileNamePatterns(m_markdownViewerExtensions);
+    for (auto it = m_viewerFilePatterns.begin(); it != m_viewerFilePatterns.end(); ++it) {
+      it.value() = extensionPatternsToFileNamePatterns(it.value());
+    }
+  }
+
   qDebug() << "Settings::load: loaded settings from" << filePath
            << "(theme mode =" << static_cast<int>(m_themeMode)
            << ", effective =" << static_cast<int>(m_lastEffective) << ")";
@@ -2797,10 +2862,11 @@ void Settings::save() const {
   QString filePath = configPath + "/settings.json";
 
   QJsonObject root;
-  // version 5: カテゴリ色の既定正規化 (v3) / ドライブルート既定ブックマーク
-  // 撤去 (v4) に加え、フォントのライト・ダーク共通化 (v5) を済ませたことを示す。
-  // load 側の fileVersion < 3 / < 4 / < 5 移行と対応。
-  root["version"] = 5;
+  // version 6: カテゴリ色の既定正規化 (v3) / ドライブルート既定ブックマーク
+  // 撤去 (v4) / フォントのライト・ダーク共通化 (v5) に加え、ビュアーの対象
+  // ファイルパターンを glob 形式へ統一 (v6) したことを示す。
+  // load 側の fileVersion < 3 / < 4 / < 5 / < 6 移行と対応。
+  root["version"] = 6;
 
   // Save appearance settings
   QJsonObject appearance;

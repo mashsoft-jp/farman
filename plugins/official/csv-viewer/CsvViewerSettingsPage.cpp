@@ -21,7 +21,7 @@ namespace {
 // 既定値 (Settings の初期値と一致させる)。
 const QString kDefDelimiter      = QStringLiteral("auto");
 constexpr bool kDefFirstRowHeader = false;
-const QStringList kDefExtensions  = { "csv", "tsv" };
+const QStringList kDefExtensions  = { "*.csv", "*.tsv" };
 } // namespace
 
 CsvViewerSettingsPage::CsvViewerSettingsPage(QWidget* parent)
@@ -33,8 +33,9 @@ CsvViewerSettingsPage::CsvViewerSettingsPage(QWidget* parent)
   form->setContentsMargins(0, 0, 0, 0);
   m_extensionsEdit = new QLineEdit(this);
   m_extensionsEdit->setToolTip(
-    tr("Comma, semicolon, or space separated patterns. Write an extension "
-    "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+    tr("Comma, semicolon, or space separated patterns matched against the "
+    "file name (*.mp4, *.tar.gz, Makefile). Prefix with ! to exclude "
+    "(!*.min.js). A bare extension (mp4) also works."));
   form->addRow(tr("File patterns:"), m_extensionsEdit);
   m_delimiterCombo = new QComboBox(this);
   m_delimiterCombo->addItem(tr("Auto detect"),     QStringLiteral("auto"));

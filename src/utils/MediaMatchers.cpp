@@ -39,10 +39,6 @@ bool globMatches(const QStringList& patterns, const QString& text) {
   return included;
 }
 
-bool extensionMatches(const QStringList& patterns, const QString& extension) {
-  return globMatches(patterns, extension);
-}
-
 bool fileNameMatches(const QStringList& patterns, const QString& fileName) {
   if (fileName.isEmpty()) return false;
 
@@ -96,8 +92,9 @@ bool mimeMatches(const QStringList& patterns, const QMimeType& mime) {
 bool isImageFile(const QString& filePath) {
   const Settings& s = Settings::instance();
   const QFileInfo fi(filePath);
-  const QString ext = fi.suffix().toLower();
-  if (extensionMatches(s.imageViewerExtensions(), ext)) return true;
+  // 対象の指定はファイル名パターン ("*.png")。拡張子だけを渡すと "*.png" が
+  // "png" に一致せず落ちるので、ファイル名全体で照合する。
+  if (fileNameMatches(s.imageViewerExtensions(), fi.fileName())) return true;
   // MIME 判定は extra cost が掛かる (QMimeDatabase が file の magic bytes
   // を読みに行く可能性) ので、拡張子で先にふるい落としてから初めて呼ぶ。
   QMimeDatabase mimeDb;

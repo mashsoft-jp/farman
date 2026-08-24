@@ -304,7 +304,8 @@ QString ViewerTab::extensionsDisplayText(const PluginRecord& record) const {
   if (!record.pluginId.isEmpty() && m_extensions.contains(record.pluginId)) {
     return m_extensions.value(record.pluginId).join(QStringLiteral(", "));
   }
-  return record.supportedExtensions.join(QStringLiteral(", "));
+  return defaultExtensionsFromList(record.supportedExtensions)
+           .join(QStringLiteral(", "));
 }
 
 // 一覧の選択行 (カーソル) の色をフォーカス状態に合わせる。
@@ -482,14 +483,16 @@ void ViewerTab::showPluginDetails(int row) {
     extensionsEdit = new QLineEdit(&dialog);
     extensionsEdit->setText(
       m_extensions.value(rec.pluginId).join(QStringLiteral(", ")));
-    extensionsEdit->setPlaceholderText(tr("mp4, *.tar.gz, Makefile"));
+    extensionsEdit->setPlaceholderText(tr("*.mp4, *.tar.gz, Makefile"));
     extensionsEdit->setToolTip(
-      tr("Comma, semicolon, or space separated patterns. Write an extension "
-         "(mp4), a glob (*.tar.gz), or a whole file name (Makefile)."));
+      tr("Comma, semicolon, or space separated patterns matched against the "
+         "file name (*.mp4, *.tar.gz, Makefile). Prefix with ! to exclude "
+         "(!*.min.js). A bare extension (mp4) also works."));
     form->addRow(tr("File patterns:"), extensionsEdit);
   } else {
     addField(tr("File patterns:"),
-             rec.supportedExtensions.join(QStringLiteral(", ")));
+             defaultExtensionsFromList(rec.supportedExtensions)
+               .join(QStringLiteral(", ")));
   }
 
   addField(tr("Path:"), rec.filePath);
@@ -556,24 +559,30 @@ void ViewerTab::showPluginDetails(int row) {
 }
 
 QString ViewerTab::normalizedExtension(const QString& extension) const {
-  QString result = extension.trimmed().toLower();
-  while (result.startsWith(QLatin1Char('.'))) {
-    result.remove(0, 1);
+  // 入力はファイル名パターンとして扱い、原則そのまま持つ (設定 → アーカイブの
+  // パターン欄と同じ扱い)。勝手に "*." を補うと "Makefile" のような
+  // 「拡張子を持たないファイル名」の指定が壊れるため、変換はしない。
+  //
+  // 例外は先頭のドットだけ。".png" は拡張子を書いたつもりのはずで、そのままだと
+  // どのファイルにも一致しないので "*.png" に直す。
+  const QString result = extension.trimmed();
+  if (result.startsWith(QLatin1Char('.'))) {
+    return extensionPatternToFileNamePattern(result);
   }
   return result;
 }
 
 QStringList ViewerTab::normalizedExtensions(const QString& text) const {
-  QSet<QString> extensions;
+  QStringList result;
   const QStringList parts = text.split(QRegularExpression(QStringLiteral("[,;\\s]+")),
                                        Qt::SkipEmptyParts);
   for (const QString& part : parts) {
     const QString normalized = normalizedExtension(part);
-    if (!normalized.isEmpty()) {
-      extensions.insert(normalized);
+    // 照合は大小無視なので、重複判定も大小無視で行う。
+    if (!normalized.isEmpty() && !result.contains(normalized, Qt::CaseInsensitive)) {
+      result.append(normalized);
     }
   }
-  QStringList result = extensions.values();
   result.sort(Qt::CaseInsensitive);
   return result;
 }
@@ -583,13 +592,10 @@ QStringList ViewerTab::defaultExtensionsForPlugin(IViewerPlugin* plugin) const {
 }
 
 QStringList ViewerTab::defaultExtensionsFromList(const QStringList& source) const {
-  QStringList extensions;
-  for (const QString& ext : source) {
-    const QString normalized = normalizedExtension(ext);
-    if (!normalized.isEmpty() && !extensions.contains(normalized)) {
-      extensions.append(normalized);
-    }
-  }
+  // プラグインの既定は supportedExtensions() = 拡張子の一覧なので、一覧と
+  // 詳細ダイアログに出す前にファイル名パターン ("*.png") へ揃える。設定 →
+  // アーカイブのパターン表示と書式を合わせるため。
+  QStringList extensions = extensionPatternsToFileNamePatterns(source);
   extensions.sort(Qt::CaseInsensitive);
   return extensions;
 }
