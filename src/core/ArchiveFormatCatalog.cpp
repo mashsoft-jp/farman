@@ -46,8 +46,19 @@ ArchiveFormatInfo makeCreatable(const QString& id, const char* displayName,
   return f;
 }
 
-// 読取のみのコンテナ形式。libarchive は読めるはずだが farman としての動作確認と
-// 各 OS のコーデック同梱保証が済んでいないため、既定では無効にしておく。
+// 読取のみのコンテナ形式。
+//
+// 既定で有効にしてよいかは「3 OS の配布ビルドの libarchive がそのコーデックを
+// 内蔵しているか」で決まる。内蔵していないと、一覧には出るのに開けない形式が
+// できてしまう。調査 (2026-09-05) の結果、下記以外はすべて内蔵されているので
+// 既定で有効にする:
+//   - ISO9660 / CAB / cpio / ar / RAR / 7-Zip の各リーダは libarchive 内蔵
+//   - xar は libxml2 / expat 依存だが 3 OS とも同梱済み
+//   - zstd / lz4 / lzma / lzip / compress の各フィルタも 3 OS とも同梱済み
+//   - **LZO だけは例外** (defaultEnabled=false)。macOS の Homebrew ビルドと
+//     Windows の vcpkg 既定 features はどちらも LZO 無しで、外部 lzop コマンドの
+//     呼び出しにフォールバックする = 実質開けない。Linux では使えることが
+//     あるので、カタログには残して設定から有効にできるようにしておく。
 ArchiveFormatInfo makeReadOnly(const QString& id, const char* displayName,
                                const QStringList& patterns,
                                Enc encryption = Enc::None,
@@ -57,7 +68,7 @@ ArchiveFormatInfo makeReadOnly(const QString& id, const char* displayName,
   f.displayName              = name(displayName);
   f.defaultPatterns          = patterns;
   f.source                   = ArchiveFormatInfo::Source::Builtin;
-  f.defaultEnabled           = false;
+  f.defaultEnabled           = true;
   f.canCreate                = false;
   f.supportsCompressionLevel = false;
   f.encryption               = encryption;
@@ -129,7 +140,16 @@ QList<ArchiveFormatInfo> buildBuiltinFormats() {
   list << makeSingleFile(QStringLiteral("lz4"),  QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "LZ4"),       {QStringLiteral("*.lz4")});
   list << makeSingleFile(QStringLiteral("lz"),   QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "lzip"),      {QStringLiteral("*.lz")});
   list << makeSingleFile(QStringLiteral("Z"),    QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "compress"),  {QStringLiteral("*.Z")});
-  list << makeSingleFile(QStringLiteral("lzo"),  QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "LZO"),       {QStringLiteral("*.lzo")});
+  // LZO だけは既定で無効。macOS / Windows の配布ビルドの libarchive が
+  // LZO を内蔵しておらず、外部 lzop コマンドを呼びに行って失敗するため
+  // (makeReadOnly のコメント参照)。
+  {
+    ArchiveFormatInfo lzo = makeSingleFile(
+      QStringLiteral("lzo"), QT_TRANSLATE_NOOP("ArchiveFormatCatalog", "LZO"),
+      {QStringLiteral("*.lzo")});
+    lzo.defaultEnabled = false;
+    list << lzo;
+  }
 
   return list;
 }
