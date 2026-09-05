@@ -4,134 +4,133 @@
 <context>
     <name>ArchiveFormatCatalog</name>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="80"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="93"/>
         <source>ZIP</source>
         <translation>ZIP</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="82"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="95"/>
         <source>TAR (uncompressed)</source>
         <translation>TAR (無圧縮)</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="84"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="97"/>
         <source>TAR + gzip</source>
         <translation>TAR + gzip</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="87"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="100"/>
         <source>TAR + bzip2</source>
         <translation>TAR + bzip2</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="90"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="103"/>
         <source>TAR + xz</source>
         <translation>TAR + xz</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="95"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="108"/>
         <source>TAR + Zstandard</source>
         <translation>TAR + Zstandard</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="97"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="110"/>
         <source>TAR + LZ4</source>
         <translation>TAR + LZ4</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="99"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="112"/>
         <source>TAR + LZMA</source>
         <translation>TAR + LZMA</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="101"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="114"/>
         <source>TAR + lzip</source>
         <translation>TAR + lzip</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="103"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="116"/>
         <source>TAR + compress</source>
         <translation>TAR + compress</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="105"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="118"/>
         <source>7-Zip</source>
         <translation>7-Zip</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="107"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="120"/>
         <source>RAR</source>
         <translation>RAR</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="109"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="122"/>
         <source>ISO9660 disc image</source>
         <translation>ISO9660 ディスクイメージ</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="111"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="124"/>
         <source>Microsoft Cabinet</source>
         <translation>Microsoft Cabinet</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="113"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="126"/>
         <source>xar / pkg</source>
         <translation>xar / pkg</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="115"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="128"/>
         <source>cpio</source>
         <translation>cpio</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="117"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="130"/>
         <source>ar / Debian package</source>
         <translation>ar / Debian パッケージ</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="124"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="137"/>
         <source>gzip</source>
         <translation>gzip</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="125"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="138"/>
         <source>bzip2</source>
         <translation>bzip2</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="126"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="139"/>
         <source>xz</source>
         <translation>xz</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="127"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="140"/>
         <source>LZMA</source>
         <translation>LZMA</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="128"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="141"/>
         <source>Zstandard</source>
         <translation>Zstandard</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="129"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="142"/>
         <source>LZ4</source>
         <translation>LZ4</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="130"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="143"/>
         <source>lzip</source>
         <translation>lzip</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="131"/>
+        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="144"/>
         <source>compress</source>
         <translation>compress</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveFormatCatalog.cpp" line="132"/>
         <source>LZO</source>
-        <translation>LZO</translation>
+        <translation type="vanished">LZO</translation>
     </message>
 </context>
 <context>

@@ -19,9 +19,8 @@
   package, and TAR combined with Zstandard / LZ4 / LZMA / lzip / compress.
 - A **single file** compressed with gzip, bzip2, xz, LZMA, Zstandard, LZ4 or
   compress can now be opened as an archive containing one entry.
-- The added formats are enabled by default. The one exception is LZO (`*.lzo`),
-  which is off because the shipped builds do not include the codec; enable it in
-  Settings → Archive if your system supports it.
+- The added formats are enabled by default. Turn off any you do not need in
+  Settings → Archive.
 
 ### Settings reorganized
 
