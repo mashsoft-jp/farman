@@ -82,13 +82,14 @@ void SearchDialog::setupUi(const QString& initialPath) {
   m_browseButton->setFocusPolicy(Qt::StrongFocus);
   pathRowLayout->addWidget(m_pathEdit, 1);
   pathRowLayout->addWidget(m_browseButton);
-  form->addRow(withAltMnemonic(tr("Start path:"), Qt::Key_P), pathRow);
+  form->addRow(altBuddyLabel(tr("Start path:"), Qt::Key_P, m_pathEdit, this), pathRow);
 
   // Name pattern
   m_patternEdit = new QLineEdit(this);
   m_patternEdit->setPlaceholderText(tr("e.g. *.txt *.cpp (space-separated, empty for all)"));
   m_patternEdit->setFocusPolicy(Qt::StrongFocus);
-  form->addRow(withAltMnemonic(tr("Name pattern:"), Qt::Key_N), m_patternEdit);
+  form->addRow(altBuddyLabel(tr("Name pattern:"), Qt::Key_N, m_patternEdit, this),
+               m_patternEdit);
 
   // Exclude dirs
   m_excludeEdit = new QLineEdit(this);
@@ -98,7 +99,8 @@ void SearchDialog::setupUi(const QString& initialPath) {
     tr("Directory names (glob) to skip when recursing. Default comes "
        "from Settings → Behavior. Changes here apply to this search only."));
   m_excludeEdit->setFocusPolicy(Qt::StrongFocus);
-  form->addRow(withAltMnemonic(tr("Exclude dirs:"), Qt::Key_D), m_excludeEdit);
+  form->addRow(altBuddyLabel(tr("Exclude dirs:"), Qt::Key_D, m_excludeEdit, this),
+               m_excludeEdit);
 
   // Exclude files (file name patterns to skip). 例: *.log .DS_Store
   m_excludeFileEdit = new QLineEdit(this);
@@ -107,7 +109,8 @@ void SearchDialog::setupUi(const QString& initialPath) {
     tr("File name patterns (glob) to skip from results. Applied after the "
        "name pattern filter."));
   m_excludeFileEdit->setFocusPolicy(Qt::StrongFocus);
-  form->addRow(withAltMnemonic(tr("Exclude files:"), Qt::Key_E), m_excludeFileEdit);
+  form->addRow(altBuddyLabel(tr("Exclude files:"), Qt::Key_E, m_excludeFileEdit, this),
+               m_excludeFileEdit);
 
   // ── Alt ショートカットの方針 ───────────────────────────────
   // このダイアログでは「フォームの各行」「フィルタの ON/OFF チェック」
@@ -124,12 +127,12 @@ void SearchDialog::setupUi(const QString& initialPath) {
   auto* targetRow = new QWidget(this);
   auto* targetRowLayout = new QHBoxLayout(targetRow);
   targetRowLayout->setContentsMargins(0, 0, 0, 0);
-  m_targetFilesRadio = new QRadioButton(
-    withAltMnemonic(tr("Files only"), Qt::Key_I), targetRow);
-  m_targetDirsRadio  = new QRadioButton(
-    withAltMnemonic(tr("Directories only"), Qt::Key_R), targetRow);
-  m_targetBothRadio  = new QRadioButton(
-    withAltMnemonic(tr("Files and directories"), Qt::Key_A), targetRow);
+  m_targetFilesRadio = new QRadioButton(tr("Files only"), targetRow);
+  m_targetDirsRadio  = new QRadioButton(tr("Directories only"), targetRow);
+  m_targetBothRadio  = new QRadioButton(tr("Files and directories"), targetRow);
+  applyAltShortcut(m_targetFilesRadio, Qt::Key_I);
+  applyAltShortcut(m_targetDirsRadio,  Qt::Key_R);
+  applyAltShortcut(m_targetBothRadio,  Qt::Key_A);
   m_targetFilesRadio->setChecked(true);
   for (QRadioButton* r : {m_targetFilesRadio, m_targetDirsRadio, m_targetBothRadio}) {
     r->setFocusPolicy(Qt::StrongFocus);
@@ -139,8 +142,8 @@ void SearchDialog::setupUi(const QString& initialPath) {
   form->addRow(tr("Search for:"), targetRow);
 
   // Include subdirectories
-  m_subdirsCheck = new QCheckBox(
-    withAltMnemonic(tr("Include subdirectories"), Qt::Key_S), this);
+  m_subdirsCheck = new QCheckBox(tr("Include subdirectories"), this);
+  applyAltShortcut(m_subdirsCheck, Qt::Key_S);
   m_subdirsCheck->setChecked(true);
   m_subdirsCheck->setFocusPolicy(Qt::StrongFocus);
   form->addRow(QString(), m_subdirsCheck);
@@ -153,7 +156,8 @@ void SearchDialog::setupUi(const QString& initialPath) {
   filterGrid->setColumnStretch(5, 1);
 
   // Size
-  m_sizeFilterCheck = new QCheckBox(withAltMnemonic(tr("Size:"), Qt::Key_Z), this);
+  m_sizeFilterCheck = new QCheckBox(tr("Size:"), this);
+  applyAltShortcut(m_sizeFilterCheck, Qt::Key_Z);
   m_minSizeSpin = new QSpinBox(this);
   m_minSizeSpin->setRange(0, 1000000);
   m_minSizeSpin->setSpecialValueText(tr("Any"));
@@ -187,7 +191,8 @@ void SearchDialog::setupUi(const QString& initialPath) {
   filterGrid->addLayout(maxRow, 0, 5);
 
   // Modified date
-  m_dateFilterCheck = new QCheckBox(withAltMnemonic(tr("Modified:"), Qt::Key_M), this);
+  m_dateFilterCheck = new QCheckBox(tr("Modified:"), this);
+  applyAltShortcut(m_dateFilterCheck, Qt::Key_M);
   m_dateFromEdit = new QDateTimeEdit(QDateTime(QDate::currentDate().addYears(-1), QTime(0, 0)), this);
   m_dateFromEdit->setCalendarPopup(true);
   m_dateFromEdit->setDisplayFormat(QStringLiteral("yyyy-MM-dd HH:mm"));
@@ -201,7 +206,8 @@ void SearchDialog::setupUi(const QString& initialPath) {
   filterGrid->addWidget(m_dateToEdit, 1, 5);
 
   // Content text
-  m_contentFilterCheck = new QCheckBox(withAltMnemonic(tr("Content:"), Qt::Key_T), this);
+  m_contentFilterCheck = new QCheckBox(tr("Content:"), this);
+  applyAltShortcut(m_contentFilterCheck, Qt::Key_T);
   m_contentEdit = new QLineEdit(this);
   m_contentEdit->setPlaceholderText(tr("Text to find inside files"));
   m_contentCsCheck = new QCheckBox(tr("Case sensitive"), this);

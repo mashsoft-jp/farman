@@ -104,9 +104,8 @@ void TransferConfirmDialog::setupUi(Operation op,
   itemsLayout->addWidget(list);
   mainLayout->addWidget(itemsGroup, 1);
 
-  // Overwrite mode。ラベルに Alt+key の視覚ヒントを埋める (withAltMnemonic 経由)。
-  // Windows / Linux は & mnemonic で該当文字をアンダーライン表示、
-  // macOS は HIG に従い末尾 "(⌥X)" 形式。
+  // Overwrite mode。ラベルは altBuddyLabel で作る (視覚ヒント + setBuddy +
+  // macOS 用の明示ショートカット)。'&' mnemonic は macOS では効かない。
   QFormLayout* overwriteForm = new QFormLayout();
   m_overwriteModeCombo = new QComboBox(this);
   m_overwriteModeCombo->addItem(tr("Ask"),            static_cast<int>(OverwriteMode::Ask));
@@ -114,9 +113,8 @@ void TransferConfirmDialog::setupUi(Operation op,
   m_overwriteModeCombo->addItem(tr("Auto-rename"),    static_cast<int>(OverwriteMode::AutoRename));
   m_overwriteModeCombo->setToolTip(
     tr("How to handle files that already exist at the destination."));
-  auto* overwriteLabel = new QLabel(
-    withAltMnemonic(tr("On overwrite:"), Qt::Key_O), this);
-  overwriteLabel->setBuddy(m_overwriteModeCombo);
+  auto* overwriteLabel = altBuddyLabel(tr("On overwrite:"), Qt::Key_O,
+                                      m_overwriteModeCombo, this);
   overwriteForm->addRow(overwriteLabel, m_overwriteModeCombo);
 
   // Auto-rename テンプレート: AutoRename モード時のみ有効
@@ -125,9 +123,8 @@ void TransferConfirmDialog::setupUi(Operation op,
   m_autoRenameEdit->setToolTip(
     tr("Suffix appended to rename conflicting files. "
        "Use {n} as the counter placeholder (e.g., ' ({n})' → 'foo (1).txt')."));
-  auto* renameSuffixLabel = new QLabel(
-    withAltMnemonic(tr("Rename suffix:"), Qt::Key_S), this);
-  renameSuffixLabel->setBuddy(m_autoRenameEdit);
+  auto* renameSuffixLabel = altBuddyLabel(tr("Rename suffix:"), Qt::Key_S,
+                                         m_autoRenameEdit, this);
   overwriteForm->addRow(renameSuffixLabel, m_autoRenameEdit);
   auto updateEditEnabled = [this]() {
     const auto mode = static_cast<OverwriteMode>(

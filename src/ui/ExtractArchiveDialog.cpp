@@ -63,11 +63,11 @@ void ExtractArchiveDialog::setupUi(const QString& archivePath,
   m_browseButton->setFocusPolicy(Qt::StrongFocus);
   dirRowLayout->addWidget(m_dirEdit, 1);
   dirRowLayout->addWidget(m_browseButton);
-  // ラベルに Alt+D の視覚ヒントを埋め (withAltMnemonic 経由) + setBuddy で
+  // ラベルは altBuddyLabel で作る (視覚ヒント + setBuddy + macOS 用の
+  // 明示ショートカット)。旧: withAltMnemonic + setBuddy で
   // Alt+D 押下時に出力先入力欄へフォーカスを送る。
-  auto* dirLabel = new QLabel(
-    withAltMnemonic(tr("Output directory:"), Qt::Key_D), this);
-  dirLabel->setBuddy(m_dirEdit);
+  auto* dirLabel = altBuddyLabel(tr("Output directory:"), Qt::Key_D,
+                                 m_dirEdit, this);
   form->addRow(dirLabel, dirRow);
 
   mainLayout->addLayout(form);

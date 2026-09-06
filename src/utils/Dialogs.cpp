@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QShortcut>
 #include <QStyle>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -184,11 +185,40 @@ QString withAltMnemonic(const QString& text, Qt::Key key) {
 #endif
 }
 
-void applyAltShortcut(QPushButton* btn, Qt::Key key) {
+void applyAltShortcut(QAbstractButton* btn, Qt::Key key) {
   if (!btn) return;
   btn->setText(withAltMnemonic(btn->text(), key));
+  // '&' 由来の mnemonic は macOS では生成されない (QKeySequence::mnemonic が
+  // 空を返す) ので、明示的に張る。Windows / Linux では同じキーで上書きに
+  // なるだけなので無害。
   btn->setShortcut(QKeySequence(Qt::ALT | key));
   btn->setFocusPolicy(Qt::StrongFocus);
+}
+
+QLabel* altBuddyLabel(const QString& text,
+                      Qt::Key        key,
+                      QWidget*       buddy,
+                      QWidget*       shortcutParent) {
+  auto* label = new QLabel(withAltMnemonic(text, key), shortcutParent);
+  label->setBuddy(buddy);
+
+#ifdef Q_OS_MAC
+  // macOS は mnemonic が無効なので setBuddy だけでは Alt+key が効かない。
+  // ラベルに出したヒントを裏切らないよう、明示的にショートカットを張る。
+  if (buddy && shortcutParent) {
+    auto* shortcut = new QShortcut(QKeySequence(Qt::ALT | key), shortcutParent);
+    shortcut->setContext(Qt::WindowShortcut);
+    QObject::connect(shortcut, &QShortcut::activated, buddy, [buddy]() {
+      if (!buddy->isEnabled()) return;
+      buddy->setFocus(Qt::ShortcutFocusReason);
+      // 入力欄は全選択しておくと、そのまま打ち直せる。
+      if (auto* edit = qobject_cast<QLineEdit*>(buddy)) {
+        edit->selectAll();
+      }
+    });
+  }
+#endif
+  return label;
 }
 
 bool informWithSuppress(QWidget* parent,

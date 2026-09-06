@@ -5,6 +5,8 @@
 #include <Qt>
 
 class QWidget;
+class QAbstractButton;
+class QLabel;
 class QPushButton;
 
 namespace Farman {
@@ -64,10 +66,27 @@ int choose(QWidget* parent,
 // 入力中の '&' は一旦除去するため、繰り返し呼び出しても二重付加しない。
 QString withAltMnemonic(const QString& text, Qt::Key key);
 
-// ボタンにショートカットキー (Alt+key) を設定し、表記を withAltMnemonic で
-// 整える。Tab でフォーカスを当てられるよう focusPolicy も StrongFocus に
-// 明示する。再呼び出し安全。
-void applyAltShortcut(QPushButton* btn, Qt::Key key);
+// ボタン (QPushButton / QCheckBox / QRadioButton) にショートカットキー
+// (Alt+key) を設定し、表記を withAltMnemonic で整える。Tab でフォーカスを
+// 当てられるよう focusPolicy も StrongFocus に明示する。再呼び出し安全。
+//
+// **setShortcut を明示的に呼ぶ点が重要**。'&' 由来の mnemonic は macOS では
+// 効かない (Qt の QKeySequence::mnemonic が macOS では常に空を返す) ので、
+// withAltMnemonic でヒントを出すだけでは押しても何も起きない。
+void applyAltShortcut(QAbstractButton* btn, Qt::Key key);
+
+// 入力欄に付けるラベルを、Alt+key でその入力欄へフォーカスが飛ぶ形で作る。
+//   - 表記は withAltMnemonic (Windows / Linux は下線、macOS は "(⌥X)")
+//   - setBuddy で Windows / Linux の mnemonic を効かせる
+//   - macOS は mnemonic が無効なので、shortcutParent (通常はダイアログ) に
+//     QShortcut を張って buddy へフォーカスを送る。QLineEdit なら全選択も行う
+//
+// shortcutParent は QShortcut の持ち主。buddy がまだウィンドウに載っていない
+// 時点で呼ばれても正しい窓に張れるよう、呼び出し側から明示的に渡す。
+QLabel* altBuddyLabel(const QString& text,
+                      Qt::Key        key,
+                      QWidget*       buddy,
+                      QWidget*       shortcutParent);
 
 // 情報通知ダイアログ + 「次回以降表示しない」チェックを 1 つ持つ汎用ヘルパ。
 // initiallyShow = true で開かれた直後はチェック OFF。ユーザーが OK を押した

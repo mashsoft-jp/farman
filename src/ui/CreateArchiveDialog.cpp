@@ -122,8 +122,9 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
   // Format
-  // ラベルに Alt+key の視覚ヒントを埋め (withAltMnemonic 経由) + setBuddy で
-  // Alt+key 押下時に対応フィールドへフォーカスを送る。
+  // ラベルは altBuddyLabel で作る (視覚ヒント + setBuddy + macOS 用の
+  // 明示ショートカット)。macOS は '&' mnemonic が効かないので、setBuddy
+  // だけだとヒントは出るのに押しても何も起きない。
   m_formatCombo = new QComboBox(this);
   m_formatCombo->addItem(QStringLiteral("zip"),     static_cast<int>(ArchiveCreateWorker::Format::Zip));
   m_formatCombo->addItem(QStringLiteral("tar"),     static_cast<int>(ArchiveCreateWorker::Format::Tar));
@@ -131,8 +132,7 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   m_formatCombo->addItem(QStringLiteral("tar.bz2"), static_cast<int>(ArchiveCreateWorker::Format::TarBz2));
   m_formatCombo->addItem(QStringLiteral("tar.xz"),  static_cast<int>(ArchiveCreateWorker::Format::TarXz));
   m_formatCombo->setFocusPolicy(Qt::StrongFocus);
-  auto* formatLabel = new QLabel(withAltMnemonic(tr("Format:"), Qt::Key_F), this);
-  formatLabel->setBuddy(m_formatCombo);
+  auto* formatLabel = altBuddyLabel(tr("Format:"), Qt::Key_F, m_formatCombo, this);
   form->addRow(formatLabel, m_formatCombo);
 
   // Output directory + Browse
@@ -154,15 +154,13 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   m_browseButton->setFocusPolicy(Qt::StrongFocus);
   dirRowLayout->addWidget(m_dirEdit, 1);
   dirRowLayout->addWidget(m_browseButton);
-  auto* dirLabel = new QLabel(withAltMnemonic(tr("Directory:"), Qt::Key_D), this);
-  dirLabel->setBuddy(m_dirEdit);
+  auto* dirLabel = altBuddyLabel(tr("Directory:"), Qt::Key_D, m_dirEdit, this);
   form->addRow(dirLabel, dirRow);
 
   // Output filename
   m_nameEdit = new QLineEdit(this);
   m_nameEdit->setFocusPolicy(Qt::StrongFocus);
-  auto* nameLabel = new QLabel(withAltMnemonic(tr("File name:"), Qt::Key_M), this);
-  nameLabel->setBuddy(m_nameEdit);
+  auto* nameLabel = altBuddyLabel(tr("File name:"), Qt::Key_M, m_nameEdit, this);
   form->addRow(nameLabel, m_nameEdit);
 
   // Compression level (gz / bz2 / xz / zip。Tar は無圧縮なので無効化)

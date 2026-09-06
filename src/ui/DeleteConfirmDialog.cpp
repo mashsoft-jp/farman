@@ -55,15 +55,14 @@ void DeleteConfirmDialog::setupUi(const QString& message, bool defaultToTrash,
   mainLayout->addWidget(label);
 
   // ── Action 選択 ──
-  // ラジオラベルに Alt+key の視覚ヒントを埋める (withAltMnemonic 経由)。
+  // ラジオは applyAltShortcut で作る (ヒント表示 + 明示ショートカット)。
+  // '&' 由来の mnemonic は macOS では効かないため、setShortcut が要る。
   QGroupBox* actionGroup = new QGroupBox(tr("Action"), this);
   QVBoxLayout* actionLayout = new QVBoxLayout(actionGroup);
-  m_trashRadio     = new QRadioButton(
-    withAltMnemonic(tr("Move to Trash"), Qt::Key_T), this);
-  m_permanentRadio = new QRadioButton(
-    withAltMnemonic(tr("Delete permanently"), Qt::Key_P), this);
-  m_trashRadio->setFocusPolicy(Qt::StrongFocus);
-  m_permanentRadio->setFocusPolicy(Qt::StrongFocus);
+  m_trashRadio     = new QRadioButton(tr("Move to Trash"), this);
+  m_permanentRadio = new QRadioButton(tr("Delete permanently"), this);
+  applyAltShortcut(m_trashRadio,     Qt::Key_T);
+  applyAltShortcut(m_permanentRadio, Qt::Key_P);
   if (trashAvailable) {
     (defaultToTrash ? m_trashRadio : m_permanentRadio)->setChecked(true);
   } else {

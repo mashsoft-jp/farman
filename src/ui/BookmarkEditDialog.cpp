@@ -47,13 +47,12 @@ void BookmarkEditDialog::setupUi(const QString& initialName,
   // ダイアログ幅いっぱいまで使う
   form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
-  // ラベル文字列に Alt+key の視覚ヒントを埋める。
-  // Windows/Linux は & mnemonic + Qt 自動アクティベート、
-  // macOS は (⌥X) 末尾追加 (どちらも withAltMnemonic が振り分ける)。
+  // ラベルは altBuddyLabel で作る (視覚ヒント + setBuddy + macOS 用の明示
+  // ショートカット)。macOS は '&' mnemonic が効かないので、setBuddy だけだと
+  // ヒントは出るのに Alt+key で何も起きない。
   m_nameEdit = new QLineEdit(initialName, this);
   m_nameEdit->setFocusPolicy(Qt::StrongFocus);
-  auto* nameLabel = new QLabel(withAltMnemonic(tr("Name:"), Qt::Key_N), this);
-  nameLabel->setBuddy(m_nameEdit);   // Win/Linux で Alt+N により buddy にフォーカス
+  auto* nameLabel = altBuddyLabel(tr("Name:"), Qt::Key_N, m_nameEdit, this);
   form->addRow(nameLabel, m_nameEdit);
 
   // Path: 入力欄 + フォルダアイコンボタン
@@ -72,8 +71,7 @@ void BookmarkEditDialog::setupUi(const QString& initialName,
   m_browseButton->setFocusPolicy(Qt::StrongFocus);
   pathRowLayout->addWidget(m_pathEdit, 1);
   pathRowLayout->addWidget(m_browseButton);
-  auto* pathLabel = new QLabel(withAltMnemonic(tr("Path:"), Qt::Key_P), this);
-  pathLabel->setBuddy(m_pathEdit);
+  auto* pathLabel = altBuddyLabel(tr("Path:"), Qt::Key_P, m_pathEdit, this);
   form->addRow(pathLabel, pathRow);
 
   mainLayout->addLayout(form);

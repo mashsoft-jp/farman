@@ -47,17 +47,17 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
   mainLayout->addLayout(pathForm);
 
   // ── Action 選択 ──
-  // ラジオラベルに Alt+key の視覚ヒントを埋める。withAltMnemonic が
-  // Windows / Linux では '&' 挿入、macOS では "(⌥X)" 末尾追加に振り分ける。
+  // ラジオは applyAltShortcut で作る (ヒント表示 + 明示ショートカット)。
+  // '&' 由来の mnemonic は macOS では効かないため、setShortcut が要る。
   QGroupBox* actionGroup = new QGroupBox(tr("Action"), this);
   QVBoxLayout* actionLayout = new QVBoxLayout(actionGroup);
 
-  m_overwriteRadio = new QRadioButton(
-    withAltMnemonic(tr("Overwrite the existing file"), Qt::Key_O), this);
-  m_renameRadio    = new QRadioButton(
-    withAltMnemonic(tr("Rename to:"), Qt::Key_R), this);
-  m_skipRadio      = new QRadioButton(
-    withAltMnemonic(tr("Skip this file"), Qt::Key_S), this);
+  m_overwriteRadio = new QRadioButton(tr("Overwrite the existing file"), this);
+  m_renameRadio    = new QRadioButton(tr("Rename to:"), this);
+  m_skipRadio      = new QRadioButton(tr("Skip this file"), this);
+  applyAltShortcut(m_overwriteRadio, Qt::Key_O);
+  applyAltShortcut(m_renameRadio,    Qt::Key_R);
+  applyAltShortcut(m_skipRadio,      Qt::Key_S);
 
   actionLayout->addWidget(m_overwriteRadio);
 
