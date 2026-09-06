@@ -1249,14 +1249,17 @@ void MainWindow::registerCommands() {
 
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "file.search",
-    tr("Search Files..."),
+    tr("Search..."),
     [this]() {
       const QString start = m_fileManagerPanel->activePane()->currentPath();
       SearchDialog dlg(start, this);
       if (dlg.exec() == QDialog::Accepted) {
         const QString picked = dlg.selectedPath();
         if (!picked.isEmpty()) {
-          m_fileManagerPanel->navigateActivePaneTo(picked);
+          // 検索結果はディレクトリのこともある。中に入らず、親で
+          // カーソルを合わせるだけにする。
+          m_fileManagerPanel->navigateActivePaneTo(picked,
+                                                   /*revealInParent=*/true);
         }
       }
       m_fileManagerPanel->activePane()->view()->setFocus();
@@ -1997,7 +2000,7 @@ void MainWindow::createMenus() {
   addCmd(goMenu, "navigate.home",   tr("Jump to Top"));
   addCmd(goMenu, "navigate.end",    tr("Jump to Bottom"));
   goMenu->addSeparator();
-  addCmd(goMenu, "file.search",     tr("Search Files..."));
+  addCmd(goMenu, "file.search",     tr("Search..."));
   addCmd(goMenu, "history.show",    tr("History..."));
 
   // Bookmarks

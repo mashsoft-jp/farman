@@ -1,6 +1,9 @@
 #pragma once
 
+#include "core/workers/SearchWorker.h"
+
 #include <QDialog>
+#include <QList>
 #include <QString>
 
 class QLineEdit;
@@ -16,12 +19,13 @@ namespace Farman {
 
 class SearchWorker;
 
-// ファイル検索ダイアログ。
-// - Start path / Name pattern (glob) / Include subdirectories
+// ファイル / ディレクトリ検索ダイアログ。
+// - Start path / Name pattern (glob) / 検索対象 / Include subdirectories
 // - Search/Stop で別スレッド検索、結果を逐次テーブルに追加
 // - ダブルクリック or Go to で accept し、呼び出し側は selectedPath() を取る
-// - selectedPath() はファイルの絶対パス。呼び出し側でそのディレクトリへ
-//   ペインを移動し、該当ファイルにカーソルを合わせる。
+// - selectedPath() は見つかったファイル / ディレクトリの絶対パス。呼び出し側は
+//   その親ディレクトリへペインを移動し、該当行にカーソルを合わせる
+//   (ディレクトリでも中には入らない。探した本人が場所を確認したいはずなので)。
 class SearchDialog : public QDialog {
   Q_OBJECT
 
@@ -47,6 +51,12 @@ private:
   void startSearch();
   void stopSearch();
   void appendResultRow(const QString& path);
+  // 現在選択されている検索対象。
+  SearchTarget currentTarget() const;
+  // 検索対象に合わせて、意味の無いフィルタを使えなくする。
+  // サイズと内容はディレクトリに対して意味が無いので、「ディレクトリのみ」の
+  // ときはチェックボックスごと無効化する (チェックしたのに効かない、を防ぐ)。
+  void updateFilterAvailability();
 
   QLineEdit*    m_pathEdit;
   QPushButton*  m_browseButton;
@@ -54,6 +64,8 @@ private:
   QLineEdit*    m_excludeEdit;
   QLineEdit*    m_excludeFileEdit = nullptr;
   QCheckBox*    m_subdirsCheck;
+  // 検索対象 (ファイル / ディレクトリ / 両方)。
+  QComboBox*    m_targetCombo = nullptr;
   QPushButton*  m_searchButton;
   QTableWidget* m_resultsTable;
   QLabel*       m_statusLabel;
@@ -71,6 +83,9 @@ private:
   QCheckBox*     m_contentFilterCheck = nullptr;
   QLineEdit*     m_contentEdit        = nullptr;
   QCheckBox*     m_contentCsCheck     = nullptr;
+  // サイズ / 内容フィルタの行を丸ごと無効化するための保持 (ラベルを含む)。
+  QList<QWidget*> m_sizeFilterWidgets;
+  QList<QWidget*> m_contentFilterWidgets;
 
   SearchWorker* m_worker;
   QString       m_selectedPath;

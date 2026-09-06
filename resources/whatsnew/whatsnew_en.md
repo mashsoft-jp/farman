@@ -54,6 +54,15 @@
 - The "Temporary directory" and "Password attempts" settings are now applied
   as well (a change to the temporary directory takes effect at next start).
 
+### Search can now find directories
+
+- The search dialog has a new "Search for" option: files only (as before),
+  directories only, or both.
+- With "directories only", the size and content filters are disabled, since
+  neither means anything for a directory.
+- Going to a result no longer enters a directory. The pane moves to its parent
+  and puts the cursor on it, so you can see where it was found.
+
 ### File list operations
 
 - "Copy Path" now copies the paths of **all selected files** at once

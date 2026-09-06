@@ -60,7 +60,7 @@ SearchDialog::~SearchDialog() {
 }
 
 void SearchDialog::setupUi(const QString& initialPath) {
-  setWindowTitle(tr("Search Files"));
+  setWindowTitle(tr("Search"));
   setModal(true);
   resize(820, 720);
 
@@ -108,6 +108,17 @@ void SearchDialog::setupUi(const QString& initialPath) {
   m_excludeFileEdit->setFocusPolicy(Qt::StrongFocus);
   form->addRow(tr("Exclude files:"), m_excludeFileEdit);
 
+  // 検索対象 (ファイル / ディレクトリ / 両方)
+  m_targetCombo = new QComboBox(this);
+  m_targetCombo->addItem(tr("Files only"),
+                         static_cast<int>(SearchTarget::Files));
+  m_targetCombo->addItem(tr("Directories only"),
+                         static_cast<int>(SearchTarget::Directories));
+  m_targetCombo->addItem(tr("Files and directories"),
+                         static_cast<int>(SearchTarget::Both));
+  m_targetCombo->setFocusPolicy(Qt::StrongFocus);
+  form->addRow(tr("Search for:"), m_targetCombo);
+
   // Include subdirectories
   m_subdirsCheck = new QCheckBox(
     withAltMnemonic(tr("Include subdirectories"), Qt::Key_S), this);
@@ -142,11 +153,13 @@ void SearchDialog::setupUi(const QString& initialPath) {
   m_maxSizeUnit->addItem(QStringLiteral("MB"),  1024LL * 1024);
   m_maxSizeUnit->addItem(QStringLiteral("GB"),  1024LL * 1024 * 1024);
   m_maxSizeUnit->setCurrentIndex(1);
+  auto* minSizeLabel = new QLabel(tr("Min:"), this);
+  auto* maxSizeLabel = new QLabel(tr("Max:"), this);
   filterGrid->addWidget(m_sizeFilterCheck, 0, 0);
-  filterGrid->addWidget(new QLabel(tr("Min:"), this), 0, 1);
+  filterGrid->addWidget(minSizeLabel, 0, 1);
   filterGrid->addWidget(m_minSizeSpin, 0, 2);
   filterGrid->addWidget(m_minSizeUnit, 0, 3);
-  filterGrid->addWidget(new QLabel(tr("Max:"), this), 0, 4);
+  filterGrid->addWidget(maxSizeLabel, 0, 4);
   QHBoxLayout* maxRow = new QHBoxLayout();
   maxRow->setContentsMargins(0, 0, 0, 0);
   maxRow->addWidget(m_maxSizeSpin);
@@ -189,12 +202,22 @@ void SearchDialog::setupUi(const QString& initialPath) {
     QObject::connect(master, &QCheckBox::toggled, master, apply);
     apply();
   };
-  wireMaster(m_sizeFilterCheck,
-             {m_minSizeSpin, m_minSizeUnit, m_maxSizeSpin, m_maxSizeUnit});
+  // 更新日時はディレクトリにも意味があるので、対象種別によらず従来どおり。
   wireMaster(m_dateFilterCheck,
              {m_dateFromEdit, m_dateToEdit});
-  wireMaster(m_contentFilterCheck,
-             {m_contentEdit, m_contentCsCheck});
+
+  // サイズ / 内容は「ディレクトリのみ」で行ごと無効化したいので、
+  // マスターチェックだけでなく検索対象も見る updateFilterAvailability に任せる。
+  m_sizeFilterWidgets = {minSizeLabel, m_minSizeSpin, m_minSizeUnit,
+                         maxSizeLabel, m_maxSizeSpin, m_maxSizeUnit};
+  m_contentFilterWidgets = {m_contentEdit, m_contentCsCheck};
+  connect(m_sizeFilterCheck,    &QCheckBox::toggled,
+          this, &SearchDialog::updateFilterAvailability);
+  connect(m_contentFilterCheck, &QCheckBox::toggled,
+          this, &SearchDialog::updateFilterAvailability);
+  connect(m_targetCombo, &QComboBox::currentIndexChanged,
+          this, &SearchDialog::updateFilterAvailability);
+  updateFilterAvailability();
 
   // macOS のキーボードナビゲーション設定に依存させずに Tab で全部辿れるよう
   // 拡張フィルタの全コントロールに StrongFocus を明示。
@@ -351,14 +374,17 @@ void SearchDialog::startSearch() {
   const QStringList excludeDirPatterns  = splitPatterns(m_excludeEdit->text());
   const QStringList excludeFilePatterns = splitPatterns(m_excludeFileEdit->text());
   const bool includeSubdirs = m_subdirsCheck->isChecked();
+  const SearchTarget target = currentTarget();
 
   // 結果テーブルをクリア
   m_resultsTable->setRowCount(0);
   m_statusLabel->setText(tr("Searching..."));
 
   // 拡張フィルタを組み立てる
+  // 無効化されているフィルタは、チェックが残っていても組み立てない
+  // (「ディレクトリのみ」に切り替える前のチェックが効いてしまうのを防ぐ)。
   SearchFilter filter;
-  if (m_sizeFilterCheck->isChecked()) {
+  if (m_sizeFilterCheck->isEnabled() && m_sizeFilterCheck->isChecked()) {
     filter.sizeEnabled = true;
     filter.minSize = static_cast<qint64>(m_minSizeSpin->value())
                        * m_minSizeUnit->currentData().toLongLong();
@@ -370,7 +396,7 @@ void SearchDialog::startSearch() {
     filter.modifiedFrom = m_dateFromEdit->dateTime();
     filter.modifiedTo   = m_dateToEdit->dateTime();
   }
-  if (m_contentFilterCheck->isChecked()) {
+  if (m_contentFilterCheck->isEnabled() && m_contentFilterCheck->isChecked()) {
     const QString text = m_contentEdit->text();
     if (!text.isEmpty()) {
       filter.contentEnabled       = true;
@@ -381,7 +407,7 @@ void SearchDialog::startSearch() {
 
   m_worker = new SearchWorker(rootPath, patterns, excludeDirPatterns,
                               excludeFilePatterns, includeSubdirs,
-                              filter, this);
+                              filter, target, this);
   connect(m_worker, &SearchWorker::resultFound, this, &SearchDialog::onResultFound);
   connect(m_worker, &WorkerBase::finished,      this, &SearchDialog::onFinished);
   m_searching = true;
@@ -422,7 +448,8 @@ void SearchDialog::appendResultRow(const QString& path) {
 
   auto* nameItem = new QTableWidgetItem(info.fileName());
   auto* pathItem = new QTableWidgetItem(info.absolutePath());
-  auto* sizeItem = new QTableWidgetItem(humanSize(info.size()));
+  auto* sizeItem = new QTableWidgetItem(
+    info.isDir() ? QStringLiteral("<DIR>") : humanSize(info.size()));
   auto* timeItem = new QTableWidgetItem(
     info.lastModified().toString(QStringLiteral("yyyy/MM/dd HH:mm")));
 
@@ -436,6 +463,25 @@ void SearchDialog::appendResultRow(const QString& path) {
   if (row == 0) {
     m_resultsTable->setCurrentCell(0, 0);
   }
+}
+
+SearchTarget SearchDialog::currentTarget() const {
+  if (!m_targetCombo) return SearchTarget::Files;
+  return static_cast<SearchTarget>(m_targetCombo->currentData().toInt());
+}
+
+void SearchDialog::updateFilterAvailability() {
+  // サイズと内容はディレクトリに意味が無い。「ディレクトリのみ」のときは
+  // マスターチェックごと無効化して、設定できないことを見た目で示す。
+  const bool available = (currentTarget() != SearchTarget::Directories);
+
+  m_sizeFilterCheck->setEnabled(available);
+  const bool sizeOn = available && m_sizeFilterCheck->isChecked();
+  for (QWidget* w : m_sizeFilterWidgets) w->setEnabled(sizeOn);
+
+  m_contentFilterCheck->setEnabled(available);
+  const bool contentOn = available && m_contentFilterCheck->isChecked();
+  for (QWidget* w : m_contentFilterWidgets) w->setEnabled(contentOn);
 }
 
 void SearchDialog::onGoTo() {

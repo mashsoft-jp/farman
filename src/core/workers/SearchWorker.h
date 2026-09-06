@@ -29,7 +29,14 @@ struct SearchFilter {
   qint64     contentMaxScanBytes  = 50LL * 1024 * 1024;
 };
 
-// ファイル名パターンに一致するファイルを rootPath 以下から探すワーカー。
+// 検索対象の種別。
+enum class SearchTarget {
+  Files,        // ファイルのみ (既定)
+  Directories,  // ディレクトリのみ
+  Both,         // 両方
+};
+
+// 名前パターンに一致するファイル / ディレクトリを rootPath 以下から探すワーカー。
 // 逐次 resultFound(path) を emit し、完了時に finished(true) を発行する。
 // キャンセルされた場合は finished(false) で終了する。
 //
@@ -38,6 +45,10 @@ struct SearchFilter {
 // 無限再帰回避のため追跡しない。
 //
 // SearchFilter で size / modified / content の追加条件を AND で適用できる。
+// ただし size / content はディレクトリには意味が無いので、ディレクトリは
+// これらの条件を「満たさないもの」として扱う (= 有効なときは結果に出さない)。
+// 「ディレクトリのみ」ではダイアログ側で両フィルタを無効化するので、この規則が
+// 効くのは「両方」を選んだときだけ。
 class SearchWorker : public WorkerBase {
   Q_OBJECT
 
@@ -48,6 +59,7 @@ public:
                const QStringList&  excludeFilePatterns,
                bool                includeSubdirs,
                const SearchFilter& filter,
+               SearchTarget        target = SearchTarget::Files,
                QObject*            parent = nullptr);
 
 signals:
@@ -60,7 +72,11 @@ private:
   void searchIn(const QString& dirPath);
   bool isExcludedDir(const QString& dirName) const;
   bool isExcludedFile(const QString& fileName) const;
+  // fi (ファイル or ディレクトリ) が追加フィルタを満たすか。
   bool matchesFilter(const QFileInfo& fi) const;
+  // 名前パターンに一致するか。ディレクトリ側は entryInfoList のフィルタを
+  // 使わず自前で照合する (再帰と結果出力で必要な条件が違うため)。
+  bool matchesNamePattern(const QString& name) const;
   bool fileContainsContent(const QString& filePath) const;
 
   QString      m_rootPath;
@@ -69,6 +85,7 @@ private:
   QStringList  m_excludeFilePatterns;
   bool         m_includeSubdirs;
   SearchFilter m_filter;
+  SearchTarget m_target;
 };
 
 } // namespace Farman

@@ -112,7 +112,13 @@ public:
   void openSortFilterDialog();
 
   // 任意のパスへアクティブペインを遷移させる（失敗時は false）
-  bool navigateActivePaneTo(const QString& path);
+  // path へアクティブペインを移動する。
+  //   - ファイル       : 親ディレクトリへ移動し、そのファイルにカーソルを合わせる
+  //   - ディレクトリ   : そのディレクトリの中へ入る
+  // revealInParent=true のときは、ディレクトリでも中に入らず、親ディレクトリで
+  // カーソルを合わせるだけにする。検索結果からの移動がこれ (探した本人は場所を
+  // 確認したいので、いきなり中に入ってしまうと元の位置が分からなくなる)。
+  bool navigateActivePaneTo(const QString& path, bool revealInParent = false);
 
   // 反対側のペインをアクティブと同じディレクトリへ移動
   void syncOtherToActive();

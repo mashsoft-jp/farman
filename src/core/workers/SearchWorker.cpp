@@ -12,6 +12,7 @@ SearchWorker::SearchWorker(const QString&      rootPath,
                            const QStringList&  excludeFilePatterns,
                            bool                includeSubdirs,
                            const SearchFilter& filter,
+                           SearchTarget        target,
                            QObject*            parent)
   : WorkerBase(parent)
   , m_rootPath(rootPath)
@@ -19,7 +20,8 @@ SearchWorker::SearchWorker(const QString&      rootPath,
   , m_excludeDirPatterns(excludeDirPatterns)
   , m_excludeFilePatterns(excludeFilePatterns)
   , m_includeSubdirs(includeSubdirs)
-  , m_filter(filter) {
+  , m_filter(filter)
+  , m_target(target) {
   m_namePatterns.removeAll(QString());
   m_excludeDirPatterns.removeAll(QString());
   m_excludeFilePatterns.removeAll(QString());
@@ -37,30 +39,54 @@ void SearchWorker::searchIn(const QString& dirPath) {
   if (!dir.exists()) return;
 
   // ファイル（パターン適用）
-  const QStringList filters = m_namePatterns.isEmpty()
-    ? QStringList{QStringLiteral("*")}
-    : m_namePatterns;
-  const QFileInfoList files = dir.entryInfoList(
-    filters,
-    QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot);
-  for (const QFileInfo& fi : files) {
-    if (isCancelled()) return;
-    if (isExcludedFile(fi.fileName())) continue;
-    if (!matchesFilter(fi)) continue;
-    emit resultFound(fi.absoluteFilePath());
+  if (m_target != SearchTarget::Directories) {
+    const QStringList filters = m_namePatterns.isEmpty()
+      ? QStringList{QStringLiteral("*")}
+      : m_namePatterns;
+    const QFileInfoList files = dir.entryInfoList(
+      filters,
+      QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot);
+    for (const QFileInfo& fi : files) {
+      if (isCancelled()) return;
+      if (isExcludedFile(fi.fileName())) continue;
+      if (!matchesFilter(fi)) continue;
+      emit resultFound(fi.absoluteFilePath());
+    }
   }
 
-  if (!m_includeSubdirs) return;
+  // サブディレクトリ。「結果に出す」と「再帰で潜る」を 1 回の列挙でまとめて
+  // 判断する。除外パターン (Exclude dirs) はどちらにも同じように効かせる
+  // = 除外したディレクトリは結果にも出さないし、中にも入らない。
+  const bool wantDirs = (m_target != SearchTarget::Files);
+  if (!m_includeSubdirs && !wantDirs) return;
 
-  // サブディレクトリを手動で再帰。除外パターンに該当するものは入らない。
   const QFileInfoList subs = dir.entryInfoList(
     QDir::Dirs | QDir::Hidden | QDir::NoDotAndDotDot);
   for (const QFileInfo& fi : subs) {
     if (isCancelled()) return;
-    if (fi.isSymLink()) continue;  // ループ回避
     if (isExcludedDir(fi.fileName())) continue;
+
+    if (wantDirs
+        && matchesNamePattern(fi.fileName())
+        && matchesFilter(fi)) {
+      emit resultFound(fi.absoluteFilePath());
+    }
+
+    if (!m_includeSubdirs) continue;
+    if (fi.isSymLink()) continue;  // ループ回避
     searchIn(fi.absoluteFilePath());
   }
+}
+
+bool SearchWorker::matchesNamePattern(const QString& name) const {
+  if (m_namePatterns.isEmpty()) return true;
+  for (const QString& pattern : m_namePatterns) {
+    const QRegularExpression re = QRegularExpression::fromWildcard(
+      pattern.trimmed(),
+      Qt::CaseInsensitive);
+    if (re.match(name).hasMatch()) return true;
+  }
+  return false;
 }
 
 bool SearchWorker::isExcludedDir(const QString& dirName) const {
@@ -84,6 +110,15 @@ bool SearchWorker::isExcludedFile(const QString& fileName) const {
 }
 
 bool SearchWorker::matchesFilter(const QFileInfo& fi) const {
+  // サイズと内容はディレクトリに意味が無い。条件が有効なら「満たさない」と
+  // 扱って結果から落とす (サイズ指定をしたのにディレクトリが混ざる、という
+  // 見え方を避ける)。「ディレクトリのみ」ではダイアログ側が両フィルタを
+  // 無効化するので、ここに来るのは「両方」を選んだときだけ。
+  if (fi.isDir()) {
+    if (m_filter.sizeEnabled)    return false;
+    if (m_filter.contentEnabled) return false;
+  }
+
   // サイズ
   if (m_filter.sizeEnabled) {
     const qint64 sz = fi.size();

@@ -560,15 +560,18 @@ const DirectoryHistory& FileManagerPanel::history(PaneType pane) const {
   return (pane == PaneType::Left) ? m_leftHistory : m_rightHistory;
 }
 
-bool FileManagerPanel::navigateActivePaneTo(const QString& path) {
+bool FileManagerPanel::navigateActivePaneTo(const QString& path,
+                                            bool revealInParent) {
   if (path.isEmpty()) return false;
 
   // パスがファイルなら、その親ディレクトリへ遷移したうえでカーソルを
-  // そのファイルに合わせる。ディレクトリならそのまま遷移。
+  // そのファイルに合わせる。ディレクトリならそのまま遷移する
+  // (revealInParent なら、ディレクトリもファイルと同じ扱いにする)。
   QFileInfo info(path);
   QString dirPath = path;
   QString fileName;
-  if (info.exists() && !info.isDir()) {
+  const bool revealOnly = revealInParent || !info.isDir();
+  if (info.exists() && revealOnly) {
     dirPath  = info.absolutePath();
     fileName = info.fileName();
   }
