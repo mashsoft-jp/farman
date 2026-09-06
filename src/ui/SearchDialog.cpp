@@ -12,6 +12,7 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QRadioButton>
 #include <QSpinBox>
 #include <QDateTimeEdit>
 #include <QDate>
@@ -108,16 +109,21 @@ void SearchDialog::setupUi(const QString& initialPath) {
   m_excludeFileEdit->setFocusPolicy(Qt::StrongFocus);
   form->addRow(tr("Exclude files:"), m_excludeFileEdit);
 
-  // 検索対象 (ファイル / ディレクトリ / 両方)
-  m_targetCombo = new QComboBox(this);
-  m_targetCombo->addItem(tr("Files only"),
-                         static_cast<int>(SearchTarget::Files));
-  m_targetCombo->addItem(tr("Directories only"),
-                         static_cast<int>(SearchTarget::Directories));
-  m_targetCombo->addItem(tr("Files and directories"),
-                         static_cast<int>(SearchTarget::Both));
-  m_targetCombo->setFocusPolicy(Qt::StrongFocus);
-  form->addRow(tr("Search for:"), m_targetCombo);
+  // 検索対象 (ファイル / ディレクトリ / 両方)。3 択なのでラジオボタンを横に並べる。
+  // 同じ親の下に置くので autoExclusive が効き、←/→ で選択が移る。
+  auto* targetRow = new QWidget(this);
+  auto* targetRowLayout = new QHBoxLayout(targetRow);
+  targetRowLayout->setContentsMargins(0, 0, 0, 0);
+  m_targetFilesRadio = new QRadioButton(tr("Files only"), targetRow);
+  m_targetDirsRadio  = new QRadioButton(tr("Directories only"), targetRow);
+  m_targetBothRadio  = new QRadioButton(tr("Files and directories"), targetRow);
+  m_targetFilesRadio->setChecked(true);
+  for (QRadioButton* r : {m_targetFilesRadio, m_targetDirsRadio, m_targetBothRadio}) {
+    r->setFocusPolicy(Qt::StrongFocus);
+    targetRowLayout->addWidget(r);
+  }
+  targetRowLayout->addStretch(1);
+  form->addRow(tr("Search for:"), targetRow);
 
   // Include subdirectories
   m_subdirsCheck = new QCheckBox(
@@ -215,7 +221,7 @@ void SearchDialog::setupUi(const QString& initialPath) {
           this, &SearchDialog::updateFilterAvailability);
   connect(m_contentFilterCheck, &QCheckBox::toggled,
           this, &SearchDialog::updateFilterAvailability);
-  connect(m_targetCombo, &QComboBox::currentIndexChanged,
+  connect(m_targetDirsRadio, &QRadioButton::toggled,
           this, &SearchDialog::updateFilterAvailability);
   updateFilterAvailability();
 
@@ -297,7 +303,10 @@ void SearchDialog::setupUi(const QString& initialPath) {
   setTabOrder(m_browseButton,       m_patternEdit);
   setTabOrder(m_patternEdit,        m_excludeEdit);
   setTabOrder(m_excludeEdit,        m_excludeFileEdit);
-  setTabOrder(m_excludeFileEdit,    m_subdirsCheck);
+  setTabOrder(m_excludeFileEdit,    m_targetFilesRadio);
+  setTabOrder(m_targetFilesRadio,   m_targetDirsRadio);
+  setTabOrder(m_targetDirsRadio,    m_targetBothRadio);
+  setTabOrder(m_targetBothRadio,    m_subdirsCheck);
   setTabOrder(m_subdirsCheck,       m_sizeFilterCheck);
   setTabOrder(m_sizeFilterCheck,    m_minSizeSpin);
   setTabOrder(m_minSizeSpin,        m_minSizeUnit);
@@ -466,8 +475,13 @@ void SearchDialog::appendResultRow(const QString& path) {
 }
 
 SearchTarget SearchDialog::currentTarget() const {
-  if (!m_targetCombo) return SearchTarget::Files;
-  return static_cast<SearchTarget>(m_targetCombo->currentData().toInt());
+  if (m_targetDirsRadio && m_targetDirsRadio->isChecked()) {
+    return SearchTarget::Directories;
+  }
+  if (m_targetBothRadio && m_targetBothRadio->isChecked()) {
+    return SearchTarget::Both;
+  }
+  return SearchTarget::Files;
 }
 
 void SearchDialog::updateFilterAvailability() {

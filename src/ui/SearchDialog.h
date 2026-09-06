@@ -14,6 +14,7 @@ class QLabel;
 class QSpinBox;
 class QComboBox;
 class QDateTimeEdit;
+class QRadioButton;
 
 namespace Farman {
 
@@ -64,8 +65,10 @@ private:
   QLineEdit*    m_excludeEdit;
   QLineEdit*    m_excludeFileEdit = nullptr;
   QCheckBox*    m_subdirsCheck;
-  // 検索対象 (ファイル / ディレクトリ / 両方)。
-  QComboBox*    m_targetCombo = nullptr;
+  // 検索対象 (ファイル / ディレクトリ / 両方)。3 択なのでラジオボタン。
+  QRadioButton* m_targetFilesRadio = nullptr;
+  QRadioButton* m_targetDirsRadio  = nullptr;
+  QRadioButton* m_targetBothRadio  = nullptr;
   QPushButton*  m_searchButton;
   QTableWidget* m_resultsTable;
   QLabel*       m_statusLabel;
