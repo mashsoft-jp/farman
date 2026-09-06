@@ -82,13 +82,13 @@ void SearchDialog::setupUi(const QString& initialPath) {
   m_browseButton->setFocusPolicy(Qt::StrongFocus);
   pathRowLayout->addWidget(m_pathEdit, 1);
   pathRowLayout->addWidget(m_browseButton);
-  form->addRow(tr("Start path:"), pathRow);
+  form->addRow(withAltMnemonic(tr("Start path:"), Qt::Key_P), pathRow);
 
   // Name pattern
   m_patternEdit = new QLineEdit(this);
   m_patternEdit->setPlaceholderText(tr("e.g. *.txt *.cpp (space-separated, empty for all)"));
   m_patternEdit->setFocusPolicy(Qt::StrongFocus);
-  form->addRow(tr("Name pattern:"), m_patternEdit);
+  form->addRow(withAltMnemonic(tr("Name pattern:"), Qt::Key_N), m_patternEdit);
 
   // Exclude dirs
   m_excludeEdit = new QLineEdit(this);
@@ -98,7 +98,7 @@ void SearchDialog::setupUi(const QString& initialPath) {
     tr("Directory names (glob) to skip when recursing. Default comes "
        "from Settings → Behavior. Changes here apply to this search only."));
   m_excludeEdit->setFocusPolicy(Qt::StrongFocus);
-  form->addRow(tr("Exclude dirs:"), m_excludeEdit);
+  form->addRow(withAltMnemonic(tr("Exclude dirs:"), Qt::Key_D), m_excludeEdit);
 
   // Exclude files (file name patterns to skip). 例: *.log .DS_Store
   m_excludeFileEdit = new QLineEdit(this);
@@ -107,16 +107,29 @@ void SearchDialog::setupUi(const QString& initialPath) {
     tr("File name patterns (glob) to skip from results. Applied after the "
        "name pattern filter."));
   m_excludeFileEdit->setFocusPolicy(Qt::StrongFocus);
-  form->addRow(tr("Exclude files:"), m_excludeFileEdit);
+  form->addRow(withAltMnemonic(tr("Exclude files:"), Qt::Key_E), m_excludeFileEdit);
 
+  // ── Alt ショートカットの方針 ───────────────────────────────
+  // このダイアログでは「フォームの各行」「フィルタの ON/OFF チェック」
+  // 「ダイアログのボタン」に Alt+key を割り当てる。フィルタ行の中の
+  // 入力欄 (Min / Max / From / To / 単位 / Case sensitive) には付けない。
+  // ON にした直後に Tab で辿れる位置にあり、字面の候補も尽きるため。
+  // 割当: P 開始パス / N 名前 / D 除外ディレクトリ / E 除外ファイル /
+  //       I ファイルのみ / R ディレクトリのみ / A 両方 /
+  //       S サブディレクトリ / Z サイズ / M 更新日時 / T 内容 /
+  //       F 検索 / C 閉じる
+  //
   // 検索対象 (ファイル / ディレクトリ / 両方)。3 択なのでラジオボタンを横に並べる。
   // 同じ親の下に置くので autoExclusive が効き、←/→ で選択が移る。
   auto* targetRow = new QWidget(this);
   auto* targetRowLayout = new QHBoxLayout(targetRow);
   targetRowLayout->setContentsMargins(0, 0, 0, 0);
-  m_targetFilesRadio = new QRadioButton(tr("Files only"), targetRow);
-  m_targetDirsRadio  = new QRadioButton(tr("Directories only"), targetRow);
-  m_targetBothRadio  = new QRadioButton(tr("Files and directories"), targetRow);
+  m_targetFilesRadio = new QRadioButton(
+    withAltMnemonic(tr("Files only"), Qt::Key_I), targetRow);
+  m_targetDirsRadio  = new QRadioButton(
+    withAltMnemonic(tr("Directories only"), Qt::Key_R), targetRow);
+  m_targetBothRadio  = new QRadioButton(
+    withAltMnemonic(tr("Files and directories"), Qt::Key_A), targetRow);
   m_targetFilesRadio->setChecked(true);
   for (QRadioButton* r : {m_targetFilesRadio, m_targetDirsRadio, m_targetBothRadio}) {
     r->setFocusPolicy(Qt::StrongFocus);
@@ -140,7 +153,7 @@ void SearchDialog::setupUi(const QString& initialPath) {
   filterGrid->setColumnStretch(5, 1);
 
   // Size
-  m_sizeFilterCheck = new QCheckBox(tr("Size:"), this);
+  m_sizeFilterCheck = new QCheckBox(withAltMnemonic(tr("Size:"), Qt::Key_Z), this);
   m_minSizeSpin = new QSpinBox(this);
   m_minSizeSpin->setRange(0, 1000000);
   m_minSizeSpin->setSpecialValueText(tr("Any"));
@@ -174,7 +187,7 @@ void SearchDialog::setupUi(const QString& initialPath) {
   filterGrid->addLayout(maxRow, 0, 5);
 
   // Modified date
-  m_dateFilterCheck = new QCheckBox(tr("Modified:"), this);
+  m_dateFilterCheck = new QCheckBox(withAltMnemonic(tr("Modified:"), Qt::Key_M), this);
   m_dateFromEdit = new QDateTimeEdit(QDateTime(QDate::currentDate().addYears(-1), QTime(0, 0)), this);
   m_dateFromEdit->setCalendarPopup(true);
   m_dateFromEdit->setDisplayFormat(QStringLiteral("yyyy-MM-dd HH:mm"));
@@ -188,7 +201,7 @@ void SearchDialog::setupUi(const QString& initialPath) {
   filterGrid->addWidget(m_dateToEdit, 1, 5);
 
   // Content text
-  m_contentFilterCheck = new QCheckBox(tr("Content:"), this);
+  m_contentFilterCheck = new QCheckBox(withAltMnemonic(tr("Content:"), Qt::Key_T), this);
   m_contentEdit = new QLineEdit(this);
   m_contentEdit->setPlaceholderText(tr("Text to find inside files"));
   m_contentCsCheck = new QCheckBox(tr("Case sensitive"), this);
