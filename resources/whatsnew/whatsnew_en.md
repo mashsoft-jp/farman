@@ -85,5 +85,8 @@
   Markdown rendering in general immune to the same kind of truncation.
 - With every viewer plugin disabled, only the binary viewer used to open. Now
   nothing opens at all.
+- On macOS, the Alt (⌥) shortcuts shown on dialog labels, check boxes and radio
+  buttons did nothing when pressed. They now work — including "Move to Trash" in
+  the delete confirmation and "Overwrite" / "Rename to" in the overwrite dialog.
 - Fixed "Open With Viewer..." (Shift+Ctrl+Enter, Cmd+Enter on macOS) on a file
   inside an archive: it showed empty content or failed to open.
