@@ -2318,16 +2318,13 @@ void MainWindow::showAboutDialog() {
     box.setIcon(QMessageBox::Information);
   }
 
-  // prerelease (-test 等) ビルドのときだけ、どのビルドか識別できるように
-  // ビルドリビジョンを版数の下に併記する。安定版 (x.y.z) では表示しない
-  // (安定版は版数だけで一意に決まるため)。
+  // 版数の下にビルドリビジョンを併記する。test ビルドはタグを打ち直す運用で
+  // 版数だけでは区別が付かないし、安定版でも「どのビルドか」を特定できると
+  // 不具合報告のやり取りが楽になるので、種別を問わず出す。
   // (本文の翻訳文字列はそのまま活かし、リビジョンは %1 = 版数 側に埋め込む。)
   QString versionText = version;
-  if (version.contains(QLatin1Char('-'))) {
-    const QString revision = buildRevision();
-    if (!revision.isEmpty()) {
-      versionText += QStringLiteral("<br><small>Build: %1</small>").arg(revision);
-    }
+  if (const QString revision = buildRevision(); !revision.isEmpty()) {
+    versionText += QStringLiteral("<br><small>Build: %1</small>").arg(revision);
   }
 
   // 本文はバージョン等のみ。farman ワードマークは本文の「上」に別途 QLabel で置く。
