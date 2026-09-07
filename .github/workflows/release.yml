@@ -788,7 +788,11 @@ jobs:
           fi
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v6
+        # v8: Node 24 ランタイム (v6 は Node 20 で、ランナー側が Node 24 に
+        # 強制していた)。あわせてダウンロードのハッシュ不一致が警告から
+        # エラーに変わる。壊れたアセットで Release を作らずに済むので、
+        # 既定のまま (digest-mismatch: error) にしておく。
+        uses: actions/download-artifact@v8
         with:
           path: dist
 
@@ -823,7 +827,8 @@ jobs:
           ls -la *.sha256
 
       - name: Create GitHub Release (draft)
-        uses: softprops/action-gh-release@v2
+        # v3: Node 24 ランタイム化のみで、入力・挙動は v2 と同じ。
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: farman ${{ steps.tag.outputs.tag }}
