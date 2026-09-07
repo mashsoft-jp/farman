@@ -274,14 +274,57 @@ else()
 endif()
 message(STATUS "FARMAN_VERSION = ${FARMAN_VERSION_STRING}")
 
-# ビルド日時 (構成時のタイムスタンプ)。About ダイアログで prerelease
-# (-test 等) ビルドのときだけ表示し、どの test ビルドかを識別できるようにする。
-# CI は毎回クリーン構成するので、この値は実質「ビルド日時」になる。
+# ── ビルドリビジョン ───────────────────────────────────────────
+# 同じバージョン文字列 (例 "0.9.10-test") のビルドを見分けるための識別子。
+# test タグは打ち直す運用なので、版数だけでは手元のビルドが最新かどうかが
+# 分からない。次の 3 つを組み合わせて About / ログ / 配布ファイル名に出す。
+#
+#   FARMAN_BUILD_NUMBER    CI の run number。単調増加なので新旧が一目で分かる
+#   FARMAN_BUILD_COMMIT    短縮コミット ID。どのコードかを一意に特定できる
+#   FARMAN_BUILD_TIMESTAMP ビルド日時。run number が無いローカルビルド用の保険
+#
+# **FARMAN_VERSION には混ぜない**。UpdateChecker のバージョン比較と、プラグインの
+# MinHostVersion ゲート (hostSatisfiesMinVersion) がこの文字列を解析するため。
+#
+# いずれも「構成時」に決まる。CI は毎回クリーン構成するので実質ビルド時と同じ。
+# ローカルで commit したあと再構成せずにビルドするとコミット ID が古いままに
+# なるが、ローカルビルドの識別は日時側で足りるので許容する。
+set(FARMAN_BUILD_NUMBER "" CACHE STRING
+  "CI build number embedded in the binary (GitHub Actions github.run_number)")
+
 string(TIMESTAMP FARMAN_BUILD_TIMESTAMP_STR "%Y-%m-%d %H:%M UTC" UTC)
+
+set(FARMAN_BUILD_COMMIT_STR "")
+find_program(FARMAN_GIT_EXECUTABLE git)
+if(FARMAN_GIT_EXECUTABLE)
+  execute_process(
+    COMMAND ${FARMAN_GIT_EXECUTABLE} rev-parse --short=7 HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE FARMAN_BUILD_COMMIT_STR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET)
+  if(FARMAN_BUILD_COMMIT_STR)
+    # 追跡中のファイルに未コミットの変更があれば "+" を付ける。
+    # 未追跡ファイル (ビルド生成物など) は無視する。
+    execute_process(
+      COMMAND ${FARMAN_GIT_EXECUTABLE} status --porcelain --untracked-files=no
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE FARMAN_GIT_DIRTY
+      ERROR_QUIET)
+    if(FARMAN_GIT_DIRTY)
+      set(FARMAN_BUILD_COMMIT_STR "${FARMAN_BUILD_COMMIT_STR}+")
+    endif()
+  endif()
+endif()
+
+message(STATUS "FARMAN_BUILD_NUMBER    = ${FARMAN_BUILD_NUMBER}")
+message(STATUS "FARMAN_BUILD_COMMIT    = ${FARMAN_BUILD_COMMIT_STR}")
 message(STATUS "FARMAN_BUILD_TIMESTAMP = ${FARMAN_BUILD_TIMESTAMP_STR}")
 
 target_compile_definitions(farman PRIVATE
   FARMAN_VERSION=${FARMAN_VERSION_STRING}
+  FARMAN_BUILD_NUMBER="${FARMAN_BUILD_NUMBER}"
+  FARMAN_BUILD_COMMIT="${FARMAN_BUILD_COMMIT_STR}"
   FARMAN_BUILD_TIMESTAMP="${FARMAN_BUILD_TIMESTAMP_STR}"
 )
 

@@ -10,6 +10,7 @@
 #include "SearchDialog.h"
 #include "ExternalPluginViewerWindow.h"
 #include "../core/FileItem.h"
+#include "../core/BuildInfo.h"
 #include "../core/Logger.h"
 #include "../core/UpdateChecker.h"
 #include "../core/UpdateDownloader.h"
@@ -92,7 +93,15 @@ MainWindow::MainWindow(QWidget* parent)
   {
     auto& s = Settings::instance();
     Logger::instance().setFileOutput(s.logToFile(), s.logDirectory(), s.logRetentionDays());
-    Logger::instance().info(QStringLiteral("farman started"));
+    // 版数とビルドリビジョンをログの先頭に残す。不具合報告でログを送って
+    // もらったときに、どのビルドかを聞き返さずに済む。
+    const QString revision = buildRevision();
+    Logger::instance().info(
+      revision.isEmpty()
+        ? QStringLiteral("farman %1 started")
+            .arg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)))
+        : QStringLiteral("farman %1 started (%2)")
+            .arg(QStringLiteral(QT_STRINGIFY(FARMAN_VERSION)), revision));
   }
 
   setupUi();
@@ -2309,17 +2318,15 @@ void MainWindow::showAboutDialog() {
     box.setIcon(QMessageBox::Information);
   }
 
-  // prerelease (-test 等) ビルドのときだけ、どの test ビルドか識別できるように
-  // ビルド日時を版数の下に併記する。安定版 (x.y.z) では表示しない。
-  // (本文の翻訳文字列はそのまま活かし、ビルド日時は %1 = 版数 側に埋め込む。)
-#ifndef FARMAN_BUILD_TIMESTAMP
-#define FARMAN_BUILD_TIMESTAMP ""
-#endif
+  // prerelease (-test 等) ビルドのときだけ、どのビルドか識別できるように
+  // ビルドリビジョンを版数の下に併記する。安定版 (x.y.z) では表示しない
+  // (安定版は版数だけで一意に決まるため)。
+  // (本文の翻訳文字列はそのまま活かし、リビジョンは %1 = 版数 側に埋め込む。)
   QString versionText = version;
   if (version.contains(QLatin1Char('-'))) {
-    const QString buildTs = QStringLiteral(FARMAN_BUILD_TIMESTAMP);
-    if (!buildTs.isEmpty()) {
-      versionText += QStringLiteral("<br><small>Build: %1</small>").arg(buildTs);
+    const QString revision = buildRevision();
+    if (!revision.isEmpty()) {
+      versionText += QStringLiteral("<br><small>Build: %1</small>").arg(revision);
     }
   }
 

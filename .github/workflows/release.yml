@@ -218,12 +218,16 @@ jobs:
           echo "FARMAN_VERSION_SUFFIX=${suffix}" >> "$GITHUB_ENV"
           echo "Resolved suffix='${suffix}' from tag='${tag}'"
 
+      # FARMAN_BUILD_NUMBER には run number を渡す。同じ v*-test タグを打ち
+      # 直しても番号は増え続けるので、手元のビルドが最新かどうかを About /
+      # ログ / 配布ファイル名で判別できる。
       - name: Configure (Unix)
         if: runner.os != 'Windows'
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-            -DFARMAN_VERSION_SUFFIX="${FARMAN_VERSION_SUFFIX}"
+            -DFARMAN_VERSION_SUFFIX="${FARMAN_VERSION_SUFFIX}" \
+            -DFARMAN_BUILD_NUMBER="${{ github.run_number }}"
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
@@ -237,7 +241,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
             -DCMAKE_PREFIX_PATH="$env:VCPKG_ROOT/installed/x64-windows-heif" `
-            -DFARMAN_VERSION_SUFFIX="$env:FARMAN_VERSION_SUFFIX"
+            -DFARMAN_VERSION_SUFFIX="$env:FARMAN_VERSION_SUFFIX" `
+            -DFARMAN_BUILD_NUMBER="${{ github.run_number }}"
 
       - name: Build (Linux)
         if: runner.os == 'Linux'
@@ -801,11 +806,20 @@ jobs:
           cd dist
           ls -la */
           TAG="${{ steps.tag.outputs.tag }}"
-          mv macos/farman.dmg                       "farman-${TAG}-macos-arm64.dmg"
-          mv linux/farman-x86_64.AppImage           "farman-${TAG}-linux-x86_64.AppImage"
-          mv linux/farman_*_amd64.deb               "farman-${TAG}-linux-x86_64.deb"
-          mv windows/farman-windows-x64.zip         "farman-${TAG}-windows-x64.zip"
-          mv windows/farman-setup-windows-x64.exe   "farman-${TAG}-windows-x64-setup.exe"
+          # プレリリース (v*-test 等) はタグを打ち直す運用なので、ファイル名にも
+          # ビルド番号を入れて、ダウンロード済みのものと見分けられるようにする。
+          # 正式リリース (v1.2.3) では入れない。自動アップデート
+          # (UpdateDownloader) がアセット名と "<asset>.sha256" の対応で本体を
+          # 探すため、安定版のファイル名は変えたくない。
+          case "${TAG}" in
+            *-*) REV="-b${{ github.run_number }}" ;;
+            *)   REV="" ;;
+          esac
+          mv macos/farman.dmg                       "farman-${TAG}${REV}-macos-arm64.dmg"
+          mv linux/farman-x86_64.AppImage           "farman-${TAG}${REV}-linux-x86_64.AppImage"
+          mv linux/farman_*_amd64.deb               "farman-${TAG}${REV}-linux-x86_64.deb"
+          mv windows/farman-windows-x64.zip         "farman-${TAG}${REV}-windows-x64.zip"
+          mv windows/farman-setup-windows-x64.exe   "farman-${TAG}${REV}-windows-x64-setup.exe"
           ls -la
 
       - name: Generate SHA256 checksums
@@ -825,6 +839,26 @@ jobs:
             cat "$f.sha256"
           done
           ls -la *.sha256
+
+      # プレリリースはファイル名にビルド番号が入るため、タグを打ち直すと
+      # 別名のアセットとして増えていく (同名なら action-gh-release が置き換えて
+      # くれるが、名前が変わると古いものが残る)。先に既存 Draft のアセットを
+      # 全部消してから貼り直し、常に「最新のビルド 1 組だけ」が並ぶようにする。
+      - name: Remove stale assets from existing draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "No existing release for $TAG; nothing to clean."
+            exit 0
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets[].name' | while read -r asset; do
+            [ -n "$asset" ] || continue
+            echo "Deleting stale asset: $asset"
+            gh release delete-asset "$TAG" "$asset" --repo "$GITHUB_REPOSITORY" --yes
+          done
 
       - name: Create GitHub Release (draft)
         # v3: Node 24 ランタイム化のみで、入力・挙動は v2 と同じ。
