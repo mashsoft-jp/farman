@@ -186,9 +186,16 @@ void PropertiesDialog::setupUi() {
   m_nameEdit->setMinimumWidth(520);
   m_pathLabel->setMinimumWidth(520);
 
+  // パスを先頭に置き、値を太字にして強調する。何に対するプロパティなのかを
+  // 最初に示したいため (他のダイアログ先頭の「パス:」見出しと同じ狙い)。
+  {
+    QFont pathFont = m_pathLabel->font();
+    pathFont.setBold(true);
+    m_pathLabel->setFont(pathFont);
+  }
+  m_form->addRow(tr("Path:"),        m_pathLabel);
   m_form->addRow(altBuddyLabel(tr("Name:"), Qt::Key_N, m_nameEdit, this),
                  m_nameEdit);
-  m_form->addRow(tr("Path:"),        m_pathLabel);
   m_form->addRow(tr("Type:"),        m_typeLabel);
   m_form->addRow(tr("Size:"),        m_sizeLabel);
   m_form->addRow(tr("Modified:"),    m_modifiedEdit);
