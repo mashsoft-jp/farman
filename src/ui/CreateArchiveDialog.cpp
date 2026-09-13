@@ -121,21 +121,12 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   QFormLayout* form = new QFormLayout();
   form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
-  // Format
-  // ラベルは altBuddyLabel で作る (視覚ヒント + setBuddy + macOS 用の
+  // 各行のラベルは altBuddyLabel で作る (視覚ヒント + setBuddy + macOS 用の
   // 明示ショートカット)。macOS は '&' mnemonic が効かないので、setBuddy
   // だけだとヒントは出るのに押しても何も起きない。
-  m_formatCombo = new QComboBox(this);
-  m_formatCombo->addItem(QStringLiteral("zip"),     static_cast<int>(ArchiveCreateWorker::Format::Zip));
-  m_formatCombo->addItem(QStringLiteral("tar"),     static_cast<int>(ArchiveCreateWorker::Format::Tar));
-  m_formatCombo->addItem(QStringLiteral("tar.gz"),  static_cast<int>(ArchiveCreateWorker::Format::TarGz));
-  m_formatCombo->addItem(QStringLiteral("tar.bz2"), static_cast<int>(ArchiveCreateWorker::Format::TarBz2));
-  m_formatCombo->addItem(QStringLiteral("tar.xz"),  static_cast<int>(ArchiveCreateWorker::Format::TarXz));
-  m_formatCombo->setFocusPolicy(Qt::StrongFocus);
-  auto* formatLabel = altBuddyLabel(tr("Format:"), Qt::Key_F, m_formatCombo, this);
-  form->addRow(formatLabel, m_formatCombo);
 
-  // Output directory + Browse
+  // 出力先のパス + Browse。何に対する操作かが最初に分かるよう、他のダイアログの
+  // 「パス:」見出しと同じく一番上に置く。
   QWidget* dirRow = new QWidget(this);
   QHBoxLayout* dirRowLayout = new QHBoxLayout(dirRow);
   dirRowLayout->setContentsMargins(0, 0, 0, 0);
@@ -154,8 +145,19 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   m_browseButton->setFocusPolicy(Qt::StrongFocus);
   dirRowLayout->addWidget(m_dirEdit, 1);
   dirRowLayout->addWidget(m_browseButton);
-  auto* dirLabel = altBuddyLabel(tr("Directory:"), Qt::Key_D, m_dirEdit, this);
+  auto* dirLabel = altBuddyLabel(tr("Path:"), Qt::Key_P, m_dirEdit, this);
   form->addRow(dirLabel, dirRow);
+
+  // Format
+  m_formatCombo = new QComboBox(this);
+  m_formatCombo->addItem(QStringLiteral("zip"),     static_cast<int>(ArchiveCreateWorker::Format::Zip));
+  m_formatCombo->addItem(QStringLiteral("tar"),     static_cast<int>(ArchiveCreateWorker::Format::Tar));
+  m_formatCombo->addItem(QStringLiteral("tar.gz"),  static_cast<int>(ArchiveCreateWorker::Format::TarGz));
+  m_formatCombo->addItem(QStringLiteral("tar.bz2"), static_cast<int>(ArchiveCreateWorker::Format::TarBz2));
+  m_formatCombo->addItem(QStringLiteral("tar.xz"),  static_cast<int>(ArchiveCreateWorker::Format::TarXz));
+  m_formatCombo->setFocusPolicy(Qt::StrongFocus);
+  auto* formatLabel = altBuddyLabel(tr("Format:"), Qt::Key_F, m_formatCombo, this);
+  form->addRow(formatLabel, m_formatCombo);
 
   // Output filename
   m_nameEdit = new QLineEdit(this);

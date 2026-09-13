@@ -435,7 +435,7 @@
         <translation type="vanished">ディレクトリ: %1</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="266"/>
+        <location filename="../src/utils/Dialogs.cpp" line="287"/>
         <source>Path: %1</source>
         <translation>パス: %1</translation>
     </message>
@@ -2813,7 +2813,7 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <name>Farman::CreateArchiveDialog</name>
     <message>
         <location filename="../src/ui/CreateArchiveDialog.cpp" line="115"/>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="278"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="280"/>
         <source>Create Archive</source>
         <translation>アーカイブ作成</translation>
     </message>
@@ -2822,7 +2822,7 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation type="vanished">フォーマット (%1):</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="153"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="144"/>
         <source>Browse folder...</source>
         <translation>フォルダを参照...</translation>
     </message>
@@ -2835,77 +2835,81 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation type="vanished">ファイル名 (%1):</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="135"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="159"/>
         <source>Format:</source>
         <translation>フォーマット:</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="148"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="139"/>
         <source>Output directory. Press ↑/↓ to toggle between the source pane and the opposite-pane directory. Click the folder button to browse.</source>
         <translation>出力先ディレクトリ。↑/↓ でソースペインと反対側ペインのディレクトリを切替。フォルダボタンで参照ダイアログ。</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="157"/>
         <source>Directory:</source>
-        <translation>ディレクトリ:</translation>
+        <translation type="vanished">ディレクトリ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="163"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="148"/>
+        <source>Path:</source>
+        <translation>パス:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="165"/>
         <source>File name:</source>
         <translation>ファイル名:</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="169"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="171"/>
         <source>Default</source>
         <translation>既定</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="172"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="174"/>
         <source> (store/fastest)</source>
         <translation> (保存/最速)</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="173"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="175"/>
         <source> (best)</source>
         <translation> (最高)</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="176"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="178"/>
         <source>Compression:</source>
         <translation>圧縮:</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="184"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="186"/>
         <source>Leave empty for no encryption (zip only, AES-256)</source>
         <translation>暗号化しない場合は空欄 (zip のみ、AES-256)</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="185"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="187"/>
         <source>Password:</source>
         <translation>パスワード:</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="190"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="192"/>
         <source>Confirm:</source>
         <translation>確認:</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="197"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="199"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="198"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="200"/>
         <source>Create</source>
         <translation>作成</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="243"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="245"/>
         <source>Select Output Directory</source>
         <translation>出力先ディレクトリを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="278"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="280"/>
         <source>Passwords do not match.</source>
         <translation>パスワードが一致しません。</translation>
     </message>
@@ -7928,42 +7932,42 @@ Enter キーでビュアーを開いてください。</translation>
     </message>
     <message>
         <location filename="../src/ui/PropertiesDialog.cpp" line="109"/>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="440"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="441"/>
         <source>calculating...</source>
         <translation>計算中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="368"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="369"/>
         <source>Name:</source>
         <translation>名前:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="232"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="233"/>
         <source>Path:</source>
         <translation>パス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="234"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="235"/>
         <source>Type:</source>
         <translation>種別:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="235"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="236"/>
         <source>Size:</source>
         <translation>サイズ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="236"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="237"/>
         <source>Modified:</source>
         <translation>更新日時:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="238"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="239"/>
         <source>Created:</source>
         <translation>作成日時:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="239"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="240"/>
         <source>Accessed:</source>
         <translation>アクセス日時:</translation>
     </message>
@@ -7972,137 +7976,137 @@ Enter キーでビュアーを開いてください。</translation>
         <translation type="vanished">パーミッション:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="240"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="241"/>
         <source>Owner:</source>
         <translation>所有者:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="242"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="243"/>
         <source>Group:</source>
         <translation>グループ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="244"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="245"/>
         <source>Link Target:</source>
         <translation>リンク先:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="255"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="256"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="256"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="257"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="275"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="276"/>
         <source>Attributes</source>
         <translation>属性</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="277"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="278"/>
         <source>Read-only</source>
         <translation>読み取り専用</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="278"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="279"/>
         <source>Hidden</source>
         <translation>隠し</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="296"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="297"/>
         <source>Permissions</source>
         <translation>パーミッション</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="298"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="299"/>
         <source>Read</source>
         <translation>読み</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="299"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="300"/>
         <source>Write</source>
         <translation>書き</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="300"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="301"/>
         <source>Execute</source>
         <translation>実行</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="301"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="302"/>
         <source>Owner</source>
         <translation>所有者</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="302"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="303"/>
         <source>Group</source>
         <translation>グループ</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="360"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="361"/>
         <source>%1 items</source>
         <translation>%1 件</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="433"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="434"/>
         <source>Symbolic link</source>
         <translation>シンボリックリンク</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="434"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="435"/>
         <source>Directory</source>
         <translation>ディレクトリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="435"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="436"/>
         <source>File</source>
         <translation>ファイル</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="303"/>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="436"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="304"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="437"/>
         <source>Other</source>
         <translation>その他</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="585"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="586"/>
         <source>modification time</source>
         <translation>更新日時</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="597"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="598"/>
         <source>owner / group</source>
         <translation>所有者 / グループ</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="610"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="611"/>
         <source>name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="616"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="617"/>
         <source>Could not apply some changes</source>
         <translation>一部の変更を適用できませんでした</translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="617"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="618"/>
         <source>Failed to change: %1
 (You may not have the required permission.)</source>
         <translation>変更できませんでした: %1
 （必要な権限が無い可能性があります。）</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/ui/PropertiesDialog.cpp" line="624"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="625"/>
         <source>%1   (%n file(s), %2 directories)</source>
         <translation>
             <numerusform>%1   (ファイル %n / ディレクトリ %2)</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../src/ui/PropertiesDialog.cpp" line="632"/>
+        <location filename="../src/ui/PropertiesDialog.cpp" line="633"/>
         <source>  (cancelled)</source>
         <translation>  (キャンセル)</translation>
     </message>
@@ -8204,35 +8208,35 @@ Enter キーでビュアーを開いてください。</translation>
         <translation>更新日時:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="203"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="205"/>
         <source>From:</source>
         <translation>から:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="205"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="207"/>
         <source>To:</source>
         <translation>まで:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="209"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="211"/>
         <source>Content:</source>
         <translation>内容:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="212"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="214"/>
         <source>Text to find inside files</source>
         <translation>ファイル内を検索する文字列</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="213"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="215"/>
         <source>Case sensitive</source>
         <translation>大文字小文字を区別</translation>
     </message>
     <message>
         <location filename="../src/ui/SearchDialog.cpp" line="64"/>
-        <location filename="../src/ui/SearchDialog.cpp" line="261"/>
-        <location filename="../src/ui/SearchDialog.cpp" line="454"/>
-        <location filename="../src/ui/SearchDialog.cpp" line="464"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="263"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="456"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="466"/>
         <source>Search</source>
         <translation>検索</translation>
     </message>
@@ -8257,57 +8261,57 @@ Enter キーでビュアーを開いてください。</translation>
         <translation>検索対象:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="273"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="275"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="273"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="275"/>
         <source>Path</source>
         <translation>パス</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="273"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="275"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="273"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="275"/>
         <source>Modified</source>
         <translation>更新日時</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="293"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="295"/>
         <source>Ready.</source>
         <translation>準備完了</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="299"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="301"/>
         <source>Close</source>
         <translation>閉じる</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="378"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="380"/>
         <source>Select Start Directory</source>
         <translation>開始ディレクトリを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="409"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="411"/>
         <source>Searching...</source>
         <translation>検索中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="442"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="444"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="459"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="461"/>
         <source>Searching... %1 found</source>
         <translation>検索中... %1 件</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="465"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="467"/>
         <source>Done. %1 found.</source>
         <translation>完了。%1 件見つかりました。</translation>
     </message>
@@ -9793,30 +9797,30 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>iCloud Drive</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="61"/>
+        <location filename="../src/utils/Dialogs.cpp" line="63"/>
         <source>No</source>
         <translation>いいえ</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="62"/>
+        <location filename="../src/utils/Dialogs.cpp" line="64"/>
         <source>Yes</source>
         <translation>はい</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="246"/>
+        <location filename="../src/utils/Dialogs.cpp" line="248"/>
         <source>Do not show this dialog next time</source>
         <translation>次回以降このダイアログを表示しない</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="324"/>
+        <location filename="../src/utils/Dialogs.cpp" line="348"/>
         <location filename="../src/model/FileListModel.cpp" line="321"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="39"/>
-        <location filename="../src/utils/Dialogs.cpp" line="325"/>
-        <location filename="../src/utils/Dialogs.cpp" line="325"/>
+        <location filename="../src/utils/Dialogs.cpp" line="41"/>
+        <location filename="../src/utils/Dialogs.cpp" line="349"/>
+        <location filename="../src/utils/Dialogs.cpp" line="349"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
