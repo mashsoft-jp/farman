@@ -431,9 +431,13 @@
 <context>
     <name>Farman</name>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="266"/>
         <source>Directory: %1</source>
-        <translation>ディレクトリ: %1</translation>
+        <translation type="vanished">ディレクトリ: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/utils/Dialogs.cpp" line="266"/>
+        <source>Path: %1</source>
+        <translation>パス: %1</translation>
     </message>
 </context>
 <context>
@@ -9804,15 +9808,15 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>次回以降このダイアログを表示しない</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="325"/>
+        <location filename="../src/utils/Dialogs.cpp" line="324"/>
         <location filename="../src/model/FileListModel.cpp" line="321"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
         <location filename="../src/utils/Dialogs.cpp" line="39"/>
-        <location filename="../src/utils/Dialogs.cpp" line="326"/>
-        <location filename="../src/utils/Dialogs.cpp" line="326"/>
+        <location filename="../src/utils/Dialogs.cpp" line="325"/>
+        <location filename="../src/utils/Dialogs.cpp" line="325"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>

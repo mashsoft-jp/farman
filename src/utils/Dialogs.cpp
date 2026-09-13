@@ -261,10 +261,9 @@ bool informWithSuppress(QWidget* parent,
   return !suppressCheck->isChecked();
 }
 
-QLabel* directoryHeaderLabel(const QString& directoryPath, QWidget* parent) {
+QLabel* pathHeaderLabel(const QString& path, QWidget* parent) {
   auto* label = new QLabel(
-    QCoreApplication::translate("Farman", "Directory: %1").arg(directoryPath),
-    parent);
+    QCoreApplication::translate("Farman", "Path: %1").arg(path), parent);
   label->setWordWrap(true);
   label->setStyleSheet(QStringLiteral("QLabel { font-weight: bold; padding: 4px; }"));
   return label;
@@ -276,7 +275,7 @@ QString inputText(QWidget* parent,
                   const QString& defaultValue,
                   bool* ok,
                   TextInputCursor cursor,
-                  const QString& directoryPath) {
+                  const QString& headerPath) {
   QDialog dlg(parent);
   dlg.setWindowTitle(title);
   dlg.setModal(true);
@@ -284,9 +283,9 @@ QString inputText(QWidget* parent,
 
   auto* layout = new QVBoxLayout(&dlg);
 
-  // 対象ディレクトリの見出し (指定があるときだけ)。
-  if (!directoryPath.isEmpty()) {
-    layout->addWidget(directoryHeaderLabel(directoryPath, &dlg));
+  // 対象パスの見出し (指定があるときだけ)。
+  if (!headerPath.isEmpty()) {
+    layout->addWidget(pathHeaderLabel(headerPath, &dlg));
   }
 
   auto* labelWidget = new QLabel(label, &dlg);

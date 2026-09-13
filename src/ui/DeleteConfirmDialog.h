@@ -21,7 +21,7 @@ public:
                       QWidget* parent = nullptr,
                       const QString& detailTooltip = QString(),
                       bool trashAvailable = true,
-                      const QString& directoryPath = QString());
+                      const QString& headerPath = QString());
   ~DeleteConfirmDialog() override = default;
 
   bool toTrash() const;
@@ -32,7 +32,7 @@ protected:
 private:
   void setupUi(const QString& message, bool defaultToTrash,
                const QString& detailTooltip, bool trashAvailable,
-               const QString& directoryPath);
+               const QString& headerPath);
 
   QRadioButton* m_trashRadio;
   QRadioButton* m_permanentRadio;

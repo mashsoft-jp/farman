@@ -145,19 +145,19 @@ enum class TextInputCursor {
   BeforeExtension,
 };
 
-// ダイアログの先頭に置く「対象ディレクトリ」の見出しラベル。
-// どのディレクトリに対する操作なのかを、ダイアログだけ見て分かるようにする
+// ダイアログの先頭に置く「対象パス」の見出しラベル。
+// どこに対する操作なのかを、ダイアログだけ見てフルパスで分かるようにする
 // (ペインが隠れていたり、2 画面でどちらが対象か紛らわしい場面のため)。
 // 見た目はソート / フィルタダイアログの見出しに合わせる。
-QLabel* directoryHeaderLabel(const QString& directoryPath, QWidget* parent);
+QLabel* pathHeaderLabel(const QString& path, QWidget* parent);
 
-// directoryPath が空でなければ、入力欄の上に directoryHeaderLabel を出す。
+// headerPath が空でなければ、入力欄の上に pathHeaderLabel を出す。
 QString inputText(QWidget* parent,
                   const QString& title,
                   const QString& label,
                   const QString& defaultValue = QString(),
                   bool* ok = nullptr,
                   TextInputCursor cursor = TextInputCursor::SelectAll,
-                  const QString& directoryPath = QString());
+                  const QString& headerPath = QString());
 
 } // namespace Farman
