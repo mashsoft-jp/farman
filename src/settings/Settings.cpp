@@ -1206,7 +1206,7 @@ QString normalizeViewerAssociationExtension(QString extension) {
 //   "!class" → "!*.class"
 // 既に "*." や "*" で始まるもの、パスらしきものはそのまま返す。
 //
-// v0.9.10 で照合を MediaMatchers::fileNameMatches (ファイル名全体 / 拡張子の
+// v1.0.0 で照合を MediaMatchers::fileNameMatches (ファイル名全体 / 拡張子の
 // どちらに一致しても可) へ統一したが、既定値は拡張子のまま残っていた。書式が
 // 設定 → アーカイブのパターンと不揃いなうえ、"c*" のような拡張子グロブが
 // ファイル名全体にも一致して "cabinet.zip" まで拾ってしまうため、glob へ寄せる。
@@ -2475,7 +2475,7 @@ void Settings::load() {
       // 追加された既定拡張子だけをマージする (メディアビュアーと同じ扱い)。
       // ユーザーが意図的に削除した拡張子は復活させない。
       static const QMap<int, QStringList> kImageExtAddedInRevision = {
-        // revision 2 (farman 0.9.10): それまで ImageViewerPlugin 側にコード固定で
+        // revision 2 (farman 1.0.0): それまで ImageViewerPlugin 側にコード固定で
         // 持っていた psd / heic / heif を設定側の既定へ移した分。
         {2, {"psd", "heic", "heif"}},
       };

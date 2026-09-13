@@ -10,7 +10,7 @@ if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum macOS deployment target")
 endif()
 
-project(farman VERSION 0.9.10 LANGUAGES CXX)
+project(farman VERSION 1.0.0 LANGUAGES CXX)
 
 # Windows (vcpkg + MSBuild): 各ターゲットのビルド後に vcpkg が依存 DLL を出力先へ
 # コピーする (applocal deps)。全プラグインが同じ plugins/viewers/ 出力先へ同じ
@@ -275,7 +275,7 @@ endif()
 message(STATUS "FARMAN_VERSION = ${FARMAN_VERSION_STRING}")
 
 # ── ビルドリビジョン ───────────────────────────────────────────
-# 同じバージョン文字列 (例 "0.9.10-test") のビルドを見分けるための識別子。
+# 同じバージョン文字列 (例 "1.0.0-test") のビルドを見分けるための識別子。
 # test タグは打ち直す運用なので、版数だけでは手元のビルドが最新かどうかが
 # 分からない。次の 3 つを組み合わせて About / ログ / 配布ファイル名に出す。
 #

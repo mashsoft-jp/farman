@@ -1,4 +1,4 @@
-# What's New in farman 0.9.10
+# What's New in farman 1.0.0
 
 (This version is still in development. The contents may change.)
 
