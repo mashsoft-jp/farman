@@ -286,7 +286,10 @@ QLabel* pathHeaderLabel(const QString& path, QWidget* parent) {
   auto* label = new QLabel(
     QCoreApplication::translate("Farman", "Path: %1").arg(path), parent);
   label->setWordWrap(true);
-  label->setStyleSheet(QStringLiteral("QLabel { font-weight: bold; padding: 4px; }"));
+  // 左右に padding を入れると、同じレイアウトに並ぶ他の行より 1 字ぶん
+  // 字下げされて見えてしまう。空けたいのは下側だけなので下だけに入れる。
+  label->setStyleSheet(
+    QStringLiteral("QLabel { font-weight: bold; padding: 0px 0px 4px 0px; }"));
   return label;
 }
 
