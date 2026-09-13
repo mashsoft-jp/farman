@@ -62,6 +62,9 @@ private:
   QLineEdit*       m_nameEdit         = nullptr;     // 末尾の名前 (リネーム可能)
   QLabel*          m_pathLabel        = nullptr;     // 親ディレクトリ + 区切り
   QWidget*         m_pathRow          = nullptr;     // 上記 2 つを束ねた行
+
+  // 親ディレクトリのパスをラベルに入れる (長ければ中央省略 + ツールチップ)。
+  void setParentPathText(const QString& parentPath);
   QLabel*          m_pathRowLabel     = nullptr;     // 行ラベル (複数選択で差し替え)
   QLabel*          m_typeLabel        = nullptr;
   QLabel*          m_sizeLabel        = nullptr;     // 動的更新

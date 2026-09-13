@@ -123,6 +123,19 @@ PropertiesDialog::~PropertiesDialog() {
   }
 }
 
+// 親ディレクトリのパスをラベルに入れる。長すぎるとダイアログが横に伸びて
+// しまうので、上限を超える分は中央を省略し、全文はツールチップで見せる。
+void PropertiesDialog::setParentPathText(const QString& parentPath) {
+  // 入力欄 (最低 240px) と並べても現実的な幅に収まる上限。
+  constexpr int kMaxParentWidth = 460;
+  const QFontMetrics fm(m_pathLabel->font());
+  m_pathLabel->setText(
+    fm.horizontalAdvance(parentPath) <= kMaxParentWidth
+      ? parentPath
+      : fm.elidedText(parentPath, Qt::ElideMiddle, kMaxParentWidth));
+  m_pathLabel->setToolTip(parentPath);
+}
+
 void PropertiesDialog::setupUi() {
   auto* mainLayout = new QVBoxLayout(this);
 
@@ -150,17 +163,17 @@ void PropertiesDialog::setupUi() {
     return lbl;
   };
 
-  // パス行の親ディレクトリ側。他の値ラベルと違い入力欄と横並びになるので、
-  // 幅を取り合わないよう Expanding にはせず、入力欄と縦位置を揃える。
+  // パス行の親ディレクトリ側。入力欄と横並びの 1 行なので折り返さない。
+  // 折り返しを許すと幅を入力欄と奪い合って 2 行に割れ、縦位置もずれる。
+  // 長すぎる場合は中央省略し、全文はツールチップで読めるようにする。
   m_pathLabel = new QLabel(this);
   m_pathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  m_pathLabel->setWordWrap(true);
+  m_pathLabel->setWordWrap(false);
   m_pathLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
   {
     QSizePolicy sp = m_pathLabel->sizePolicy();
-    sp.setHeightForWidth(true);
-    sp.setHorizontalPolicy(QSizePolicy::Preferred);
-    sp.setVerticalPolicy(QSizePolicy::Minimum);
+    sp.setHorizontalPolicy(QSizePolicy::Fixed);   // 自然幅のまま、入力欄に譲らない
+    sp.setVerticalPolicy(QSizePolicy::Fixed);
     m_pathLabel->setSizePolicy(sp);
   }
   m_typeLabel        = makeValueLabel();
@@ -211,8 +224,10 @@ void PropertiesDialog::setupUi() {
   auto* pathRowLayout = new QHBoxLayout(m_pathRow);
   pathRowLayout->setContentsMargins(0, 0, 0, 0);
   pathRowLayout->setSpacing(2);
-  pathRowLayout->addWidget(m_pathLabel, 0);
-  pathRowLayout->addWidget(m_nameEdit, 1);
+  // 縦は中央合わせ。ラベルの文字と入力欄の文字のベースラインを揃えて、
+  // 1 つのパスが続いているように見せる。
+  pathRowLayout->addWidget(m_pathLabel, 0, Qt::AlignVCenter);
+  pathRowLayout->addWidget(m_nameEdit,  1, Qt::AlignVCenter);
   m_pathRowLabel = altBuddyLabel(tr("Path:"), Qt::Key_P, m_nameEdit, this);
   m_form->addRow(m_pathRowLabel, m_pathRow);
   m_form->addRow(tr("Type:"),        m_typeLabel);
@@ -393,7 +408,7 @@ void PropertiesDialog::populateStaticInfo() {
   // ルート直下 ("/foo") では absolutePath() が "/" を返すので二重にしない。
   QString parent = fi.absolutePath();
   if (!parent.endsWith(QLatin1Char('/'))) parent += QLatin1Char('/');
-  m_pathLabel->setText(QDir::toNativeSeparators(parent));
+  setParentPathText(QDir::toNativeSeparators(parent));
 
   QString type;
   if (fi.isSymLink())   type = tr("Symbolic link");
