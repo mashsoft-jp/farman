@@ -5,6 +5,7 @@
 
 class QComboBox;
 class QCheckBox;
+class QRadioButton;
 class QLineEdit;
 class QDialogButtonBox;
 
@@ -43,8 +44,11 @@ private:
 
   // Filter controls
   QCheckBox* m_showHiddenCheck;
-  QCheckBox* m_dirsOnlyCheck;
-  QCheckBox* m_filesOnlyCheck;
+  // 対象の種別。「のみ」が 2 つ並ぶチェックだと両方 ON にできてしまい
+  // 意味が通らないので、検索ダイアログと同じ 3 択のラジオにしている。
+  QRadioButton* m_targetBothRadio;   // 既定
+  QRadioButton* m_targetFilesRadio;
+  QRadioButton* m_targetDirsRadio;
   QLineEdit* m_nameFiltersEdit;
 
   // Save toggle

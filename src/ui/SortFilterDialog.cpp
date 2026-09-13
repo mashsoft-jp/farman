@@ -6,6 +6,7 @@
 #include <QGroupBox>
 #include <QComboBox>
 #include <QCheckBox>
+#include <QRadioButton>
 #include <QLineEdit>
 #include <QLabel>
 #include <QDialogButtonBox>
@@ -26,8 +27,9 @@ SortFilterDialog::SortFilterDialog(const QString& directoryPath,
   , m_sortDotFirstCheck(nullptr)
   , m_sortCaseSensitiveCheck(nullptr)
   , m_showHiddenCheck(nullptr)
-  , m_dirsOnlyCheck(nullptr)
-  , m_filesOnlyCheck(nullptr)
+  , m_targetBothRadio(nullptr)
+  , m_targetFilesRadio(nullptr)
+  , m_targetDirsRadio(nullptr)
   , m_nameFiltersEdit(nullptr)
   , m_saveCheck(nullptr)
   , m_buttonBox(nullptr)
@@ -55,7 +57,7 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   // (macOS は '&' 由来の mnemonic が効かないので、明示的な setShortcut が要る)。
   // 割当: S 並び替え / T 次の条件 / R 昇順降順 / P ディレクトリの位置 /
   //       D ドットファイル / C 大文字小文字 / H 隠しファイル /
-  //       I ディレクトリのみ / F ファイルのみ / N 名前フィルタ /
+  //       F ファイルのみ / I ディレクトリのみ / A 両方 / N 名前フィルタ /
   //       V このディレクトリ専用として保存 / O OK / X キャンセル
   //
   // ── Sort group ──
@@ -117,22 +119,24 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   applyAltShortcut(m_showHiddenCheck, Qt::Key_H);
   filterLayout->addWidget(m_showHiddenCheck);
 
-  QHBoxLayout* onlyLayout = new QHBoxLayout();
-  m_dirsOnlyCheck  = new QCheckBox(tr("Directories only"), this);
-  m_filesOnlyCheck = new QCheckBox(tr("Files only"),       this);
-  applyAltShortcut(m_dirsOnlyCheck,  Qt::Key_I);
-  applyAltShortcut(m_filesOnlyCheck, Qt::Key_F);
-  // Dirs-only と Files-only は排他
-  connect(m_dirsOnlyCheck, &QCheckBox::toggled, this, [this](bool checked) {
-    if (checked) m_filesOnlyCheck->setChecked(false);
-  });
-  connect(m_filesOnlyCheck, &QCheckBox::toggled, this, [this](bool checked) {
-    if (checked) m_dirsOnlyCheck->setChecked(false);
-  });
-  onlyLayout->addWidget(m_dirsOnlyCheck);
-  onlyLayout->addWidget(m_filesOnlyCheck);
-  onlyLayout->addStretch();
-  filterLayout->addLayout(onlyLayout);
+  // 表示対象。「ファイルのみ」「ディレクトリのみ」のチェックを 2 つ並べると
+  // 両方 ON にできてしまい「のみ」が意味を成さないので、検索ダイアログと
+  // 同じ 3 択のラジオにする。文言・並び・キーも検索側に合わせる。
+  QHBoxLayout* targetLayout = new QHBoxLayout();
+  m_targetFilesRadio = new QRadioButton(tr("Files only"), this);
+  m_targetDirsRadio  = new QRadioButton(tr("Directories only"), this);
+  m_targetBothRadio  = new QRadioButton(tr("Files and directories"), this);
+  applyAltShortcut(m_targetFilesRadio, Qt::Key_F);
+  applyAltShortcut(m_targetDirsRadio,  Qt::Key_I);
+  applyAltShortcut(m_targetBothRadio,  Qt::Key_A);
+  // ラベル自体にはキーを振らない (3 つのラジオがそれぞれ持っているため)。
+  // 検索ダイアログの「Search for:」と同じ扱い。
+  targetLayout->addWidget(new QLabel(tr("Show:"), this));
+  targetLayout->addWidget(m_targetFilesRadio);
+  targetLayout->addWidget(m_targetDirsRadio);
+  targetLayout->addWidget(m_targetBothRadio);
+  targetLayout->addStretch();
+  filterLayout->addLayout(targetLayout);
 
   QHBoxLayout* nameLayout = new QHBoxLayout();
   m_nameFiltersEdit = new QLineEdit(this);
@@ -196,8 +200,15 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   m_sortCaseSensitiveCheck->setChecked(initial.sortCS == Qt::CaseSensitive);
 
   m_showHiddenCheck->setChecked(static_cast<bool>(initial.attrFilter & AttrFilter::ShowHidden));
-  m_dirsOnlyCheck->setChecked(static_cast<bool>(initial.attrFilter & AttrFilter::DirsOnly));
-  m_filesOnlyCheck->setChecked(static_cast<bool>(initial.attrFilter & AttrFilter::FilesOnly));
+  // 保存形式 (AttrFilter のビット) は据え置き。どちらのビットも立って
+  // いなければ「ファイルとディレクトリ」= 既定。
+  if (initial.attrFilter & AttrFilter::DirsOnly) {
+    m_targetDirsRadio->setChecked(true);
+  } else if (initial.attrFilter & AttrFilter::FilesOnly) {
+    m_targetFilesRadio->setChecked(true);
+  } else {
+    m_targetBothRadio->setChecked(true);
+  }
 
   m_nameFiltersEdit->setText(initial.nameFilters.join(' '));
 
@@ -216,8 +227,8 @@ void SortFilterDialog::onAccepted() {
 
   AttrFilterFlags flags = AttrFilter::None;
   if (m_showHiddenCheck->isChecked()) flags |= AttrFilter::ShowHidden;
-  if (m_dirsOnlyCheck->isChecked())   flags |= AttrFilter::DirsOnly;
-  if (m_filesOnlyCheck->isChecked())  flags |= AttrFilter::FilesOnly;
+  if (m_targetDirsRadio->isChecked())  flags |= AttrFilter::DirsOnly;
+  if (m_targetFilesRadio->isChecked()) flags |= AttrFilter::FilesOnly;
   s.attrFilter = flags;
 
   QStringList filters;

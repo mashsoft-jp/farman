@@ -8499,141 +8499,151 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::SortFilterDialog</name>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="41"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="43"/>
         <source>Sort &amp; Filter</source>
         <translation>ソートとフィルタ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="47"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="49"/>
         <source>Directory: %1</source>
         <translation>ディレクトリ: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="62"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="64"/>
         <source>Sort</source>
         <translation>ソート</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="68"/>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="78"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="70"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="80"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="69"/>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="79"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="71"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="81"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="70"/>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="80"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="72"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="82"/>
         <source>Type</source>
         <translation>種別</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="71"/>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="81"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="73"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="83"/>
         <source>Last Modified</source>
         <translation>更新日時</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="73"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="75"/>
         <source>Sort by:</source>
         <translation>ソート基準:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="77"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="79"/>
         <source>None</source>
         <translation>なし</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="83"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="85"/>
         <source>Then by:</source>
         <translation>第 2 ソート:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="87"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="89"/>
         <source>Ascending</source>
         <translation>昇順</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="88"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="90"/>
         <source>Descending</source>
         <translation>降順</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="90"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="92"/>
         <source>Order:</source>
         <translation>順序:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="94"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="96"/>
         <source>Directories First</source>
         <translation>ディレクトリを先頭</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="95"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="97"/>
         <source>Directories Last</source>
         <translation>ディレクトリを末尾</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="96"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="98"/>
         <source>Mixed with Files</source>
         <translation>ファイルと混在</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="98"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="100"/>
         <source>Directory Placement:</source>
         <translation>ディレクトリの配置:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="102"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="104"/>
         <source>Sort dot files first</source>
         <translation>ドットファイルを先頭にソート</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="106"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="108"/>
         <source>Case sensitive</source>
         <translation>大文字小文字を区別</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="113"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="115"/>
         <source>Filter</source>
         <translation>フィルタ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="116"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="118"/>
         <source>Show hidden files</source>
         <translation>隠しファイルを表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="121"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="127"/>
         <source>Directories only</source>
         <translation>ディレクトリのみ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="122"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="126"/>
         <source>Files only</source>
         <translation>ファイルのみ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="141"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="145"/>
         <source>Name filters:</source>
         <translation>名前フィルタ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="139"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="143"/>
         <source>e.g. *.cpp *.h (space-separated)</source>
         <translation>例: *.cpp *.h (空白区切り)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="149"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="128"/>
+        <source>Files and directories</source>
+        <translation>ファイルとディレクトリ</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="134"/>
+        <source>Show:</source>
+        <translation>表示:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="153"/>
         <source>Override defaults for this directory (save)</source>
         <translation>このディレクトリのデフォルトを上書きする (保存)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="152"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="156"/>
         <source>Save these settings as a per-directory override. They take priority over the Behavior tab defaults whenever this directory is opened. Unchecking a previously saved directory removes its override and falls back to the defaults.</source>
         <translation>これらの設定を、このディレクトリ専用の上書きとして保存します。Behavior タブのデフォルトより優先され、このディレクトリを開いたときに自動適用されます。保存済みのディレクトリでチェックを外すと上書きを削除し、デフォルトに戻ります。</translation>
     </message>
