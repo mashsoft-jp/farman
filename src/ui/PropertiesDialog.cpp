@@ -11,6 +11,7 @@
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QShortcut>
 #include <QDateTimeEdit>
 #include <QDir>
 #include <QHBoxLayout>
@@ -232,7 +233,8 @@ void PropertiesDialog::setupUi() {
   m_form->addRow(m_pathRowLabel, m_pathRow);
   m_form->addRow(tr("Type:"),        m_typeLabel);
   m_form->addRow(tr("Size:"),        m_sizeLabel);
-  m_form->addRow(tr("Modified:"),    m_modifiedEdit);
+  m_form->addRow(altBuddyLabel(tr("Modified:"), Qt::Key_M, m_modifiedEdit, this),
+                 m_modifiedEdit);
   m_form->addRow(tr("Created:"),     m_createdLabel);
   m_form->addRow(tr("Accessed:"),    m_accessedLabel);
   m_form->addRow(altBuddyLabel(tr("Owner:"), Qt::Key_W, m_ownerEdit, this),
@@ -286,7 +288,12 @@ void PropertiesDialog::buildAttributeEditor(QBoxLayout* parentLayout) {
   v->addWidget(m_hiddenCheck);
   setTabOrder(m_readOnlyCheck, m_hiddenCheck);
 #else
-  auto* group = new QGroupBox(tr("Permissions"), this);
+  // グループ全体で 1 つのショートカット。チェック 9 個に個別のキーを振ると
+  // 覚えきれず、他のダイアログとの兼ね合いでも文字が尽きるので、
+  // 「グループの先頭 (所有者の読み) へ飛ぶ」だけにする。あとは Tab / ←→ で
+  // 辿れる。タイトルにはヒントを出して、キーがあることを分かるようにする。
+  auto* group = new QGroupBox(
+    withAltMnemonic(tr("Permissions"), Qt::Key_E), this);
   auto* grid = new QGridLayout(group);
   grid->addWidget(new QLabel(tr("Read"),    this), 0, 1, Qt::AlignHCenter);
   grid->addWidget(new QLabel(tr("Write"),   this), 0, 2, Qt::AlignHCenter);
@@ -310,6 +317,18 @@ void PropertiesDialog::buildAttributeEditor(QBoxLayout* parentLayout) {
                    m_otherRead, m_otherWrite, m_otherExec}) {
     cb->setFocusPolicy(Qt::StrongFocus);
     if (multi) cb->setTristate(true);
+  }
+
+  // QGroupBox のタイトルに埋めた '&' は macOS では効かないので、明示的に
+  // ショートカットを張る (applyAltShortcut と同じ理由)。
+  {
+    auto* permShortcut = new QShortcut(QKeySequence(Qt::ALT | Qt::Key_E), this);
+    permShortcut->setContext(Qt::WindowShortcut);
+    connect(permShortcut, &QShortcut::activated, this, [this]() {
+      if (m_ownerRead && m_ownerRead->isEnabled()) {
+        m_ownerRead->setFocus(Qt::ShortcutFocusReason);
+      }
+    });
   }
 
   grid->addWidget(m_ownerRead,  1, 1, Qt::AlignHCenter);
