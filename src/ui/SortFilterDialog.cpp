@@ -49,6 +49,15 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   pathLabel->setStyleSheet("QLabel { font-weight: bold; padding: 4px; }");
   mainLayout->addWidget(pathLabel);
 
+  // ── Alt ショートカットの方針 ───────────────────────────────
+  // 検索ダイアログ等と同じく、入力行のラベルとチェックボックスに Alt+key を
+  // 割り当てる。ラベルは altBuddyLabel、チェックは applyAltShortcut を通すこと
+  // (macOS は '&' 由来の mnemonic が効かないので、明示的な setShortcut が要る)。
+  // 割当: S 並び替え / T 次の条件 / R 昇順降順 / P ディレクトリの位置 /
+  //       D ドットファイル / C 大文字小文字 / H 隠しファイル /
+  //       I ディレクトリのみ / F ファイルのみ / N 名前フィルタ /
+  //       V このディレクトリ専用として保存 / O OK / X キャンセル
+  //
   // ── Sort group ──
   QGroupBox* sortGroup = new QGroupBox(tr("Sort"), this);
   QGridLayout* sortGrid = new QGridLayout(sortGroup);
@@ -60,7 +69,8 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   m_sortKeyCombo->addItem(tr("Size"),          static_cast<int>(SortKey::Size));
   m_sortKeyCombo->addItem(tr("Type"),          static_cast<int>(SortKey::Type));
   m_sortKeyCombo->addItem(tr("Last Modified"), static_cast<int>(SortKey::LastModified));
-  sortGrid->addWidget(new QLabel(tr("Sort by:"), this), 0, 0);
+  sortGrid->addWidget(
+    altBuddyLabel(tr("Sort by:"), Qt::Key_S, m_sortKeyCombo, this), 0, 0);
   sortGrid->addWidget(m_sortKeyCombo, 0, 1);
 
   m_sortKey2ndCombo = new QComboBox(this);
@@ -69,26 +79,32 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   m_sortKey2ndCombo->addItem(tr("Size"),          static_cast<int>(SortKey::Size));
   m_sortKey2ndCombo->addItem(tr("Type"),          static_cast<int>(SortKey::Type));
   m_sortKey2ndCombo->addItem(tr("Last Modified"), static_cast<int>(SortKey::LastModified));
-  sortGrid->addWidget(new QLabel(tr("Then by:"), this), 0, 2);
+  sortGrid->addWidget(
+    altBuddyLabel(tr("Then by:"), Qt::Key_T, m_sortKey2ndCombo, this), 0, 2);
   sortGrid->addWidget(m_sortKey2ndCombo, 0, 3);
 
   m_sortOrderCombo = new QComboBox(this);
   m_sortOrderCombo->addItem(tr("Ascending"),  static_cast<int>(Qt::AscendingOrder));
   m_sortOrderCombo->addItem(tr("Descending"), static_cast<int>(Qt::DescendingOrder));
-  sortGrid->addWidget(new QLabel(tr("Order:"), this), 1, 0);
+  sortGrid->addWidget(
+    altBuddyLabel(tr("Order:"), Qt::Key_R, m_sortOrderCombo, this), 1, 0);
   sortGrid->addWidget(m_sortOrderCombo, 1, 1);
 
   m_sortDirsTypeCombo = new QComboBox(this);
   m_sortDirsTypeCombo->addItem(tr("Directories First"), static_cast<int>(SortDirsType::First));
   m_sortDirsTypeCombo->addItem(tr("Directories Last"),  static_cast<int>(SortDirsType::Last));
   m_sortDirsTypeCombo->addItem(tr("Mixed with Files"),  static_cast<int>(SortDirsType::Mixed));
-  sortGrid->addWidget(new QLabel(tr("Directory Placement:"), this), 1, 2);
+  sortGrid->addWidget(
+    altBuddyLabel(tr("Directory Placement:"), Qt::Key_P, m_sortDirsTypeCombo, this),
+    1, 2);
   sortGrid->addWidget(m_sortDirsTypeCombo, 1, 3);
 
   m_sortDotFirstCheck = new QCheckBox(tr("Sort dot files first"), this);
+  applyAltShortcut(m_sortDotFirstCheck, Qt::Key_D);
   sortGrid->addWidget(m_sortDotFirstCheck, 2, 0, 1, 2);
 
   m_sortCaseSensitiveCheck = new QCheckBox(tr("Case sensitive"), this);
+  applyAltShortcut(m_sortCaseSensitiveCheck, Qt::Key_C);
   sortGrid->addWidget(m_sortCaseSensitiveCheck, 2, 2, 1, 2);
 
   mainLayout->addWidget(sortGroup);
@@ -98,11 +114,14 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   QVBoxLayout* filterLayout = new QVBoxLayout(filterGroup);
 
   m_showHiddenCheck = new QCheckBox(tr("Show hidden files"), this);
+  applyAltShortcut(m_showHiddenCheck, Qt::Key_H);
   filterLayout->addWidget(m_showHiddenCheck);
 
   QHBoxLayout* onlyLayout = new QHBoxLayout();
   m_dirsOnlyCheck  = new QCheckBox(tr("Directories only"), this);
   m_filesOnlyCheck = new QCheckBox(tr("Files only"),       this);
+  applyAltShortcut(m_dirsOnlyCheck,  Qt::Key_I);
+  applyAltShortcut(m_filesOnlyCheck, Qt::Key_F);
   // Dirs-only と Files-only は排他
   connect(m_dirsOnlyCheck, &QCheckBox::toggled, this, [this](bool checked) {
     if (checked) m_filesOnlyCheck->setChecked(false);
@@ -116,9 +135,10 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   filterLayout->addLayout(onlyLayout);
 
   QHBoxLayout* nameLayout = new QHBoxLayout();
-  nameLayout->addWidget(new QLabel(tr("Name filters:"), this));
   m_nameFiltersEdit = new QLineEdit(this);
   m_nameFiltersEdit->setPlaceholderText(tr("e.g. *.cpp *.h (space-separated)"));
+  nameLayout->addWidget(
+    altBuddyLabel(tr("Name filters:"), Qt::Key_N, m_nameFiltersEdit, this));
   nameLayout->addWidget(m_nameFiltersEdit, 1);
   filterLayout->addLayout(nameLayout);
 
@@ -127,6 +147,7 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   // ── Save checkbox ──
   m_saveCheck = new QCheckBox(
     tr("Override defaults for this directory (save)"), this);
+  applyAltShortcut(m_saveCheck, Qt::Key_V);
   m_saveCheck->setToolTip(
     tr("Save these settings as a per-directory override. They take priority over "
        "the Behavior tab defaults whenever this directory is opened. "
