@@ -63,6 +63,21 @@
 - Going to a result no longer enters a directory. The pane moves to its parent
   and puts the cursor on it, so you can see where it was found.
 
+### Dialogs
+
+- Dialog shortcut keys (Alt, or ⌥ on macOS) were reviewed across the whole app so
+  that **the same function uses the same key** — O for OK, X for Cancel, C for
+  Close, N for Name, and so on.
+- Dialogs that previously had keys only on OK and Cancel (Sort & Filter, Bulk
+  Rename, Directory Compare, Properties and others) now let you reach every
+  field by keyboard.
+- The Create File, Create Directory, Delete and Rename dialogs now show the path
+  they act on, so you can tell which directory is affected without looking away.
+- In Properties, the last component of the path is an editable field: change it
+  there to rename. The separate "Name" row is gone.
+- Sort & Filter now uses the same three-way choice as Search (files only,
+  directories only, or both) instead of two "only" check boxes.
+
 ### File list operations
 
 - "Copy Path" now copies the paths of **all selected files** at once
@@ -85,6 +100,8 @@
   Markdown rendering in general immune to the same kind of truncation.
 - With every viewer plugin disabled, only the binary viewer used to open. Now
   nothing opens at all.
+- Fixed the month and year in the date picker being unreadable against their
+  background.
 - On macOS, the Alt (⌥) shortcuts shown on dialog labels, check boxes and radio
   buttons did nothing when pressed. They now work — including "Move to Trash" in
   the delete confirmation and "Overwrite" / "Rename to" in the overwrite dialog.
