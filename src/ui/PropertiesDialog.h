@@ -57,8 +57,12 @@ private:
   QFormLayout*     m_form = nullptr;
 
   // 一覧表示用のラベル群
-  QLineEdit*       m_nameEdit         = nullptr;     // 名前 (リネーム可能)
-  QLabel*          m_pathLabel        = nullptr;     // パス (折り返して全体表示)
+  // パス行は「親ディレクトリ (表示のみ) + 末尾の名前 (編集可)」の 2 つを
+  // 横に並べて 1 行に見せる。フルパスを示しつつ、その場でリネームできる。
+  QLineEdit*       m_nameEdit         = nullptr;     // 末尾の名前 (リネーム可能)
+  QLabel*          m_pathLabel        = nullptr;     // 親ディレクトリ + 区切り
+  QWidget*         m_pathRow          = nullptr;     // 上記 2 つを束ねた行
+  QLabel*          m_pathRowLabel     = nullptr;     // 行ラベル (複数選択で差し替え)
   QLabel*          m_typeLabel        = nullptr;
   QLabel*          m_sizeLabel        = nullptr;     // 動的更新
   QDateTimeEdit*   m_modifiedEdit     = nullptr;     // 更新日時 (編集可能)

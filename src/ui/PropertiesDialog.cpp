@@ -12,6 +12,7 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QDateTimeEdit>
+#include <QDir>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -149,7 +150,19 @@ void PropertiesDialog::setupUi() {
     return lbl;
   };
 
-  m_pathLabel        = makeValueLabel();   // 折り返して全体表示
+  // パス行の親ディレクトリ側。他の値ラベルと違い入力欄と横並びになるので、
+  // 幅を取り合わないよう Expanding にはせず、入力欄と縦位置を揃える。
+  m_pathLabel = new QLabel(this);
+  m_pathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  m_pathLabel->setWordWrap(true);
+  m_pathLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  {
+    QSizePolicy sp = m_pathLabel->sizePolicy();
+    sp.setHeightForWidth(true);
+    sp.setHorizontalPolicy(QSizePolicy::Preferred);
+    sp.setVerticalPolicy(QSizePolicy::Minimum);
+    m_pathLabel->setSizePolicy(sp);
+  }
   m_typeLabel        = makeValueLabel();
   m_sizeLabel        = makeValueLabel();
   m_createdLabel     = makeValueLabel();
@@ -182,20 +195,26 @@ void PropertiesDialog::setupUi() {
   // 名前は短いので入力欄も短めにする。
   m_ownerEdit->setMaximumWidth(220);
   m_groupEdit->setMaximumWidth(220);
-  // 名前 / パスの表示領域を十分に確保する (値列がこの幅まで広がる)。
-  m_nameEdit->setMinimumWidth(520);
-  m_pathLabel->setMinimumWidth(520);
+  // パス行の表示領域を十分に確保する (値列がこの幅まで広がる)。
+  // 入力欄は名前が見える程度、余りは親ディレクトリ側の折り返しに使う。
+  m_nameEdit->setMinimumWidth(240);
 
-  // パスを先頭に置き、値を太字にして強調する。何に対するプロパティなのかを
-  // 最初に示したいため (他のダイアログ先頭の「パス:」見出しと同じ狙い)。
+  // パス行: 「親ディレクトリ + 末尾の名前」を 1 行に並べる。
+  // 親ディレクトリは表示のみで太字、末尾の名前だけが入力欄になっていて、
+  // ここを書き換えると OK でリネームされる (専用の「名前」行は持たない)。
   {
     QFont pathFont = m_pathLabel->font();
     pathFont.setBold(true);
     m_pathLabel->setFont(pathFont);
   }
-  m_form->addRow(tr("Path:"),        m_pathLabel);
-  m_form->addRow(altBuddyLabel(tr("Name:"), Qt::Key_N, m_nameEdit, this),
-                 m_nameEdit);
+  m_pathRow = new QWidget(this);
+  auto* pathRowLayout = new QHBoxLayout(m_pathRow);
+  pathRowLayout->setContentsMargins(0, 0, 0, 0);
+  pathRowLayout->setSpacing(2);
+  pathRowLayout->addWidget(m_pathLabel, 0);
+  pathRowLayout->addWidget(m_nameEdit, 1);
+  m_pathRowLabel = altBuddyLabel(tr("Path:"), Qt::Key_P, m_nameEdit, this);
+  m_form->addRow(m_pathRowLabel, m_pathRow);
   m_form->addRow(tr("Type:"),        m_typeLabel);
   m_form->addRow(tr("Size:"),        m_sizeLabel);
   m_form->addRow(tr("Modified:"),    m_modifiedEdit);
@@ -308,8 +327,13 @@ void PropertiesDialog::populateStaticInfo() {
     m_nameEdit->setReadOnly(true);  // 複数選択ではリネーム不可
     m_aggregateSize = true;  // 合計サイズを worker で集計する
 
-    // パス / 種別 / 作成・アクセス日時 / リンク先は複数では意味が薄いので隠す。
-    m_form->setRowVisible(m_pathLabel, false);
+    // 複数選択では 1 つのパスに定まらないので、親ディレクトリ側は隠し、
+    // 行ラベルも「名前」に戻して "3 items" だけを見せる。
+    m_pathLabel->hide();
+    if (m_pathRowLabel) {
+      m_pathRowLabel->setText(withAltMnemonic(tr("Name:"), Qt::Key_P));
+    }
+    // 種別 / 作成・アクセス日時 / リンク先は複数では意味が薄いので隠す。
     for (QLabel* l : {m_typeLabel, m_createdLabel,
                       m_accessedLabel, m_linkTargetLabel}) {
       m_form->setRowVisible(l, false);
@@ -365,7 +389,11 @@ void PropertiesDialog::populateStaticInfo() {
 
   m_origName = fi.fileName().isEmpty() ? fi.absoluteFilePath() : fi.fileName();
   m_nameEdit->setText(m_origName);
-  m_pathLabel->setText(fi.absoluteFilePath());
+  // 親ディレクトリ側は末尾に区切りを付けて、入力欄と地続きに見せる。
+  // ルート直下 ("/foo") では absolutePath() が "/" を返すので二重にしない。
+  QString parent = fi.absolutePath();
+  if (!parent.endsWith(QLatin1Char('/'))) parent += QLatin1Char('/');
+  m_pathLabel->setText(QDir::toNativeSeparators(parent));
 
   QString type;
   if (fi.isSymLink())   type = tr("Symbolic link");
