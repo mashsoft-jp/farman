@@ -118,9 +118,9 @@ void SearchDialog::setupUi(const QString& initialPath) {
   // 入力欄 (Min / Max / From / To / 単位 / Case sensitive) には付けない。
   // ON にした直後に Tab で辿れる位置にあり、字面の候補も尽きるため。
   // 割当: P 開始パス / N 名前 / D 除外ディレクトリ / E 除外ファイル /
-  //       I ファイルのみ / R ディレクトリのみ / A 両方 /
+  //       F ファイルのみ / I ディレクトリのみ / A 両方 /
   //       S サブディレクトリ / Z サイズ / M 更新日時 / T 内容 /
-  //       F 検索 / C 閉じる
+  //       O 検索 (実行系) / C 閉じる
   //
   // 検索対象 (ファイル / ディレクトリ / 両方)。3 択なのでラジオボタンを横に並べる。
   // 同じ親の下に置くので autoExclusive が効き、←/→ で選択が移る。
@@ -130,8 +130,8 @@ void SearchDialog::setupUi(const QString& initialPath) {
   m_targetFilesRadio = new QRadioButton(tr("Files only"), targetRow);
   m_targetDirsRadio  = new QRadioButton(tr("Directories only"), targetRow);
   m_targetBothRadio  = new QRadioButton(tr("Files and directories"), targetRow);
-  applyAltShortcut(m_targetFilesRadio, Qt::Key_I);
-  applyAltShortcut(m_targetDirsRadio,  Qt::Key_R);
+  applyAltShortcut(m_targetFilesRadio, Qt::Key_F);   // ファイルのみ
+  applyAltShortcut(m_targetDirsRadio,  Qt::Key_I);   // ディレクトリのみ
   applyAltShortcut(m_targetBothRadio,  Qt::Key_A);
   m_targetFilesRadio->setChecked(true);
   for (QRadioButton* r : {m_targetFilesRadio, m_targetDirsRadio, m_targetBothRadio}) {
@@ -259,7 +259,7 @@ void SearchDialog::setupUi(const QString& initialPath) {
   // Search / Stop button
   QHBoxLayout* searchRow = new QHBoxLayout();
   m_searchButton = new QPushButton(tr("Search"), this);
-  applyAltShortcut(m_searchButton, Qt::Key_F);  // Find
+  applyAltShortcut(m_searchButton, Qt::Key_O);  // 実行系
   m_searchButton->setDefault(true);
   searchRow->addStretch(1);
   searchRow->addWidget(m_searchButton);

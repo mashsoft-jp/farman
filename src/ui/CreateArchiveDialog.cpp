@@ -160,7 +160,7 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   // Output filename
   m_nameEdit = new QLineEdit(this);
   m_nameEdit->setFocusPolicy(Qt::StrongFocus);
-  auto* nameLabel = altBuddyLabel(tr("File name:"), Qt::Key_M, m_nameEdit, this);
+  auto* nameLabel = altBuddyLabel(tr("File name:"), Qt::Key_N, m_nameEdit, this);
   form->addRow(nameLabel, m_nameEdit);
 
   // Compression level (gz / bz2 / xz / zip。Tar は無圧縮なので無効化)
@@ -197,7 +197,7 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   auto* cancelBtn = new QPushButton(tr("Cancel"), this);
   auto* okBtn     = new QPushButton(tr("Create"), this);
   applyAltShortcut(cancelBtn, Qt::Key_X);
-  applyAltShortcut(okBtn,     Qt::Key_C);
+  applyAltShortcut(okBtn,     Qt::Key_O);
   okBtn->setDefault(true);
   btnLayout->addWidget(cancelBtn);
   btnLayout->addWidget(okBtn);

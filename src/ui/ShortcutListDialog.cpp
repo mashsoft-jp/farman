@@ -9,6 +9,7 @@
 #include <QKeySequence>
 #include <QLabel>
 #include <QLineEdit>
+#include <QShortcut>
 #include <QShowEvent>
 #include <QTableWidget>
 #include <QVBoxLayout>
@@ -69,6 +70,16 @@ void ShortcutListDialog::setupUi() {
   // テーブルを絞り込む。clearButton 付きで「×」一発で全件表示に戻せる。
   m_searchEdit = new QLineEdit(this);
   m_searchEdit->setPlaceholderText(tr("Filter (key, command name, or id)"));
+  // 絞り込み欄にはラベルが無いので、ラベル付きの行にせずショートカットだけ
+  // 張る。Alt+F でどこからでも絞り込みに戻れるようにする。
+  {
+    auto* filterShortcut = new QShortcut(QKeySequence(Qt::ALT | Qt::Key_F), this);
+    filterShortcut->setContext(Qt::WindowShortcut);
+    connect(filterShortcut, &QShortcut::activated, this, [this]() {
+      m_searchEdit->setFocus(Qt::ShortcutFocusReason);
+      m_searchEdit->selectAll();
+    });
+  }
   m_searchEdit->setClearButtonEnabled(true);
   connect(m_searchEdit, &QLineEdit::textChanged,
           this, &ShortcutListDialog::applyFilter);

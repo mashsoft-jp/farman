@@ -37,6 +37,8 @@ void DirectoryCompareDialog::setupUi(const QString& leftPath, const QString& rig
   auto* granLayout = new QVBoxLayout(granGroup);
   m_radioNameOnly  = new QRadioButton(tr("File name only"), this);
   m_radioSizeMtime = new QRadioButton(tr("Size + modified time"), this);
+  applyAltShortcut(m_radioNameOnly,  Qt::Key_N);   // 名前
+  applyAltShortcut(m_radioSizeMtime, Qt::Key_Z);   // サイズ
   m_radioSizeMtime->setChecked(true);
   granLayout->addWidget(m_radioNameOnly);
   granLayout->addWidget(m_radioSizeMtime);
@@ -45,6 +47,7 @@ void DirectoryCompareDialog::setupUi(const QString& leftPath, const QString& rig
   // 再帰: 同名サブディレクトリの中身を再帰的に比較し、ディレクトリエントリの
   // DiffStatus に集約結果 (Same / Differ) を反映する。
   m_recursiveCheck = new QCheckBox(tr("Recurse into subdirectories"), this);
+  applyAltShortcut(m_recursiveCheck, Qt::Key_S);   // サブディレクトリ
   main->addWidget(m_recursiveCheck);
 
   // OK / Cancel
@@ -52,7 +55,7 @@ void DirectoryCompareDialog::setupUi(const QString& leftPath, const QString& rig
     QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
   buttons->button(QDialogButtonBox::Ok)->setText(tr("Compare"));
   applyAltShortcut(buttons->button(QDialogButtonBox::Ok),     Qt::Key_O);
-  applyAltShortcut(buttons->button(QDialogButtonBox::Cancel), Qt::Key_C);
+  applyAltShortcut(buttons->button(QDialogButtonBox::Cancel), Qt::Key_X);
   connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
   connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
   main->addWidget(buttons);

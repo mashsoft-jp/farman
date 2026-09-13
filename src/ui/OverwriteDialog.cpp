@@ -55,7 +55,7 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
   m_overwriteRadio = new QRadioButton(tr("Overwrite the existing file"), this);
   m_renameRadio    = new QRadioButton(tr("Rename to:"), this);
   m_skipRadio      = new QRadioButton(tr("Skip this file"), this);
-  applyAltShortcut(m_overwriteRadio, Qt::Key_O);
+  applyAltShortcut(m_overwriteRadio, Qt::Key_W);
   applyAltShortcut(m_renameRadio,    Qt::Key_R);
   applyAltShortcut(m_skipRadio,      Qt::Key_S);
 
@@ -118,7 +118,7 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
     QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
   auto* okBtn     = m_buttonBox->button(QDialogButtonBox::Ok);
   auto* cancelBtn = m_buttonBox->button(QDialogButtonBox::Cancel);
-  applyAltShortcut(okBtn,     Qt::Key_K);  // "OK" の Alt+O は Overwrite ラジオで使用中
+  applyAltShortcut(okBtn,     Qt::Key_O);  // "OK" の Alt+O は Overwrite ラジオで使用中
   applyAltShortcut(cancelBtn, Qt::Key_X);
   okBtn->setDefault(true);
   connect(m_buttonBox, &QDialogButtonBox::accepted, this, &OverwriteDialog::onAccepted);

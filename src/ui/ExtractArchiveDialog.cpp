@@ -77,7 +77,7 @@ void ExtractArchiveDialog::setupUi(const QString& archivePath,
   auto* cancelBtn = new QPushButton(tr("Cancel"), this);
   auto* okBtn     = new QPushButton(tr("Extract"), this);
   applyAltShortcut(cancelBtn, Qt::Key_X);
-  applyAltShortcut(okBtn,     Qt::Key_E);
+  applyAltShortcut(okBtn,     Qt::Key_O);
   okBtn->setDefault(true);
   btnLayout->addWidget(cancelBtn);
   btnLayout->addWidget(okBtn);

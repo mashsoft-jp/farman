@@ -73,7 +73,8 @@ void BulkRenameDialog::setupUi() {
   templateCellLayout->setSpacing(2);
   templateCellLayout->addWidget(m_templateEdit);
   templateCellLayout->addWidget(placeholderHelp);
-  form->addRow(tr("Template:"), templateCell);
+  form->addRow(altBuddyLabel(tr("Template:"), Qt::Key_T, m_templateEdit, this),
+               templateCell);
 
   // Find / Replace + regex
   QWidget* findRow = new QWidget(this);
@@ -82,6 +83,7 @@ void BulkRenameDialog::setupUi() {
   m_findEdit    = new QLineEdit(this);
   m_replaceEdit = new QLineEdit(this);
   m_regexCheck  = new QCheckBox(tr("Regex"), this);
+  applyAltShortcut(m_regexCheck, Qt::Key_R);   // 正規表現
   m_findEdit->setPlaceholderText(tr("Find"));
   m_replaceEdit->setPlaceholderText(tr("Replace"));
   m_findEdit->setToolTip(
@@ -92,7 +94,8 @@ void BulkRenameDialog::setupUi() {
   findLayout->addWidget(new QLabel(QStringLiteral("→"), this));
   findLayout->addWidget(m_replaceEdit, 1);
   findLayout->addWidget(m_regexCheck);
-  form->addRow(tr("Find/Replace:"), findRow);
+  form->addRow(altBuddyLabel(tr("Find/Replace:"), Qt::Key_F, m_findEdit, this),
+               findRow);
 
   // Number row
   QWidget* numRow = new QWidget(this);
@@ -118,14 +121,16 @@ void BulkRenameDialog::setupUi() {
   numLayout->addWidget(new QLabel(tr("Default Pad:"), this));
   numLayout->addWidget(m_numPadSpin);
   numLayout->addStretch();
-  form->addRow(tr("Number:"), numRow);
+  form->addRow(altBuddyLabel(tr("Number:"), Qt::Key_U, m_numStartSpin, this),
+               numRow);
 
   // Case
   m_caseCombo = new QComboBox(this);
   m_caseCombo->addItem(tr("Keep"),     0);
   m_caseCombo->addItem(tr("lower"),    1);
   m_caseCombo->addItem(tr("UPPER"),    2);
-  form->addRow(tr("Case:"), m_caseCombo);
+  form->addRow(altBuddyLabel(tr("Case:"), Qt::Key_C, m_caseCombo, this),
+               m_caseCombo);
 
   outer->addWidget(inputGroup);
 
@@ -148,7 +153,7 @@ void BulkRenameDialog::setupUi() {
   m_buttonBox = new QDialogButtonBox(
     QDialogButtonBox::Cancel | QDialogButtonBox::Ok, this);
   m_buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Rename"));
-  applyAltShortcut(m_buttonBox->button(QDialogButtonBox::Ok),     Qt::Key_R);
+  applyAltShortcut(m_buttonBox->button(QDialogButtonBox::Ok),     Qt::Key_O);
   applyAltShortcut(m_buttonBox->button(QDialogButtonBox::Cancel), Qt::Key_X);
   outer->addWidget(m_buttonBox);
 

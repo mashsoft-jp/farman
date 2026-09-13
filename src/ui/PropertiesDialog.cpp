@@ -186,15 +186,18 @@ void PropertiesDialog::setupUi() {
   m_nameEdit->setMinimumWidth(520);
   m_pathLabel->setMinimumWidth(520);
 
-  m_form->addRow(tr("Name:"),        m_nameEdit);
+  m_form->addRow(altBuddyLabel(tr("Name:"), Qt::Key_N, m_nameEdit, this),
+                 m_nameEdit);
   m_form->addRow(tr("Path:"),        m_pathLabel);
   m_form->addRow(tr("Type:"),        m_typeLabel);
   m_form->addRow(tr("Size:"),        m_sizeLabel);
   m_form->addRow(tr("Modified:"),    m_modifiedEdit);
   m_form->addRow(tr("Created:"),     m_createdLabel);
   m_form->addRow(tr("Accessed:"),    m_accessedLabel);
-  m_form->addRow(tr("Owner:"),       m_ownerWidget);
-  m_form->addRow(tr("Group:"),       m_groupWidget);
+  m_form->addRow(altBuddyLabel(tr("Owner:"), Qt::Key_W, m_ownerEdit, this),
+                 m_ownerWidget);
+  m_form->addRow(altBuddyLabel(tr("Group:"), Qt::Key_G, m_groupEdit, this),
+                 m_groupWidget);
   m_form->addRow(tr("Link Target:"), m_linkTargetLabel);
 
   mainLayout->addLayout(m_form);
@@ -230,6 +233,8 @@ void PropertiesDialog::buildAttributeEditor(QBoxLayout* parentLayout) {
   auto* v = new QVBoxLayout(group);
   m_readOnlyCheck = new QCheckBox(tr("Read-only"), this);
   m_hiddenCheck   = new QCheckBox(tr("Hidden"),    this);
+  applyAltShortcut(m_readOnlyCheck, Qt::Key_R);
+  applyAltShortcut(m_hiddenCheck,   Qt::Key_H);   // 隠しファイル
   m_readOnlyCheck->setFocusPolicy(Qt::StrongFocus);
   m_hiddenCheck->setFocusPolicy(Qt::StrongFocus);
   if (multi) {

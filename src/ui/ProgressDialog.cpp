@@ -65,6 +65,7 @@ void ProgressDialog::setupUI(const QString& operationName) {
   QHBoxLayout* buttonLayout = new QHBoxLayout();
 
   m_autoCloseCheck = new QCheckBox(tr("Close automatically when done"), this);
+  applyAltShortcut(m_autoCloseCheck, Qt::Key_C);   // 閉じる
   // 既定値は Settings から取るが、ここでの変更は **その場限り** で永続化しない。
   // 永続的な既定は Settings → 全般 → File Operations から変更する。
   m_autoCloseCheck->setChecked(Settings::instance().progressAutoClose());
@@ -172,6 +173,9 @@ void ProgressDialog::onFinished(bool success) {
   // 「Cancel」ボタンを「Close」に切り替えて成功/失敗で accept/reject する。
   m_cancelButton->setEnabled(true);
   m_cancelButton->setText(tr("Close"));
+  // 規約では閉じる = C だが、ここは同じボタンの表記が途中で変わるだけなので
+  // キーは X のまま据え置く。処理が終わった瞬間に閉じるキーが変わると、
+  // 押そうとしていた指が空振りするため。
   applyAltShortcut(m_cancelButton, Qt::Key_X);
   // 既存の onCancel 接続を切り、Close は単に accept/reject させる
   m_cancelButton->disconnect(this);
