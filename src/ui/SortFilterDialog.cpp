@@ -45,11 +45,8 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
 
   QVBoxLayout* mainLayout = new QVBoxLayout(this);
 
-  // Directory path header
-  QLabel* pathLabel = new QLabel(tr("Directory: %1").arg(directoryPath), this);
-  pathLabel->setWordWrap(true);
-  pathLabel->setStyleSheet("QLabel { font-weight: bold; padding: 4px; }");
-  mainLayout->addWidget(pathLabel);
+  // Directory path header (他のダイアログと同じ見出しを共通ヘルパで作る)
+  mainLayout->addWidget(directoryHeaderLabel(directoryPath, this));
 
   // ── Alt ショートカットの方針 ───────────────────────────────
   // 検索ダイアログ等と同じく、入力行のラベルとチェックボックスに Alt+key を

@@ -1,6 +1,7 @@
 #include "Dialogs.h"
 #include "FarmanMessageBox.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -260,18 +261,33 @@ bool informWithSuppress(QWidget* parent,
   return !suppressCheck->isChecked();
 }
 
+QLabel* directoryHeaderLabel(const QString& directoryPath, QWidget* parent) {
+  auto* label = new QLabel(
+    QCoreApplication::translate("Farman", "Directory: %1").arg(directoryPath),
+    parent);
+  label->setWordWrap(true);
+  label->setStyleSheet(QStringLiteral("QLabel { font-weight: bold; padding: 4px; }"));
+  return label;
+}
+
 QString inputText(QWidget* parent,
                   const QString& title,
                   const QString& label,
                   const QString& defaultValue,
                   bool* ok,
-                  TextInputCursor cursor) {
+                  TextInputCursor cursor,
+                  const QString& directoryPath) {
   QDialog dlg(parent);
   dlg.setWindowTitle(title);
   dlg.setModal(true);
   dlg.resize(480, 0);
 
   auto* layout = new QVBoxLayout(&dlg);
+
+  // 対象ディレクトリの見出し (指定があるときだけ)。
+  if (!directoryPath.isEmpty()) {
+    layout->addWidget(directoryHeaderLabel(directoryPath, &dlg));
+  }
 
   auto* labelWidget = new QLabel(label, &dlg);
   labelWidget->setWordWrap(true);

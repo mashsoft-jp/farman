@@ -17,11 +17,12 @@ DeleteConfirmDialog::DeleteConfirmDialog(const QString& message,
                                          bool defaultToTrash,
                                          QWidget* parent,
                                          const QString& detailTooltip,
-                                         bool trashAvailable)
+                                         bool trashAvailable,
+                                         const QString& directoryPath)
   : QDialog(parent)
   , m_trashRadio(nullptr)
   , m_permanentRadio(nullptr) {
-  setupUi(message, defaultToTrash, detailTooltip, trashAvailable);
+  setupUi(message, defaultToTrash, detailTooltip, trashAvailable, directoryPath);
 }
 
 bool DeleteConfirmDialog::toTrash() const {
@@ -29,11 +30,17 @@ bool DeleteConfirmDialog::toTrash() const {
 }
 
 void DeleteConfirmDialog::setupUi(const QString& message, bool defaultToTrash,
-                                  const QString& detailTooltip, bool trashAvailable) {
+                                  const QString& detailTooltip, bool trashAvailable,
+                                  const QString& directoryPath) {
   setWindowTitle(tr("Confirm Delete"));
   setModal(true);
 
   QVBoxLayout* mainLayout = new QVBoxLayout(this);
+
+  // どのディレクトリに対する削除なのかを先頭に出す。
+  if (!directoryPath.isEmpty()) {
+    mainLayout->addWidget(directoryHeaderLabel(directoryPath, this));
+  }
 
   auto* label = new QLabel(message, this);
   label->setWordWrap(true);

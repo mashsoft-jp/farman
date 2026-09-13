@@ -429,6 +429,14 @@
     </message>
 </context>
 <context>
+    <name>Farman</name>
+    <message>
+        <location filename="../src/utils/Dialogs.cpp" line="266"/>
+        <source>Directory: %1</source>
+        <translation>ディレクトリ: %1</translation>
+    </message>
+</context>
+<context>
     <name>Farman::AppearanceTab</name>
     <message>
         <location filename="../src/ui/AppearanceTab.cpp" line="154"/>
@@ -3151,27 +3159,27 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::DeleteConfirmDialog</name>
     <message>
-        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="33"/>
+        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="35"/>
         <source>Confirm Delete</source>
         <translation>削除確認</translation>
     </message>
     <message>
-        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="60"/>
+        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="67"/>
         <source>Action</source>
         <translation>操作</translation>
     </message>
     <message>
-        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="62"/>
+        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="69"/>
         <source>Move to Trash</source>
         <translation>ゴミ箱へ移動</translation>
     </message>
     <message>
-        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="63"/>
+        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="70"/>
         <source>Delete permanently</source>
         <translation>完全に削除</translation>
     </message>
     <message>
-        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="78"/>
+        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="85"/>
         <source>Trash is unavailable on this drive (e.g. a network or removable drive); files will be deleted permanently.</source>
         <translation>このドライブ（ネットワーク / リムーバブルなど）ではゴミ箱を使えません。ファイルは完全に削除されます。</translation>
     </message>
@@ -3184,12 +3192,12 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation type="vanished">完全に削除 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="92"/>
+        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="99"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="93"/>
+        <location filename="../src/ui/DeleteConfirmDialog.cpp" line="100"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
@@ -3997,14 +4005,14 @@ What would you like to do?</source>
         <location filename="../src/ui/FileManagerPanel.cpp" line="1911"/>
         <location filename="../src/ui/FileManagerPanel.cpp" line="2062"/>
         <location filename="../src/ui/FileManagerPanel.cpp" line="2233"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2286"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2347"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2396"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2401"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2501"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2288"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2351"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2400"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2405"/>
         <location filename="../src/ui/FileManagerPanel.cpp" line="2506"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2716"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2785"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2511"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2721"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2790"/>
         <source>Read-only archive</source>
         <translation>読取専用アーカイブ</translation>
     </message>
@@ -4094,133 +4102,133 @@ What would you like to do?</source>
         <translation>ディレクトリ名を入力:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2260"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2308"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2319"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2834"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2855"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2262"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2312"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2323"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2840"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2861"/>
         <source>Error</source>
         <translation>エラー</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2261"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2263"/>
         <source>Failed to create directory: %1</source>
         <translation>ディレクトリの作成に失敗しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2287"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2289"/>
         <source>Cannot create a new file inside a read-only archive.</source>
         <translation>読取専用アーカイブ内にはファイルを作成できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2295"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2297"/>
         <source>Create File</source>
         <translation>ファイル作成</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2296"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2298"/>
         <source>Enter file name:</source>
         <translation>ファイル名を入力:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2309"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2835"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2313"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2841"/>
         <source>A file or directory with the name &apos;%1&apos; already exists.</source>
         <translation>&apos;%1&apos; という名前のファイル / ディレクトリが既に存在します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2320"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2324"/>
         <source>Failed to create file: %1</source>
         <translation>ファイルの作成に失敗しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2326"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2330"/>
         <source>Created file: %1</source>
         <translation>ファイルを作成しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2348"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2352"/>
         <source>Cannot change attributes of entries inside a read-only archive.</source>
         <translation>読取専用アーカイブ内のエントリの属性は変更できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2397"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2401"/>
         <source>Cannot create an archive from entries inside another archive.</source>
         <translation>別のアーカイブ内のエントリからは新規アーカイブを作成できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2402"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2406"/>
         <source>Cannot write a new archive into a read-only archive.</source>
         <translation>読取専用アーカイブ内に新規アーカイブは書き込めません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2440"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2444"/>
         <source>File Exists</source>
         <translation>ファイルが存在します</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2441"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2550"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2445"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2555"/>
         <source>&apos;%1&apos; already exists. Enter a different name:</source>
         <translation>&apos;%1&apos; は既に存在します。別の名前を入力してください:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2454"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2459"/>
         <source>Creating archive...</source>
         <translation>アーカイブ作成中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2466"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2471"/>
         <source>Created archive: %1</source>
         <translation>アーカイブを作成しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2502"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2507"/>
         <source>Cannot extract an archive that lives inside another archive.</source>
         <translation>別のアーカイブ内にあるアーカイブはそのまま展開できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2507"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2512"/>
         <source>Cannot extract into a read-only archive.</source>
         <translation>読取専用アーカイブには展開できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2516"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2521"/>
         <source>Extract Archive</source>
         <translation>アーカイブ展開</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2517"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2522"/>
         <source>Select an archive file to extract.</source>
         <translation>展開するアーカイブファイルを選択してください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2549"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2554"/>
         <source>Directory Exists</source>
         <translation>ディレクトリが存在します</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2566"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2571"/>
         <source>Enter password for %1:</source>
         <translation>%1 のパスワードを入力してください:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2570"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2575"/>
         <source>Password Required</source>
         <translation>パスワードが必要です</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2580"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2585"/>
         <source>Wrong password. Enter password for %1:</source>
         <translation>パスワードが違います。%1 のパスワードを再入力してください:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2583"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2588"/>
         <source>Cannot Extract Archive</source>
         <translation>アーカイブを展開できません</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2584"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2589"/>
         <source>Wrong password (%n attempt(s)). Giving up.</source>
         <translation>
             <numerusform>パスワードが違います (%n 回)。中止します。</numerusform>
@@ -4231,101 +4239,101 @@ What would you like to do?</source>
         <translation type="vanished">パスワードが 3 回連続で違いました。中止します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2592"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2597"/>
         <source>Extracting archive...</source>
         <translation>アーカイブ展開中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2603"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2608"/>
         <source>Extracted archive: %1</source>
         <translation>アーカイブを展開しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2717"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2722"/>
         <source>Cannot rename entries inside a read-only archive.</source>
         <translation>読取専用アーカイブ内のエントリはリネームできません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2768"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2773"/>
         <source>Bulk Rename</source>
         <translation>一括リネーム</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2769"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2774"/>
         <source>%1 file(s) renamed, %2 failed.</source>
         <translation>%1 件をリネーム、%2 件失敗しました。</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2772"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2777"/>
         <source>Renamed %n item(s)</source>
         <translation>
             <numerusform>%n 件をリネームしました</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2786"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2791"/>
         <source>Cannot rename an entry inside a read-only archive.</source>
         <translation>読取専用アーカイブ内のエントリはリネームできません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2816"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2821"/>
         <source>Rename</source>
         <translation>リネーム</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2817"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2822"/>
         <source>Enter new name:</source>
         <translation>新しい名前を入力:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2856"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2862"/>
         <source>Failed to rename &apos;%1&apos; to &apos;%2&apos;.</source>
         <translation>&apos;%1&apos; を &apos;%2&apos; にリネームできませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2861"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2867"/>
         <source>Renamed: %1 → %2</source>
         <translation>リネームしました: %1 → %2</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2886"/>
         <location filename="../src/ui/FileManagerPanel.cpp" line="2892"/>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2904"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2898"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2910"/>
         <source>Cannot compare</source>
         <translation>比較できません</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2887"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2893"/>
         <source>Directory compare is not available while one of the panes is browsing an archive.</source>
         <translation>どちらかのペインがアーカイブ内ブラウジング中はディレクトリ比較を実行できません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2893"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2899"/>
         <source>Directory compare requires two panes.</source>
         <translation>ディレクトリ比較には 2 ペインが必要です。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2905"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2911"/>
         <source>Both panes are showing the same directory; nothing to compare.</source>
         <translation>左右のペインが同じディレクトリを表示しています。比較する必要がありません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2928"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2934"/>
         <source>Directory compare done: %1 ↔ %2 (%3 / %4 items)</source>
         <translation>ディレクトリ比較完了: %1 ↔ %2 (左 %3 / 右 %4 件)</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2957"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2963"/>
         <source>Compare select: Differ rows (%1 newly selected)</source>
         <translation>比較選択: 差分あり (%1 件追加選択)</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="2964"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2970"/>
         <source>Compare select: Only-Here rows (%1 newly selected)</source>
         <translation>比較選択: このペインのみ (%1 件追加選択)</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileManagerPanel.cpp" line="3014"/>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="3020"/>
         <source>Compare select: Newer-than-other rows (%1 newly selected)</source>
         <translation>比較選択: 反対側より新しい行 (%1 件追加選択)</translation>
     </message>
@@ -8504,146 +8512,145 @@ Keybindings are not affected.</source>
         <translation>ソートとフィルタ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="49"/>
         <source>Directory: %1</source>
-        <translation>ディレクトリ: %1</translation>
+        <translation type="vanished">ディレクトリ: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="64"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="61"/>
         <source>Sort</source>
         <translation>ソート</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="70"/>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="80"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="67"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="77"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="71"/>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="81"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="68"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="78"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="72"/>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="82"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="69"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="79"/>
         <source>Type</source>
         <translation>種別</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="73"/>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="83"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="70"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="80"/>
         <source>Last Modified</source>
         <translation>更新日時</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="75"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="72"/>
         <source>Sort by:</source>
         <translation>ソート基準:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="79"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="76"/>
         <source>None</source>
         <translation>なし</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="85"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="82"/>
         <source>Then by:</source>
         <translation>第 2 ソート:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="89"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="86"/>
         <source>Ascending</source>
         <translation>昇順</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="90"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="87"/>
         <source>Descending</source>
         <translation>降順</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="92"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="89"/>
         <source>Order:</source>
         <translation>順序:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="96"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="93"/>
         <source>Directories First</source>
         <translation>ディレクトリを先頭</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="97"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="94"/>
         <source>Directories Last</source>
         <translation>ディレクトリを末尾</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="98"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="95"/>
         <source>Mixed with Files</source>
         <translation>ファイルと混在</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="100"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="97"/>
         <source>Directory Placement:</source>
         <translation>ディレクトリの配置:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="104"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="101"/>
         <source>Sort dot files first</source>
         <translation>ドットファイルを先頭にソート</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="108"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="105"/>
         <source>Case sensitive</source>
         <translation>大文字小文字を区別</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="115"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="112"/>
         <source>Filter</source>
         <translation>フィルタ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="118"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="115"/>
         <source>Show hidden files</source>
         <translation>隠しファイルを表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="127"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="124"/>
         <source>Directories only</source>
         <translation>ディレクトリのみ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="126"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="123"/>
         <source>Files only</source>
         <translation>ファイルのみ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="145"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="142"/>
         <source>Name filters:</source>
         <translation>名前フィルタ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="143"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="140"/>
         <source>e.g. *.cpp *.h (space-separated)</source>
         <translation>例: *.cpp *.h (空白区切り)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="128"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="125"/>
         <source>Files and directories</source>
         <translation>ファイルとディレクトリ</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="134"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="131"/>
         <source>Show:</source>
         <translation>表示:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="153"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="150"/>
         <source>Override defaults for this directory (save)</source>
         <translation>このディレクトリのデフォルトを上書きする (保存)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SortFilterDialog.cpp" line="156"/>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="153"/>
         <source>Save these settings as a per-directory override. They take priority over the Behavior tab defaults whenever this directory is opened. Unchecking a previously saved directory removes its override and falls back to the defaults.</source>
         <translation>これらの設定を、このディレクトリ専用の上書きとして保存します。Behavior タブのデフォルトより優先され、このディレクトリを開いたときに自動適用されます。保存済みのディレクトリでチェックを外すと上書きを削除し、デフォルトに戻ります。</translation>
     </message>
@@ -9782,30 +9789,30 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>iCloud Drive</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="60"/>
+        <location filename="../src/utils/Dialogs.cpp" line="61"/>
         <source>No</source>
         <translation>いいえ</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="61"/>
+        <location filename="../src/utils/Dialogs.cpp" line="62"/>
         <source>Yes</source>
         <translation>はい</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="245"/>
+        <location filename="../src/utils/Dialogs.cpp" line="246"/>
         <source>Do not show this dialog next time</source>
         <translation>次回以降このダイアログを表示しない</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="309"/>
+        <location filename="../src/utils/Dialogs.cpp" line="325"/>
         <location filename="../src/model/FileListModel.cpp" line="321"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/utils/Dialogs.cpp" line="38"/>
-        <location filename="../src/utils/Dialogs.cpp" line="310"/>
-        <location filename="../src/utils/Dialogs.cpp" line="310"/>
+        <location filename="../src/utils/Dialogs.cpp" line="39"/>
+        <location filename="../src/utils/Dialogs.cpp" line="326"/>
+        <location filename="../src/utils/Dialogs.cpp" line="326"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>

@@ -2146,7 +2146,7 @@ void FileManagerPanel::deleteSelectedFiles() {
   DeleteConfirmDialog confirmDlg(
     message,
     Settings::instance().defaultDeleteToTrash() && trashAvailable,
-    this, detailTooltip, trashAvailable);
+    this, detailTooltip, trashAvailable, srcPane->currentPath());
   if (confirmDlg.exec() != QDialog::Accepted) {
     return;
   }
@@ -2243,7 +2243,9 @@ void FileManagerPanel::createDirectory() {
     tr("Create Directory"),
     tr("Enter directory name:"),
     QString(),
-    &ok
+    &ok,
+    TextInputCursor::SelectAll,
+    currentPath
   );
 
   if (!ok || dirName.isEmpty()) {
@@ -2295,7 +2297,9 @@ void FileManagerPanel::createFile() {
     tr("Create File"),
     tr("Enter file name:"),
     QString(),
-    &ok
+    &ok,
+    TextInputCursor::SelectAll,
+    currentPath
   );
 
   if (!ok || fileName.isEmpty()) {
@@ -2439,7 +2443,8 @@ void FileManagerPanel::createArchive() {
     const QString newName = inputText(
       this, tr("File Exists"),
       tr("'%1' already exists. Enter a different name:").arg(currentName),
-      currentName, &ok);
+      currentName, &ok, TextInputCursor::SelectAll,
+      QFileInfo(outputPath).absolutePath());
     if (!ok || newName.trimmed().isEmpty()) return;
     outputPath = QDir(QFileInfo(outputPath).absolutePath())
                    .absoluteFilePath(newName.trimmed());
@@ -2548,7 +2553,7 @@ void FileManagerPanel::extractArchive() {
     const QString newName = inputText(
       this, tr("Directory Exists"),
       tr("'%1' already exists. Enter a different name:").arg(baseName),
-      baseName, &ok);
+      baseName, &ok, TextInputCursor::SelectAll, outputDir);
     if (!ok || newName.trimmed().isEmpty()) return;
     baseName  = newName.trimmed();
     targetDir = QDir(outputDir).absoluteFilePath(baseName);
@@ -2817,7 +2822,8 @@ void FileManagerPanel::renameItem() {
     tr("Enter new name:"),
     oldName,
     &ok,
-    itemIsDir ? TextInputCursor::SelectAll : TextInputCursor::BeforeExtension
+    itemIsDir ? TextInputCursor::SelectAll : TextInputCursor::BeforeExtension,
+    srcPane->currentPath()
   );
 
   if (!ok || newName.isEmpty() || newName == oldName) {
