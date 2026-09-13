@@ -3,6 +3,7 @@
 #include <QDialog>
 #include <QString>
 
+class QCheckBox;
 class QLineEdit;
 class QPushButton;
 
@@ -10,7 +11,8 @@ namespace Farman {
 
 // アーカイブ展開ダイアログ。
 // - 対象アーカイブパス（表示のみ）
-// - 出力ディレクトリ（既定は反対ペイン）+ Browse
+// - 出力先パス（既定は反対ペイン）+ Browse
+// - アーカイブ名のディレクトリを作るかどうか（既定は作る）
 class ExtractArchiveDialog : public QDialog {
   Q_OBJECT
 
@@ -27,6 +29,10 @@ public:
 
   QString outputDirectory() const;
 
+  // 出力先の下に「アーカイブ名のディレクトリ」を作ってから展開するか。
+  // false なら出力先へ直接展開する (中身が散らばるので既定は true)。
+  bool createSubdirectory() const;
+
 protected:
   void keyPressEvent(QKeyEvent* event) override;
   bool eventFilter(QObject* watched, QEvent* event) override;
@@ -41,6 +47,7 @@ private:
   QString      m_sourcePaneDir;   // 自分ペインのカレント (= ↑↓トグル相手)
   QLineEdit*   m_dirEdit;
   QPushButton* m_browseButton;
+  QCheckBox*   m_createSubdirCheck = nullptr;
 };
 
 } // namespace Farman

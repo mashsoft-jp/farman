@@ -63,6 +63,12 @@
 - Going to a result no longer enters a directory. The pane moves to its parent
   and puts the cursor on it, so you can see where it was found.
 
+### Extracting without a wrapper directory
+
+- The extract dialog has a new "Create a directory named after the archive"
+  option. Turn it off to extract straight into the output path; farman used to
+  always create that directory. It stays on by default.
+
 ### Dialogs
 
 - Dialog shortcut keys (Alt, or ⌥ on macOS) were reviewed across the whole app so

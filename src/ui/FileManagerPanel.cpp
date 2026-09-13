@@ -2539,24 +2539,37 @@ void FileManagerPanel::extractArchive() {
 
   const QString outputDir = dlg.outputDirectory();
   if (outputDir.isEmpty()) return;
+  const bool createSubdir = dlg.createSubdirectory();
 
-  // アーカイブ名から拡張子を剥がしてベース名を作る。組み込み (zip/tar 系) に加え、
-  // アーカイブプラグインが登録した拡張子 (.lzh 等) も ArchivePath 側で剥がす。
-  QString baseName =
-    ArchivePath::archiveBaseName(QFileInfo(archivePath).fileName());
-  if (baseName.isEmpty()) baseName = QStringLiteral("extracted");
+  // 展開先を確定する。
+  //   - 既定 (createSubdir): 出力先の下に「アーカイブ名のディレクトリ」を作る。
+  //     既に同名があればリネーム入力、キャンセルで中止。
+  //   - 直接展開: 出力先へそのまま展開する。出力先は既に存在しているので
+  //     同名チェックは行わない (中身が既存ファイルとぶつかった場合の扱いは
+  //     展開ワーカー側の上書き規則に従う)。
+  QString targetDir = outputDir;
+  // 展開後にカーソルを合わせる名前。サブディレクトリを作ったときだけ意味を持つ。
+  QString createdDirName;
+  if (createSubdir) {
+    // アーカイブ名から拡張子を剥がしてベース名を作る。組み込み (zip/tar 系) に
+    // 加え、アーカイブプラグインが登録した拡張子 (.lzh 等) も ArchivePath 側で
+    // 剥がす。
+    QString baseName =
+      ArchivePath::archiveBaseName(QFileInfo(archivePath).fileName());
+    if (baseName.isEmpty()) baseName = QStringLiteral("extracted");
 
-  // サブディレクトリを確定。既存ならリネーム入力、キャンセルで中止。
-  QString targetDir = QDir(outputDir).absoluteFilePath(baseName);
-  while (QFileInfo::exists(targetDir)) {
-    bool ok = false;
-    const QString newName = inputText(
-      this, tr("Directory Exists"),
-      tr("'%1' already exists. Enter a different name:").arg(baseName),
-      baseName, &ok, TextInputCursor::SelectAll, outputDir);
-    if (!ok || newName.trimmed().isEmpty()) return;
-    baseName  = newName.trimmed();
     targetDir = QDir(outputDir).absoluteFilePath(baseName);
+    while (QFileInfo::exists(targetDir)) {
+      bool ok = false;
+      const QString newName = inputText(
+        this, tr("Directory Exists"),
+        tr("'%1' already exists. Enter a different name:").arg(baseName),
+        baseName, &ok, TextInputCursor::SelectAll, outputDir);
+      if (!ok || newName.trimmed().isEmpty()) return;
+      baseName  = newName.trimmed();
+      targetDir = QDir(outputDir).absoluteFilePath(baseName);
+    }
+    createdDirName = baseName;
   }
 
   // 暗号化アーカイブの場合はパスワードを入力させて検証する。
@@ -2598,7 +2611,7 @@ void FileManagerPanel::extractArchive() {
   dialog->setWorker(worker);
 
   connect(worker, &WorkerBase::finished, this,
-    [this, dialog, srcPane, destPane, outputDir, baseName, archivePath](bool ok) {
+    [this, dialog, srcPane, destPane, outputDir, createdDirName, archivePath](bool ok) {
     Logger::instance().log(ok ? Logger::Info : Logger::Error,
       QStringLiteral("Archive %1: %2")
         .arg(ok ? QStringLiteral("extracted") : QStringLiteral("extract failed"))
@@ -2608,15 +2621,16 @@ void FileManagerPanel::extractArchive() {
         tr("Extracted archive: %1").arg(QFileInfo(archivePath).fileName()));
     }
     // 完了時のダイアログ開閉は ProgressDialog 側 (auto-close チェックの状態で判断) に任せる
-    // 展開したサブディレクトリを含む親ディレクトリと一致するペインを refresh し、
-    // サブディレクトリ名にカーソルを合わせる
+    // 出力先と一致するペインを refresh し、作ったサブディレクトリにカーソルを
+    // 合わせる。直接展開した場合は合わせる先が無いので refresh だけ行う。
     auto refreshIfMatches = [&](FileListPane* pane) {
       if (pane->currentPath() != outputDir) return;
       pane->setPath(outputDir);
+      if (createdDirName.isEmpty()) return;
       FileListModel* model = pane->model();
       for (int i = 0; i < model->rowCount(); ++i) {
         const FileItem* item = model->itemAt(i);
-        if (item && item->name() == baseName) {
+        if (item && item->name() == createdDirName) {
           pane->view()->setCurrentIndex(model->index(i, 0));
           break;
         }

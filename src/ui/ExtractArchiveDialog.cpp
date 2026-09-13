@@ -4,6 +4,7 @@
 #include <QHBoxLayout>
 #include <QFormLayout>
 #include <QLabel>
+#include <QCheckBox>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QFileDialog>
@@ -29,6 +30,10 @@ ExtractArchiveDialog::ExtractArchiveDialog(const QString& archivePath,
 
 QString ExtractArchiveDialog::outputDirectory() const {
   return m_dirEdit->text().trimmed();
+}
+
+bool ExtractArchiveDialog::createSubdirectory() const {
+  return m_createSubdirCheck && m_createSubdirCheck->isChecked();
 }
 
 void ExtractArchiveDialog::setupUi(const QString& archivePath,
@@ -66,11 +71,23 @@ void ExtractArchiveDialog::setupUi(const QString& archivePath,
   // ラベルは altBuddyLabel で作る (視覚ヒント + setBuddy + macOS 用の
   // 明示ショートカット)。旧: withAltMnemonic + setBuddy で
   // Alt+D 押下時に出力先入力欄へフォーカスを送る。
-  auto* dirLabel = altBuddyLabel(tr("Output directory:"), Qt::Key_D,
+  auto* dirLabel = altBuddyLabel(tr("Output path:"), Qt::Key_P,
                                  m_dirEdit, this);
   form->addRow(dirLabel, dirRow);
 
   mainLayout->addLayout(form);
+
+  // アーカイブ名のディレクトリを作ってから展開するか。既定は作る (従来の挙動)。
+  // 外すと出力先へ直接展開するので、1 ファイルだけのアーカイブや、既に
+  // 目的のディレクトリを開いている場合に一段深くならずに済む。
+  m_createSubdirCheck = new QCheckBox(
+    tr("Create a directory named after the archive"), this);
+  m_createSubdirCheck->setChecked(true);
+  m_createSubdirCheck->setToolTip(
+    tr("When off, the contents are extracted straight into the output path "
+       "instead of into a sub-directory named after the archive."));
+  applyAltShortcut(m_createSubdirCheck, Qt::Key_C);
+  mainLayout->addWidget(m_createSubdirCheck);
 
   QHBoxLayout* btnLayout = new QHBoxLayout();
   btnLayout->addStretch(1);
@@ -87,8 +104,9 @@ void ExtractArchiveDialog::setupUi(const QString& archivePath,
   connect(okBtn,          &QPushButton::clicked, this, &QDialog::accept);
   connect(m_browseButton, &QPushButton::clicked, this, &ExtractArchiveDialog::onBrowseDir);
 
-  setTabOrder(m_dirEdit,      m_browseButton);
-  setTabOrder(m_browseButton, cancelBtn);
+  setTabOrder(m_dirEdit,           m_browseButton);
+  setTabOrder(m_browseButton,      m_createSubdirCheck);
+  setTabOrder(m_createSubdirCheck, cancelBtn);
   setTabOrder(cancelBtn,      okBtn);
 
   m_dirEdit->setFocus();
