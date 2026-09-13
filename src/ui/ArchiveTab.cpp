@@ -224,6 +224,16 @@ void ArchiveTab::setupUi() {
   limitsLayout->addStretch(1);
   commonForm->addRow(tr("Password attempts:"), limitsRow);
 
+  // 展開時にアーカイブ名のディレクトリを作るか。展開ダイアログのチェックの
+  // 初期値になる (ダイアログ側で毎回変更でき、そちらは保存しない)。
+  m_extractCreateSubdirCheck = new QCheckBox(
+    tr("Create a directory named after the archive when extracting"),
+    commonGroup);
+  m_extractCreateSubdirCheck->setToolTip(
+    tr("When off, extracting puts the contents straight into the output path. "
+       "This is the initial state of the check box in the extract dialog."));
+  commonForm->addRow(QString(), m_extractCreateSubdirCheck);
+
   mainLayout->addWidget(commonGroup);
 }
 
@@ -321,6 +331,8 @@ void ArchiveTab::loadSettings() {
   m_tempDirectoryEdit->setText(settings.archiveTempDirectory());
   m_passwordRetrySpin->setValue(settings.archivePasswordRetryCount());
   m_maxNestDepthSpin->setValue(settings.archiveMaxNestDepth());
+  m_extractCreateSubdirCheck->setChecked(
+    settings.archiveExtractCreateSubdirectory());
 }
 
 QString ArchiveTab::patternsDisplayText(const QStringList& patterns) const {
@@ -738,6 +750,8 @@ void ArchiveTab::save() {
   settings.setArchiveTempDirectory(m_tempDirectoryEdit->text());
   settings.setArchivePasswordRetryCount(m_passwordRetrySpin->value());
   settings.setArchiveMaxNestDepth(m_maxNestDepthSpin->value());
+  settings.setArchiveExtractCreateSubdirectory(
+    m_extractCreateSubdirCheck->isChecked());
 
   // 組み込み形式の有効 / 無効と拡張子は再起動を待たずに反映させる。
   ArchiveFormatCatalog::applyToArchivePath();

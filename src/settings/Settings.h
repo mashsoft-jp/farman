@@ -285,6 +285,11 @@ public:
   // アーカイブ内アーカイブを何段まで潜れるか。0 = 無制限 (既定)。
   int  archiveMaxNestDepth() const;
   void setArchiveMaxNestDepth(int depth);
+
+  // 展開時に「アーカイブ名のディレクトリ」を作ってからその中へ展開するか。
+  // 既定 true (従来の挙動)。展開ダイアログのチェックの初期値になる。
+  bool archiveExtractCreateSubdirectory() const;
+  void setArchiveExtractCreateSubdirectory(bool create);
   // 既定のプラグインディレクトリを返す (= 上記の OS 別 path)。
   // pluginsDirectory() が空のとき loadPlugins に使う実体。
   static QString defaultPluginsDirectory();
@@ -747,6 +752,7 @@ private:
   QString          m_archiveTempDirectory;
   int              m_archivePasswordRetryCount = 3;
   int              m_archiveMaxNestDepth       = 0;   // 0 = 無制限
+  bool             m_archiveExtractCreateSubdir = true;
   // pluginId -> 対象ファイルパターン。未設定なら supportedExtensions() を使う。
   QMap<QString, QStringList> m_viewerFilePatterns;
   // ビュアー表示モード。デフォルトは Inline (ビュアーパネルでの表示)。

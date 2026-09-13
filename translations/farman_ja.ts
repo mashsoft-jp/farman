@@ -1245,7 +1245,7 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/ArchiveTab.cpp" line="161"/>
-        <location filename="../src/ui/ArchiveTab.cpp" line="591"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="603"/>
         <source>Default</source>
         <translation>既定</translation>
     </message>
@@ -1290,32 +1290,42 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>ネストの上限段数:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="405"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="230"/>
+        <source>Create a directory named after the archive when extracting</source>
+        <translation>展開時にアーカイブ名のディレクトリを作成する</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ArchiveTab.cpp" line="233"/>
+        <source>When off, extracting puts the contents straight into the output path. This is the initial state of the check box in the extract dialog.</source>
+        <translation>オフにすると、展開時に出力先パスへ直接展開します。展開ダイアログのチェックの初期値になります。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ArchiveTab.cpp" line="417"/>
         <source>Loaded</source>
         <translation>読み込み済み</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="406"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="418"/>
         <source>Blocked (external plugins off)</source>
         <translation>ブロック中 (外部プラグイン無効)</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="407"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="419"/>
         <source>Disabled</source>
         <translation>無効</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="407"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="419"/>
         <source>Failed</source>
         <translation>失敗</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="417"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="429"/>
         <source>Plugin</source>
         <translation>プラグイン</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="418"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="430"/>
         <source>Built-in</source>
         <translation>組み込み</translation>
     </message>
@@ -1324,149 +1334,149 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">有効 / 無効は「詳細...」ダイアログで変更できます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="439"/>
-        <location filename="../src/ui/ArchiveTab.cpp" line="528"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="451"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="540"/>
         <source>Plugin ID is unavailable, so this plugin cannot be toggled.</source>
         <translation>プラグイン ID を取得できないため、このプラグインは切り替えできません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="442"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="454"/>
         <source>Click to enable/disable. Takes effect after restarting farman.</source>
         <translation>クリックで有効 / 無効を切り替えます。変更は farman の再起動後に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="445"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="457"/>
         <source>Click to enable/disable. When off, files matching the patterns are treated as ordinary files.</source>
         <translation>クリックで有効 / 無効を切り替えます。無効にすると、パターンに一致するファイルは通常のファイルとして扱われます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="459"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="471"/>
         <source>Built-in formats are always available.</source>
         <translation>組み込み形式は常に利用できます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="465"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="477"/>
         <source>read-only</source>
         <translation>読取専用</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="466"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="478"/>
         <source>single file</source>
         <translation>単一ファイル</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="469"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="481"/>
         <source>%1 (%2)</source>
         <translation>%1 (%2)</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="481"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="493"/>
         <source>Details...</source>
         <translation>詳細...</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="483"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="495"/>
         <source>Show and change the settings for this format.</source>
         <translation>この形式の設定を表示・変更します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="510"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="522"/>
         <source>Archive Format Details</source>
         <translation>アーカイブ形式の詳細</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="530"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="542"/>
         <source>Changes take effect after restarting farman.</source>
         <translation>変更は farman の再起動後に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="531"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="543"/>
         <source>When off, files matching the patterns below are treated as ordinary files.</source>
         <translation>オフにすると、下のパターンに一致するファイルは通常のファイルとして扱われます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="533"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="545"/>
         <source>Enabled:</source>
         <translation>有効:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="539"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="551"/>
         <source>External plugin loading is off. Turn on &quot;Allow loading external plugins&quot; in Settings → General to load this plugin.</source>
         <translation>外部プラグインの読み込みが無効です。読み込むには「設定 → 全般」の「外部プラグインの読み込みを許可する」をオンにしてください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="546"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="558"/>
         <source>Format:</source>
         <translation>形式:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="547"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="559"/>
         <source>Origin:</source>
         <translation>区分:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="553"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="565"/>
         <source>Status:</source>
         <translation>状態:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="555"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="567"/>
         <source>Priority:</source>
         <translation>優先度:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="557"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="569"/>
         <source>Distribution:</source>
         <translation>配布:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="558"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="570"/>
         <source>Bundled</source>
         <translation>同梱</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="558"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="570"/>
         <source>External</source>
         <translation>外部</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="559"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="571"/>
         <source>Plugin ID:</source>
         <translation>プラグイン ID:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="560"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="572"/>
         <source>Version:</source>
         <translation>バージョン:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="561"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="573"/>
         <source>Author:</source>
         <translation>制作者:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="569"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="581"/>
         <source>Author URL:</source>
         <translation>制作者URL:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="571"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="583"/>
         <source>Path:</source>
         <translation>パス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="573"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="585"/>
         <source>Error:</source>
         <translation>エラー:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="588"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="600"/>
         <source>File patterns for this format, separated by commas. Wildcards (* and ?) can be used, e.g. &quot;*.tar.gz&quot;.</source>
         <translation>この形式のファイルパターンです。カンマ区切りで指定し、ワイルドカード (* と ?) が使えます (例: &quot;*.tar.gz&quot;)。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="581"/>
-        <location filename="../src/ui/ArchiveTab.cpp" line="599"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="593"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="611"/>
         <source>File patterns:</source>
         <translation>ファイルパターン:</translation>
     </message>
@@ -1475,7 +1485,7 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">この形式のファイル名パターンです。カンマ区切りで指定し、ワイルドカード (* と ?) が使えます (例: &quot;*.tar.gz&quot;)。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="592"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="604"/>
         <source>Restore the default patterns for this format.</source>
         <translation>この形式の既定のパターンに戻します。</translation>
     </message>
@@ -1484,42 +1494,42 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation type="vanished">ファイル名パターン:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="608"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="620"/>
         <source>Format default</source>
         <translation>形式の既定</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="615"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="627"/>
         <source>Initial compression level in the Create Archive dialog.</source>
         <translation>アーカイブ作成ダイアログの圧縮レベルの初期値です。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="616"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="628"/>
         <source>Default compression level:</source>
         <translation>既定の圧縮レベル:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="631"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="643"/>
         <source>Encryption method used when a password is entered in the Create Archive dialog. Leaving the password empty there creates an unencrypted archive.</source>
         <translation>アーカイブ作成ダイアログでパスワードを入力したときに使う暗号化方式です。パスワードを空欄にすると暗号化しません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="634"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="646"/>
         <source>Encryption method:</source>
         <translation>暗号化方式:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="648"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="660"/>
         <source>Character encoding used for entry names. &quot;Auto-detect&quot; reads them as UTF-8 when valid and as Shift_JIS otherwise.</source>
         <translation>エントリ名の文字コードです。「自動判別」は、UTF-8 として妥当なら UTF-8、そうでなければ Shift_JIS として読みます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="650"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="662"/>
         <source>File name encoding:</source>
         <translation>ファイル名の文字コード:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ArchiveTab.cpp" line="655"/>
+        <location filename="../src/ui/ArchiveTab.cpp" line="667"/>
         <source>farman can browse and extract this format, but cannot create it, so there are no settings for creating archives.</source>
         <translation>farman はこの形式の閲覧と展開はできますが、作成はできないため、作成に関する設定はありません。</translation>
     </message>
@@ -3592,37 +3602,37 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
 <context>
     <name>Farman::ExtractArchiveDialog</name>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="41"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="42"/>
         <source>Extract Archive</source>
         <translation>アーカイブ展開</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="50"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="51"/>
         <source>Archive:</source>
         <translation>アーカイブ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="62"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="63"/>
         <source>Output directory. Press ↑/↓ to toggle between the source pane and the opposite-pane directory. Click the folder button to browse.</source>
         <translation>出力先ディレクトリ。↑/↓ でソースペインと反対側ペインのディレクトリを切替。フォルダボタンで参照ダイアログ。</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="67"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="68"/>
         <source>Browse folder...</source>
         <translation>フォルダを参照...</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="74"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="75"/>
         <source>Output path:</source>
         <translation>出力先パス:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="84"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="85"/>
         <source>Create a directory named after the archive</source>
         <translation>アーカイブ名のディレクトリを作成する</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="87"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="91"/>
         <source>When off, the contents are extracted straight into the output path instead of into a sub-directory named after the archive.</source>
         <translation>オフにすると、アーカイブ名のディレクトリを作らず、出力先パスへ直接展開します。</translation>
     </message>
@@ -3635,17 +3645,17 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation type="vanished">出力先ディレクトリ (%1):</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="94"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="98"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="95"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="99"/>
         <source>Extract</source>
         <translation>展開</translation>
     </message>
     <message>
-        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="121"/>
+        <location filename="../src/ui/ExtractArchiveDialog.cpp" line="125"/>
         <source>Select Output Directory</source>
         <translation>出力先ディレクトリを選択</translation>
     </message>
@@ -9839,72 +9849,72 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1596"/>
+        <location filename="../src/settings/Settings.cpp" line="1605"/>
         <source>Home</source>
         <translation>ホーム</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1598"/>
+        <location filename="../src/settings/Settings.cpp" line="1607"/>
         <source>Desktop</source>
         <translation>デスクトップ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1600"/>
+        <location filename="../src/settings/Settings.cpp" line="1609"/>
         <source>Documents</source>
         <translation>ドキュメント</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1602"/>
+        <location filename="../src/settings/Settings.cpp" line="1611"/>
         <source>Downloads</source>
         <translation>ダウンロード</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1604"/>
+        <location filename="../src/settings/Settings.cpp" line="1613"/>
         <source>Pictures</source>
         <translation>ピクチャ</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1606"/>
+        <location filename="../src/settings/Settings.cpp" line="1615"/>
         <source>Music</source>
         <translation>ミュージック</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1608"/>
+        <location filename="../src/settings/Settings.cpp" line="1617"/>
         <source>Movies</source>
         <translation>ムービー</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1861"/>
+        <location filename="../src/settings/Settings.cpp" line="1870"/>
         <source>Settings file does not exist yet.</source>
         <translation>設定ファイルがまだ存在しません。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1866"/>
+        <location filename="../src/settings/Settings.cpp" line="1875"/>
         <source>Cannot overwrite existing file: %1</source>
         <translation>既存ファイルを上書きできません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1870"/>
+        <location filename="../src/settings/Settings.cpp" line="1879"/>
         <source>Failed to copy settings to: %1</source>
         <translation>設定ファイルのコピーに失敗しました: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1890"/>
+        <location filename="../src/settings/Settings.cpp" line="1899"/>
         <source>Not a valid JSON settings file: %1</source>
         <translation>有効な JSON 設定ファイルではありません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1896"/>
+        <location filename="../src/settings/Settings.cpp" line="1905"/>
         <source>Missing &quot;version&quot; field — not a farman settings file?</source>
         <translation>「version」フィールドがありません — farman の設定ファイルではない可能性があります。</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1905"/>
+        <location filename="../src/settings/Settings.cpp" line="1914"/>
         <source>Cannot replace existing settings file: %1</source>
         <translation>既存の設定ファイルを置き換えられません: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1909"/>
+        <location filename="../src/settings/Settings.cpp" line="1918"/>
         <source>Failed to install imported settings file</source>
         <translation>インポートした設定ファイルの適用に失敗しました</translation>
     </message>
@@ -9934,7 +9944,7 @@ External: ファイル毎に独立したウィンドウを開く (複数並べ�
         <translation>未知の外部コマンド: %1</translation>
     </message>
     <message>
-        <location filename="../src/settings/Settings.cpp" line="1881"/>
+        <location filename="../src/settings/Settings.cpp" line="1890"/>
         <location filename="../src/settings/PresetIO.cpp" line="21"/>
         <source>Cannot open file: %1</source>
         <translation>ファイルを開けません: %1</translation>

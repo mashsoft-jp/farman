@@ -160,6 +160,7 @@ void Settings::applyDefaults() {
   m_archiveTempDirectory.clear();
   m_archivePasswordRetryCount = 3;
   m_archiveMaxNestDepth       = 0;
+  m_archiveExtractCreateSubdir = true;
   m_viewerFilePatterns.clear();
   m_viewerMode    = ViewerMode::Inline;
   m_showToolbar   = true;
@@ -1167,6 +1168,14 @@ int Settings::archiveMaxNestDepth() const {
 
 void Settings::setArchiveMaxNestDepth(int depth) {
   m_archiveMaxNestDepth = qBound(0, depth, 99);   // 0 = 無制限
+}
+
+bool Settings::archiveExtractCreateSubdirectory() const {
+  return m_archiveExtractCreateSubdir;
+}
+
+void Settings::setArchiveExtractCreateSubdirectory(bool create) {
+  m_archiveExtractCreateSubdir = create;
 }
 
 namespace {
@@ -2329,6 +2338,8 @@ void Settings::load() {
     setArchiveTempDirectory(archive.value("tempDirectory").toString());
     setArchivePasswordRetryCount(archive.value("passwordRetryCount").toInt(3));
     setArchiveMaxNestDepth(archive.value("maxNestDepth").toInt(0));
+    m_archiveExtractCreateSubdir =
+      archive.value("extractCreateSubdirectory").toBool(true);
   }
 
   // Load log settings
@@ -3073,6 +3084,7 @@ void Settings::save() const {
     archive["tempDirectory"]      = m_archiveTempDirectory;
     archive["passwordRetryCount"] = m_archivePasswordRetryCount;
     archive["maxNestDepth"]       = m_archiveMaxNestDepth;
+    archive["extractCreateSubdirectory"] = m_archiveExtractCreateSubdir;
     root["archive"] = archive;
   }
 

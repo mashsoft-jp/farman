@@ -1,4 +1,5 @@
 #include "ExtractArchiveDialog.h"
+#include "settings/Settings.h"
 #include "utils/Dialogs.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -82,7 +83,10 @@ void ExtractArchiveDialog::setupUi(const QString& archivePath,
   // 目的のディレクトリを開いている場合に一段深くならずに済む。
   m_createSubdirCheck = new QCheckBox(
     tr("Create a directory named after the archive"), this);
-  m_createSubdirCheck->setChecked(true);
+  // 初期値は設定 → アーカイブの「展開時にアーカイブ名のディレクトリを作成する」。
+  // ここでの変更はその場限りで、設定側には書き戻さない。
+  m_createSubdirCheck->setChecked(
+    Settings::instance().archiveExtractCreateSubdirectory());
   m_createSubdirCheck->setToolTip(
     tr("When off, the contents are extracted straight into the output path "
        "instead of into a sub-directory named after the archive."));

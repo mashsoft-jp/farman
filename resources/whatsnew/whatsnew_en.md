@@ -68,6 +68,8 @@
 - The extract dialog has a new "Create a directory named after the archive"
   option. Turn it off to extract straight into the output path; farman used to
   always create that directory. It stays on by default.
+- The initial state of that check box comes from Settings → Archive, so you can
+  make direct extraction the default if you prefer it.
 
 ### Dialogs
 

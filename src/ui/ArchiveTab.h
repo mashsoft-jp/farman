@@ -98,6 +98,7 @@ private:
   QToolButton* m_tempDirectoryDefault = nullptr;
   QSpinBox*    m_passwordRetrySpin    = nullptr;
   QSpinBox*    m_maxNestDepthSpin     = nullptr;
+  QCheckBox*   m_extractCreateSubdirCheck = nullptr;
 
   // 一覧を作り直している間は itemChanged をユーザー操作として扱わない。
   bool m_populating = false;
