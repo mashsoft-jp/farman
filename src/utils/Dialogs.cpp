@@ -1,7 +1,9 @@
 #include "Dialogs.h"
 #include "FarmanMessageBox.h"
 #include <QApplication>
+#include <QCalendarWidget>
 #include <QCoreApplication>
+#include <QDateTimeEdit>
 #include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -259,6 +261,25 @@ bool informWithSuppress(QWidget* parent,
 
   // 戻り値は「次回以降も表示するか」: チェックが OFF なら true (= 表示し続ける)
   return !suppressCheck->isChecked();
+}
+
+void applyCalendarPopupStyle(QDateTimeEdit* edit) {
+  if (!edit || !edit->calendarPopup()) return;
+  QCalendarWidget* calendar = edit->calendarWidget();
+  if (!calendar) return;
+
+  const QPalette pal = qApp ? qApp->palette() : calendar->palette();
+  const QString bg = pal.color(QPalette::Window).name();
+  const QString fg = pal.color(QPalette::WindowText).name();
+
+  // 月 / 年のボタンは背景を透過させて見出しの地色に載せ、文字色は本文と同じに
+  // する。年を直接打ち込むときは QSpinBox に変わるので、そちらにも色を当てる。
+  calendar->setStyleSheet(QStringLiteral(
+    "QWidget#qt_calendar_navigationbar { background-color: %1; }"
+    "QWidget#qt_calendar_navigationbar QToolButton {"
+    "  color: %2; background-color: transparent; }"
+    "QWidget#qt_calendar_navigationbar QSpinBox { color: %2; }")
+      .arg(bg, fg));
 }
 
 QLabel* pathHeaderLabel(const QString& path, QWidget* parent) {

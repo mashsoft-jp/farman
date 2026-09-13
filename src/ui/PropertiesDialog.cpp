@@ -188,6 +188,7 @@ void PropertiesDialog::setupUi() {
   m_modifiedEdit = new QDateTimeEdit(this);
   m_modifiedEdit->setDisplayFormat(QStringLiteral("yyyy/MM/dd HH:mm:ss"));
   m_modifiedEdit->setCalendarPopup(true);
+  applyCalendarPopupStyle(m_modifiedEdit);
   // 所有者 / グループ: 名前は編集可能、ID は表示のみ。名前欄 + "(ID)" ラベルを
   // 1 行にまとめ、行ごとの表示制御のため QWidget でラップする。
   m_ownerEdit = new QLineEdit(this);

@@ -7,6 +7,7 @@
 class QWidget;
 class QAbstractButton;
 class QLabel;
+class QDateTimeEdit;
 class QPushButton;
 
 namespace Farman {
@@ -144,6 +145,17 @@ enum class TextInputCursor {
   SelectAll,
   BeforeExtension,
 };
+
+// QDateTimeEdit のカレンダーポップアップの見出し (前月 / 次月 / 月 / 年) を
+// 読めるようにする。
+//
+// Qt はこの見出しの配色を自前で決める: 背景 = Highlight、文字 =
+// HighlightedText。ところが月 / 年はボタンなので、farman の独自パレットでは
+// 背景がボタン色 (明るいグレー) になり、そこに白文字が載って読めなくなる。
+// 見出しをウィンドウ色 + 通常の文字色に揃え、本文の日付と同じ読みやすさにする。
+//
+// setCalendarPopup(true) した QDateTimeEdit には必ず通すこと。
+void applyCalendarPopupStyle(QDateTimeEdit* edit);
 
 // ダイアログの先頭に置く「対象パス」の見出しラベル。
 // どこに対する操作なのかを、ダイアログだけ見てフルパスで分かるようにする

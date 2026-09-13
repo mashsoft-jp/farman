@@ -195,9 +195,11 @@ void SearchDialog::setupUi(const QString& initialPath) {
   applyAltShortcut(m_dateFilterCheck, Qt::Key_M);
   m_dateFromEdit = new QDateTimeEdit(QDateTime(QDate::currentDate().addYears(-1), QTime(0, 0)), this);
   m_dateFromEdit->setCalendarPopup(true);
+  applyCalendarPopupStyle(m_dateFromEdit);
   m_dateFromEdit->setDisplayFormat(QStringLiteral("yyyy-MM-dd HH:mm"));
   m_dateToEdit = new QDateTimeEdit(QDateTime(QDate::currentDate(), QTime(23, 59)), this);
   m_dateToEdit->setCalendarPopup(true);
+  applyCalendarPopupStyle(m_dateToEdit);
   m_dateToEdit->setDisplayFormat(QStringLiteral("yyyy-MM-dd HH:mm"));
   filterGrid->addWidget(m_dateFilterCheck, 1, 0);
   filterGrid->addWidget(new QLabel(tr("From:"), this), 1, 1);
