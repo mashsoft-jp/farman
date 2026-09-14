@@ -1,6 +1,7 @@
 #include "CreateArchiveDialog.h"
 #include "core/ArchiveFormatCatalog.h"
 #include "utils/Dialogs.h"
+#include <QCheckBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -41,8 +42,9 @@ ArchiveCreateWorker::Format CreateArchiveDialog::format() const {
 }
 
 QString CreateArchiveDialog::passphrase() const {
-  // 暗号化は zip のみ。パスワード空なら暗号化しない。
+  // 暗号化は zip のみ、かつ「暗号化する」にチェックがあるときだけ。
   if (format() != ArchiveCreateWorker::Format::Zip) return QString();
+  if (!m_encryptCheck || !m_encryptCheck->isChecked()) return QString();
   return m_passwordEdit->text();
 }
 
@@ -50,8 +52,7 @@ ArchiveCreateWorker::Encryption CreateArchiveDialog::encryption() const {
   // zip + パスワードありなら暗号化する。方式は設定 → アーカイブの zip 形式の
   // 「既定の暗号化」に従う (既定は AES-256)。旧式 ZipCrypto は脆弱なので、
   // このダイアログには方式の選択 UI は出さず設定側だけで選ばせる。
-  if (format() != ArchiveCreateWorker::Format::Zip
-      || m_passwordEdit->text().isEmpty()) {
+  if (passphrase().isEmpty()) {
     return ArchiveCreateWorker::Encryption::None;
   }
   const ResolvedArchiveFormat zip =
@@ -175,15 +176,27 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
     else if (lv == 9) label += tr(" (best)");
     m_compressionCombo->addItem(label, lv);
   }
-  form->addRow(new QLabel(tr("Compression:"), this), m_compressionCombo);
+  form->addRow(altBuddyLabel(tr("Compression:"), Qt::Key_C, m_compressionCombo, this),
+               m_compressionCombo);
 
-  // Password (zip 暗号化。zip 以外は無効化)
-  // パスワードを入れた zip は AES-256 で暗号化される (方式選択 UI は省略 —
-  // ZipCrypto は脆弱なので一律 AES-256)。
+  // 暗号化 (zip のみ)。以前は「パスワード欄が空なら暗号化しない」という暗黙の
+  // 扱いだったが分かりにくいので、チェックで明示的に ON にし、ON のときだけ
+  // パスワード / 確認欄を有効にする。方式は設定 → アーカイブの zip 形式の
+  // 「既定の暗号化」に従う (既定は AES-256)。
+  m_encryptCheck = new QCheckBox(tr("Encrypt (zip only)"), this);
+  applyAltShortcut(m_encryptCheck, Qt::Key_E);
+  connect(m_encryptCheck, &QCheckBox::toggled, this, [this](bool on) {
+    updateEncryptionEnabled();
+    // ON にしたらそのまま打ち始められるようにする。
+    if (on && m_passwordEdit->isEnabled()) m_passwordEdit->setFocus();
+  });
+  form->addRow(QString(), m_encryptCheck);
+
+  // パスワード / 確認は「暗号化する」に従属する入力欄なので、ショートカットは
+  // 付けない (チェックを入れると自動でパスワード欄へフォーカスが移る)。
   m_passwordEdit = new QLineEdit(this);
   m_passwordEdit->setFocusPolicy(Qt::StrongFocus);
   m_passwordEdit->setEchoMode(QLineEdit::Password);
-  m_passwordEdit->setPlaceholderText(tr("Leave empty for no encryption (zip only, AES-256)"));
   form->addRow(new QLabel(tr("Password:"), this), m_passwordEdit);
 
   m_passwordConfirmEdit = new QLineEdit(this);
@@ -217,7 +230,8 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   setTabOrder(m_dirEdit,            m_browseButton);
   setTabOrder(m_browseButton,       m_nameEdit);
   setTabOrder(m_nameEdit,           m_compressionCombo);
-  setTabOrder(m_compressionCombo,   m_passwordEdit);
+  setTabOrder(m_compressionCombo,   m_encryptCheck);
+  setTabOrder(m_encryptCheck,       m_passwordEdit);
   setTabOrder(m_passwordEdit,       m_passwordConfirmEdit);
   setTabOrder(m_passwordConfirmEdit,cancelBtn);
   setTabOrder(cancelBtn,            okBtn);
@@ -265,17 +279,23 @@ void CreateArchiveDialog::onFormatChanged() {
   const bool isZip       = (format() == ArchiveCreateWorker::Format::Zip);
   const bool compressible = (format() != ArchiveCreateWorker::Format::Tar);
   m_compressionCombo->setEnabled(compressible);
-  m_passwordEdit->setEnabled(isZip);
-  m_passwordConfirmEdit->setEnabled(isZip);
+  Q_UNUSED(isZip);
+  updateEncryptionEnabled();
 
   // 形式が変わったら、その形式の既定値を入れ直す。
   applyFormatDefaults();
 }
 
 void CreateArchiveDialog::tryAccept() {
-  // zip 暗号化時はパスワード一致を検証してから確定する。
-  if (format() == ArchiveCreateWorker::Format::Zip
-      && !m_passwordEdit->text().isEmpty()) {
+  // 「暗号化する」が有効なら、パスワードの入力と一致を検証してから確定する。
+  if (m_encryptCheck->isEnabled() && m_encryptCheck->isChecked()) {
+    if (m_passwordEdit->text().isEmpty()) {
+      // チェックを入れたのに空のまま = 暗号化されないまま作られてしまう。
+      // 以前の「空なら暗号化しない」に戻さず、入力を促す。
+      warn(this, tr("Create Archive"), tr("Enter a password to encrypt the archive."));
+      m_passwordEdit->setFocus();
+      return;
+    }
     if (m_passwordEdit->text() != m_passwordConfirmEdit->text()) {
       warn(this, tr("Create Archive"), tr("Passwords do not match."));
       m_passwordConfirmEdit->setFocus();
@@ -284,6 +304,15 @@ void CreateArchiveDialog::tryAccept() {
     }
   }
   accept();
+}
+
+void CreateArchiveDialog::updateEncryptionEnabled() {
+  // 暗号化できるのは zip だけ。チェック自体も zip 以外では選べなくする。
+  const bool isZip = (format() == ArchiveCreateWorker::Format::Zip);
+  m_encryptCheck->setEnabled(isZip);
+  const bool on = isZip && m_encryptCheck->isChecked();
+  m_passwordEdit->setEnabled(on);
+  m_passwordConfirmEdit->setEnabled(on);
 }
 
 bool CreateArchiveDialog::eventFilter(QObject* watched, QEvent* event) {
@@ -308,30 +337,6 @@ bool CreateArchiveDialog::eventFilter(QObject* watched, QEvent* event) {
     }
   }
   return QDialog::eventFilter(watched, event);
-}
-
-void CreateArchiveDialog::keyPressEvent(QKeyEvent* event) {
-  if (event->modifiers() & Qt::AltModifier) {
-    switch (event->key()) {
-      case Qt::Key_F:
-        m_formatCombo->setFocus();
-        m_formatCombo->showPopup();
-        event->accept();
-        return;
-      case Qt::Key_D:
-        m_dirEdit->setFocus();
-        m_dirEdit->selectAll();
-        event->accept();
-        return;
-      case Qt::Key_M:
-        m_nameEdit->setFocus();
-        m_nameEdit->selectAll();
-        event->accept();
-        return;
-      default: break;
-    }
-  }
-  QDialog::keyPressEvent(event);
 }
 
 } // namespace Farman

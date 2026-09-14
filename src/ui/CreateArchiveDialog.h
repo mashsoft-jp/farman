@@ -6,6 +6,7 @@
 #include <QStringList>
 
 class QLineEdit;
+class QCheckBox;
 class QComboBox;
 class QPushButton;
 
@@ -38,12 +39,13 @@ public:
   int                              compressionLevel() const;  // -1 = 既定
 
 protected:
-  void keyPressEvent(QKeyEvent* event) override;
   bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
   void onBrowseDir();
   void onFormatChanged();
+  // 形式と「暗号化する」チェックに合わせて、暗号化まわりの有効 / 無効を決める。
+  void updateEncryptionEnabled();
   // OK 押下時の検証 (パスワード一致など)。問題なければ accept() する。
   void tryAccept();
 
@@ -64,7 +66,10 @@ private:
   QPushButton* m_browseButton;
   QLineEdit*   m_nameEdit;
   QComboBox*   m_compressionCombo     = nullptr;  // 圧縮レベル (-1=既定 / 0〜9)
-  QLineEdit*   m_passwordEdit         = nullptr;  // zip 暗号化パスワード (AES-256 固定)
+  // 暗号化する / しない。チェックしたときだけパスワード欄が有効になる。
+  // (空欄 = 暗号化しない、という暗黙の扱いは分かりにくいので明示的にした)
+  QCheckBox*   m_encryptCheck         = nullptr;
+  QLineEdit*   m_passwordEdit         = nullptr;  // zip 暗号化パスワード
   QLineEdit*   m_passwordConfirmEdit  = nullptr;  // 確認用
 };
 
