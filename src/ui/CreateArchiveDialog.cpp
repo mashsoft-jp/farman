@@ -224,11 +224,13 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   connect(m_formatCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
           this, [this](int) { onFormatChanged(); });
 
-  // Tab: format → dir → browse → name → compression → password → confirm
-  //       → Cancel → OK
-  setTabOrder(m_formatCombo,        m_dirEdit);
+  // Tab は画面の並びどおり上から:
+  //   パス → 参照 → フォーマット → ファイル名 → 圧縮 → 暗号化 → パスワード
+  //   → 確認 → キャンセル → OK
+  // (パスを先頭の行へ移したときに、ここを追従させ忘れていた)
   setTabOrder(m_dirEdit,            m_browseButton);
-  setTabOrder(m_browseButton,       m_nameEdit);
+  setTabOrder(m_browseButton,       m_formatCombo);
+  setTabOrder(m_formatCombo,        m_nameEdit);
   setTabOrder(m_nameEdit,           m_compressionCombo);
   setTabOrder(m_compressionCombo,   m_encryptCheck);
   setTabOrder(m_encryptCheck,       m_passwordEdit);
