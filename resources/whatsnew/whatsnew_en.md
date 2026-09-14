@@ -1,7 +1,5 @@
 # What's New in farman 1.0.0
 
-(This version is still in development. The contents may change.)
-
 ### New "Archive" tab in Settings
 
 - You can now see every supported archive format in one list and turn each one on
@@ -85,6 +83,9 @@
   there to rename. The separate "Name" row is gone.
 - Sort & Filter now uses the same three-way choice as Search (files only,
   directories only, or both) instead of two "only" check boxes.
+- To encrypt a new archive, tick "Encrypt". The password fields are enabled only
+  while it is ticked; an empty password used to mean "no encryption".
+- Properties now shows sizes in "bytes" rather than "B".
 
 ### File list operations
 
@@ -102,6 +103,11 @@
   **last** dot ("photo.tar.gz" selects "photo.tar"); for directories, the whole
   name (dots in a directory name are not an extension).
 
+### Other
+
+- The About box now shows the build number, commit ID and build date, which makes
+  it easier to identify the exact build when reporting a problem.
+
 ### Bug fixes
 
 - Fixed the English What's New dialog being cut off partway through, and made
@@ -113,5 +119,5 @@
 - On macOS, the Alt (⌥) shortcuts shown on dialog labels, check boxes and radio
   buttons did nothing when pressed. They now work — including "Move to Trash" in
   the delete confirmation and "Overwrite" / "Rename to" in the overwrite dialog.
-- Fixed "Open With Viewer..." (Shift+Ctrl+Enter, Cmd+Enter on macOS) on a file
+- Fixed "Open With Viewer..." (Ctrl+Enter, Cmd+Enter on macOS) on a file
   inside an archive: it showed empty content or failed to open.

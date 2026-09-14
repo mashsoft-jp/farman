@@ -47,6 +47,100 @@
       What's new in each version. These are the same notes shown in the app under "Help → What's New...", listed newest first.
     </p>
 
+    <!-- 1.0.0 -->
+    <section class="doc-section" id="v1-0-0">
+      <h2>farman 1.0.0 <span class="wn-date">2026-09-14</span></h2>
+      <div class="whatsnew">
+        <h3>New "Archive" tab in Settings</h3>
+        <ul>
+          <li>You can now see every supported archive format in one list and turn each one on or off. Built-in formats and formats provided by archive plugins appear in the same list.</li>
+          <li>"Details..." on each row lets you change the file patterns and the defaults used when creating an archive (compression level, encryption method, file name encoding). Formats that farman cannot create show no creation settings.</li>
+          <li>The temporary extraction directory, the number of password attempts, and the maximum nesting depth for archives inside archives are all configurable here.</li>
+        </ul>
+
+        <h3>More archive formats</h3>
+        <ul>
+          <li>Added 7-Zip, RAR, ISO9660, Microsoft Cabinet, xar / pkg, cpio, ar / Debian package, and TAR combined with Zstandard / LZ4 / LZMA / lzip / compress.</li>
+          <li>A <strong>single file</strong> compressed with gzip, bzip2, xz, LZMA, Zstandard, LZ4 or compress can now be opened as an archive containing one entry.</li>
+          <li>The added formats are enabled by default. Turn off any you do not need in Settings → Archive.</li>
+        </ul>
+
+        <h3>Settings reorganized</h3>
+        <ul>
+          <li>The "Plugins" tab is gone. Viewer plugins are now managed in the new "Viewer" tab, and archive plugins in the "Archive" tab.</li>
+          <li>"Allow loading external plugins" and the plugins directory moved to the "General" tab.</li>
+          <li>In both lists you can toggle a row directly with its checkbox, or switch everything at once with "Enable all".</li>
+        </ul>
+
+        <h3>File patterns</h3>
+        <ul>
+          <li>Viewers and archives used different names and formats for the same thing. They are now both "File patterns", and in addition to plain extensions you can write:
+            <ul>
+              <li><code>mp4</code> … an extension (as before)</li>
+              <li><code>*.tar.gz</code> … a compound extension</li>
+              <li><code>Makefile</code> … a file with no extension</li>
+            </ul>
+          </li>
+          <li>Extensions you added or removed in the settings did not always affect which viewer was chosen. They now take effect as written.</li>
+          <li>The built-in defaults are now written in pattern form (<code>*.png</code>) as well. Your existing settings are converted automatically on upgrade.</li>
+        </ul>
+
+        <h3>Archives</h3>
+        <ul>
+          <li><strong>Archives inside archives</strong> now open with Enter, to any depth (the depth limit is configurable). Backspace or ".." walks back out one level at a time.</li>
+          <li>The per-format "File name encoding" setting is now actually used when reading entry names — useful for older zips without the UTF-8 flag, where auto-detection guesses wrong.</li>
+          <li>The "Temporary directory" and "Password attempts" settings are now applied as well (a change to the temporary directory takes effect at next start).</li>
+        </ul>
+
+        <h3>Search can now find directories</h3>
+        <ul>
+          <li>The search dialog has a new "Search for" option: files only (as before), directories only, or both.</li>
+          <li>With "directories only", the size and content filters are disabled, since neither means anything for a directory.</li>
+          <li>Going to a result no longer enters a directory. The pane moves to its parent and puts the cursor on it, so you can see where it was found.</li>
+        </ul>
+
+        <h3>Extracting without a wrapper directory</h3>
+        <ul>
+          <li>The extract dialog has a new "Create a directory named after the archive" option. Turn it off to extract straight into the output path; farman used to always create that directory. It stays on by default.</li>
+          <li>The initial state of that check box comes from Settings → Archive, so you can make direct extraction the default if you prefer it.</li>
+        </ul>
+
+        <h3>Dialogs</h3>
+        <ul>
+          <li>Dialog shortcut keys (Alt, or ⌥ on macOS) were reviewed across the whole app so that <strong>the same function uses the same key</strong> — O for OK, X for Cancel, C for Close, N for Name, and so on.</li>
+          <li>Dialogs that previously had keys only on OK and Cancel (Sort &amp; Filter, Bulk Rename, Directory Compare, Properties and others) now let you reach every field by keyboard.</li>
+          <li>The Create File, Create Directory, Delete and Rename dialogs now show the path they act on, so you can tell which directory is affected without looking away.</li>
+          <li>In Properties, the last component of the path is an editable field: change it there to rename. The separate "Name" row is gone.</li>
+          <li>Sort &amp; Filter now uses the same three-way choice as Search (files only, directories only, or both) instead of two "only" check boxes.</li>
+          <li>To encrypt a new archive, tick "Encrypt". The password fields are enabled only while it is ticked; an empty password used to mean "no encryption".</li>
+          <li>Properties now shows sizes in "bytes" rather than "B".</li>
+        </ul>
+
+        <h3>File list operations</h3>
+        <ul>
+          <li>"Copy Path" now copies the paths of <strong>all selected files</strong> at once (previously it copied only the item under the cursor).</li>
+          <li>Added an action that copies just the <strong>file names</strong> instead of the paths (default shortcut Shift+Ctrl+C, Shift+Cmd+C on macOS).</li>
+          <li>The separator used when copying several entries is configurable: comma, comma + space, or a newline (LF / CRLF / CR). Settings → Behavior → File Operations.</li>
+          <li>After a copy, move, delete or rename, the status bar briefly shows what was done in place of the current path. The duration is configurable, and 0 turns the notice off.</li>
+          <li>Changed what gets selected when renaming: for files, everything up to the <strong>last</strong> dot ("photo.tar.gz" selects "photo.tar"); for directories, the whole name (dots in a directory name are not an extension).</li>
+        </ul>
+
+        <h3>Other</h3>
+        <ul>
+          <li>The About box now shows the build number, commit ID and build date, which makes it easier to identify the exact build when reporting a problem.</li>
+        </ul>
+
+        <h3>Bug fixes</h3>
+        <ul>
+          <li>Fixed the English What's New dialog being cut off partway through, and made Markdown rendering in general immune to the same kind of truncation.</li>
+          <li>With every viewer plugin disabled, only the binary viewer used to open. Now nothing opens at all.</li>
+          <li>Fixed the month and year in the date picker being unreadable against their background.</li>
+          <li>On macOS, the Alt (⌥) shortcuts shown on dialog labels, check boxes and radio buttons did nothing when pressed. They now work — including "Move to Trash" in the delete confirmation and "Overwrite" / "Rename to" in the overwrite dialog.</li>
+          <li>Fixed "Open With Viewer..." (Ctrl+Enter, Cmd+Enter on macOS) on a file inside an archive: it showed empty content or failed to open.</li>
+        </ul>
+      </div>
+    </section>
+
     <!-- 0.9.9 -->
     <section class="doc-section" id="v0-9-9">
       <h2>farman 0.9.9 <span class="wn-date">2026-08-12</span></h2>
