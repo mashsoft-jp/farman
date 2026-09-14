@@ -521,7 +521,7 @@ void MainWindow::updateDiskStatus() {
   const QString totalStr = en.formattedDataSize(total, 0,
                               QLocale::DataSizeTraditionalFormat);
   m_statusDiskLabel->setText(
-    tr("%1 free / %2 (%3%% used)").arg(freeStr, totalStr).arg(usedPct));
+    tr("%1 free / %2 (%3% used)").arg(freeStr, totalStr).arg(usedPct));
   // tooltip にボリューム名 / マウントポイント / ファイルシステム種別
   m_statusDiskLabel->setToolTip(
     tr("Volume: %1\nMount point: %2\nFile system: %3")

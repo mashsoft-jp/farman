@@ -2823,8 +2823,8 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <name>Farman::CreateArchiveDialog</name>
     <message>
         <location filename="../src/ui/CreateArchiveDialog.cpp" line="116"/>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="295"/>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="300"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="297"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="302"/>
         <source>Create Archive</source>
         <translation>アーカイブ作成</translation>
     </message>
@@ -2919,17 +2919,17 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <translation>作成</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="259"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="261"/>
         <source>Select Output Directory</source>
         <translation>出力先ディレクトリを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="295"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="297"/>
         <source>Enter a password to encrypt the archive.</source>
         <translation>暗号化するにはパスワードを入力してください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/CreateArchiveDialog.cpp" line="300"/>
+        <location filename="../src/ui/CreateArchiveDialog.cpp" line="302"/>
         <source>Passwords do not match.</source>
         <translation>パスワードが一致しません。</translation>
     </message>
@@ -5661,6 +5661,11 @@ This will discard all custom keybindings.</source>
         <translation>反対側パネルをアクティブと同期</translation>
     </message>
     <message>
+        <location filename="../src/ui/MainWindow.cpp" line="524"/>
+        <source>%1 free / %2 (%3% used)</source>
+        <translation>空き %1 / 全 %2 (%3% 使用)</translation>
+    </message>
+    <message>
         <location filename="../src/ui/MainWindow.cpp" line="1185"/>
         <location filename="../src/ui/MainWindow.cpp" line="1915"/>
         <source>Sync Active Pane to Other</source>
@@ -5856,9 +5861,8 @@ Local disk usage is not shown here because the host volume size would be mislead
 ホスト FS の容量表示は誤解を招くため、ここではディスク使用量を表示しません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="524"/>
         <source>%1 free / %2 (%3%% used)</source>
-        <translation>空き %1 / 全 %2 (%3%% 使用)</translation>
+        <translation type="vanished">空き %1 / 全 %2 (%3%% 使用)</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="527"/>
