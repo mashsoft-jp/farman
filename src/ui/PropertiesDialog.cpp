@@ -37,9 +37,12 @@ namespace {
 
 QString formatSize(qint64 bytes) {
   const QString num = QLocale(QLocale::English).toString(bytes);
+  // 単位は略さず "bytes" と書く ("B" だとビットと紛らわしいため)。1 だけ単数形。
+  const QString unit = (bytes == 1) ? QStringLiteral("byte") : QStringLiteral("bytes");
+  // 1 KiB 未満は換算しても同じ値になるので、括弧書きの人間向け表記は付けない。
+  if (bytes < 1024) return QStringLiteral("%1 %2").arg(num, unit);
   const QString human = QLocale(QLocale::English).formattedDataSize(bytes);
-  if (bytes < 1024) return QStringLiteral("%1 B").arg(num);
-  return QStringLiteral("%1 B (%2)").arg(num, human);
+  return QStringLiteral("%1 %2 (%3)").arg(num, unit, human);
 }
 
 QString formatDate(const QDateTime& t) {
