@@ -954,6 +954,12 @@ CLI 版を優先表示)。
   - Sync Browse: 同期ブラウズ ON のときだけ `Sync Browse: ON` を表示
   - **ディスク使用量**: アクティブペインのカレントが属するボリュームの状態
     - 通常 FS: `N GB free / M GB (P% used)` (例: `245.6 GB free / 500 GB (51% used)`)
+      - 容量は 10 進 (1 GB = 10^9 B、`QLocale::DataSizeSIFormat`) で表示し、
+        macOS のシステム情報 / Finder や Windows のエクスプローラーの表記と
+        揃える (1024 ベースを GB と書くと OS の値より小さく見えるため)
+      - 空きは OS が実際に空いていると報告する量 (`QStorageInfo::bytesAvailable`)。
+        macOS の「利用可能」に含まれる削除可能領域 (ローカルスナップショット /
+        キャッシュ等) は含まないので、システム情報より少なく出ることがある
       - tooltip にボリューム名 / マウントポイント / ファイルシステム種別
     - クラウド同期フォルダ: `<cloud sync folder>` 表示で容量抑止
       (ホスト FS の容量が返り誤解を招くため)。検出対象パス:
