@@ -5669,7 +5669,7 @@ This will discard all custom keybindings.</source>
         <location filename="../src/ui/MainWindow.cpp" line="1185"/>
         <location filename="../src/ui/MainWindow.cpp" line="1915"/>
         <source>Sync Active Pane to Other</source>
-        <translation>アクティブをパネルを反対側と同期</translation>
+        <translation>アクティブパネルを反対側と同期</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="1249"/>
