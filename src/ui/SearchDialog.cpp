@@ -441,7 +441,9 @@ void SearchDialog::startSearch() {
   connect(m_worker, &SearchWorker::resultFound, this, &SearchDialog::onResultFound);
   connect(m_worker, &WorkerBase::finished,      this, &SearchDialog::onFinished);
   m_searching = true;
-  m_searchButton->setText(tr("Stop"));
+  // setText で素の文字列に戻すと applyAltShortcut が付けた表記 (macOS の
+  // "(⌥O)" / Windows・Linux の & 下線) が消えるので withAltMnemonic で整える。
+  m_searchButton->setText(withAltMnemonic(tr("Stop"), Qt::Key_O));
   m_worker->start();
 }
 
@@ -453,7 +455,9 @@ void SearchDialog::stopSearch() {
     m_worker = nullptr;
   }
   m_searching = false;
-  if (m_searchButton) m_searchButton->setText(tr("Search"));
+  if (m_searchButton) {
+    m_searchButton->setText(withAltMnemonic(tr("Search"), Qt::Key_O));
+  }
 }
 
 void SearchDialog::onResultFound(const QString& path) {
@@ -463,7 +467,9 @@ void SearchDialog::onResultFound(const QString& path) {
 
 void SearchDialog::onFinished(bool /*success*/) {
   m_searching = false;
-  if (m_searchButton) m_searchButton->setText(tr("Search"));
+  if (m_searchButton) {
+    m_searchButton->setText(withAltMnemonic(tr("Search"), Qt::Key_O));
+  }
   m_statusLabel->setText(tr("Done. %1 found.").arg(m_resultsTable->rowCount()));
   if (m_worker) {
     m_worker->deleteLater();

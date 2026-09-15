@@ -8273,8 +8273,8 @@ Enter キーでビュアーを開いてください。</translation>
     <message>
         <location filename="../src/ui/SearchDialog.cpp" line="64"/>
         <location filename="../src/ui/SearchDialog.cpp" line="263"/>
-        <location filename="../src/ui/SearchDialog.cpp" line="456"/>
-        <location filename="../src/ui/SearchDialog.cpp" line="466"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="459"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="471"/>
         <source>Search</source>
         <translation>検索</translation>
     </message>
@@ -8339,17 +8339,17 @@ Enter キーでビュアーを開いてください。</translation>
         <translation>検索中...</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="444"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="446"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="461"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="465"/>
         <source>Searching... %1 found</source>
         <translation>検索中... %1 件</translation>
     </message>
     <message>
-        <location filename="../src/ui/SearchDialog.cpp" line="467"/>
+        <location filename="../src/ui/SearchDialog.cpp" line="473"/>
         <source>Done. %1 found.</source>
         <translation>完了。%1 件見つかりました。</translation>
     </message>
