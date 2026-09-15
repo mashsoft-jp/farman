@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QString>
 #include <atomic>
+#include <optional>
 
 namespace Farman {
 
@@ -21,6 +22,7 @@ struct OverwriteResolution {
   enum class Action {
     Overwrite,  // dst を削除してから書き込み
     Rename,     // targetPath の新パスへ書き込み（ユニーク名）
+    Skip,       // このエントリは書き込まず、次へ進む
     Cancel      // 操作を中止
   };
   Action  action      = Action::Cancel;
@@ -63,7 +65,10 @@ protected:
   // 上書き競合の解決。dst が既に存在する場合に呼び出す。
   // - AutoOverwrite: { Overwrite, dst }
   // - AutoRename:    { Rename, generateUniqueName(dst) }
-  // - Ask:           ダイアログ結果に従う
+  // - Ask:           ダイアログ結果に従う。ダイアログで「以降にも適用」が
+  //                  チェックされていたら、その選択を m_stickyAction に記憶し
+  //                  以降の競合ではダイアログを出さずに同じ選択を使う
+  //                  (Rename は generateUniqueName で自動リネーム)。
   OverwriteResolution resolveOverwrite(
     const QString& srcPath,
     const QString& dstPath
@@ -82,6 +87,9 @@ protected:
   std::atomic<bool> m_cancelRequested{false};
   OverwriteMode     m_overwriteMode = OverwriteMode::Ask;
   QString           m_autoRenameTemplate = QStringLiteral(" ({n})");
+  // Ask モードで「以降の重複にも適用」された選択。操作 (ワーカー) 単位で
+  // 保持し、Settings には保存しない。
+  std::optional<OverwriteDecision::Action> m_stickyAction;
 };
 
 } // namespace Farman

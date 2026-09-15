@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QRadioButton>
+#include <QCheckBox>
 #include <QButtonGroup>
 #include <QGroupBox>
 #include <QDialogButtonBox>
@@ -25,6 +26,7 @@ OverwriteDialog::OverwriteDialog(const QString& srcPath,
   , m_renameRadio(nullptr)
   , m_skipRadio(nullptr)
   , m_renameEdit(nullptr)
+  , m_applyToAllCheck(nullptr)
   , m_buttonBox(nullptr)
   , m_originalName(QFileInfo(dstPath).fileName()) {
   setupUi(srcPath, dstPath);
@@ -76,6 +78,17 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
   actionLayout->addWidget(m_skipRadio);
   mainLayout->addWidget(actionGroup);
 
+  // ── 以降の重複にも同じ選択を適用 ──
+  // その操作 (ワーカー) 限りの記憶で、Settings には保存しない。
+  m_applyToAllCheck = new QCheckBox(
+    tr("Apply this choice to all remaining conflicts"), this);
+  m_applyToAllCheck->setToolTip(
+    tr("Do not ask again for the rest of this operation.\n"
+       "With Rename, remaining conflicts are renamed automatically "
+       "using the auto-rename template."));
+  applyAltShortcut(m_applyToAllCheck, Qt::Key_A);
+  mainLayout->addWidget(m_applyToAllCheck);
+
   // 初期選択: Rename（ユーザーが競合を解決する意図が強いケース）
   m_renameRadio->setChecked(true);
 
@@ -125,16 +138,18 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
   connect(m_buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
   mainLayout->addWidget(m_buttonBox);
 
-  // Tab 順: Overwrite → Rename ラジオ → Rename 入力 → Skip → Cancel → OK
+  // Tab 順: Overwrite → Rename ラジオ → Rename 入力 → Skip → 以降にも適用
+  //         → Cancel → OK
   m_overwriteRadio->setFocusPolicy(Qt::StrongFocus);
   m_renameRadio->setFocusPolicy(Qt::StrongFocus);
   m_skipRadio->setFocusPolicy(Qt::StrongFocus);
   m_renameEdit->setFocusPolicy(Qt::StrongFocus);
-  setTabOrder(m_overwriteRadio, m_renameRadio);
-  setTabOrder(m_renameRadio,    m_renameEdit);
-  setTabOrder(m_renameEdit,     m_skipRadio);
-  setTabOrder(m_skipRadio,      cancelBtn);
-  setTabOrder(cancelBtn,        okBtn);
+  setTabOrder(m_overwriteRadio,  m_renameRadio);
+  setTabOrder(m_renameRadio,     m_renameEdit);
+  setTabOrder(m_renameEdit,      m_skipRadio);
+  setTabOrder(m_skipRadio,       m_applyToAllCheck);
+  setTabOrder(m_applyToAllCheck, cancelBtn);
+  setTabOrder(cancelBtn,         okBtn);
 
   onActionChanged();
   onRenameTextChanged(m_renameEdit->text());
@@ -201,8 +216,9 @@ void OverwriteDialog::onAccepted() {
     m_decision.action  = OverwriteDecision::Action::Rename;
     m_decision.newName = m_renameEdit->text().trimmed();
   } else {
-    m_decision.action = OverwriteDecision::Action::Cancel;
+    m_decision.action = OverwriteDecision::Action::Skip;
   }
+  m_decision.applyToAll = m_applyToAllCheck->isChecked();
   accept();
 }
 

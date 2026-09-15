@@ -114,10 +114,15 @@ struct OverwriteDecision {
   enum class Action {
     Overwrite,  // そのまま上書き
     Rename,     // 任意のファイル名でリネーム
+    Skip,       // このエントリだけ飛ばして続行
     Cancel      // 操作全体をキャンセル
   };
   Action  action  = Action::Cancel;
   QString newName;  // Rename 選択時のみ有効（ファイル名のみ、パスを含まない）
+  // 「以降の重複にも同じ選択を適用」チェック。true なら同じ操作の残りの
+  // 競合ではダイアログを出さず、この action を使い回す (Rename の場合は
+  // 自動リネームテンプレートで一意な名前を付ける)。Cancel では無意味。
+  bool    applyToAll = false;
 };
 
 // ウィンドウサイズの復元モード

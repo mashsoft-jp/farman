@@ -91,6 +91,13 @@ void CopyWorker::run() {
         emit finished(false);
         return;
       }
+      if (resolution.action == OverwriteResolution::Action::Skip) {
+        // このエントリは飛ばす。配下のファイル数ぶん filesDone を進めて
+        // 進捗が 100% で終わるようにする。
+        m_progress.filesDone += countAllFiles({srcPath});
+        emit progressUpdated(m_progress);
+        continue;
+      }
       if (resolution.action == OverwriteResolution::Action::Rename) {
         dstPath = resolution.targetPath;
       } else {
@@ -139,6 +146,12 @@ bool CopyWorker::copyFile(const QString& src, const QString& dstIn) {
     if (resolution.action == OverwriteResolution::Action::Cancel) {
       requestCancel();
       return false;
+    }
+    if (resolution.action == OverwriteResolution::Action::Skip) {
+      // 飛ばしたファイルも「処理済み」として数える (失敗扱いにはしない)
+      ++m_progress.filesDone;
+      emit progressUpdated(m_progress);
+      return true;
     }
     if (resolution.action == OverwriteResolution::Action::Rename) {
       dst = resolution.targetPath;

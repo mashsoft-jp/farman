@@ -106,6 +106,13 @@ void MoveWorker::run() {
         emit finished(false);
         return;
       }
+      if (resolution.action == OverwriteResolution::Action::Skip) {
+        // このエントリは移動せず元の場所に残す。配下のファイル数ぶん
+        // filesDone を進めて進捗が 100% で終わるようにする。
+        m_progress.filesDone += countAllFiles({srcPath});
+        emit progressUpdated(m_progress);
+        continue;
+      }
       if (resolution.action == OverwriteResolution::Action::Rename) {
         dstPath = resolution.targetPath;
       } else {

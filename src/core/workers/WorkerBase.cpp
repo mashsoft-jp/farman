@@ -43,6 +43,29 @@ OverwriteResolution WorkerBase::resolveOverwrite(
       return resolution;
 
     case OverwriteMode::Ask: {
+      // 前回のダイアログで「以降の重複にも適用」が選ばれていれば、
+      // ダイアログを出さずにその選択を使い回す。
+      if (m_stickyAction.has_value()) {
+        switch (*m_stickyAction) {
+          case OverwriteDecision::Action::Overwrite:
+            resolution.action = OverwriteResolution::Action::Overwrite;
+            break;
+          case OverwriteDecision::Action::Rename:
+            // ユーザーが入力した名前は 1 件目にしか使えないので、以降は
+            // 自動リネームテンプレートで一意な名前を付ける。
+            resolution.action     = OverwriteResolution::Action::Rename;
+            resolution.targetPath = generateUniqueName(dstPath);
+            break;
+          case OverwriteDecision::Action::Skip:
+            resolution.action = OverwriteResolution::Action::Skip;
+            break;
+          case OverwriteDecision::Action::Cancel:
+            resolution.action = OverwriteResolution::Action::Cancel;
+            break;
+        }
+        return resolution;
+      }
+
       OverwriteDecision decision;
       emit overwriteRequired(srcPath, dstPath, &decision);
       switch (decision.action) {
@@ -55,9 +78,16 @@ OverwriteResolution WorkerBase::resolveOverwrite(
           resolution.targetPath = parent + "/" + decision.newName;
           break;
         }
+        case OverwriteDecision::Action::Skip:
+          resolution.action = OverwriteResolution::Action::Skip;
+          break;
         case OverwriteDecision::Action::Cancel:
           resolution.action = OverwriteResolution::Action::Cancel;
           break;
+      }
+      if (decision.applyToAll &&
+          decision.action != OverwriteDecision::Action::Cancel) {
+        m_stickyAction = decision.action;
       }
       return resolution;
     }
