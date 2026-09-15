@@ -56,11 +56,15 @@
   var os = detectOS();
 
   function render(card, data) {
-    // 過去 1 か月以内のリリースならカード見出しに New バッジ。
+    // 過去 1 か月以内のリリースならカード見出しと目次のリンクに New バッジ。
     if (window.farmanIsNewRelease && window.farmanMakeNewBadge
         && window.farmanIsNewRelease(data.published_at)) {
       var h = card.querySelector("h3");
       if (h && !h.querySelector(".badge-new")) h.appendChild(window.farmanMakeNewBadge());
+      if (card.id) {
+        var toc = document.querySelector('.plugin-toc a[href="#' + card.id + '"]');
+        if (toc && !toc.querySelector(".badge-new")) toc.appendChild(window.farmanMakeNewBadge());
+      }
     }
     var slot = card.querySelector(".plugin-dl");
     if (!slot) return;

@@ -42,6 +42,13 @@
     /* プラグイン一覧は 1 列で縦に並べ、各カードに説明・スクショ・ダウンロード・
        最新版の更新内容をまとめる (更新情報を別セクションに分けない)。 */
     .plugin-list { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    /* 一覧の目次: マニュアルの狭幅時と同じチップ状リンクを横並びにする。
+       固定ヘッダに隠れないよう、リンク先のカードに scroll-margin を持たせる。 */
+    .plugin-toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+    .plugin-toc a { font-size: .9rem; padding: 5px 13px; border: 1px solid var(--border);
+      border-radius: 999px; color: var(--fg-muted); }
+    .plugin-toc a:hover { background: var(--bg-alt); color: var(--fg); text-decoration: none; }
+    .plugin-list > article { scroll-margin-top: 80px; }
     /* 1 列になった分、スクショが横いっぱいに広がらないよう幅を抑える。 */
     .plugin-list .plugin-figure { max-width: 720px; }
     /* カード内の「最新版の更新内容」ブロック。本体の更新情報 (.whatsnew) と同じ
@@ -86,6 +93,10 @@
     <!-- 一覧 (1 プラグイン = 1 カード。説明・スクショ・ダウンロード・最新版の更新内容をまとめる) -->
     <section class="doc-section" id="list">
       <h2>プラグイン一覧</h2>
+      <nav class="plugin-toc" aria-label="プラグイン一覧の目次">
+        <a href="#plugin-3d">3D モデルビュアー (FBX)</a>
+        <a href="#plugin-lzh">LZH (LHA) アーカイブ</a>
+      </nav>
       <div class="plugin-list">
         <article class="feature" id="plugin-3d" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D モデルビュアー (FBX)</h3>

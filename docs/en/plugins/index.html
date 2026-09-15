@@ -43,6 +43,14 @@
        screenshot, downloads and the latest version's changes (no separate
        "Updates" section). */
     .plugin-list { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    /* Table of contents for the list: chip-style links like the manual's
+       narrow-screen TOC. Cards get a scroll margin so the sticky header
+       does not cover them. */
+    .plugin-toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+    .plugin-toc a { font-size: .9rem; padding: 5px 13px; border: 1px solid var(--border);
+      border-radius: 999px; color: var(--fg-muted); }
+    .plugin-toc a:hover { background: var(--bg-alt); color: var(--fg); text-decoration: none; }
+    .plugin-list > article { scroll-margin-top: 80px; }
     /* Keep the screenshot from spanning the whole single-column card. */
     .plugin-list .plugin-figure { max-width: 720px; }
     /* "What's new in the latest version" block inside a card. Same bullet look
@@ -87,6 +95,10 @@
     <!-- List (one card per plugin: description, screenshot, downloads and the latest version's changes) -->
     <section class="doc-section" id="list">
       <h2>Available plugins</h2>
+      <nav class="plugin-toc" aria-label="Plugin list contents">
+        <a href="#plugin-3d">3D model viewer (FBX)</a>
+        <a href="#plugin-lzh">LZH (LHA) archive</a>
+      </nav>
       <div class="plugin-list">
         <article class="feature" id="plugin-3d" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D model viewer (FBX)</h3>
