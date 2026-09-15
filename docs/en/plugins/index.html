@@ -39,6 +39,19 @@
     .plugin-figure figcaption { font-size: .82rem; color: var(--fg-muted); margin-top: 6px; }
     /* Smaller figure (e.g. the settings screen in the install steps) */
     .plugin-figure.plugin-figure-sm { max-width: 570px; }
+    /* The plugin list is a single column; each card holds the description,
+       screenshot, downloads and the latest version's changes (no separate
+       "Updates" section). */
+    .plugin-list { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    /* Keep the screenshot from spanning the whole single-column card. */
+    .plugin-list .plugin-figure { max-width: 720px; }
+    /* "What's new in the latest version" block inside a card. Same bullet look
+       as the main What's New page (.whatsnew), separated by a dashed rule. */
+    .plugin-updates { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); }
+    .plugin-updates h4 { font-size: 1rem; margin: 0 0 4px; }
+    .plugin-updates h5 { font-size: .95rem; font-weight: 600; margin: 12px 0 4px; color: var(--fg); }
+    .plugin-updates .wn-date { font-size: .82rem; }
+    .plugin-updates p.doc-note { margin: 8px 0 0; font-size: .85rem; }
   </style>
 </head>
 <body>
@@ -71,13 +84,13 @@
       External plugins are native code and run with the same privileges as farman. For safety, loading external plugins is off by default. <strong>Only enable plugins from sources you trust.</strong>
     </p>
 
-    <!-- List -->
+    <!-- List (one card per plugin: description, screenshot, downloads and the latest version's changes) -->
     <section class="doc-section" id="list">
       <h2>Available plugins</h2>
-      <div class="feature-grid">
-        <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
+      <div class="plugin-list">
+        <article class="feature" id="plugin-3d" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D model viewer (FBX)</h3>
-          <p>Display <code>.fbx</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, and bone (skeleton) display. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
+          <p>Display <code>.fbx</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, bone (skeleton) display, and back-face culling. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
           <figure class="doc-figure plugin-figure">
             <img src="../../screenshots/ex-01-3d-model-viewer.png" width="1200" height="792" alt="A FBX model shown in the 3D model viewer" loading="lazy" />
             <figcaption>3D model viewer (textures and skeletal animation)</figcaption>
@@ -89,8 +102,28 @@
           </ul>
           <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d/releases/latest" rel="noopener">Download</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">Repository</a></p>
-        </div>
-        <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
+
+          <div class="plugin-updates whatsnew">
+            <h4>What's new in the latest version <span class="wn-date">0.3.0 · 2026-09-15</span></h4>
+
+            <h5>Multi-part FBX models are now assembled correctly</h5>
+            <ul>
+              <li>The position, rotation and scale stored in the FBX node hierarchy are now applied to each mesh. Models that place the same shape from several nodes (for example dungeon backgrounds built from floor and wall parts) used to render with every part stacked at the origin. They now appear laid out the same way as in Unity Editor or your DCC tool.</li>
+              <li>Mirrored (flipped) parts keep the correct face orientation.</li>
+              <li>Models with skeletal animation render the same as before.</li>
+            </ul>
+
+            <h5>Back-face culling</h5>
+            <ul>
+              <li>Added back-face culling, which skips drawing the back side of polygons. This matches the single-sided rendering of game engines such as Unity, so the viewer now gives a closer preview of how a model will look in-engine. It is on by default.</li>
+              <li>Toggle it with the toolbar button or the <code>C</code> key. Turn it off when you want to see both sides. The key can be changed in farman's Settings → Key Bindings.</li>
+              <li>Wireframe mode always draws both sides so the structure stays visible.</li>
+            </ul>
+            <p class="doc-note">Notes for earlier versions are on the <a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">releases page</a>, in Japanese and English.</p>
+          </div>
+        </article>
+
+        <article class="feature" id="plugin-lzh" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
           <h3>LZH (LHA) archive</h3>
           <p>Browse and extract <code>.lzh</code> / <code>.lha</code> archives, just like zip / tar. Japanese Shift-JIS file names are handled (read-only). The macOS build is signed with an Apple Developer ID and notarized.</p>
           <ul class="plugin-meta">
@@ -100,7 +133,15 @@
           </ul>
           <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">Download</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">Repository</a></p>
-        </div>
+
+          <div class="plugin-updates whatsnew">
+            <h4>What's new in the latest version <span class="wn-date">1.0.0 · 2026-07-22</span></h4>
+            <ul>
+              <li>First public release. Browse and extract <code>.lzh</code> / <code>.lha</code> archives (read-only), with Shift-JIS file names handled.</li>
+            </ul>
+            <p class="doc-note">Release notes are also on the <a href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases" rel="noopener">releases page</a>.</p>
+          </div>
+        </article>
       </div>
       <p class="doc-note">More plugins will be added over time. Want to build one? See "Plugin development" below.</p>
     </section>

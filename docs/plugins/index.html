@@ -39,6 +39,18 @@
     .plugin-figure figcaption { font-size: .82rem; color: var(--fg-muted); margin-top: 6px; }
     /* 小さめに見せる図（導入手順の設定画面など） */
     .plugin-figure.plugin-figure-sm { max-width: 570px; }
+    /* プラグイン一覧は 1 列で縦に並べ、各カードに説明・スクショ・ダウンロード・
+       最新版の更新内容をまとめる (更新情報を別セクションに分けない)。 */
+    .plugin-list { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    /* 1 列になった分、スクショが横いっぱいに広がらないよう幅を抑える。 */
+    .plugin-list .plugin-figure { max-width: 720px; }
+    /* カード内の「最新版の更新内容」ブロック。本体の更新情報 (.whatsnew) と同じ
+       箇条書きの見た目で、カード上部とは破線で区切る。 */
+    .plugin-updates { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); }
+    .plugin-updates h4 { font-size: 1rem; margin: 0 0 4px; }
+    .plugin-updates h5 { font-size: .95rem; font-weight: 600; margin: 12px 0 4px; color: var(--fg); }
+    .plugin-updates .wn-date { font-size: .82rem; }
+    .plugin-updates p.doc-note { margin: 8px 0 0; font-size: .85rem; }
   </style>
 </head>
 <body>
@@ -71,13 +83,13 @@
       外部プラグインはネイティブコードで、farman と同じ権限で動作します。安全のため、外部プラグインの読み込みは既定でオフです。<strong>信頼できる提供元のプラグインだけ</strong>を有効にしてください。
     </p>
 
-    <!-- 一覧 -->
+    <!-- 一覧 (1 プラグイン = 1 カード。説明・スクショ・ダウンロード・最新版の更新内容をまとめる) -->
     <section class="doc-section" id="list">
       <h2>プラグイン一覧</h2>
-      <div class="feature-grid">
-        <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
+      <div class="plugin-list">
+        <article class="feature" id="plugin-3d" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D モデルビュアー (FBX)</h3>
-          <p><code>.fbx</code> 形式の 3D モデルを farman 内で表示。テクスチャ（外部・埋め込み）・スケルタルアニメーション・複数マテリアル・床グリッド・ワイヤーフレーム・ボーン（スケルトン）表示に対応。マウス / キーボードで回転・平行移動・拡大縮小できます（操作キーは本体の「設定 → キーバインド」で変更できます）。</p>
+          <p><code>.fbx</code> 形式の 3D モデルを farman 内で表示。テクスチャ（外部・埋め込み）・スケルタルアニメーション・複数マテリアル・床グリッド・ワイヤーフレーム・ボーン（スケルトン）表示・裏面カリングに対応。マウス / キーボードで回転・平行移動・拡大縮小できます（操作キーは本体の「設定 → キーバインド」で変更できます）。</p>
           <figure class="doc-figure plugin-figure">
             <img src="../screenshots/ex-01-3d-model-viewer.png" width="1200" height="792" alt="3D モデルビュアーで FBX を表示" loading="lazy" />
             <figcaption>3D モデルビュアー（テクスチャ・スケルタルアニメーション対応）</figcaption>
@@ -89,8 +101,28 @@
           </ul>
           <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d/releases/latest" rel="noopener">ダウンロード</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">リポジトリ</a></p>
-        </div>
-        <div class="feature" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
+
+          <div class="plugin-updates whatsnew">
+            <h4>最新版の更新内容 <span class="wn-date">0.3.0 · 2026-09-15</span></h4>
+
+            <h5>複数パーツで構成された FBX が正しく組み上がるようになりました</h5>
+            <ul>
+              <li>FBX のノード階層が持つ位置・回転・拡大縮小をメッシュに適用するようになりました。同じ形状を複数のノードから参照して配置しているモデル (床・壁などのパーツを並べたダンジョン背景など) で、これまではすべてのパーツが原点に重なって表示されていましたが、Unity Editor や DCC ツールと同じ配置で表示されます。</li>
+              <li>鏡像 (反転) 配置されたパーツも、面の表裏が正しく保たれます。</li>
+              <li>スケルタルアニメーション付きのモデルの表示は変わりません。</li>
+            </ul>
+
+            <h5>裏面カリングを追加</h5>
+            <ul>
+              <li>ポリゴンの裏面を描画しない「裏面カリング」を追加しました。Unity などのゲームエンジンと同じ片面表示になるため、エンジンでの見え方を確認しやすくなります。既定でオンです。</li>
+              <li>ツールバーのボタン、または <code>C</code> キーで切り替えられます。両面を確認したいときはオフにしてください。キーは farman の設定 → キーバインドから変更できます。</li>
+              <li>ワイヤーフレーム表示中は、構造を把握しやすいよう常に両面を描画します。</li>
+            </ul>
+            <p class="doc-note">これまでの版の更新内容は、<a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">リリース一覧</a>に日本語・英語で掲載しています。</p>
+          </div>
+        </article>
+
+        <article class="feature" id="plugin-lzh" data-plugin-repo="mashsoft-jp/farman-plugin-lzh">
           <h3>LZH (LHA) アーカイブ</h3>
           <p><code>.lzh</code> / <code>.lha</code> アーカイブを、zip / tar と同じようにブラウジング・展開。日本語 Shift-JIS のファイル名にも対応（読み取り専用）。macOS 版は Apple の Developer ID 署名 + 公証済み。</p>
           <ul class="plugin-meta">
@@ -100,7 +132,15 @@
           </ul>
           <p class="plugin-dl"><a class="btn btn-primary btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases/latest" rel="noopener">ダウンロード</a>
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-lzh" rel="noopener">リポジトリ</a></p>
-        </div>
+
+          <div class="plugin-updates whatsnew">
+            <h4>最新版の更新内容 <span class="wn-date">1.0.0 · 2026-07-22</span></h4>
+            <ul>
+              <li>最初の公開版です。<code>.lzh</code> / <code>.lha</code> アーカイブのブラウジング・展開 (読み取り専用) と、Shift-JIS のファイル名に対応しています。</li>
+            </ul>
+            <p class="doc-note">更新内容は<a href="https://github.com/mashsoft-jp/farman-plugin-lzh/releases" rel="noopener">リリース一覧</a>にも掲載しています。</p>
+          </div>
+        </article>
       </div>
       <p class="doc-note">プラグインは順次追加予定です。作ってみたい方は下の「プラグイン開発」を参照してください。</p>
     </section>
