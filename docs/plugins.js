@@ -6,6 +6,9 @@
  * ため固定の直リンクが作れないので、本体と同じくこの方式を採る。
  *
  * data-plugin-repo="owner/repo" を持つカードごとに処理する。
+ * API の取得は site.js の farmanPluginReleases() (localStorage に 1 時間キャッシュ)
+ * を通す。あわせて、最新リリースが過去 1 か月以内ならカード見出しに "New"
+ * バッジを付ける (判定も site.js と共通)。
  * API 取得に失敗した場合 (レート制限・オフライン) や JS 無効時は、カード内に
  * 元からあるフォールバックリンク (リリースページ + リポジトリ) をそのまま残す。
  * 日本語版 (/plugins/) と英語版 (/en/plugins/) で共用。<html lang> で文言を出し分け。
@@ -53,6 +56,12 @@
   var os = detectOS();
 
   function render(card, data) {
+    // 過去 1 か月以内のリリースならカード見出しに New バッジ。
+    if (window.farmanIsNewRelease && window.farmanMakeNewBadge
+        && window.farmanIsNewRelease(data.published_at)) {
+      var h = card.querySelector("h3");
+      if (h && !h.querySelector(".badge-new")) h.appendChild(window.farmanMakeNewBadge());
+    }
     var slot = card.querySelector(".plugin-dl");
     if (!slot) return;
     var urls = pickAssets(data.assets || []);
@@ -78,15 +87,14 @@
   }
 
   var cards = document.querySelectorAll("[data-plugin-repo]");
-  Array.prototype.forEach.call(cards, function (card) {
-    var repo = card.getAttribute("data-plugin-repo");
-    fetch("https://api.github.com/repos/" + repo + "/releases/latest",
-          { headers: { "Accept": "application/vnd.github+json" } })
-      .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-      .then(function (data) { render(card, data); })
-      .catch(function (err) {
-        // レート制限 (60 req/h/IP) やオフライン時はフォールバックリンクを残す。
-        if (window.console) console.warn("farman: plugin release fetch failed:", repo, err);
-      });
+  if (!cards.length || !window.farmanPluginReleases) return;
+  window.farmanPluginReleases().then(function (map) {
+    Array.prototype.forEach.call(cards, function (card) {
+      var repo = card.getAttribute("data-plugin-repo");
+      var data = map[repo];
+      // 取得できなかったリポジトリ (レート制限・オフライン・未登録) はフォールバック
+      // リンクをそのまま残す。
+      if (data) render(card, data);
+    });
   });
 })();

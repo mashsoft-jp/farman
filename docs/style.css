@@ -89,6 +89,24 @@ code {
 }
 .lang-switch:hover { background: var(--bg-alt); }
 
+/* ===== "New" バッジ (過去 1 か月以内にリリースされたプラグイン。site.js /
+   plugins.js が GitHub Releases の公開日から判定して付与する) ===== */
+.badge-new {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  padding: 1px 7px 2px;
+  border-radius: 999px;
+  font-size: .62rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--accent-fg);
+  background: var(--accent);
+}
+.nav a .badge-new { margin-left: 4px; font-size: .58rem; position: relative; top: -1px; }
+
 /* ===== Hero ===== */
 .hero {
   padding: 64px 24px 32px;
