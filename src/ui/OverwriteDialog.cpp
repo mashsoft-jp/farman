@@ -43,7 +43,13 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
   headline->setStyleSheet("QLabel { font-weight: bold; }");
   mainLayout->addWidget(headline);
 
+  // コピー元 / コピー先は見出しから 1 文字分だけ字下げした位置を行頭にして
+  // 左寄せで並べる (macOS の QFormLayout 既定はラベル右寄せで、見出しとの
+  // 位置関係が読みにくい)。
   QFormLayout* pathForm = new QFormLayout();
+  pathForm->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  pathForm->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+  pathForm->setContentsMargins(fontMetrics().averageCharWidth(), 0, 0, 0);
   pathForm->addRow(tr("Source:"),      new QLabel(srcPath, this));
   pathForm->addRow(tr("Destination:"), new QLabel(dstPath, this));
   mainLayout->addLayout(pathForm);

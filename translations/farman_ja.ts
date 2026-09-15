@@ -7180,42 +7180,42 @@ The format or codec is not supported on this platform.</source>
         <translation>コピー先に既にファイルが存在します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="47"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="53"/>
         <source>Source:</source>
         <translation>コピー元:</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="48"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="54"/>
         <source>Destination:</source>
         <translation>コピー先:</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="54"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="60"/>
         <source>Action</source>
         <translation>操作</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="57"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="63"/>
         <source>Overwrite the existing file</source>
         <translation>既存ファイルを上書き</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="58"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="64"/>
         <source>Rename to:</source>
         <translation>新しい名前:</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="59"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="65"/>
         <source>Skip this file</source>
         <translation>このファイルをスキップ</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="84"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="90"/>
         <source>Apply this choice to all remaining conflicts</source>
         <translation>以降の重複にもこの選択を適用する</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="86"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="92"/>
         <source>Do not ask again for the rest of this operation.
 With Rename, remaining conflicts are renamed automatically using the auto-rename template.</source>
         <translation>この操作の残りの重複では確認しません。
@@ -7234,12 +7234,12 @@ With Rename, remaining conflicts are renamed automatically using the auto-rename
         <translation type="vanished">このファイルをスキップ (%1)</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="73"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="79"/>
         <source>New filename</source>
         <translation>新しいファイル名</translation>
     </message>
     <message>
-        <location filename="../src/ui/OverwriteDialog.cpp" line="74"/>
+        <location filename="../src/ui/OverwriteDialog.cpp" line="80"/>
         <source>Alt+N to focus this field</source>
         <translation>Alt+N でこの欄にフォーカス</translation>
     </message>
