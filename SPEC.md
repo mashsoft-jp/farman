@@ -962,9 +962,10 @@ CLI 版を優先表示)。
   - Sync Browse: 同期ブラウズ ON のときだけ `Sync Browse: ON` を表示
   - **ディスク使用量**: アクティブペインのカレントが属するボリュームの状態
     - 通常 FS: `N GB free / M GB (P% used)` (例: `245.6 GB free / 500 GB (51% used)`)
-      - 容量は 10 進 (1 GB = 10^9 B、`QLocale::DataSizeSIFormat`) で表示し、
-        macOS のシステム情報 / Finder や Windows のエクスプローラーの表記と
-        揃える (1024 ベースを GB と書くと OS の値より小さく見えるため)
+      - 容量は GB 単位 (1000 ベース、1 GB = 10^9 B、`QLocale::DataSizeSIFormat`)
+        で表示する。GiB 単位 (1024 ベース) の値に "GB" と表記するのは単位として
+        誤りなので行わない (なお Windows のエクスプローラーは 1024 ベースの値を
+        GB と表記するため、そちらとは数値が一致しない)
       - 空きは OS が実際に空いていると報告する量 (`QStorageInfo::bytesAvailable`)。
         macOS の「利用可能」に含まれる削除可能領域 (ローカルスナップショット /
         キャッシュ等) は含まないので、システム情報より少なく出ることがある

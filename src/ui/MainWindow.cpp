@@ -515,10 +515,10 @@ void MainWindow::updateDiskStatus() {
   }
   const int usedPct = static_cast<int>(((total - free) * 100) / total);
   // バイト単位は英語固定 (SPEC.md「バイトサイズの表記」と整合)。
-  // ボリューム容量は OS のストレージ表示 (macOS のシステム情報 / Finder、
-  // Windows のエクスプローラーの「GB」) に合わせて 10 進 (1 GB = 10^9 B) の
-  // SI 形式で出す。1024 ベースを "GB" と表記すると OS の値より小さく見えて
-  // バグに見えるため (例: 994.66 GB のディスクが 926 GB と出る)。
+  // ボリューム容量は GB 単位 (1000 ベース、1 GB = 10^9 B) の SI 形式で出す。
+  // GiB 単位 (1024 ベース) の値に "GB" と表記すると単位として誤りで、バグに
+  // 見えるため (例: 994.66 GB のディスクが 926 GB と出る)。Windows の
+  // エクスプローラーは 1024 ベースを GB と表記するので、そちらとは一致しない。
   const QLocale en(QLocale::English);
   const QString freeStr  = en.formattedDataSize(free,  1,
                               QLocale::DataSizeSIFormat);
