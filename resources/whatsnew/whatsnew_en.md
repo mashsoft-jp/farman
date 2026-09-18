@@ -15,10 +15,8 @@
 
 ### Disk space in the status bar
 
-- Disk space is now shown in decimal gigabytes (1 GB = 1,000,000,000 bytes),
-  matching System Information and Finder on macOS and Explorer on Windows.
-  Previously a 1024-based value was labelled "GB", which made volumes look
-  smaller than the OS reports. Note that the free space is what the OS reports
+- The status bar was showing disk space as GiB (1024-based) values. It now
+  shows GB (1000-based) values. Note that the free space is what the OS reports
   as actually free; it does not include the "purgeable" space that macOS counts
   in "Available".
 
