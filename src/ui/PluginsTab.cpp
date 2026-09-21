@@ -22,6 +22,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMimeData>
+#include <QPainter>
 #include <QPushButton>
 #include <QStyle>
 #include <QTableWidget>
@@ -61,6 +62,39 @@ QString kindLabel(PluginInstaller::Kind kind) {
   }
   return QString();
 }
+
+// Web のファイルアップロード欄のような、点線枠のドロップ領域。ドラッグ中は強調する。
+// 色はパレットから描くので、Light / Dark の切り替えにもそのまま追従する。
+class DropZoneFrame : public QFrame {
+public:
+  using QFrame::QFrame;
+
+  void setActive(bool active) {
+    if (m_active == active) return;
+    m_active = active;
+    update();
+  }
+
+protected:
+  void paintEvent(QPaintEvent*) override {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    const QPalette pal = palette();
+    const QColor highlight = pal.color(QPalette::Highlight);
+    QColor fill = highlight;
+    fill.setAlpha(m_active ? 40 : 0);
+    QPen pen(m_active ? highlight : pal.color(QPalette::PlaceholderText));
+    pen.setWidthF(m_active ? 2.0 : 1.5);
+    pen.setStyle(Qt::DashLine);
+    painter.setPen(pen);
+    painter.setBrush(fill);
+    const qreal inset = pen.widthF() / 2.0 + 0.5;
+    painter.drawRoundedRect(QRectF(rect()).adjusted(inset, inset, -inset, -inset), 8, 8);
+  }
+
+private:
+  bool m_active = false;
+};
 
 PluginInstaller::Kind kindOfRelPath(const QString& relPath) {
   const QString sub = relPath.section(QLatin1Char('/'), 0, 0);
@@ -113,26 +147,36 @@ void PluginsTab::setupUi() {
   listLayout->addWidget(m_table, 1);
 
   m_emptyLabel = new QLabel(
-    tr("No external plugins are installed. Drop plugin files onto this page, or "
-       "use \"Install from File...\"."), listGroup);
+    tr("No external plugins are installed."), listGroup);
   m_emptyLabel->setWordWrap(true);
   m_emptyLabel->setAlignment(Qt::AlignCenter);
   m_emptyLabel->setEnabled(false);
   listLayout->addWidget(m_emptyLabel, 1);
 
-  auto* installRow = new QHBoxLayout();
-  m_installButton = new QPushButton(tr("Install from File..."), listGroup);
+  // ドロップ領域 (点線枠)。ドラッグ＆ドロップでも導入できることが見て分かるようにする。
+  // ドロップ自体はページのどこでも受けるが、ドラッグ中はこの枠を強調して知らせる。
+  auto* dropZone = new DropZoneFrame(listGroup);
+  m_dropZone = dropZone;
+  auto* dropLayout = new QVBoxLayout(dropZone);
+  dropLayout->setContentsMargins(12, 10, 12, 10);
+  dropLayout->setSpacing(4);
+  auto* dropLabel = new QLabel(
+    tr("⬇  Drop plugin files (.%1) here to install")
+      .arg(PluginInstaller::nativeLibrarySuffix()), dropZone);
+  dropLabel->setAlignment(Qt::AlignCenter);
+  dropLayout->addWidget(dropLabel);
+  auto* orLabel = new QLabel(tr("or"), dropZone);
+  orLabel->setAlignment(Qt::AlignCenter);
+  orLabel->setEnabled(false);
+  dropLayout->addWidget(orLabel);
+  m_installButton = new QPushButton(tr("Install from File..."), dropZone);
   m_installButton->setAutoDefault(false);
   m_installButton->setToolTip(
     tr("Choose plugin files (.%1) to install. The plugin type (viewer / archive) "
        "is detected automatically.").arg(PluginInstaller::nativeLibrarySuffix()));
   connect(m_installButton, &QPushButton::clicked, this, &PluginsTab::chooseFiles);
-  installRow->addWidget(m_installButton);
-  auto* dropHint = new QLabel(
-    tr("You can also drop plugin files onto this page."), listGroup);
-  dropHint->setEnabled(false);
-  installRow->addWidget(dropHint, 1);
-  listLayout->addLayout(installRow);
+  dropLayout->addWidget(m_installButton, 0, Qt::AlignHCenter);
+  listLayout->addWidget(dropZone);
 
   // 再起動待ちの変更があるときだけ出すバナー。
   m_restartBanner = new QFrame(listGroup);
@@ -644,13 +688,23 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
   }
 }
 
+void PluginsTab::setDropZoneActive(bool active) {
+  static_cast<DropZoneFrame*>(m_dropZone)->setActive(active);
+}
+
 void PluginsTab::dragEnterEvent(QDragEnterEvent* event) {
   if (!localFilesFromMime(event->mimeData()).isEmpty()) {
     event->setDropAction(Qt::CopyAction);
     event->accept();
+    setDropZoneActive(true);
   } else {
     event->ignore();
   }
+}
+
+void PluginsTab::dragLeaveEvent(QDragLeaveEvent* event) {
+  setDropZoneActive(false);
+  QWidget::dragLeaveEvent(event);
 }
 
 void PluginsTab::dragMoveEvent(QDragMoveEvent* event) {
@@ -663,6 +717,7 @@ void PluginsTab::dragMoveEvent(QDragMoveEvent* event) {
 }
 
 void PluginsTab::dropEvent(QDropEvent* event) {
+  setDropZoneActive(false);
   const QStringList files = localFilesFromMime(event->mimeData());
   if (files.isEmpty()) {
     event->ignore();

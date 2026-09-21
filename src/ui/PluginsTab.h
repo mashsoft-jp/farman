@@ -54,6 +54,7 @@ protected:
   // ドロップを受けないので、ドラッグイベントはこのページまで上がってくる)。
   void dragEnterEvent(QDragEnterEvent* event) override;
   void dragMoveEvent(QDragMoveEvent* event) override;
+  void dragLeaveEvent(QDragLeaveEvent* event) override;
   void dropEvent(QDropEvent* event) override;
   // 一覧のキー操作: Enter / Space で選択行の操作ボタンを押す。操作ボタンには
   // Tab でもフォーカスが当たる (一覧 → 各行のボタン → 「ファイルからインストール...」)。
@@ -88,6 +89,7 @@ private:
   QString statusEmoji(const Row& row) const;
   QString statusText(const Row& row) const;
 
+  void setDropZoneActive(bool active);
   void chooseFiles();
   // 確認 → 検証 → 退避 → 結果表示までを行う。
   void installFiles(const QStringList& filePaths);
@@ -106,6 +108,8 @@ private:
   QTableWidget* m_table         = nullptr;
   QLabel*       m_emptyLabel    = nullptr;
   QPushButton*  m_installButton = nullptr;
+  // 点線枠のドロップ領域 (DropZoneFrame)。ドラッグ中は強調表示にする。
+  QFrame*       m_dropZone      = nullptr;
   QList<Row>    m_rows;
   // ボタンにフォーカスがあるときの Enter を「そのボタンを押す」にする。何もしないと
   // Enter はダイアログの既定ボタン (OK) に届いて設定ダイアログが閉じてしまう。
