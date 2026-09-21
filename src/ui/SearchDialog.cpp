@@ -35,7 +35,8 @@ namespace Farman {
 namespace {
 
 QString humanSize(qint64 bytes) {
-  return QLocale::system().formattedDataSize(bytes);
+  // 単位は英語固定 (SPEC.md「バイトサイズの表記」)。システムロケールに依存させない。
+  return QLocale(QLocale::English).formattedDataSize(bytes);
 }
 
 } // anonymous namespace
