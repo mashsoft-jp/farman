@@ -59,8 +59,14 @@
       </div>
       <p class="hero-sub" id="hero-version">最新リリースを取得中…</p>
 
+      <!-- 基本操作 (コピー / 移動 / 削除 / 一括リネーム / 検索) のデモ。アニメーション WebP。
+           「視差効果を減らす」設定の環境では静止画を出す。 -->
       <div class="hero-shot">
-        <img src="screenshots/01-main-2pane.png" alt="farman のメイン 2 ペイン画面" loading="lazy" />
+        <picture>
+          <source media="(prefers-reduced-motion: reduce)" srcset="screenshots/01-main-2pane.png" />
+          <img src="screenshots/00-demo-ja.webp" width="1200" height="700"
+               alt="farman の操作デモ: コピー、移動、削除、一括リネーム、検索をキーボードで行う様子" />
+        </picture>
       </div>
     </div>
   </section>

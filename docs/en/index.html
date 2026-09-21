@@ -59,8 +59,14 @@
       </div>
       <p class="hero-sub" id="hero-version">Fetching the latest release…</p>
 
+      <!-- Demo of the core operations (copy / move / delete / bulk rename / search) as an
+           animated WebP. A still image is served when reduced motion is requested. -->
       <div class="hero-shot">
-        <img src="../screenshots/01-main-2pane.png" alt="farman main dual-pane window" loading="lazy" />
+        <picture>
+          <source media="(prefers-reduced-motion: reduce)" srcset="../screenshots/00-demo-en.png" />
+          <img src="../screenshots/00-demo-en.webp" width="1200" height="700"
+               alt="farman demo: copying, moving, deleting, bulk renaming and searching files from the keyboard" />
+        </picture>
       </div>
     </div>
   </section>
