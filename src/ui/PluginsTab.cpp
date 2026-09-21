@@ -629,13 +629,13 @@ void PluginsTab::reloadList() {
     setItem(i, ColVersion, row.version.isEmpty() ? QStringLiteral("-") : row.version);
     const QString latest = official ? m_catalog[row.catalogIndex].latestVersion : QString();
     const bool updateAvailable = row.updateState == UpdateState::UpdateAvailable;
-    // 更新があるときは、最新版の前に「NEW」を付けて太字 + 橙色にし、ひと目で分かるように
-    // する。絵文字 (🆕 は青地) だと選択行の青い背景に埋もれるので文字にしている。文字なら
-    // 選択中はハイライト用の文字色 (白) で描かれ、どちらの状態でも読める。
+    // 更新があるときは、最新版の前に ❗ を付けて太字 + 橙色にし、ひと目で分かるようにする。
+    // 印は赤い絵文字にしている: 青地の 🆕 は選択行の青い背景に埋もれ、文字の「NEW」は
+    // 選択中に他の列と同じ白になって目立たない。赤なら選択していてもいなくても見える。
     auto* latestItem = setItem(
       i, ColLatest,
       latest.isEmpty()  ? QStringLiteral("-")
-      : updateAvailable ? tr("NEW %1").arg(latest)
+      : updateAvailable ? QStringLiteral("❗ ") + latest
                         : latest,
       !official         ? tr("Not an official plugin")
       : updateAvailable ? tr("Update available: %1 → %2").arg(row.version, latest)
@@ -967,18 +967,18 @@ void PluginsTab::onCatalogUpdated() {
     status = tr("Last checked: %1")
                .arg(QLocale().toString(fetchedAt.toLocalTime(), QLocale::ShortFormat));
   }
-  // 更新の有無を先頭に出す (一覧の「NEW」と「更新する」ボタンに対応)。
+  // 更新の有無を先頭に出す (一覧の ❗ と「更新する」ボタンに対応)。
   const int updates = static_cast<int>(std::count_if(m_rows.cbegin(), m_rows.cend(),
     [](const Row& row) { return row.updateState == UpdateState::UpdateAvailable; }));
   const QString summary = updates > 0
     ? tr("%n update(s) available.", "", updates)
     : (anyFailed ? QString() : tr("No updates available."));
-  // 更新があるときは、件数を一覧の「NEW」と同じ太字 + 橙色で強調する (ふだんは控えめな
+  // 更新があるときは、件数を一覧と同じ ❗ + 太字 + 橙色で強調する (ふだんは控えめな
   // グレー表示のラベルなので、そのままだと見落とす)。
   m_checkLabel->setTextFormat(Qt::RichText);
   m_checkLabel->setEnabled(updates > 0);
   const QString summaryHtml = updates > 0
-    ? QStringLiteral("<b style=\"color:#E06C00\">%1</b>").arg(summary.toHtmlEscaped())
+    ? QStringLiteral("❗ <b style=\"color:#E06C00\">%1</b>").arg(summary.toHtmlEscaped())
     : summary.toHtmlEscaped();
   m_checkLabel->setText(
     QStringList{summaryHtml, status.toHtmlEscaped()}.join(QLatin1Char(' ')).trimmed());

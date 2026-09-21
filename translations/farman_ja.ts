@@ -8126,9 +8126,8 @@ The plugin file is deleted when farman is restarted. Until then you can cancel t
         <translation>最新です</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="638"/>
         <source>NEW %1</source>
-        <translation>NEW %1</translation>
+        <translation type="vanished">NEW %1</translation>
     </message>
     <message>
         <location filename="../src/ui/PluginsTab.cpp" line="641"/>
