@@ -628,8 +628,21 @@ void PluginsTab::reloadList() {
     setItem(i, ColKind, kindLabel(row.kind));
     setItem(i, ColVersion, row.version.isEmpty() ? QStringLiteral("-") : row.version);
     const QString latest = official ? m_catalog[row.catalogIndex].latestVersion : QString();
-    setItem(i, ColLatest, latest.isEmpty() ? QStringLiteral("-") : latest,
-            official ? updateStateText(row) : tr("Not an official plugin"));
+    const bool updateAvailable = row.updateState == UpdateState::UpdateAvailable;
+    // 更新があるときは、最新版の前に 🆕 を付けて太字にし、ひと目で分かるようにする。
+    auto* latestItem = setItem(
+      i, ColLatest,
+      latest.isEmpty()  ? QStringLiteral("-")
+      : updateAvailable ? QStringLiteral("🆕 ") + latest
+                        : latest,
+      !official         ? tr("Not an official plugin")
+      : updateAvailable ? tr("Update available: %1 → %2").arg(row.version, latest)
+                        : updateStateText(row));
+    if (updateAvailable) {
+      QFont font = latestItem->font();
+      font.setBold(true);
+      latestItem->setFont(font);
+    }
 
     // ── 詳細 ──
     auto* details = addButton(i, ColDetails, tr("Details..."),
@@ -650,6 +663,11 @@ void PluginsTab::reloadList() {
       auto* update = addButton(i, ColUpdate, label, updateStateText(row),
                                canUpdate && !m_busy);
       update->setProperty("canUpdate", canUpdate);
+      if (updateAvailable) {
+        QFont font = update->font();
+        font.setBold(true);
+        update->setFont(font);
+      }
       connect(update, &QPushButton::clicked, this, [this, i]() {
         m_table->selectRow(i);
         runRowUpdate(i);
@@ -935,20 +953,23 @@ void PluginsTab::onCatalogUpdated() {
       return e.releaseState == PluginCatalogEntry::ReleaseState::Failed;
     });
   const QDateTime fetchedAt = PluginCatalog::instance().fetchedAt();
+  QString status;
   if (anyFailed) {
-    m_checkLabel->setText(
-      tr("Some release information could not be retrieved. Try again later."));
+    status = tr("Some release information could not be retrieved. Try again later.");
   } else if (!PluginCatalog::instance().manifestFromNetwork()) {
-    m_checkLabel->setText(
-      tr("The online list of official plugins could not be reached, so the list "
-         "bundled with this farman is used."));
+    status = tr("The online list of official plugins could not be reached, so the list "
+                "bundled with this farman is used.");
   } else if (fetchedAt.isValid()) {
-    m_checkLabel->setText(
-      tr("Last checked: %1")
-        .arg(QLocale().toString(fetchedAt.toLocalTime(), QLocale::ShortFormat)));
-  } else {
-    m_checkLabel->clear();
+    status = tr("Last checked: %1")
+               .arg(QLocale().toString(fetchedAt.toLocalTime(), QLocale::ShortFormat));
   }
+  // 更新の有無を先頭に出す (一覧の 🆕 と「更新する」ボタンに対応)。
+  const int updates = static_cast<int>(std::count_if(m_rows.cbegin(), m_rows.cend(),
+    [](const Row& row) { return row.updateState == UpdateState::UpdateAvailable; }));
+  const QString summary = updates > 0
+    ? tr("🆕 %n update(s) available.", "", updates)
+    : (anyFailed ? QString() : tr("No updates available."));
+  m_checkLabel->setText(QStringList{summary, status}.join(QLatin1Char(' ')).trimmed());
 }
 
 void PluginsTab::setBusy(bool busy, const QString& message) {
