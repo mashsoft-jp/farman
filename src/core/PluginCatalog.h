@@ -70,7 +70,10 @@ public:
   void refresh(bool force = false);
   bool isRefreshing() const { return m_pending > 0 || m_manifestReply; }
 
-  QList<PluginCatalogEntry> entries() const { return m_entries; }
+  // 公式プラグインの一覧。まだ一度も更新していなければ、同梱のマニフェストだけを
+  // 読んだ状態 (最新リリースは Unknown) を返す。ネットワークには出ない。
+  // どのプラグインが公式かは、これで更新前から分かる。
+  QList<PluginCatalogEntry> entries();
   // マニフェストを Web から取れたか (false = 同梱版にフォールバックした)。
   bool manifestFromNetwork() const { return m_manifestFromNetwork; }
   QDateTime fetchedAt() const { return m_fetchedAt; }

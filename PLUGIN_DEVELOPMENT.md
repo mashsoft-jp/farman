@@ -188,8 +188,8 @@ macOS の `.app/Contents/PlugIns/`) に第三者製プラグインを置いて�
 
 ## 5. 規約
 
-- **公式プラグインとして farman のアプリ内一覧 (設定 → プラグイン →「公式プラグインを
-  入手...」) に載せる場合** は、farman リポジトリの `docs/plugins/manifest.json` に
+- **公式プラグインとして farman のアプリ内一覧 (設定 → プラグイン。未導入でも一覧に出て、
+  更新の確認と「更新する」/「インストール」ができる) に載せる場合** は、farman リポジトリの `docs/plugins/manifest.json` に
   項目を足す (`id` = `pluginId()`、`repo`、`kind`、`fileName` = 配布ファイル名の基底、
   `minFarmanVersion`、`name` / `description` の `ja` / `en`)。あわせて Web サイトの
   プラグインページ (`docs/plugins/index.html` / `docs/en/plugins/index.html`) にも

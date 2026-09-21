@@ -187,6 +187,16 @@ void PluginCatalog::applyReleaseJson(const QByteArray& json, const QString& asse
   entry->releaseError.clear();
 }
 
+QList<PluginCatalogEntry> PluginCatalog::entries() {
+  if (m_entries.isEmpty()) {
+    QFile bundled(QString::fromLatin1(kBundledManifest));
+    if (bundled.open(QIODevice::ReadOnly)) {
+      m_entries = parseManifest(bundled.readAll());
+    }
+  }
+  return m_entries;
+}
+
 void PluginCatalog::refresh(bool force) {
   if (isRefreshing()) return;
 
