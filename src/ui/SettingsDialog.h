@@ -14,6 +14,7 @@ class AppearanceTab;
 class BehaviorTab;
 class ViewerTab;
 class ArchiveTab;
+class PluginsTab;
 class GeneralTab;
 class ExternalAppsTab;
 
@@ -28,6 +29,7 @@ public:
     Appearance,
     Viewer,
     Archive,
+    Plugins,
     ExternalApps,
     Keybindings,
   };
@@ -51,6 +53,8 @@ signals:
 private slots:
   void onOk();
   void onApply();
+  // Plugins ページの「再起動」ボタン。設定を保存してから再起動する。
+  void onRestartRequested();
   void onClearBinding();
   void onResetToDefaults();
   // 「Reset All Settings」ボタン: キーバインドを除く全 Settings を
@@ -59,6 +63,9 @@ private slots:
 
 private:
   void setupUi();
+  // 全ページの編集内容を Settings / キーバインドへ保存し settingsChanged を出す
+  // (再起動の確認はしない。OK / 適用 と「再起動」ボタンの共通部分)。
+  void saveAll();
 
   QString m_leftCurrentPath;
   QString m_rightCurrentPath;
@@ -74,6 +81,7 @@ private:
   BehaviorTab*      m_behaviorTab;
   ViewerTab*        m_viewerTab;
   ArchiveTab*       m_archiveTab;
+  PluginsTab*       m_pluginsTab;
   GeneralTab*       m_generalTab;
   ExternalAppsTab*  m_externalAppsTab;
   QDialogButtonBox* m_buttonBox;

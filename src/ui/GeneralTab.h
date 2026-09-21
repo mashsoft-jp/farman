@@ -39,17 +39,6 @@ public:
   // 「再起動するか確認」ダイアログを出すために使う。
   bool languageChangedOnSave() const { return m_languageChangedOnSave; }
 
-  // 直前の save() でプラグインの読込み設定 (外部プラグインの許可 /
-  // プラグインディレクトリ) が変更されたか。どちらも起動時に一括ロードする
-  // 都合で次回起動から反映されるため、SettingsDialog が再起動を確認する。
-  bool pluginLoadSettingsChangedOnSave() const {
-    return m_pluginLoadSettingsChangedOnSave;
-  }
-  // プラグインの導入フロー (Viewer / Archive タブ) が「外部プラグインの読込みを
-  // 許可」を ON にして保存したとき、このタブのチェックを追従させる。そのままだと
-  // save() が古いチェック状態で設定を OFF に書き戻してしまう。
-  void setAllowExternalPluginsChecked(bool checked);
-
 private slots:
   void onWindowSizeModeChanged(int index);
   void onWindowPositionModeChanged(int index);
@@ -113,16 +102,6 @@ private:
 
   // 直前の save() で言語が変更されたか
   bool         m_languageChangedOnSave     = false;
-
-  // ── プラグイン (ビュアー / アーカイブ共通の置き場所) ──
-  // 個々のプラグインの有効 / 無効は「ビュアー」「アーカイブ」の各タブが持つ。
-  // ここは「どこから読み込むか / そもそも外部を読み込むか」だけを扱う。
-  QCheckBox*   m_allowExternalPluginsCheck = nullptr;
-  QLineEdit*   m_pluginsDirectoryEdit      = nullptr;
-  QToolButton* m_pluginsDirectoryBrowse    = nullptr;
-  QToolButton* m_pluginsDirectoryOpen      = nullptr;
-  QToolButton* m_pluginsDirectoryDefault   = nullptr;
-  bool         m_pluginLoadSettingsChangedOnSave = false;
 
   // ── 自動アップデート (SPEC.md "自動アップデート" 節) ──
   // checkOnStartup: 起動時に最大 1 日 1 回 GitHub をチェック

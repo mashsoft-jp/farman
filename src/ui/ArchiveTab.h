@@ -16,8 +16,6 @@ class QToolButton;
 
 namespace Farman {
 
-class PluginInstallPanel;
-
 // 設定 → Archive ページ。アーカイブに関する設定を 1 箇所に集約する:
 //   - 対応形式の一覧 (組み込み libarchive 形式 + アーカイブプラグイン形式を
 //     同列に表示)。有効 / 無効の切り替えと、各行の「詳細...」ダイアログで
@@ -44,11 +42,6 @@ public:
   // 直前の save() で「次回起動から反映」の変更 (プラグイン形式の有効 / 無効)
   // があったか。SettingsDialog が Apply/OK 後の通知に使う。
   bool restartRequiredOnSave() const { return m_restartRequiredOnSave; }
-
-signals:
-  // プラグインの導入フローで「外部プラグインの読込みを許可」が ON にされた
-  // (設定は保存済み)。SettingsDialog が General タブのチェックへ反映する。
-  void allowExternalPluginsEnabled();
 
 protected:
   // 形式一覧のキー操作。PluginsTab の一覧と同じ作法に揃える:
@@ -97,8 +90,6 @@ private:
   QCheckBox*        m_allCheck    = nullptr;
   // 形式一覧 (行番号 → 編集状態)。
   QTableWidget*     m_formatTable = nullptr;
-  // プラグインの導入 (ファイル選択 / 一覧へのドロップ) と、再起動待ちの変更の表示。
-  PluginInstallPanel* m_installPanel = nullptr;
   QList<FormatState> m_formats;
 
   // 共通設定

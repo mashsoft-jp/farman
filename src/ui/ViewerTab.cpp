@@ -1,5 +1,4 @@
 #include "ViewerTab.h"
-#include "PluginInstallPanel.h"
 #include "settings/Settings.h"
 #include "viewer/IPluginSettingsPage.h"
 #include "keybinding/ViewerKeyBindingManager.h"
@@ -100,16 +99,6 @@ void ViewerTab::setupUi() {
   updatePluginTablePalette(/*focused=*/false);  // 初期状態は非フォーカス
 
   listLayout->addWidget(m_pluginTable, 1);
-
-  // プラグインの導入 / 削除 (SPEC「プラグインのインストール」)。一覧へのファイル
-  // ドロップも受ける。退避状況が変わったら状態列を描き直す。
-  m_installPanel = new PluginInstallPanel(listGroup);
-  m_installPanel->watchDropTarget(m_pluginTable);
-  connect(m_installPanel, &PluginInstallPanel::pendingChanged, this,
-          [this]() { loadPluginList(); });
-  connect(m_installPanel, &PluginInstallPanel::allowExternalPluginsEnabled, this,
-          &ViewerTab::allowExternalPluginsEnabled);
-  listLayout->addWidget(m_installPanel);
 
   connect(m_pluginTable, &QTableWidget::itemDoubleClicked, this,
           [this](QTableWidgetItem* item) {
@@ -247,7 +236,7 @@ void ViewerTab::loadPluginList() {
     } else if (rec.blockedExternalDisabled) {
       enabledItem->setToolTip(
         tr("External plugin loading is off. Turn on \"Allow loading external "
-           "plugins\" in Settings → General to load this plugin."));
+           "plugins\" in Settings → Plugins to load this plugin."));
     } else {
       enabledItem->setToolTip(
         tr("Click to enable/disable. Takes effect after restarting farman."));
@@ -400,22 +389,12 @@ void ViewerTab::updateAllCheckState() {
 }
 
 QString ViewerTab::pluginStatusText(const PluginRecord& record) const {
-  if (m_installPanel->isPendingRemoval(record.filePath)) {
-    return tr("Uninstalled after restart");
-  }
-  if (m_installPanel->isPendingUpdate(record.filePath)) {
-    return tr("Updated after restart");
-  }
   if (record.loaded) return tr("Loaded");
   if (record.blockedExternalDisabled) return tr("Blocked (external plugins off)");
   return record.disabledByUser ? tr("Disabled") : tr("Failed");
 }
 
 QString ViewerTab::pluginStatusEmoji(const PluginRecord& record) const {
-  if (m_installPanel->isPendingRemoval(record.filePath)
-      || m_installPanel->isPendingUpdate(record.filePath)) {
-    return QStringLiteral("⏳");
-  }
   if (record.loaded) return QStringLiteral("✅");
   if (record.blockedExternalDisabled) return QStringLiteral("🔒");
   return record.disabledByUser ? QStringLiteral("🚫") : QStringLiteral("❌");
@@ -550,28 +529,6 @@ void ViewerTab::showPluginDetails(int row) {
     auto* rd = buttons->addButton(QDialogButtonBox::RestoreDefaults);
     connect(rd, &QPushButton::clicked, settingsPage,
             [settingsPage]() { settingsPage->restoreDefaults(); });
-  }
-  // プラグインディレクトリ配下の外部プラグインはアンインストールできる
-  // (削除は再起動時。退避中は同じボタンで取り消せる)。
-  if (PluginInstallPanel::isManagedPluginFile(rec.filePath)) {
-    const bool pendingRemoval = m_installPanel->isPendingRemoval(rec.filePath);
-    auto* uninstall = buttons->addButton(
-      pendingRemoval ? tr("Cancel Uninstall") : tr("Uninstall..."),
-      QDialogButtonBox::DestructiveRole);
-    uninstall->setAutoDefault(false);
-    const QString filePath = rec.filePath;
-    const QString displayName = rec.pluginName.isEmpty()
-                                  ? QFileInfo(rec.filePath).fileName()
-                                  : rec.pluginName;
-    connect(uninstall, &QPushButton::clicked, &dialog,
-            [this, &dialog, pendingRemoval, filePath, displayName]() {
-      const bool changed = pendingRemoval
-        ? m_installPanel->cancelUninstall(filePath)
-        : m_installPanel->requestUninstall(filePath, displayName);
-      if (changed) {
-        dialog.reject();
-      }
-    });
   }
   layout->addWidget(buttons);
 

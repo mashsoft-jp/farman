@@ -4,6 +4,7 @@
 #include "BehaviorTab.h"
 #include "ViewerTab.h"
 #include "ArchiveTab.h"
+#include "PluginsTab.h"
 #include "GeneralTab.h"
 #include "ExternalAppsTab.h"
 #include "settings/Settings.h"
@@ -75,6 +76,7 @@ SettingsDialog::SettingsDialog(const QString& leftCurrentPath,
   , m_behaviorTab(nullptr)
   , m_viewerTab(nullptr)
   , m_archiveTab(nullptr)
+  , m_pluginsTab(nullptr)
   , m_externalAppsTab(nullptr)
   , m_buttonBox(nullptr)
   , m_leftCurrentPath(leftCurrentPath)
@@ -129,12 +131,9 @@ void SettingsDialog::setupUi() {
                                      this);
   m_externalAppsTab = new ExternalAppsTab(this);
 
-  // プラグインの導入フローが「外部プラグインの読込みを許可」を ON にしたら、
-  // General タブのチェックも揃える (OK 時に古い状態で書き戻さないため)。
-  connect(m_viewerTab, &ViewerTab::allowExternalPluginsEnabled, m_generalTab,
-          [this]() { m_generalTab->setAllowExternalPluginsChecked(true); });
-  connect(m_archiveTab, &ArchiveTab::allowExternalPluginsEnabled, m_generalTab,
-          [this]() { m_generalTab->setAllowExternalPluginsChecked(true); });
+  m_pluginsTab      = new PluginsTab(this);
+  connect(m_pluginsTab, &PluginsTab::restartRequested, this,
+          &SettingsDialog::onRestartRequested);
 
   // ページとメニュー項目を 1:1 で並べる。順序は旧 TabWidget と同じ。
   // 外部アプリはキーバインドと密結合 (T / E などのキーが指す先) なので
@@ -156,8 +155,9 @@ void SettingsDialog::setupUi() {
   addPage(m_appearanceTab,   tr("3. Appearance"));
   addPage(m_viewerTab,       tr("4. Viewer"));
   addPage(m_archiveTab,      tr("5. Archive"));
-  addPage(m_externalAppsTab, tr("6. External Apps"));
-  addPage(m_keybindingTab,   tr("7. Keybindings"));
+  addPage(m_pluginsTab,      tr("6. Plugins"));
+  addPage(m_externalAppsTab, tr("7. External Apps"));
+  addPage(m_keybindingTab,   tr("8. Keybindings"));
 
   m_sideMenu->setCurrentRow(0);
   connect(m_sideMenu, &QListWidget::currentRowChanged,
@@ -170,7 +170,7 @@ void SettingsDialog::setupUi() {
   // StrongFocus を設定する。Tab キーで全項目を辿れるようにするのが目的。
   const QList<QWidget*> tabRoots = {
     m_generalTab, m_behaviorTab, m_appearanceTab,
-    m_viewerTab, m_archiveTab, m_externalAppsTab, m_keybindingTab
+    m_viewerTab, m_archiveTab, m_pluginsTab, m_externalAppsTab, m_keybindingTab
   };
   for (QWidget* root : tabRoots) {
     const auto widgets = root->findChildren<QWidget*>();
@@ -288,36 +288,23 @@ void SettingsDialog::onOk() {
   accept();
 }
 
+void SettingsDialog::onRestartRequested() {
+  // 導入 / アンインストールの退避は済んでいるので、あとは再起動するだけ。ダイアログで
+  // 編集中の設定 (導入フローで ON にした「外部プラグインの読込みを許可」を含む) は
+  // OK と同じく保存してから再起動する。
+  saveAll();
+  restartFarman();
+}
+
 void SettingsDialog::onApply() {
-  // Save all tabs
-  m_keybindingTab->save();
-  m_appearanceTab->save();
-  m_behaviorTab->save();
-  m_viewerTab->save();
-  m_archiveTab->save();
-  m_generalTab->save();
-  m_externalAppsTab->save();
-
-  // Save settings to file
-  Settings::instance().save();
-
-  // Save keybindings to settings
-  KeyBindingManager::instance().saveToSettings();
-
-  // 同梱ビュアーのショートカット (ビュアー別スコープ) も永続化する。ここで
-  // ViewerKeyBindingManager::bindingsChanged が発火し、開いているビュアーへ
-  // 割り当てが再 push される (一方向：本体→ビュアー)。
-  ViewerKeyBindingManager::instance().saveToSettings();
-
-  // Notify that settings have changed
-  emit settingsChanged();
+  saveAll();
 
   // プラグインの有効/無効・ディレクトリは次回起動から反映されるため、
   // 再起動するか確認し、Yes なら即再起動する。
   // Y/N の単押し対応のため独自の confirm() ヘルパを使う。
   if (m_viewerTab->restartRequiredOnSave()
       || m_archiveTab->restartRequiredOnSave()
-      || m_generalTab->pluginLoadSettingsChangedOnSave()) {
+      || m_pluginsTab->pluginLoadSettingsChangedOnSave()) {
     if (confirm(this,
                 tr("Plugins"),
                 tr("Plugin changes will take effect after restarting farman.\n"
@@ -337,6 +324,32 @@ void SettingsDialog::onApply() {
       restartFarman();
     }
   }
+}
+
+void SettingsDialog::saveAll() {
+  // Save all tabs
+  m_keybindingTab->save();
+  m_appearanceTab->save();
+  m_behaviorTab->save();
+  m_viewerTab->save();
+  m_archiveTab->save();
+  m_pluginsTab->save();
+  m_generalTab->save();
+  m_externalAppsTab->save();
+
+  // Save settings to file
+  Settings::instance().save();
+
+  // Save keybindings to settings
+  KeyBindingManager::instance().saveToSettings();
+
+  // 同梱ビュアーのショートカット (ビュアー別スコープ) も永続化する。ここで
+  // ViewerKeyBindingManager::bindingsChanged が発火し、開いているビュアーへ
+  // 割り当てが再 push される (一方向：本体→ビュアー)。
+  ViewerKeyBindingManager::instance().saveToSettings();
+
+  // Notify that settings have changed
+  emit settingsChanged();
 }
 
 void SettingsDialog::onClearBinding() {
