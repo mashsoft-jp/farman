@@ -629,11 +629,13 @@ void PluginsTab::reloadList() {
     setItem(i, ColVersion, row.version.isEmpty() ? QStringLiteral("-") : row.version);
     const QString latest = official ? m_catalog[row.catalogIndex].latestVersion : QString();
     const bool updateAvailable = row.updateState == UpdateState::UpdateAvailable;
-    // 更新があるときは、最新版の前に 🆕 を付けて太字にし、ひと目で分かるようにする。
+    // 更新があるときは、最新版の前に「NEW」を付けて太字 + 橙色にし、ひと目で分かるように
+    // する。絵文字 (🆕 は青地) だと選択行の青い背景に埋もれるので文字にしている。文字なら
+    // 選択中はハイライト用の文字色 (白) で描かれ、どちらの状態でも読める。
     auto* latestItem = setItem(
       i, ColLatest,
       latest.isEmpty()  ? QStringLiteral("-")
-      : updateAvailable ? QStringLiteral("🆕 ") + latest
+      : updateAvailable ? tr("NEW %1").arg(latest)
                         : latest,
       !official         ? tr("Not an official plugin")
       : updateAvailable ? tr("Update available: %1 → %2").arg(row.version, latest)
@@ -642,6 +644,8 @@ void PluginsTab::reloadList() {
       QFont font = latestItem->font();
       font.setBold(true);
       latestItem->setFont(font);
+      // 白地でも暗い背景でも読める橙。選択行ではスタイルがハイライト用の文字色に置き換える。
+      latestItem->setForeground(QColor(0xE0, 0x6C, 0x00));
     }
 
     // ── 詳細 ──
@@ -963,13 +967,21 @@ void PluginsTab::onCatalogUpdated() {
     status = tr("Last checked: %1")
                .arg(QLocale().toString(fetchedAt.toLocalTime(), QLocale::ShortFormat));
   }
-  // 更新の有無を先頭に出す (一覧の 🆕 と「更新する」ボタンに対応)。
+  // 更新の有無を先頭に出す (一覧の「NEW」と「更新する」ボタンに対応)。
   const int updates = static_cast<int>(std::count_if(m_rows.cbegin(), m_rows.cend(),
     [](const Row& row) { return row.updateState == UpdateState::UpdateAvailable; }));
   const QString summary = updates > 0
-    ? tr("🆕 %n update(s) available.", "", updates)
+    ? tr("%n update(s) available.", "", updates)
     : (anyFailed ? QString() : tr("No updates available."));
-  m_checkLabel->setText(QStringList{summary, status}.join(QLatin1Char(' ')).trimmed());
+  // 更新があるときは、件数を一覧の「NEW」と同じ太字 + 橙色で強調する (ふだんは控えめな
+  // グレー表示のラベルなので、そのままだと見落とす)。
+  m_checkLabel->setTextFormat(Qt::RichText);
+  m_checkLabel->setEnabled(updates > 0);
+  const QString summaryHtml = updates > 0
+    ? QStringLiteral("<b style=\"color:#E06C00\">%1</b>").arg(summary.toHtmlEscaped())
+    : summary.toHtmlEscaped();
+  m_checkLabel->setText(
+    QStringList{summaryHtml, status.toHtmlEscaped()}.join(QLatin1Char(' ')).trimmed());
 }
 
 void PluginsTab::setBusy(bool busy, const QString& message) {
