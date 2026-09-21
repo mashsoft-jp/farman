@@ -8769,9 +8769,18 @@ Enter キーでビュアーを開いてください。</translation>
         <translation>3. 外観</translation>
     </message>
     <message>
+        <location filename="../src/ui/SettingsDialog.cpp" line="157"/>
+        <source>5. Viewer</source>
+        <translation>5. ビュアー</translation>
+    </message>
+    <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="158"/>
+        <source>6. Archive</source>
+        <translation>6. アーカイブ</translation>
+    </message>
+    <message>
         <source>6. Plugins</source>
-        <translation>6. プラグイン</translation>
+        <translation type="vanished">6. プラグイン</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="159"/>
@@ -8784,8 +8793,9 @@ Enter キーでビュアーを開いてください。</translation>
         <translation>8. キーバインド</translation>
     </message>
     <message>
+        <location filename="../src/ui/SettingsDialog.cpp" line="156"/>
         <source>4. Plugins</source>
-        <translation type="vanished">4. プラグイン</translation>
+        <translation>4. プラグイン</translation>
     </message>
     <message>
         <source>4. Viewers</source>
@@ -8824,14 +8834,12 @@ Enter キーでビュアーを開いてください。</translation>
         <translation type="vanished">5. プラグイン</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="156"/>
         <source>4. Viewer</source>
-        <translation>4. ビュアー</translation>
+        <translation type="vanished">4. ビュアー</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="157"/>
         <source>5. Archive</source>
-        <translation>5. アーカイブ</translation>
+        <translation type="vanished">5. アーカイブ</translation>
     </message>
     <message>
         <source>6. External Apps</source>

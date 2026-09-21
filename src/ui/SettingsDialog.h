@@ -27,9 +27,9 @@ public:
     General = 0,
     Behavior,
     Appearance,
+    Plugins,
     Viewer,
     Archive,
-    Plugins,
     ExternalApps,
     Keybindings,
   };

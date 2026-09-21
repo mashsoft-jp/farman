@@ -153,9 +153,9 @@ void SettingsDialog::setupUi() {
   addPage(m_generalTab,      tr("1. General"));
   addPage(m_behaviorTab,     tr("2. Behavior"));
   addPage(m_appearanceTab,   tr("3. Appearance"));
-  addPage(m_viewerTab,       tr("4. Viewer"));
-  addPage(m_archiveTab,      tr("5. Archive"));
-  addPage(m_pluginsTab,      tr("6. Plugins"));
+  addPage(m_pluginsTab,      tr("4. Plugins"));
+  addPage(m_viewerTab,       tr("5. Viewer"));
+  addPage(m_archiveTab,      tr("6. Archive"));
   addPage(m_externalAppsTab, tr("7. External Apps"));
   addPage(m_keybindingTab,   tr("8. Keybindings"));
 
@@ -170,7 +170,7 @@ void SettingsDialog::setupUi() {
   // StrongFocus を設定する。Tab キーで全項目を辿れるようにするのが目的。
   const QList<QWidget*> tabRoots = {
     m_generalTab, m_behaviorTab, m_appearanceTab,
-    m_viewerTab, m_archiveTab, m_pluginsTab, m_externalAppsTab, m_keybindingTab
+    m_pluginsTab, m_viewerTab, m_archiveTab, m_externalAppsTab, m_keybindingTab
   };
   for (QWidget* root : tabRoots) {
     const auto widgets = root->findChildren<QWidget*>();

@@ -2118,7 +2118,7 @@ Dual モードで反対ペインに移ったときは、同時に `setActivePane
 ### カスタマイズ可能な項目
 
 Settings ダイアログは 8 つのトップレベルカテゴリ (`1. General` / `2. Behavior` /
-`3. Appearance` / `4. Viewer` / `5. Archive` / `6. Plugins` / `7. External Apps` /
+`3. Appearance` / `4. Plugins` / `5. Viewer` / `6. Archive` / `7. External Apps` /
 `8. Keybindings`) で構成される。`Alt+1`〜`Alt+8` で直接カテゴリ切替可能。
 外部プラグインの導入 / アンインストールと読み込み設定は Plugins、導入後のプラグインの
 有効 / 無効や設定は Viewer / Archive が持つ (「プラグインのインストール」節)。
