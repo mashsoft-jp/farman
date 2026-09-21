@@ -16,6 +16,8 @@ class QToolButton;
 
 namespace Farman {
 
+class EnterClickFilter;
+
 // 設定 → Plugins ページ。外部プラグインの「導入と管理」を、ビュアー / アーカイブの
 // 種別を問わず 1 箇所で扱う (仕様は SPEC.md「プラグインのインストール」):
 //   - 外部プラグインを読み込むか / どこから読み込むか (プラグインディレクトリ)
@@ -53,7 +55,8 @@ protected:
   void dragEnterEvent(QDragEnterEvent* event) override;
   void dragMoveEvent(QDragMoveEvent* event) override;
   void dropEvent(QDropEvent* event) override;
-  // 一覧のキー操作: Enter / Space で選択行の操作ボタンを押す。
+  // 一覧のキー操作: Enter / Space で選択行の操作ボタンを押す。操作ボタンには
+  // Tab でもフォーカスが当たる (一覧 → 各行のボタン → 「ファイルからインストール...」)。
   bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
@@ -104,6 +107,9 @@ private:
   QLabel*       m_emptyLabel    = nullptr;
   QPushButton*  m_installButton = nullptr;
   QList<Row>    m_rows;
+  // ボタンにフォーカスがあるときの Enter を「そのボタンを押す」にする。何もしないと
+  // Enter はダイアログの既定ボタン (OK) に届いて設定ダイアログが閉じてしまう。
+  EnterClickFilter* m_enterClickFilter = nullptr;
 
   // ── 再起動待ちの変更があるときだけ出すバナー ──
   QFrame*      m_restartBanner = nullptr;

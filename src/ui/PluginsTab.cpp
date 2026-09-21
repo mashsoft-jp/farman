@@ -3,8 +3,10 @@
 #include "core/ArchiveDispatcher.h"
 #include "settings/Settings.h"
 #include "utils/Dialogs.h"
+#include "utils/EnterClickFilter.h"
 #include "viewer/ViewerDispatcher.h"
 
+#include <QApplication>
 #include <QCheckBox>
 #include <QDesktopServices>
 #include <QDir>
@@ -82,6 +84,7 @@ PluginsTab::PluginsTab(QWidget* parent)
 
 void PluginsTab::setupUi() {
   auto* mainLayout = new QVBoxLayout(this);
+  m_enterClickFilter = new EnterClickFilter(this);
 
   // ── 外部プラグインの一覧と導入 ──
   auto* listGroup = new QGroupBox(tr("External Plugins"), this);
@@ -147,6 +150,8 @@ void PluginsTab::setupUi() {
           &PluginsTab::restartRequested);
   bannerLayout->addWidget(m_restartButton);
   listLayout->addWidget(m_restartBanner);
+  m_enterClickFilter->installOnButtonsIn(m_installButton);
+  m_enterClickFilter->installOnButtonsIn(m_restartButton);
 
   mainLayout->addWidget(listGroup, 1);
 
@@ -391,7 +396,9 @@ void PluginsTab::reloadList() {
     // 第三者製など) は farman からは消せない。
     auto* button = new QPushButton(pending ? tr("Cancel") : tr("Uninstall..."), m_table);
     button->setAutoDefault(false);
-    button->setFocusPolicy(Qt::NoFocus);  // キーボードからは一覧の Enter / Space で押す
+    // Tab でフォーカスが当たる (一覧の Enter / Space でも選択行のボタンを押せる)。
+    button->setFocusPolicy(Qt::StrongFocus);
+    m_enterClickFilter->installOnButtonsIn(button);
     if (row.relPath.isEmpty()) {
       button->setEnabled(false);
       button->setToolTip(
@@ -411,6 +418,18 @@ void PluginsTab::reloadList() {
     });
     m_table->setCellWidget(i, ColAction, button);
   }
+
+  // 行のボタンは一覧を作り直すたびに生成されるので、そのままだとフォーカスチェーンの
+  // 末尾 (OK / キャンセルの後ろ) に入ってしまう。一覧 → 各行のボタン (上から順) →
+  // 「ファイルからインストール...」の順に Tab で辿れるよう、明示的に並べ直す。
+  QWidget* previous = m_table;
+  for (int i = 0; i < m_rows.size(); ++i) {
+    QWidget* button = m_table->cellWidget(i, ColAction);
+    if (!button || !button->isEnabled()) continue;
+    QWidget::setTabOrder(previous, button);
+    previous = button;
+  }
+  QWidget::setTabOrder(previous, m_installButton);
 
   m_table->resizeColumnsToContents();
   m_table->resizeRowsToContents();
@@ -454,7 +473,22 @@ void PluginsTab::runRowAction(int index) {
   }
 
   // 押されたボタン自身が一覧の作り直しで破棄されるので、シグナル処理を抜けてから行う。
-  QTimer::singleShot(0, this, [this]() { reloadList(); });
+  // ボタンにフォーカスがあった場合 (Tab で辿って押した) は、作り直した同じ行のボタンへ
+  // フォーカスを戻す。続けて「取り消し」などを押せるようにするため。
+  const QWidget* focused = QApplication::focusWidget();
+  const bool buttonHadFocus = focused && focused != m_table
+                           && m_table->isAncestorOf(focused);
+  QTimer::singleShot(0, this, [this, index, buttonHadFocus]() {
+    reloadList();
+    if (!buttonHadFocus) return;
+    QWidget* button = (index < m_table->rowCount())
+                        ? m_table->cellWidget(index, ColAction) : nullptr;
+    if (button && button->isEnabled()) {
+      button->setFocus(Qt::OtherFocusReason);
+    } else {
+      m_table->setFocus(Qt::OtherFocusReason);
+    }
+  });
 }
 
 void PluginsTab::chooseFiles() {
