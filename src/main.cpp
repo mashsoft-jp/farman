@@ -15,6 +15,7 @@
 #include "viewer/ViewerDispatcher.h"
 #include "core/ArchiveDispatcher.h"
 #include "core/ArchiveFormatCatalog.h"
+#include "core/PluginInstaller.h"
 #include "utils/ArchivePath.h"
 #include "settings/Settings.h"
 
@@ -229,6 +230,9 @@ int main(int argc, char *argv[]) {
                          : pluginsDir;
   QDir().mkpath(extPluginsRoot + QStringLiteral("/viewers"));
   QDir().mkpath(extPluginsRoot + QStringLiteral("/archives"));
+  // 前回の起動中に退避された導入 / 更新 / 削除を、プラグインを読み込む前に反映する
+  // (ロード中のライブラリは差し替え・削除できないため。SPEC「プラグインのインストール」)。
+  Farman::PluginInstaller::applyPending(extPluginsRoot);
   Farman::ViewerDispatcher::instance().loadPlugins(
     QDir(extPluginsRoot + QStringLiteral("/viewers")));
 

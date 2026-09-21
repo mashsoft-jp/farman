@@ -716,4 +716,8 @@ void GeneralTab::onImportAllSettings() {
             "the updated values in all tabs."));
 }
 
+void GeneralTab::setAllowExternalPluginsChecked(bool checked) {
+  m_allowExternalPluginsCheck->setChecked(checked);
+}
+
 } // namespace Farman

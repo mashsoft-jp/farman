@@ -18,6 +18,7 @@ class QToolButton;
 namespace Farman {
 
 class IViewerPlugin;
+class PluginInstallPanel;
 
 // 設定 → Viewer ページ。ビュアープラグインに関する診断情報と設定を集約する:
 //   - インストール済みビュアープラグインの一覧 (ロード状況 + 有効 / 無効)
@@ -38,6 +39,11 @@ public:
   // 直前の save() で「次回起動から反映」の変更 (有効/無効) があったか。
   // SettingsDialog が Apply/OK 後の通知に使う。
   bool restartRequiredOnSave() const { return m_restartRequiredOnSave; }
+
+signals:
+  // プラグインの導入フローで「外部プラグインの読込みを許可」が ON にされた
+  // (設定は保存済み)。SettingsDialog が General タブのチェックへ反映する。
+  void allowExternalPluginsEnabled();
 
 protected:
   // プラグイン一覧のキー操作の制御:
@@ -86,6 +92,8 @@ private:
   // 一覧の全行をまとめて有効 / 無効にする三状態チェック。
   QCheckBox*    m_allCheck    = nullptr;
   QTableWidget* m_pluginTable = nullptr;
+  // プラグインの導入 (ファイル選択 / 一覧へのドロップ) と、再起動待ちの変更の表示。
+  PluginInstallPanel* m_installPanel = nullptr;
   // 一覧の行番号 → レコード。詳細ダイアログの表示に使う。
   QList<PluginRecord> m_pluginRecords;
 

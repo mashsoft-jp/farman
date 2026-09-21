@@ -140,6 +140,14 @@ void ArchiveDispatcher::loadPluginsFromDirectory(
     if (!obj) {
       rec.loaded      = false;
       rec.errorReason = loader->errorString();
+#ifdef Q_OS_MACOS
+      // ViewerDispatcher と同じ案内 (Gatekeeper による拒否の可能性)。
+      if (origin == ArchivePluginRecord::Origin::External) {
+        rec.errorReason += QLatin1Char('\n')
+          + tr("On macOS this can happen when the plugin is not signed / notarized, "
+               "or is quarantined because it was downloaded from the internet.");
+      }
+#endif
       m_records.append(rec);
       loader->unload();
       Logger::instance().warn(

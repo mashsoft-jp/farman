@@ -129,6 +129,13 @@ void SettingsDialog::setupUi() {
                                      this);
   m_externalAppsTab = new ExternalAppsTab(this);
 
+  // プラグインの導入フローが「外部プラグインの読込みを許可」を ON にしたら、
+  // General タブのチェックも揃える (OK 時に古い状態で書き戻さないため)。
+  connect(m_viewerTab, &ViewerTab::allowExternalPluginsEnabled, m_generalTab,
+          [this]() { m_generalTab->setAllowExternalPluginsChecked(true); });
+  connect(m_archiveTab, &ArchiveTab::allowExternalPluginsEnabled, m_generalTab,
+          [this]() { m_generalTab->setAllowExternalPluginsChecked(true); });
+
   // ページとメニュー項目を 1:1 で並べる。順序は旧 TabWidget と同じ。
   // 外部アプリはキーバインドと密結合 (T / E などのキーが指す先) なので
   // Keybindings の直前に並べる。

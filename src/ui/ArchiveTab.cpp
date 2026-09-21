@@ -1,4 +1,5 @@
 #include "ArchiveTab.h"
+#include "PluginInstallPanel.h"
 
 #include <QCheckBox>
 #include <QCoreApplication>
@@ -133,6 +134,16 @@ void ArchiveTab::setupUi() {
     setFormatEnabled(item->row(), item->checkState() == Qt::Checked);
   });
   formatLayout->addWidget(m_formatTable, 1);
+
+  // プラグインの導入 / 削除 (SPEC「プラグインのインストール」)。一覧へのファイル
+  // ドロップも受ける。退避状況が変わったら状態列を描き直す。
+  m_installPanel = new PluginInstallPanel(formatGroup);
+  m_installPanel->watchDropTarget(m_formatTable);
+  connect(m_installPanel, &PluginInstallPanel::pendingChanged, this,
+          [this]() { loadFormatList(); });
+  connect(m_installPanel, &PluginInstallPanel::allowExternalPluginsEnabled, this,
+          &ArchiveTab::allowExternalPluginsEnabled);
+  formatLayout->addWidget(m_installPanel);
 
   mainLayout->addWidget(formatGroup, 1);
 
@@ -414,12 +425,22 @@ void ArchiveTab::updateAllCheckState() {
 
 // プラグイン形式のロード状態。ViewerTab の一覧と同じ絵文字 / 文言に揃える。
 QString ArchiveTab::pluginStatusText(const ArchivePluginRecord& record) const {
+  if (m_installPanel->isPendingRemoval(record.filePath)) {
+    return tr("Uninstalled after restart");
+  }
+  if (m_installPanel->isPendingUpdate(record.filePath)) {
+    return tr("Updated after restart");
+  }
   if (record.loaded) return tr("Loaded");
   if (record.blockedExternalDisabled) return tr("Blocked (external plugins off)");
   return record.disabledByUser ? tr("Disabled") : tr("Failed");
 }
 
 QString ArchiveTab::pluginStatusEmoji(const ArchivePluginRecord& record) const {
+  if (m_installPanel->isPendingRemoval(record.filePath)
+      || m_installPanel->isPendingUpdate(record.filePath)) {
+    return QStringLiteral("⏳");
+  }
   if (record.loaded) return QStringLiteral("✅");
   if (record.blockedExternalDisabled) return QStringLiteral("🔒");
   return record.disabledByUser ? QStringLiteral("🚫") : QStringLiteral("❌");
@@ -676,6 +697,27 @@ void ArchiveTab::showFormatDetails(int row) {
                                        &dialog);
   connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
   connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+  // プラグインディレクトリ配下の外部プラグインはアンインストールできる
+  // (削除は再起動時。退避中は同じボタンで取り消せる)。
+  if (info.source == ArchiveFormatInfo::Source::Plugin
+      && PluginInstallPanel::isManagedPluginFile(info.pluginRecord.filePath)) {
+    const QString filePath = info.pluginRecord.filePath;
+    const bool pendingRemoval = m_installPanel->isPendingRemoval(filePath);
+    auto* uninstall = buttons->addButton(
+      pendingRemoval ? tr("Cancel Uninstall") : tr("Uninstall..."),
+      QDialogButtonBox::DestructiveRole);
+    uninstall->setAutoDefault(false);
+    const QString displayName = info.displayName;
+    connect(uninstall, &QPushButton::clicked, &dialog,
+            [this, &dialog, pendingRemoval, filePath, displayName]() {
+      const bool changed = pendingRemoval
+        ? m_installPanel->cancelUninstall(filePath)
+        : m_installPanel->requestUninstall(filePath, displayName);
+      if (changed) {
+        dialog.reject();
+      }
+    });
+  }
   layout->addWidget(buttons);
   dialog.resize(std::clamp(dialog.sizeHint().width(), 420, 560),
                 dialog.sizeHint().height());

@@ -45,6 +45,10 @@ public:
   bool pluginLoadSettingsChangedOnSave() const {
     return m_pluginLoadSettingsChangedOnSave;
   }
+  // プラグインの導入フロー (Viewer / Archive タブ) が「外部プラグインの読込みを
+  // 許可」を ON にして保存したとき、このタブのチェックを追従させる。そのままだと
+  // save() が古いチェック状態で設定を OFF に書き戻してしまう。
+  void setAllowExternalPluginsChecked(bool checked);
 
 private slots:
   void onWindowSizeModeChanged(int index);
