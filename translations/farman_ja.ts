@@ -1112,7 +1112,7 @@ Row Background: fill the entire row with the cursor color.</source>
     <name>Farman::ArchiveDispatcher</name>
     <message>
         <location filename="../src/core/ArchiveDispatcher.cpp" line="111"/>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="191"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="202"/>
         <source>External plugins are disabled (enable in Settings &gt; Plugins)</source>
         <translation>外部プラグインは無効です (設定 &gt; プラグイン で有効化してください)</translation>
     </message>
@@ -1122,32 +1122,41 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>このプラグインには farman %1 以降が必要です (現在 %2)。</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="147"/>
         <source>On macOS this can happen when the plugin is not signed / notarized, or is quarantined because it was downloaded from the internet.</source>
-        <translation>macOS では、プラグインが署名 / 公証されていない場合や、インターネットから入手したために隔離されている場合に起こります。</translation>
+        <translation type="vanished">macOS では、プラグインが署名 / 公証されていない場合や、インターネットから入手したために隔離されている場合に起こります。</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="162"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="149"/>
+        <source>macOS blocked this plugin: it is not signed / notarized, or it is quarantined because it was downloaded from the internet.</source>
+        <translation>macOS がこのプラグインをブロックしました。署名 / 公証されていないか、インターネットから入手したために隔離されています。</translation>
+    </message>
+    <message>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="154"/>
+        <source>A library this plugin depends on was not found. The plugin may have been built for a different farman / Qt (plugins built for the released app do not load in a development build).</source>
+        <translation>このプラグインが依存するライブラリが見つかりません。別の farman / Qt 向けにビルドされたプラグインの可能性があります (配布版アプリ向けのプラグインは開発ビルドでは読み込めません)。</translation>
+    </message>
+    <message>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="173"/>
         <source>Not an IArchivePlugin (wrong IID?)</source>
         <translation>IArchivePlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="209"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="220"/>
         <source>Invalid priority %1 (external plugins must use 0-9999)</source>
         <translation>優先度 %1 は不正です (外部プラグインは 0〜9999 を指定してください)</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="223"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="234"/>
         <source>Missing author information (external plugins must declare author())</source>
         <translation>制作者情報がありません (外部プラグインは author() を宣言する必要があります)</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="237"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="248"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/core/ArchiveDispatcher.cpp" line="249"/>
+        <location filename="../src/core/ArchiveDispatcher.cpp" line="260"/>
         <source>initialize() failed</source>
         <translation>initialize() に失敗しました</translation>
     </message>
@@ -9545,7 +9554,7 @@ Keybindings are not affected.</source>
     <name>Farman::ViewerDispatcher</name>
     <message>
         <location filename="../src/viewer/ViewerDispatcher.cpp" line="174"/>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="252"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="261"/>
         <source>External plugins are disabled (enable in Settings &gt; Plugins)</source>
         <translation>外部プラグインは無効です (設定 &gt; プラグイン で有効化してください)</translation>
     </message>
@@ -9555,47 +9564,56 @@ Keybindings are not affected.</source>
         <translation>このプラグインには farman %1 以降が必要です (現在 %2)。</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="212"/>
         <source>On macOS this can happen when the plugin is not signed / notarized, or is quarantined because it was downloaded from the internet.</source>
-        <translation>macOS では、プラグインが署名 / 公証されていない場合や、インターネットから入手したために隔離されている場合に起こります。</translation>
+        <translation type="vanished">macOS では、プラグインが署名 / 公証されていない場合や、インターネットから入手したために隔離されている場合に起こります。</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="226"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="212"/>
+        <source>macOS blocked this plugin: it is not signed / notarized, or it is quarantined because it was downloaded from the internet.</source>
+        <translation>macOS がこのプラグインをブロックしました。署名 / 公証されていないか、インターネットから入手したために隔離されています。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="217"/>
+        <source>A library this plugin depends on was not found. The plugin may have been built for a different farman / Qt (plugins built for the released app do not load in a development build).</source>
+        <translation>このプラグインが依存するライブラリが見つかりません。別の farman / Qt 向けにビルドされたプラグインの可能性があります (配布版アプリ向けのプラグインは開発ビルドでは読み込めません)。</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="235"/>
         <source>Not an IViewerPlugin (wrong IID?)</source>
         <translation>IViewerPlugin ではありません (IID 不一致?)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="267"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="276"/>
         <source>Invalid priority %1 (external plugins must use 0-9999)</source>
         <translation>優先度 %1 は不正です (外部プラグインは 0〜9999 を指定してください)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="282"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="291"/>
         <source>Missing author information (external plugins must declare author())</source>
         <translation>制作者情報がありません (外部プラグインは author() を宣言する必要があります)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="293"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="302"/>
         <source>Disabled by user</source>
         <translation>ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="495"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="504"/>
         <source>null plugin instance</source>
         <translation>プラグインインスタンスが null</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="504"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="513"/>
         <source>duplicate plugin id (already registered)</source>
         <translation>プラグイン ID が重複 (既に登録済み)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="517"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="526"/>
         <source>initialize() returned false</source>
         <translation>initialize() が失敗を返しました</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ViewerDispatcher.cpp" line="532"/>
+        <location filename="../src/viewer/ViewerDispatcher.cpp" line="541"/>
         <source>bundled</source>
         <translation>同梱</translation>
     </message>

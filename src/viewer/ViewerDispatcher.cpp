@@ -203,16 +203,25 @@ void ViewerDispatcher::loadPluginsFromDirectory(const QDir& pluginDir,
     if (!plugin) {
       rec.loaded      = false;
       rec.errorReason = loader->errorString();
-#ifdef Q_OS_MACOS
-      // 外部プラグインのロード失敗は Gatekeeper による拒否のことが多い (ブラウザ経由で
-      // 入手したファイルの隔離属性 / 未署名・未公証)。dyld のメッセージだけでは
-      // 分かりにくいので可能性を案内する。属性を剥がすことはしない (SPEC)。
+      // dyld 等のメッセージだけでは分かりにくいので、推定した原因の案内を添える
+      // (隔離属性を剥がすことはしない。SPEC「プラグインのインストール」)。
       if (origin == PluginRecord::Origin::External) {
-        rec.errorReason += QLatin1Char('\n')
-          + tr("On macOS this can happen when the plugin is not signed / notarized, "
-               "or is quarantined because it was downloaded from the internet.");
+        switch (classifyPluginLoadError(rec.errorReason)) {
+          case PluginLoadFailure::CodeSigning:
+            rec.errorReason += QLatin1Char('\n')
+              + tr("macOS blocked this plugin: it is not signed / notarized, or it "
+                   "is quarantined because it was downloaded from the internet.");
+            break;
+          case PluginLoadFailure::MissingDependency:
+            rec.errorReason += QLatin1Char('\n')
+              + tr("A library this plugin depends on was not found. The plugin may "
+                   "have been built for a different farman / Qt (plugins built for "
+                   "the released app do not load in a development build).");
+            break;
+          case PluginLoadFailure::Other:
+            break;
+        }
       }
-#endif
       m_records.append(rec);
       loader->unload();
       Logger::instance().warn(

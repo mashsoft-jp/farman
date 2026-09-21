@@ -74,4 +74,32 @@ inline bool hostSatisfiesMinVersion(const QString& hostVersion, const QString& m
   return true;  // 数値部が完全一致
 }
 
+// プラグインのロード (dlopen) 失敗メッセージから推定した原因の種別。dyld / ld.so の
+// メッセージはそのままでは分かりにくいので、一覧のエラー表示に案内を添えるのに使う。
+enum class PluginLoadFailure {
+  Other,
+  // プラグインが依存するライブラリが見つからない。配布版 farman 向けのプラグイン
+  // (Qt を @executable_path/../Frameworks から引く) を、別の Qt を使う開発ビルドで
+  // 読もうとした場合もこれになる。
+  MissingDependency,
+  // macOS の Gatekeeper による拒否 (未署名 / 未公証、隔離属性)。
+  CodeSigning,
+};
+
+inline PluginLoadFailure classifyPluginLoadError(const QString& errorString) {
+  const auto has = [&errorString](const char* needle) {
+    return errorString.contains(QLatin1String(needle), Qt::CaseInsensitive);
+  };
+  if (has("code signature") || has("not valid for use in process")
+      || has("system policy") || has("quarantine")) {
+    return PluginLoadFailure::CodeSigning;
+  }
+  if (has("Library not loaded") || has("image not found")
+      || has("cannot open shared object file")
+      || has("specified module could not be found")) {
+    return PluginLoadFailure::MissingDependency;
+  }
+  return PluginLoadFailure::Other;
+}
+
 } // namespace Farman
