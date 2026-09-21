@@ -62,6 +62,9 @@ private:
     PluginInstaller::Kind kind = PluginInstaller::Kind::Unknown;
     QString filePath;      // 導入済みのパス。導入待ちの新規ファイルは空
     QString relPath;       // プラグインディレクトリからの相対パス (管理外は空)
+    // この行を置き換える導入待ちファイルの相対パス。同名の上書きなら relPath と同じ、
+    // 別名の新しい版なら別のパス、導入待ちの新規ファイルの行ではそのファイル自身。
+    QString pendingInstallRelPath;
     QString name;
     QString version;
     QString author;

@@ -285,9 +285,19 @@ QList<PluginsTab::Row> PluginsTab::collectRows() const {
     row.blockedExternalDisabled = blocked;
     row.installed   = true;
     if (!row.relPath.isEmpty()) {
-      row.pendingInstall = pending.installs.contains(row.relPath);
-      row.pendingRemoval = pending.removals.contains(row.relPath);
       knownRelPaths.append(row.relPath);
+      if (pending.replacedBy.contains(row.relPath)) {
+        // 別名の新しい版に置き換わる (古いファイルの削除は更新の一部)。導入待ちの
+        // ファイルは新規の行としては出さず、この行の「更新待ち」として見せる。
+        row.pendingInstall        = true;
+        row.pendingInstallRelPath = pending.replacedBy.value(row.relPath);
+        knownRelPaths.append(row.pendingInstallRelPath);
+      } else if (pending.installs.contains(row.relPath)) {
+        row.pendingInstall        = true;
+        row.pendingInstallRelPath = row.relPath;
+      } else {
+        row.pendingRemoval = pending.removals.contains(row.relPath);
+      }
     }
     rows.append(row);
   };
@@ -313,6 +323,7 @@ QList<PluginsTab::Row> PluginsTab::collectRows() const {
     row.relPath        = relPath;
     row.name           = relPath.section(QLatin1Char('/'), 1);
     row.pendingInstall = true;
+    row.pendingInstallRelPath = relPath;
     rows.append(row);
   }
   return rows;
@@ -328,7 +339,11 @@ QString PluginsTab::statusEmoji(const Row& row) const {
 QString PluginsTab::statusText(const Row& row) const {
   if (row.pendingRemoval) return tr("Uninstalled after restart");
   if (row.pendingInstall) {
-    return row.installed ? tr("Updated after restart") : tr("Installed after restart");
+    if (!row.installed) return tr("Installed after restart");
+    const QString newName = row.pendingInstallRelPath.section(QLatin1Char('/'), 1);
+    return row.pendingInstallRelPath == row.relPath
+      ? tr("Updated after restart")
+      : tr("Updated after restart (replaced by %1)").arg(newName);
   }
   if (row.loaded) return tr("Loaded");
   if (row.blockedExternalDisabled) return tr("Blocked (external plugins off)");
@@ -420,7 +435,8 @@ void PluginsTab::runRowAction(int index) {
   if (row.pendingRemoval) {
     PluginInstaller::cancelPendingRemoval(root, row.relPath);
   } else if (row.pendingInstall) {
-    PluginInstaller::cancelPendingInstall(root, row.relPath);
+    // 別名の新しい版への更新なら、古い版の削除待ちも一緒に取り消される。
+    PluginInstaller::cancelPendingInstall(root, row.pendingInstallRelPath);
   } else {
     const bool ok = confirm(
       this, tr("Uninstall Plugin"),
@@ -453,7 +469,7 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
   struct Candidate {
     QString               filePath;
     PluginInstaller::Kind kind;
-    bool                  replaces;
+    QStringList           replaces;  // 置き換わる同じプラグインのファイル名 (古い版を含む)
   };
   const QString root = PluginInstaller::pluginsRoot();
   QList<Candidate> candidates;
@@ -467,8 +483,15 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
       failures.append(QStringLiteral("%1: %2").arg(name, inspection.error));
       continue;
     }
-    candidates.append({filePath, inspection.kind,
-                       PluginInstaller::isInstalledOrPending(root, inspection.kind, name)});
+    QStringList replaces;
+    for (const QString& relPath :
+         PluginInstaller::samePluginFiles(root, inspection.kind, name)) {
+      const QString oldName = relPath.section(QLatin1Char('/'), 1);
+      if (!replaces.contains(oldName)) {
+        replaces.append(oldName);
+      }
+    }
+    candidates.append({filePath, inspection.kind, replaces});
   }
 
   if (candidates.isEmpty()) {
@@ -484,8 +507,9 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
   for (const Candidate& c : candidates) {
     QString line = QStringLiteral("• %1 (%2)")
                      .arg(QFileInfo(c.filePath).fileName(), kindLabel(c.kind));
-    if (c.replaces) {
-      line += QStringLiteral(" — ") + tr("replaces the installed file");
+    if (!c.replaces.isEmpty()) {
+      line += QStringLiteral(" — ")
+            + tr("replaces %1").arg(c.replaces.join(QStringLiteral(", ")));
     }
     lines.append(line);
   }
