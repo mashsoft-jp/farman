@@ -188,6 +188,16 @@ macOS の `.app/Contents/PlugIns/`) に第三者製プラグインを置いて�
 
 ## 5. 規約
 
+- **公式プラグインとして farman のアプリ内一覧 (設定 → プラグイン →「公式プラグインを
+  入手...」) に載せる場合** は、farman リポジトリの `docs/plugins/manifest.json` に
+  項目を足す (`id` = `pluginId()`、`repo`、`kind`、`fileName` = 配布ファイル名の基底、
+  `minFarmanVersion`、`name` / `description` の `ja` / `en`)。あわせて Web サイトの
+  プラグインページ (`docs/plugins/index.html` / `docs/en/plugins/index.html`) にも
+  カードを足す。リリースのアセットは
+  `<fileName>-vX.Y.Z-{macos-arm64|windows-x64|linux-x86_64}.{dylib|dll|so}` の名前で、
+  **同名 + `.sha256` のチェックサムを必ず付ける** (無い配布物はアプリから導入できない。
+  3.3 の CI テンプレートは生成済み)。
+
 - リポジトリ名: **`farman-plugin-<name>`**。GitHub topics に `farman` / `farman-plugin` を付ける。
 - 読み取り専用など制約は README に明記する。
 - ライセンスは farman 本体に準じる。

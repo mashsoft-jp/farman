@@ -138,6 +138,7 @@ qt_add_executable(farman
   src/ui/ShortcutListDialog.cpp
   src/ui/ViewerTab.cpp
   src/ui/PluginsTab.cpp
+  src/ui/PluginCatalogDialog.cpp
   src/ui/ArchiveTab.cpp
   src/ui/UpdateAvailableDialog.cpp
   src/ui/WhatsNewDialog.cpp
@@ -182,6 +183,8 @@ qt_add_executable(farman
   src/core/UpdateChecker.cpp
   src/core/UpdateDownloader.cpp
   src/core/PluginInstaller.cpp
+  src/core/PluginCatalog.cpp
+  src/core/PluginDownloader.cpp
   src/utils/Dialogs.cpp
   src/utils/FarmanMessageBox.cpp
   src/utils/EnterClickFilter.cpp

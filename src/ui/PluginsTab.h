@@ -92,6 +92,10 @@ private:
 
   void setDropZoneActive(bool active);
   void chooseFiles();
+  // 公式プラグインの一覧ダイアログを開く。
+  void openCatalog();
+  // 外部プラグインの読込みが OFF なら、ON にするか尋ねる (導入しても動かないため)。
+  void offerEnableExternalPlugins();
   // 確認 → 検証 → 退避 → 結果表示までを行う。
   void installFiles(const QStringList& filePaths);
   // 行の操作ボタン: 退避中なら取り消し、そうでなければアンインストール。
@@ -109,6 +113,7 @@ private:
   QTableWidget* m_table         = nullptr;
   QLabel*       m_emptyLabel    = nullptr;
   QPushButton*  m_installButton = nullptr;
+  QPushButton*  m_catalogButton = nullptr;
   // 点線枠のドロップ領域 (DropZoneFrame)。ドラッグ中は強調表示にする。
   QFrame*       m_dropZone      = nullptr;
   QList<Row>    m_rows;

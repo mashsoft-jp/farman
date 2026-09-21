@@ -7486,6 +7486,235 @@ With Rename, remaining conflicts are renamed automatically using the auto-rename
     </message>
 </context>
 <context>
+    <name>Farman::PluginCatalogDialog</name>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="33"/>
+        <source>Viewer</source>
+        <translation>ビュアー</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="34"/>
+        <source>Archive</source>
+        <translation>アーカイブ</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="44"/>
+        <source>Official Plugins</source>
+        <translation>公式プラグイン</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="62"/>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="133"/>
+        <source>Getting the list of official plugins...</source>
+        <translation>公式プラグインの一覧を取得しています...</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="84"/>
+        <source>Plugins published by the farman project. Downloads are verified with their SHA256 checksum, and take effect after restarting farman.</source>
+        <translation>farman プロジェクトが公開しているプラグインです。ダウンロードしたファイルは SHA256 チェックサムで照合し、farman の再起動後に有効になります。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="93"/>
+        <source>Name</source>
+        <translation>名前</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="93"/>
+        <source>Type</source>
+        <translation>種別</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="93"/>
+        <source>Latest</source>
+        <translation>最新版</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="93"/>
+        <source>Installed</source>
+        <translation>インストール済み</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="93"/>
+        <source>Status</source>
+        <translation>状態</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="129"/>
+        <source>Reload</source>
+        <translation>再読み込み</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="131"/>
+        <source>Get the latest information again.</source>
+        <translation>最新の情報を取得し直します。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="138"/>
+        <source>Close</source>
+        <translation>閉じる</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="213"/>
+        <source>⏳ Installed after restart</source>
+        <translation>⏳ 再起動後にインストール</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="213"/>
+        <source>⏳ Updated after restart</source>
+        <translation>⏳ 再起動後に更新</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="217"/>
+        <source>⏳ Uninstalled after restart</source>
+        <translation>⏳ 再起動後にアンインストール</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="224"/>
+        <source>Could not get release information</source>
+        <translation>リリース情報を取得できません</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="227"/>
+        <source>Not available for this platform</source>
+        <translation>この環境向けの配布物がありません</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="233"/>
+        <source>Requires farman %1 or later</source>
+        <translation>farman %1 以降が必要です</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="240"/>
+        <source>Installed outside the plugins directory</source>
+        <translation>プラグインディレクトリの外にインストール済み</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="242"/>
+        <source>Not installed</source>
+        <translation>未インストール</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="246"/>
+        <source>Installed (version unknown)</source>
+        <translation>インストール済み (バージョン不明)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="249"/>
+        <source>Update available</source>
+        <translation>更新あり</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="252"/>
+        <source>Up to date</source>
+        <translation>最新です</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="283"/>
+        <source>Yes</source>
+        <translation>あり</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="291"/>
+        <source>Install</source>
+        <translation>インストール</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="292"/>
+        <source>Update</source>
+        <translation>更新</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="293"/>
+        <source>Reinstall</source>
+        <translation>再インストール</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="324"/>
+        <source>The list of official plugins could not be loaded.</source>
+        <translation>公式プラグインの一覧を読み込めませんでした。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="327"/>
+        <source>The online list could not be reached, so the list bundled with this farman is shown. Newer plugins may be missing.</source>
+        <translation>オンラインの一覧を取得できなかったため、この farman に同梱された一覧を表示しています。新しいプラグインが載っていない場合があります。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="348"/>
+        <source>Repository</source>
+        <translation>リポジトリ</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="348"/>
+        <source>Release notes</source>
+        <translation>リリースノート</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="352"/>
+        <source>Installed file: %1</source>
+        <translation>インストール済みのファイル: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="369"/>
+        <source>Install &quot;%1&quot; %2?</source>
+        <translation>「%1」 %2 をインストールしますか?</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="370"/>
+        <source>Update &quot;%1&quot; to %2?</source>
+        <translation>「%1」を %2 に更新しますか?</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="380"/>
+        <source>The installed file will be uninstalled: %1</source>
+        <translation>インストール済みのファイルはアンインストールされます: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="386"/>
+        <source>Downloading %1...</source>
+        <translation>%1 をダウンロードしています...</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginCatalogDialog.cpp" line="405"/>
+        <source>The downloaded file is not the expected type of plugin.</source>
+        <translation>ダウンロードしたファイルが、想定した種別のプラグインではありません。</translation>
+    </message>
+</context>
+<context>
+    <name>Farman::PluginDownloader</name>
+    <message>
+        <location filename="../src/core/PluginDownloader.cpp" line="57"/>
+        <source>No downloadable file for this platform.</source>
+        <translation>この環境向けにダウンロードできるファイルがありません。</translation>
+    </message>
+    <message>
+        <location filename="../src/core/PluginDownloader.cpp" line="88"/>
+        <source>Could not download the checksum (%1).</source>
+        <translation>チェックサムをダウンロードできませんでした (%1)。</translation>
+    </message>
+    <message>
+        <location filename="../src/core/PluginDownloader.cpp" line="97"/>
+        <source>The checksum file is not valid.</source>
+        <translation>チェックサムファイルの内容が正しくありません。</translation>
+    </message>
+    <message>
+        <location filename="../src/core/PluginDownloader.cpp" line="108"/>
+        <location filename="../src/core/PluginDownloader.cpp" line="144"/>
+        <location filename="../src/core/PluginDownloader.cpp" line="157"/>
+        <source>Could not save the downloaded file (%1).</source>
+        <translation>ダウンロードしたファイルを保存できませんでした (%1)。</translation>
+    </message>
+    <message>
+        <location filename="../src/core/PluginDownloader.cpp" line="134"/>
+        <source>Download failed (%1).</source>
+        <translation>ダウンロードに失敗しました (%1)。</translation>
+    </message>
+    <message>
+        <location filename="../src/core/PluginDownloader.cpp" line="151"/>
+        <source>The downloaded file did not match its checksum (SHA256).</source>
+        <translation>ダウンロードしたファイルがチェックサム (SHA256) と一致しませんでした。</translation>
+    </message>
+</context>
+<context>
     <name>Farman::PluginInstallPanel</name>
     <message>
         <source>Viewer</source>
@@ -7703,7 +7932,7 @@ The plugin file is deleted when farman is restarted. Until then you can cancel t
 <context>
     <name>Farman::PluginsTab</name>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="224"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="239"/>
         <source>Plugins Directory</source>
         <translation>プラグインディレクトリ</translation>
     </message>
@@ -7716,17 +7945,17 @@ The plugin file is deleted when farman is restarted. Until then you can cancel t
         <translation type="vanished">外部ビュアープラグイン (.dylib, .so, .dll) を置くディレクトリです。変更は次回起動時に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="144"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="145"/>
         <source>External Plugins</source>
         <translation>外部プラグイン</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="148"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="149"/>
         <source>Install, update and uninstall external plugins here, for viewers and archives alike. Changes take effect after restarting farman. To turn a plugin on or off or change its settings, use the Viewer / Archive pages.</source>
         <translation>外部プラグインのインストール / 更新 / アンインストールは、ビュアー用・アーカイブ用を問わずここで行います。変更は farman の再起動後に反映されます。プラグインの有効 / 無効や設定の変更は「ビュアー」「アーカイブ」ページで行います。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="159"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="173"/>
         <source>Author</source>
         <translation>制作者</translation>
     </message>
@@ -7735,12 +7964,12 @@ The plugin file is deleted when farman is restarted. Until then you can cancel t
         <translation type="vanished">外部プラグインはインストールされていません。このページにプラグインファイルをドロップするか、「ファイルからインストール...」を使ってください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="192"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="206"/>
         <source>Install from File...</source>
         <translation>ファイルからインストール...</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="195"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="209"/>
         <source>Choose plugin files (.%1) to install. The plugin type (viewer / archive) is detected automatically.</source>
         <translation>インストールするプラグインファイル (.%1) を選びます。種別 (ビュアー / アーカイブ) は自動で判定されます。</translation>
     </message>
@@ -7749,17 +7978,17 @@ The plugin file is deleted when farman is restarted. Until then you can cancel t
         <translation type="vanished">このページにプラグインファイルをドロップしてもインストールできます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="206"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="220"/>
         <source>⏳ Plugin changes are applied when farman is restarted.</source>
         <translation>⏳ プラグインの変更は farman の再起動時に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="209"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="223"/>
         <source>Restart farman</source>
         <translation>farman を再起動</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="212"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="226"/>
         <source>Save the settings in this dialog and restart farman now.</source>
         <translation>このダイアログの設定を保存して、今すぐ farman を再起動します。</translation>
     </message>
@@ -7768,47 +7997,47 @@ The plugin file is deleted when farman is restarted. Until then you can cancel t
         <translation type="vanished">読み込み</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="228"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="243"/>
         <source>External plugins are loaded on startup from this directory (viewers/ and archives/ subdirectories). Leave empty to use the default user plugins directory.</source>
         <translation>外部プラグインは起動時にこのディレクトリ (viewers/ と archives/ サブディレクトリ) から読み込まれます。空欄にすると既定のユーザー用プラグインディレクトリを使います。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="241"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="256"/>
         <source>Directory containing external plugins (.dylib, .so, .dll). Changes take effect on next launch.</source>
         <translation>外部プラグイン (.dylib, .so, .dll) を置くディレクトリです。変更は次回起動時に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="245"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="260"/>
         <source>Choose plugins directory...</source>
         <translation>プラグインディレクトリを選択...</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="253"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="268"/>
         <source>Default</source>
         <translation>既定</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="255"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="270"/>
         <source>Use the default user plugins directory.</source>
         <translation>既定のユーザー用プラグインディレクトリを使います。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="257"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="272"/>
         <source>Directory:</source>
         <translation>ディレクトリ:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="282"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="297"/>
         <source>Choose plugins directory</source>
         <translation>プラグインディレクトリを選択</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="394"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="409"/>
         <source>Uninstalled after restart</source>
         <translation>再起動後にアンインストール</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="399"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="414"/>
         <source>Updated after restart</source>
         <translation>再起動後に更新</translation>
     </message>
@@ -7817,78 +8046,78 @@ The plugin file is deleted when farman is restarted. Until then you can cancel t
         <translation type="vanished">%1 を置き換えます</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="170"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="184"/>
         <source>No external plugins are installed.</source>
         <translation>外部プラグインはインストールされていません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="184"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="198"/>
         <source>⬇  Drop plugin files (.%1) here to install</source>
         <translation>⬇  ここにプラグインファイル (.%1) をドロップしてインストール</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="188"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="202"/>
         <source>or</source>
         <translation>または</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="396"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="411"/>
         <source>Installed after restart</source>
         <translation>再起動後にインストール</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="400"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="415"/>
         <source>Updated after restart (replaced by %1)</source>
         <translation>再起動後に更新 (%1 に置き換え)</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="406"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="421"/>
         <source>Failed: %1</source>
         <translation>失敗: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="444"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="459"/>
         <source>Cancel</source>
         <translation>取り消し</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="444"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="459"/>
         <source>Uninstall...</source>
         <translation>アンインストール...</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="452"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="467"/>
         <source>This plugin is outside the plugins directory, so farman cannot uninstall it.</source>
         <translation>このプラグインはプラグインディレクトリの外にあるため、farman からはアンインストールできません。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="455"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="470"/>
         <source>Keep this plugin installed.</source>
         <translation>このプラグインのアンインストールを取りやめます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="457"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="472"/>
         <source>Do not update this plugin.</source>
         <translation>このプラグインの更新を取りやめます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="458"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="473"/>
         <source>Do not install this plugin.</source>
         <translation>このプラグインのインストールを取りやめます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="460"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="475"/>
         <source>Delete this plugin when farman is restarted.</source>
         <translation>farman の再起動時にこのプラグインを削除します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="510"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="517"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="526"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="533"/>
         <source>Uninstall Plugin</source>
         <translation>プラグインのアンインストール</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="511"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="527"/>
         <source>Uninstall &quot;%1&quot;?
 
 The plugin file is deleted when farman is restarted. Until then you can cancel this from the list.</source>
@@ -7897,53 +8126,53 @@ The plugin file is deleted when farman is restarted. Until then you can cancel t
 プラグインファイルは farman の再起動時に削除されます。それまでは一覧から取り消せます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="544"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="587"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="610"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="638"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="660"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="688"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="563"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="585"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="628"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="651"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="679"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="716"/>
         <source>Install Plugins</source>
         <translation>プラグインのインストール</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="545"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="586"/>
         <source>farman plugins (*.%1)</source>
         <translation>farman プラグイン (*.%1)</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="588"/>
-        <location filename="../src/ui/PluginsTab.cpp" line="687"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="629"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="715"/>
         <source>No plugin was installed.</source>
         <translation>プラグインはインストールされませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="600"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="641"/>
         <source>replaces the installed file</source>
         <translation>導入済みのファイルを置き換えます</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="605"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="646"/>
         <source>Install the following plugins?</source>
         <translation>次のプラグインをインストールしますか?</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="607"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="648"/>
         <source>Plugins run as part of farman and can access your files. farman cannot verify who made these files, so install only plugins obtained from a source you trust.</source>
         <translation>プラグインは farman の一部として動作し、ファイルにアクセスできます。farman はこれらのファイルの制作者を確認できないため、入手元を信頼できるプラグインだけをインストールしてください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="635"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="676"/>
         <source>version %1</source>
         <translation>バージョン %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="639"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="680"/>
         <source>What appears to be another version of &quot;%1&quot; is already installed:</source>
         <translation>「%1」の別のバージョンと見られるプラグインが、既にインストールされています:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="642"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="683"/>
         <source>Uninstall the installed one and install &quot;%1&quot;?
 
 If you choose No, &quot;%1&quot; is not installed (only one copy of a plugin can be loaded).</source>
@@ -7952,7 +8181,7 @@ If you choose No, &quot;%1&quot; is not installed (only one copy of a plugin can
 「いいえ」を選ぶと「%1」はインストールしません (同じプラグインは 1 つしか読み込めません)。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="661"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="564"/>
         <source>Loading external plugins is currently turned off, so the installed plugins will not be loaded.
 
 Turn on &quot;Allow loading external plugins&quot;?</source>
@@ -7961,14 +8190,14 @@ Turn on &quot;Allow loading external plugins&quot;?</source>
 「外部プラグインの読み込みを許可する」をオンにしますか?</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/ui/PluginsTab.cpp" line="686"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="714"/>
         <source>%n plugin(s) will be installed when farman is restarted.</source>
         <translation>
             <numerusform>%n 個のプラグインが farman の再起動時にインストールされます。</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="689"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="717"/>
         <source>Not installed:</source>
         <translation>インストールされなかったもの:</translation>
     </message>
@@ -7985,12 +8214,12 @@ Turn on &quot;Allow loading external plugins&quot;?</source>
         <translation type="vanished">有効</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="159"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="173"/>
         <source>Type</source>
         <translation>種別</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="159"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="173"/>
         <source>Status</source>
         <translation>状態</translation>
     </message>
@@ -8003,7 +8232,7 @@ Turn on &quot;Allow loading external plugins&quot;?</source>
         <translation type="vanished">プラグイン ID</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="159"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="173"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
@@ -8032,7 +8261,7 @@ Turn on &quot;Allow loading external plugins&quot;?</source>
         <translation type="vanished">各ビュアーは、プラグインが宣言した拡張子を初期値として表示します。行を編集するとその既定値を上書きし、未変更の行はプラグイン側の既定値に追従します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="59"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="60"/>
         <source>Viewer</source>
         <translation>ビュアー</translation>
     </message>
@@ -8077,17 +8306,17 @@ Turn on &quot;Allow loading external plugins&quot;?</source>
         <translation type="vanished">このプラグインの全情報を表示します。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="402"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="417"/>
         <source>Loaded</source>
         <translation>読み込み済み</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="404"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="419"/>
         <source>Disabled</source>
         <translation>無効</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="405"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="420"/>
         <source>Failed</source>
         <translation>失敗</translation>
     </message>
@@ -8096,37 +8325,47 @@ Turn on &quot;Allow loading external plugins&quot;?</source>
         <translation type="vanished">プラグインの詳細</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="128"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="129"/>
         <source>Allow loading external plugins</source>
         <translation>外部プラグインの読み込みを許可する</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="130"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="131"/>
         <source>When enabled, plugins placed in the directory below are loaded at startup. External plugins are third-party native code and run with the same privileges as Farman — only enable this if you trust their source. Changes take effect on next launch.</source>
         <translation>有効にすると、下のディレクトリに置いたプラグインを起動時に読み込みます。外部プラグインは第三者製のネイティブコードで、Farman と同じ権限で動作します。信頼できる提供元のものだけを有効にしてください。変更は次回起動時に反映されます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="137"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="138"/>
         <source>⚠ External plugins are native code and run with full application privileges. Only enable plugins from sources you trust.</source>
         <translation>⚠ 外部プラグインはネイティブコードで、アプリと同じ権限で動作します。信頼できる提供元のプラグインだけを有効にしてください。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="248"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="159"/>
+        <source>Get Official Plugins...</source>
+        <translation>公式プラグインを入手...</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="162"/>
+        <source>Show the plugins published by the farman project, and install or update them from the internet.</source>
+        <translation>farman プロジェクトが公開しているプラグインを表示し、インターネットからインストール / 更新します。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PluginsTab.cpp" line="263"/>
         <source>Open</source>
         <translation>開く</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="251"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="266"/>
         <source>Open the plugins directory in Finder / Explorer.</source>
         <translation>プラグインディレクトリを Finder / エクスプローラーで開く。</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="159"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="173"/>
         <source>Version</source>
         <translation>バージョン</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="60"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="61"/>
         <source>Archive</source>
         <translation>アーカイブ</translation>
     </message>
@@ -8139,7 +8378,7 @@ Turn on &quot;Allow loading external plugins&quot;?</source>
         <translation type="vanished">ユーザーにより無効化されています</translation>
     </message>
     <message>
-        <location filename="../src/ui/PluginsTab.cpp" line="403"/>
+        <location filename="../src/ui/PluginsTab.cpp" line="418"/>
         <source>Blocked (external plugins off)</source>
         <translation>ブロック中 (外部プラグイン無効)</translation>
     </message>

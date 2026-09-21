@@ -1,0 +1,35 @@
+{
+  "formatVersion": 1,
+  "plugins": [
+    {
+      "id": "model_viewer",
+      "repo": "mashsoft-jp/farman-plugin-3d",
+      "kind": "viewer",
+      "fileName": "ModelViewerPlugin",
+      "minFarmanVersion": "0.9.9",
+      "name": {
+        "ja": "3D モデルビュアー (FBX)",
+        "en": "3D model viewer (FBX)"
+      },
+      "description": {
+        "ja": ".fbx 形式の 3D モデルを farman 内で表示します。テクスチャ・スケルタルアニメーション・複数マテリアル・ワイヤーフレーム・ボーン表示に対応し、マウス / キーボードで回転・平行移動・拡大縮小できます。",
+        "en": "Displays .fbx 3D models inside farman. Supports textures, skeletal animation, multiple materials, wireframe and bone display; rotate, pan and zoom with the mouse or keyboard."
+      }
+    },
+    {
+      "id": "lzh_archive",
+      "repo": "mashsoft-jp/farman-plugin-lzh",
+      "kind": "archive",
+      "fileName": "LzhArchivePlugin",
+      "minFarmanVersion": "",
+      "name": {
+        "ja": "LZH (LHA) アーカイブ",
+        "en": "LZH (LHA) archive"
+      },
+      "description": {
+        "ja": ".lzh / .lha アーカイブを zip / tar と同じようにブラウジング・展開します。日本語 Shift-JIS のファイル名にも対応 (読み取り専用)。",
+        "en": "Browse and extract .lzh / .lha archives just like zip / tar. Japanese Shift-JIS file names are handled (read-only)."
+      }
+    }
+  ]
+}

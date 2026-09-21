@@ -1,4 +1,5 @@
 #include "PluginsTab.h"
+#include "PluginCatalogDialog.h"
 
 #include "core/ArchiveDispatcher.h"
 #include "settings/Settings.h"
@@ -152,6 +153,19 @@ void PluginsTab::setupUi() {
   listHint->setWordWrap(true);
   listLayout->addWidget(listHint);
 
+  // 公式プラグインの一覧 (Web から取得) を開く。ネットワークに出るのはこのボタンを
+  // 押したときだけ。
+  auto* catalogRow = new QHBoxLayout();
+  m_catalogButton = new QPushButton(tr("Get Official Plugins..."), listGroup);
+  m_catalogButton->setAutoDefault(false);
+  m_catalogButton->setToolTip(
+    tr("Show the plugins published by the farman project, and install or update "
+       "them from the internet."));
+  connect(m_catalogButton, &QPushButton::clicked, this, &PluginsTab::openCatalog);
+  catalogRow->addWidget(m_catalogButton);
+  catalogRow->addStretch(1);
+  listLayout->addLayout(catalogRow);
+
   m_table = new QTableWidget(listGroup);
   m_table->setWordWrap(false);
   m_table->setColumnCount(ColCount);
@@ -215,6 +229,7 @@ void PluginsTab::setupUi() {
   bannerLayout->addWidget(m_restartButton);
   listLayout->addWidget(m_restartBanner);
   m_enterClickFilter->installOnButtonsIn(m_installButton);
+  m_enterClickFilter->installOnButtonsIn(m_catalogButton);
   m_enterClickFilter->installOnButtonsIn(m_restartButton);
 
   mainLayout->addWidget(listGroup, 1);
@@ -469,6 +484,7 @@ void PluginsTab::reloadList() {
   // 行のボタンは一覧を作り直すたびに生成されるので、そのままだとフォーカスチェーンの
   // 末尾 (OK / キャンセルの後ろ) に入ってしまう。一覧 → 各行のボタン (上から順) →
   // 「ファイルからインストール...」の順に Tab で辿れるよう、明示的に並べ直す。
+  QWidget::setTabOrder(m_catalogButton, m_table);
   QWidget* previous = m_table;
   for (int i = 0; i < m_rows.size(); ++i) {
     QWidget* button = m_table->cellWidget(i, ColAction);
@@ -536,6 +552,31 @@ void PluginsTab::runRowAction(int index) {
       m_table->setFocus(Qt::OtherFocusReason);
     }
   });
+}
+
+void PluginsTab::offerEnableExternalPlugins() {
+  // 外部プラグインの読込みが OFF のままだと導入しても動かない。黙って ON には
+  // せず、ここで尋ねる。断っても導入は続ける (一覧には「ブロック中」で出る)。
+  // ON にするのはこのページのチェックで、保存は OK / 適用 / 再起動のとき。
+  if (m_allowExternalPluginsCheck->isChecked()) return;
+  const bool enable = confirm(
+    this, tr("Install Plugins"),
+    tr("Loading external plugins is currently turned off, so the installed "
+       "plugins will not be loaded.\n\nTurn on \"Allow loading external "
+       "plugins\"?"),
+    /*defaultYes=*/true);
+  if (enable) {
+    m_allowExternalPluginsCheck->setChecked(true);
+  }
+}
+
+void PluginsTab::openCatalog() {
+  PluginCatalogDialog dialog(this);
+  dialog.exec();
+  reloadList();
+  if (dialog.stagedAny()) {
+    offerEnableExternalPlugins();
+  }
 }
 
 void PluginsTab::chooseFiles() {
@@ -652,20 +693,7 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
     return;  // すべて断られた。何も変えていないので結果表示も不要
   }
 
-  // 外部プラグインの読込みが OFF のままだと導入しても動かない。黙って ON には
-  // せず、ここで尋ねる。断っても導入は続ける (一覧には「ブロック中」で出る)。
-  // ON にするのはこのページのチェックで、保存は OK / 適用 / 再起動のとき。
-  if (!m_allowExternalPluginsCheck->isChecked()) {
-    const bool enable = confirm(
-      this, tr("Install Plugins"),
-      tr("Loading external plugins is currently turned off, so the installed "
-         "plugins will not be loaded.\n\nTurn on \"Allow loading external "
-         "plugins\"?"),
-      /*defaultYes=*/true);
-    if (enable) {
-      m_allowExternalPluginsCheck->setChecked(true);
-    }
-  }
+  offerEnableExternalPlugins();
 
   int staged = 0;
   for (const Candidate& c : candidates) {
