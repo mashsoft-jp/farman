@@ -120,6 +120,26 @@ void PluginsTab::setupUi() {
   auto* mainLayout = new QVBoxLayout(this);
   m_enterClickFilter = new EnterClickFilter(this);
 
+  // ── 外部プラグインを読み込むか ──
+  // 外部プラグイン全体に関わるスイッチなので、ページの一番上に置く (下の一覧 / 導入 /
+  // ディレクトリはすべてこれが ON のときに意味を持つ)。個々のプラグインの有効 / 無効は
+  // 「ビュアー」「アーカイブ」の各タブが持つ。
+  m_allowExternalPluginsCheck =
+    new QCheckBox(tr("Allow loading external plugins"), this);
+  m_allowExternalPluginsCheck->setToolTip(
+    tr("When enabled, plugins placed in the directory below are loaded at "
+       "startup. External plugins are third-party native code and run with "
+       "the same privileges as Farman — only enable this if you trust their "
+       "source. Changes take effect on next launch."));
+  mainLayout->addWidget(m_allowExternalPluginsCheck);
+
+  QLabel* pluginSecurityHint = new QLabel(
+    tr("⚠ External plugins are native code and run with full application "
+       "privileges. Only enable plugins from sources you trust."), this);
+  pluginSecurityHint->setWordWrap(true);
+  pluginSecurityHint->setEnabled(false);
+  mainLayout->addWidget(pluginSecurityHint);
+
   // ── 外部プラグインの一覧と導入 ──
   auto* listGroup = new QGroupBox(tr("External Plugins"), this);
   auto* listLayout = new QVBoxLayout(listGroup);
@@ -199,27 +219,10 @@ void PluginsTab::setupUi() {
 
   mainLayout->addWidget(listGroup, 1);
 
-  // ── 読込み設定 (ビュアー / アーカイブ共通の置き場所) ──
-  // 個々のプラグインの有効 / 無効は「ビュアー」「アーカイブ」の各タブが持つ。
-  // ここは「そもそも外部を読み込むか / どこから読み込むか」だけを扱う。
-  QGroupBox* pluginGroup = new QGroupBox(tr("Loading"), this);
+  // ── プラグインディレクトリ (ビュアー / アーカイブ共通の置き場所) ──
+  // めったに変えない設定なので、一覧と導入の下に置く。
+  QGroupBox* pluginGroup = new QGroupBox(tr("Plugins Directory"), this);
   QVBoxLayout* pluginLayout = new QVBoxLayout(pluginGroup);
-
-  m_allowExternalPluginsCheck =
-    new QCheckBox(tr("Allow loading external plugins"), pluginGroup);
-  m_allowExternalPluginsCheck->setToolTip(
-    tr("When enabled, plugins placed in the directory below are loaded at "
-       "startup. External plugins are third-party native code and run with "
-       "the same privileges as Farman — only enable this if you trust their "
-       "source. Changes take effect on next launch."));
-  pluginLayout->addWidget(m_allowExternalPluginsCheck);
-
-  QLabel* pluginSecurityHint = new QLabel(
-    tr("⚠ External plugins are native code and run with full application "
-       "privileges. Only enable plugins from sources you trust."), pluginGroup);
-  pluginSecurityHint->setWordWrap(true);
-  pluginSecurityHint->setEnabled(false);
-  pluginLayout->addWidget(pluginSecurityHint);
 
   QLabel* pluginDirHint = new QLabel(
     tr("External plugins are loaded on startup from this directory "
