@@ -28,6 +28,8 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include <utility>
+
 namespace Farman {
 
 namespace {
@@ -469,7 +471,10 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
   struct Candidate {
     QString               filePath;
     PluginInstaller::Kind kind;
-    QStringList           replaces;  // 置き換わる同じプラグインのファイル名 (古い版を含む)
+    bool                  overwrites = false;  // 同名のファイルが導入済み / 導入待ち
+    // 導入済みの、別名の同じプラグイン (= 別のバージョンと見られるもの) のファイル名。
+    // 導入するならアンインストールが要るので、個別に尋ねる。
+    QStringList           otherVersions;
   };
   const QString root = PluginInstaller::pluginsRoot();
   QList<Candidate> candidates;
@@ -483,15 +488,18 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
       failures.append(QStringLiteral("%1: %2").arg(name, inspection.error));
       continue;
     }
-    QStringList replaces;
+    Candidate candidate{filePath, inspection.kind};
     for (const QString& relPath :
          PluginInstaller::samePluginFiles(root, inspection.kind, name)) {
       const QString oldName = relPath.section(QLatin1Char('/'), 1);
-      if (!replaces.contains(oldName)) {
-        replaces.append(oldName);
+      if (oldName == name) {
+        candidate.overwrites = true;
+      } else if (QFileInfo::exists(root + QLatin1Char('/') + relPath)) {
+        candidate.otherVersions.append(oldName);
       }
+      // 別名の導入待ち (まだ導入されていない版) は、尋ねずに後の導入で置き換える。
     }
-    candidates.append({filePath, inspection.kind, replaces});
+    candidates.append(candidate);
   }
 
   if (candidates.isEmpty()) {
@@ -507,9 +515,8 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
   for (const Candidate& c : candidates) {
     QString line = QStringLiteral("• %1 (%2)")
                      .arg(QFileInfo(c.filePath).fileName(), kindLabel(c.kind));
-    if (!c.replaces.isEmpty()) {
-      line += QStringLiteral(" — ")
-            + tr("replaces %1").arg(c.replaces.join(QStringLiteral(", ")));
+    if (c.overwrites) {
+      line += QStringLiteral(" — ") + tr("replaces the installed file");
     }
     lines.append(line);
   }
@@ -521,6 +528,47 @@ void PluginsTab::installFiles(const QStringList& filePaths) {
          "source you trust.");
   if (!confirm(this, tr("Install Plugins"), question, /*defaultYes=*/false)) {
     return;
+  }
+
+  // 別のバージョンと見られるプラグインが導入済みなら、そちらをアンインストールして
+  // よいかを個別に尋ねる。同じプラグインを 2 つ置くと片方しか読み込まれない (重複 ID)
+  // ので、断られたらそのファイルは導入しない。
+  QList<Candidate> accepted;
+  for (const Candidate& c : std::as_const(candidates)) {
+    if (c.otherVersions.isEmpty()) {
+      accepted.append(c);
+      continue;
+    }
+    const QString newName = QFileInfo(c.filePath).fileName();
+    QStringList oldLines;
+    for (const QString& oldName : c.otherVersions) {
+      // ロード済みなら版数が分かるので添える。
+      QString version;
+      for (const Row& row : std::as_const(m_rows)) {
+        if (row.relPath.section(QLatin1Char('/'), 1) == oldName && row.kind == c.kind) {
+          version = row.version;
+        }
+      }
+      oldLines.append(version.isEmpty()
+        ? QStringLiteral("• %1").arg(oldName)
+        : QStringLiteral("• %1 (%2)").arg(oldName, tr("version %1").arg(version)));
+    }
+    const bool replace = confirm(
+      this, tr("Install Plugins"),
+      tr("What appears to be another version of \"%1\" is already installed:")
+          .arg(newName)
+        + QStringLiteral("\n\n") + oldLines.join(QLatin1Char('\n')) + QStringLiteral("\n\n")
+        + tr("Uninstall the installed one and install \"%1\"?\n\nIf you choose No, "
+             "\"%1\" is not installed (only one copy of a plugin can be loaded).")
+            .arg(newName),
+      /*defaultYes=*/true);
+    if (replace) {
+      accepted.append(c);
+    }
+  }
+  candidates = accepted;
+  if (candidates.isEmpty()) {
+    return;  // すべて断られた。何も変えていないので結果表示も不要
   }
 
   // 外部プラグインの読込みが OFF のままだと導入しても動かない。黙って ON には
