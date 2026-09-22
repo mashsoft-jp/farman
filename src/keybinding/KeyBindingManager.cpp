@@ -7,6 +7,8 @@
 #include <QSettings>
 #include <QSet>
 
+#include <utility>
+
 namespace Farman {
 
 KeyBindingManager& KeyBindingManager::instance() {
@@ -170,7 +172,7 @@ QList<QPair<QKeySequence, QString>> defaultBindingList() {
     { QKeySequence(Qt::Key_Question),                  "help.shortcuts" },
     { QKeySequence(Qt::SHIFT | Qt::Key_Question),      "help.shortcuts" },
     { QKeySequence(Qt::SHIFT | Qt::Key_Slash),         "help.shortcuts" },
-    { QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_P),  "help.viewer_plugins" },
+    { QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_P),  "help.plugins" },
   };
 }
 
@@ -253,6 +255,11 @@ void KeyBindingManager::loadFromSettings() {
   // 各ページへ分けたのに合わせ、help.plugins を help.viewer_plugins へ改名。
   // 旧 ID のバインドは同じキーのまま新 ID へ載せ替える (下の移行処理)。
   // help.archive_plugins は既定キー無しで新規追加。
+  // version < 22: 設定に「プラグイン」ページ (導入 / 更新 / アンインストール) が戻った
+  // のに合わせ、help.plugins を「Settings → Plugins を開く」コマンドとして再追加し、
+  // 既定キー Ctrl+Shift+P をこちらに戻す。help.viewer_plugins に Ctrl+Shift+P が
+  // 残っている (= 旧既定のまま) 場合だけ載せ替え、別のキーに変えていれば維持する。
+  // help.viewer_plugins は既定キー無しになる。
   if (version < 13) {
     qDebug() << "KeyBindingManager: migrating bindings from version" << version;
     loadDefaults();
@@ -308,6 +315,23 @@ void KeyBindingManager::loadFromSettings() {
     }
   }
 
+  // version < 22: 旧既定 Ctrl+Shift+P → help.viewer_plugins を help.plugins へ戻す。
+  if (version < 22) {
+    const QKeySequence key(Qt::CTRL | Qt::SHIFT | Qt::Key_P);
+    auto it = m_bindings.find(key);
+    if (it != m_bindings.end()
+        && it.value() == QStringLiteral("help.viewer_plugins")) {
+      it.value() = QStringLiteral("help.plugins");
+      savedCommands.insert(QStringLiteral("help.plugins"));
+      // help.viewer_plugins は既定キー無しなので、他に割り当てが無ければ外れたまま。
+      bool stillBound = false;
+      for (const QString& cmd : std::as_const(m_bindings)) {
+        if (cmd == QStringLiteral("help.viewer_plugins")) stillBound = true;
+      }
+      if (!stillBound) savedCommands.remove(QStringLiteral("help.viewer_plugins"));
+    }
+  }
+
   // 保存データに含まれない新規コマンドについてはデフォルトを補完する。
   // これにより、アプリアップデートで追加されたコマンドが既存ユーザー環境でも
   // 動作する。保存済みキーと衝突する場合は上書きせずスキップ。
@@ -338,7 +362,7 @@ void KeyBindingManager::saveToSettings() const {
 
   QJsonObject root;
   root["bindings"] = bindings;
-  root["version"] = 21;
+  root["version"] = 22;
 
   QJsonDocument doc(root);
   QString jsonData = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));

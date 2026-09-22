@@ -1711,6 +1711,15 @@ void MainWindow::registerCommands() {
   ));
 
   registry.registerCommand(std::make_shared<LambdaCommand>(
+    "help.plugins",
+    tr("Plugins..."),
+    [this]() { showPluginsSettings(); },
+    "help",
+    tr("Open plugin management: install, update, and uninstall external "
+       "plugins.")
+  ));
+
+  registry.registerCommand(std::make_shared<LambdaCommand>(
     "help.viewer_plugins",
     tr("Viewer Plugins..."),
     [this]() { showViewerPluginsSettings(); },
@@ -2025,6 +2034,7 @@ void MainWindow::createMenus() {
   QMenu* helpMenu = bar->addMenu(tr("&Help"));
   // キーバインド一覧 (`?` キー)
   addCmd(helpMenu, "help.shortcuts", tr("Keybinding List"), /*global=*/true);
+  addCmd(helpMenu, "help.plugins",         tr("Plugins..."),         /*global=*/true);
   addCmd(helpMenu, "help.viewer_plugins",  tr("Viewer Plugins..."),  /*global=*/true);
   addCmd(helpMenu, "help.archive_plugins", tr("Archive Plugins..."), /*global=*/true);
   helpMenu->addSeparator();
@@ -2262,7 +2272,7 @@ void MainWindow::createMainToolBar() {
 
   m_toolbar->addSeparator();
   addBtn("help.shortcuts",          tr("Keybindings"),  QStringLiteral("shortcuts.svg"));
-  addBtn("help.viewer_plugins",     tr("Plugins"),      QStringLiteral("plugins.svg"));
+  addBtn("help.plugins",            tr("Plugins"),      QStringLiteral("plugins.svg"));
   addBtn("app.settings",            tr("Settings"),     QStringLiteral("settings.svg"));
 
   // 右端に「ツールバーを閉じる (×)」ボタン。残りスペースを expanding な
@@ -2395,10 +2405,16 @@ void MainWindow::showAboutDialog() {
   }
 }
 
+void MainWindow::showPluginsSettings() {
+  // 外部プラグインの導入 / 更新 / アンインストールは Settings → Plugins ページが
+  // 持つ。Help → Plugins... やツールバーの Plugins ボタンからは、そのページを直接開く。
+  showSettingsDialog(SettingsDialog::Page::Plugins);
+}
+
 void MainWindow::showViewerPluginsSettings() {
   // ビュアープラグイン (ロード状況 / 有効・無効 / 拡張子の紐付け) は
-  // Settings → Viewer ページが持つ。Help → Viewer Plugins... やツールバーの
-  // Plugins ボタンからは、そのページを直接開く。
+  // Settings → Viewer ページが持つ。Help → Viewer Plugins... からは、そのページを
+  // 直接開く。
   showSettingsDialog(SettingsDialog::Page::Viewer);
 }
 

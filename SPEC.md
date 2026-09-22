@@ -1487,10 +1487,13 @@ Binary / Media) は `IViewerPlugin` 実装として登録されており、同�
 - 起動時に `ViewerDispatcher::registerBundledPlugins()` でアプリ同梱の
   dynamic plugin を読み込み、その後 `ViewerDispatcher::loadPlugins(QDir)` で
   ユーザー指定ディレクトリから外部 .dylib / .dll / .so を読み込む。
-- プラグイン関連の設定と診断情報は **Settings → Plugins** ページに集約する
-  (ディレクトリ / 一覧・ロード状況 / 有効・無効 / ビュアーの拡張子紐付け)。
-  Help → Plugins...、メインツールバーの Plugins ボタン、`help.plugins`
-  コマンド (既定: Ctrl+Shift+P) はいずれもこのページを直接開く。
+- 外部プラグインの導入 / 更新 / アンインストールと読み込み設定は **Settings →
+  Plugins** ページ (「プラグインのインストール」節)、ビュアープラグインのロード状況 /
+  有効・無効 / 拡張子紐付けは Settings → Viewer、アーカイブプラグインは Settings →
+  Archive が持つ。Help → Plugins...、メインツールバーの Plugins ボタン、`help.plugins`
+  コマンド (既定: Ctrl+Shift+P) は Settings → Plugins を、Help → Viewer Plugins...
+  (`help.viewer_plugins`、既定キー無し) / Archive Plugins... (`help.archive_plugins`、
+  既定キー無し) はそれぞれのページを直接開く。
 - Plugins Directory: プラグインディレクトリを指定できる。空欄なら
   `Settings::defaultPluginsDirectory()` を使う。
 - Installed Plugins: 種別ごとのタブ (現状は Viewer のみ) に分けて、同梱公式 /

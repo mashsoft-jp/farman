@@ -70,6 +70,7 @@ private:
   void registerCommands();
   void createMenus();
   void showAboutDialog();
+  void showPluginsSettings();
   void showViewerPluginsSettings();
   void showArchivePluginsSettings();
   // About ダイアログの「License Info...」から開く、同梱 OSS のライセンス全文
