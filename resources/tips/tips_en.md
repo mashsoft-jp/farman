@@ -13,6 +13,12 @@ The other pane is used as the destination automatically.
 `Space` selects the file and moves down. `I` inverts the selection, `Ctrl+A`
 selects everything. The total size of the selection is shown in the status bar.
 
+## Jump to a file by its first letter
+
+Hold `Shift` and press a letter to move the cursor to the next file or directory
+starting with that letter. Press the same key again to go to the next match (it wraps
+around to the top). The list itself stays as it is — this only moves the cursor.
+
 ## Narrow down the list
 
 Press `/` to open the quick filter; only files containing what you type stay

@@ -9930,6 +9930,11 @@ Keybindings are not affected.</source>
         <source>Close</source>
         <translation>閉じる</translation>
     </message>
+    <message>
+        <location filename="../src/ui/TipsDialog.cpp" line="107"/>
+        <source>%1 / %2  %3</source>
+        <translation>%1 / %2  %3</translation>
+    </message>
 </context>
 <context>
     <name>Farman::TransferConfirmDialog</name>
