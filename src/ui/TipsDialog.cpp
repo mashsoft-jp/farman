@@ -104,7 +104,7 @@ void TipsDialog::showTip(int index) {
   const Tip& tip = m_tips[index];
   // 番号 / 全体数を添える (ランダム表示なので、どれを見たかの目印にもなる)。
   m_titleLabel->setText(
-    tr("%1 / %2  %3").arg(index + 1).arg(m_tips.size()).arg(tip.title));
+    tr("(%1 / %2)  %3").arg(index + 1).arg(m_tips.size()).arg(tip.title));
   // 生の "<...>" が HTML タグ扱いされて以降の本文が消えるのを防ぐ
   // (MarkdownSanitize.h のコメント参照)。
   m_bodyView->setMarkdown(MarkdownSanitize::neutralizeRawHtml(tip.body));

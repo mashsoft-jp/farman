@@ -9932,8 +9932,12 @@ Keybindings are not affected.</source>
     </message>
     <message>
         <location filename="../src/ui/TipsDialog.cpp" line="107"/>
+        <source>(%1 / %2)  %3</source>
+        <translation>(%1 / %2)  %3</translation>
+    </message>
+    <message>
         <source>%1 / %2  %3</source>
-        <translation>%1 / %2  %3</translation>
+        <translation type="vanished">%1 / %2  %3</translation>
     </message>
 </context>
 <context>

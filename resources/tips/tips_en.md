@@ -3,7 +3,7 @@
 Press `?` to open a list of the shortcuts you can use right now; press it again to
 close. You can change the keys under Settings → Keybindings.
 
-## File operations are single keys
+## Copy, move and delete with one key
 
 `C` copies, `M` moves, `D` deletes, `K` creates a directory, and `R` renames.
 The other pane is used as the destination automatically.
