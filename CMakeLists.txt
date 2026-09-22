@@ -141,6 +141,7 @@ qt_add_executable(farman
   src/ui/ArchiveTab.cpp
   src/ui/UpdateAvailableDialog.cpp
   src/ui/WhatsNewDialog.cpp
+  src/ui/TipsDialog.cpp
   src/ui/KeybindingTab.cpp
   src/ui/AppearanceTab.cpp
   src/ui/BehaviorTab.cpp

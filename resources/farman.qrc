@@ -120,6 +120,14 @@
     を取りに行く。取得できないとき (オフライン / サイト未反映) のフォールバックとして
     ビルド時点の内容を同梱する (PluginCatalog)。
   -->
+  <!--
+    起動時 TIPS の本文 (言語別 Markdown、"## " 見出し 1 つ = TIPS 1 件)。
+    TipsDialog が ":/tips/tips_<lang>.md" を読み込む (en がフォールバック)。
+  -->
+  <qresource prefix="/tips">
+    <file alias="tips_en.md">tips/tips_en.md</file>
+    <file alias="tips_ja.md">tips/tips_ja.md</file>
+  </qresource>
   <qresource prefix="/plugins">
     <file alias="manifest.json">../docs/plugins/manifest.json</file>
   </qresource>

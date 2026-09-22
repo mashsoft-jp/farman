@@ -160,6 +160,13 @@ void GeneralTab::setupUi() {
   windowLayout->addWidget(posGroup);
   startupLayout->addWidget(windowGroup);
 
+  // 起動時 TIPS (SPEC.md「起動時 TIPS」)。TIPS ダイアログ左下のチェックと同じ値。
+  m_showTipsCheck = new QCheckBox(tr("Show tips on startup"), startupGroup);
+  m_showTipsCheck->setToolTip(
+    tr("Show a tip about using farman once a day, on the first launch of the day. "
+       "Tips can also be opened any time from Help → Tips..."));
+  startupLayout->addWidget(m_showTipsCheck);
+
   mainLayout->addWidget(startupGroup);
 
   // ── Log settings ────────────────────────────────
@@ -391,6 +398,7 @@ void GeneralTab::loadSettings() {
 
   m_confirmOnExitCheck->setChecked(settings.confirmOnExit());
   m_singleInstanceCheck->setChecked(settings.singleInstance());
+  m_showTipsCheck->setChecked(settings.showTipsOnStartup());
   m_showToolbarCheck->setChecked(settings.showToolbar());
   for (int i = 0; i < m_languageCombo->count(); ++i) {
     if (m_languageCombo->itemData(i).toInt() == static_cast<int>(settings.language())) {
@@ -472,6 +480,7 @@ void GeneralTab::save() {
   settings.setCustomInitialPath(PaneType::Right, m_rightCustomPathEdit->text().trimmed());
   settings.setConfirmOnExit(m_confirmOnExitCheck->isChecked());
   settings.setSingleInstance(m_singleInstanceCheck->isChecked());
+  settings.setShowTipsOnStartup(m_showTipsCheck->isChecked());
   settings.setShowToolbar(m_showToolbarCheck->isChecked());
   settings.setLanguage(static_cast<LanguageMode>(m_languageCombo->currentData().toInt()));
 

@@ -17,6 +17,7 @@
 #include "../core/UserCommand.h"
 #include "UpdateAvailableDialog.h"
 #include "WhatsNewDialog.h"
+#include "TipsDialog.h"
 #include "../core/UserCommandManager.h"
 #include "../core/PlaceholderExpander.h"
 #include "../keybinding/ICommand.h"
@@ -49,6 +50,7 @@
 #include <QStorageInfo>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include <QDate>
 #include <QTimer>
 #include <QFileInfo>
 #include <QLabel>
@@ -1745,6 +1747,14 @@ void MainWindow::registerCommands() {
     tr("Show what changed in this version of farman.")
   ));
 
+  registry.registerCommand(std::make_shared<LambdaCommand>(
+    "help.tips",
+    tr("Tips..."),
+    [this]() { showTipsDialog(); },
+    "help",
+    tr("Show a tip about using farman.")
+  ));
+
   // Bookmark commands
   registry.registerCommand(std::make_shared<LambdaCommand>(
     "bookmark.toggle",
@@ -2040,6 +2050,7 @@ void MainWindow::createMenus() {
   helpMenu->addSeparator();
   // アップデート内容の再表示 (起動時の自動表示と同じダイアログ)。
   addCmd(helpMenu, "help.whats_new", tr("What's New..."), /*global=*/true);
+  addCmd(helpMenu, "help.tips",      tr("Tips..."),       /*global=*/true);
   // 手動アップデートチェック (macOS の慣習で menuRole = ApplicationSpecific
   // を当てると標準で Help メニューに残る。Help → "Check for Updates..." は
   // Sparkle 系アプリの慣習で違和感ない位置)。
@@ -2486,7 +2497,10 @@ void MainWindow::maybeCheckForUpdatesOnStartup() {
 
 void MainWindow::maybeShowWhatsNew() {
   const QString current = QStringLiteral(QT_STRINGIFY(FARMAN_VERSION));
-  if (Settings::instance().whatsNewShownVersion() == current) return;
+  if (Settings::instance().whatsNewShownVersion() == current) {
+    maybeShowTips(/*whatsNewShown=*/false);
+    return;
+  }
 
   // コンストラクタから呼ばれるので、ウィンドウが表示されてイベントループが
   // 回り始めてからダイアログを出す。自動アップデートチェック (1500ms 遅延)
@@ -2499,7 +2513,30 @@ void MainWindow::maybeShowWhatsNew() {
     auto& s = Settings::instance();
     s.setWhatsNewShownVersion(current);
     s.save();
+    // 同じ起動でダイアログを連続させない。TIPS はその日の次の起動で出る。
+    maybeShowTips(/*whatsNewShown=*/true);
   });
+}
+
+void MainWindow::maybeShowTips(bool whatsNewShown) {
+  if (whatsNewShown) return;
+  const auto& s = Settings::instance();
+  if (!s.showTipsOnStartup()) return;
+  // 1 日 1 回 (ローカル時刻の 0 時区切り)。今日すでに出していれば出さない。
+  const QString today = QDate::currentDate().toString(Qt::ISODate);
+  if (s.tipsLastShownDate() == today) return;
+
+  QTimer::singleShot(0, this, [this]() { showTipsDialog(); });
+}
+
+void MainWindow::showTipsDialog() {
+  TipsDialog dlg(this);
+  if (!dlg.hasTips()) return;  // 同梱リソース欠落時は何もしない
+  // 手動で開いた場合も含めて「今日は出した」ことにする (起動時に重ねて出さない)。
+  auto& s = Settings::instance();
+  s.setTipsLastShownDate(QDate::currentDate().toString(Qt::ISODate));
+  s.save();
+  dlg.exec();
 }
 
 void MainWindow::showWhatsNewDialog() {

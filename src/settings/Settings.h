@@ -389,6 +389,15 @@ public:
   QString whatsNewShownVersion()        const;
   void    setWhatsNewShownVersion(const QString& version);
 
+  // ── 起動時 TIPS (SPEC.md「起動時 TIPS」) ─────────
+  // 起動時に TIPS ダイアログを出すか (既定 ON)。TIPS ダイアログ左下のチェックと同じ値。
+  bool    showTipsOnStartup()           const;
+  void    setShowTipsOnStartup(bool enabled);
+  // 最後に TIPS を表示した日付 ("yyyy-MM-dd"、ローカル時刻)。今日と一致すれば起動時に
+  // 出さない (1 日 1 回)。空 = 未表示。
+  QString tipsLastShownDate()           const;
+  void    setTipsLastShownDate(const QString& date);
+
   // ── 言語設定 ─────────────────────────────
   // UI 言語。変更は次回起動時に反映される (実装上の制限、再起動を促す)。
   LanguageMode language()               const;
@@ -740,6 +749,9 @@ private:
   QString          m_autoUpdateChannel = QStringLiteral("stable");
   // 最後に What's New を表示したバージョン (空 = 未表示)。
   QString          m_whatsNewShownVersion;
+  // 起動時 TIPS を出すか / 最後に出した日付 ("yyyy-MM-dd")。
+  bool             m_showTipsOnStartup = true;
+  QString          m_tipsLastShownDate;
   // ビュアープラグインを置くディレクトリ。空文字 = defaultPluginsDirectory()。
   QString          m_pluginsDirectory;
   // 起動時に登録しない外部ビュアープラグイン ID。

@@ -152,6 +152,8 @@ void Settings::applyDefaults() {
   m_copySeparator = CopySeparator::Comma;
   m_actionStatusSeconds = 4;
   m_singleInstance = true;
+  m_showTipsOnStartup = true;
+  m_tipsLastShownDate.clear();
   m_allowExternalPlugins = false;
   m_pluginsDirectory.clear();
   m_disabledViewerPlugins.clear();
@@ -1008,6 +1010,11 @@ QString Settings::autoUpdateChannel() const { return m_autoUpdateChannel; }
 void Settings::setAutoUpdateChannel(const QString& channel) { m_autoUpdateChannel = channel; }
 QString Settings::whatsNewShownVersion() const { return m_whatsNewShownVersion; }
 void Settings::setWhatsNewShownVersion(const QString& version) { m_whatsNewShownVersion = version; }
+
+bool Settings::showTipsOnStartup() const { return m_showTipsOnStartup; }
+void Settings::setShowTipsOnStartup(bool enabled) { m_showTipsOnStartup = enabled; }
+QString Settings::tipsLastShownDate() const { return m_tipsLastShownDate; }
+void Settings::setTipsLastShownDate(const QString& date) { m_tipsLastShownDate = date; }
 
 QString Settings::pluginsDirectory() const {
   return m_pluginsDirectory;
@@ -2249,6 +2256,8 @@ void Settings::load() {
     m_autoUpdateChannel = au.value("channel").toString(QStringLiteral("stable"));
   }
   m_whatsNewShownVersion = behavior.value("whatsNewShownVersion").toString();
+  m_showTipsOnStartup = behavior.value("showTipsOnStartup").toBool(true);
+  m_tipsLastShownDate = behavior.value("tipsLastShownDate").toString();
   {
     const QString langStr = behavior.value("language").toString("auto");
     if      (langStr == "en") m_language = LanguageMode::English;
@@ -3023,6 +3032,8 @@ void Settings::save() const {
     behavior["autoUpdate"] = au;
   }
   behavior["whatsNewShownVersion"] = m_whatsNewShownVersion;
+  behavior["showTipsOnStartup"] = m_showTipsOnStartup;
+  behavior["tipsLastShownDate"] = m_tipsLastShownDate;
   switch (m_language) {
     case LanguageMode::English:  behavior["language"] = "en";   break;
     case LanguageMode::Japanese: behavior["language"] = "ja";   break;

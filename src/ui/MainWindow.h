@@ -89,6 +89,10 @@ private:
   // What's New ダイアログを無条件に表示する。起動時の自動表示と
   // Help → "What's New..." の手動表示の両方から使う。
   void showWhatsNewDialog();
+  // 起動時 TIPS (SPEC.md「起動時 TIPS」): 1 日 1 回、その日の最初の起動で表示する。
+  // 同じ起動で What's New を出した回はスキップする。
+  void maybeShowTips(bool whatsNewShown);
+  void showTipsDialog();
   // UpdateAvailableDialog で "Update Now" が押されたあとのダウンロード +
   // インストール起動。完了で QApplication::quit() してインストール側に
   // 制御を移す。

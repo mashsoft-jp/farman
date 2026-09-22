@@ -64,7 +64,7 @@ QList<GroupSpec> groupTemplate() {
         QStringLiteral("history.show"), QStringLiteral("user.cmd.terminal"),
         QStringLiteral("user.cmd.editor"), QStringLiteral("app.settings"),
         QStringLiteral("help.shortcuts"), QStringLiteral("help.plugins"),
-        QStringLiteral("app.quit") } },
+        QStringLiteral("help.tips"), QStringLiteral("app.quit") } },
     { "general",
       QCoreApplication::translate("CommandLayout", "Other"),
       {},  // どのグループにも属さないカテゴリの受け皿
