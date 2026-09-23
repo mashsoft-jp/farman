@@ -3,7 +3,7 @@
 Press {key:help.shortcuts} to open a list of the shortcuts you can use right now; press it again to
 close. You can change the keys under Settings → Keybindings.
 
-## Copy, move and delete with one key
+## Shortcuts for copy, move and delete
 
 {key:file.copy} copies, {key:file.move} moves, {key:file.delete} deletes, {key:file.mkdir} creates
 a directory, and {key:file.rename} renames.

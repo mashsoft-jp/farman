@@ -3,7 +3,7 @@
 {key:help.shortcuts} キーを押すと、いま使えるショートカットの一覧が開きます。もう一度押すと閉じます。
 キーは 設定 → キーバインド で自由に変えられます。
 
-## コピー・移動・削除はキー 1 つで
+## コピー・移動・削除のショートカット
 
 コピーは {key:file.copy}、移動は {key:file.move}、削除は {key:file.delete}、ディレクトリ作成は {key:file.mkdir}、
 リネームは {key:file.rename}。
