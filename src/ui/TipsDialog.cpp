@@ -55,12 +55,13 @@ TipsDialog::TipsDialog(QWidget* parent)
   bottom->addStretch(1);
 
   // 「次の TIPS」は Tab でフォーカスを当てて Enter でも押せるようにするが、既定
-  // ボタンにはしない (Enter の既定は「閉じる」)。
+  // ボタンにはしない (Enter の既定は「閉じる」)。開いたときの 1 件はランダムだが、
+  // こちらは並び順に次へ進む (最後の次は 1 に戻る)。
   m_nextButton = new QPushButton(tr("Next Tip"), this);
   applyAltShortcut(m_nextButton, Qt::Key_N);
   m_nextButton->setAutoDefault(false);
   m_nextButton->setEnabled(m_tips.size() > 1);
-  connect(m_nextButton, &QPushButton::clicked, this, &TipsDialog::showRandomTip);
+  connect(m_nextButton, &QPushButton::clicked, this, &TipsDialog::showNextTip);
   bottom->addWidget(m_nextButton);
 
   m_closeButton = new QPushButton(tr("Close"), this);
@@ -86,23 +87,19 @@ TipsDialog::TipsDialog(QWidget* parent)
 
 void TipsDialog::showRandomTip() {
   if (m_tips.isEmpty()) return;
-  int index = m_current;
-  if (m_tips.size() == 1) {
-    index = 0;
-  } else {
-    // 直前と同じ TIPS は連続させない。
-    while (index == m_current) {
-      index = static_cast<int>(QRandomGenerator::global()->bounded(m_tips.size()));
-    }
-  }
-  showTip(index);
+  showTip(static_cast<int>(QRandomGenerator::global()->bounded(m_tips.size())));
+}
+
+void TipsDialog::showNextTip() {
+  if (m_tips.isEmpty()) return;
+  showTip((m_current + 1) % m_tips.size());
 }
 
 void TipsDialog::showTip(int index) {
   if (index < 0 || index >= m_tips.size()) return;
   m_current = index;
   const Tip& tip = m_tips[index];
-  // 番号 / 全体数を添える (ランダム表示なので、どれを見たかの目印にもなる)。
+  // 番号 / 全体数を添える (最初の 1 件はランダムなので、どこから始まったかの目印にもなる)。
   m_titleLabel->setText(
     tr("(%1 / %2)  %3").arg(index + 1).arg(m_tips.size()).arg(tip.title));
   // 生の "<...>" が HTML タグ扱いされて以降の本文が消えるのを防ぐ

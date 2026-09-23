@@ -9921,17 +9921,17 @@ Keybindings are not affected.</source>
         <translation>起動時に TIPS を表示する</translation>
     </message>
     <message>
-        <location filename="../src/ui/TipsDialog.cpp" line="59"/>
+        <location filename="../src/ui/TipsDialog.cpp" line="60"/>
         <source>Next Tip</source>
         <translation>次の TIPS</translation>
     </message>
     <message>
-        <location filename="../src/ui/TipsDialog.cpp" line="66"/>
+        <location filename="../src/ui/TipsDialog.cpp" line="67"/>
         <source>Close</source>
         <translation>閉じる</translation>
     </message>
     <message>
-        <location filename="../src/ui/TipsDialog.cpp" line="107"/>
+        <location filename="../src/ui/TipsDialog.cpp" line="104"/>
         <source>(%1 / %2)  %3</source>
         <translation>(%1 / %2)  %3</translation>
     </message>

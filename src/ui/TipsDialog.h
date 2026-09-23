@@ -14,8 +14,8 @@ namespace Farman {
 // 起動時 TIPS のダイアログ (仕様は SPEC.md「起動時 TIPS」)。
 //
 // 本文は言語別 Markdown をリソースに同梱 (":/tips/tips_<lang>.md")。"## " 見出し
-// 1 つ = TIPS 1 件で、見出しがタイトル、続く本文が内容。表示する TIPS はランダムに
-// 選び、「次の TIPS」でも直前と同じものは連続させない。
+// 1 つ = TIPS 1 件で、見出しがタイトル、続く本文が内容。開いたとき (起動時 / ヘルプ)
+// に出す 1 件はランダムに選び、「次の TIPS」は並び順に次へ進む (最後の次は 1 に戻る)。
 //
 // 左下の「起動時に TIPS を表示する」は Settings::showTipsOnStartup と同じ値で、
 // 切り替えるとその場で保存する。起動時に出すかどうかの判断 (1 日 1 回) は
@@ -38,7 +38,8 @@ public:
   static QList<Tip> parseTips(const QString& markdown);
 
 private:
-  void showRandomTip();
+  void showRandomTip();   // 開いたときの 1 件
+  void showNextTip();     // 「次の TIPS」: 並び順で次、最後なら 1 へ
   void showTip(int index);
 
   QList<Tip>    m_tips;
