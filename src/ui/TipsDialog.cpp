@@ -89,10 +89,17 @@ TipsDialog::TipsDialog(QWidget* parent)
   bottom->addWidget(m_showOnStartupCheck);
   bottom->addStretch(1);
 
-  // 「次の TIPS」は Tab でフォーカスを当てて Enter でも押せるようにするが、既定
+  // 「前へ」「次へ」は Tab でフォーカスを当てて Enter でも押せるようにするが、既定
   // ボタンにはしない (Enter の既定は「閉じる」)。開いたときの 1 件はランダムだが、
-  // こちらは並び順に次へ進む (最後の次は 1 に戻る)。
-  m_nextButton = new QPushButton(tr("Next Tip"), this);
+  // こちらは並び順に前後へ進む (最後の次は 1 に、1 の前は最後に回る)。
+  m_prevButton = new QPushButton(tr("Previous"), this);
+  applyAltShortcut(m_prevButton, Qt::Key_P);
+  m_prevButton->setAutoDefault(false);
+  m_prevButton->setEnabled(m_tips.size() > 1);
+  connect(m_prevButton, &QPushButton::clicked, this, &TipsDialog::showPreviousTip);
+  bottom->addWidget(m_prevButton);
+
+  m_nextButton = new QPushButton(tr("Next"), this);
   applyAltShortcut(m_nextButton, Qt::Key_N);
   m_nextButton->setAutoDefault(false);
   m_nextButton->setEnabled(m_tips.size() > 1);
@@ -108,12 +115,14 @@ TipsDialog::TipsDialog(QWidget* parent)
 
   // ボタンにフォーカスがあるときの Enter は、そのボタンを押す (既定ボタンではなく)。
   auto* enterFilter = new EnterClickFilter(this);
+  enterFilter->installOnButtonsIn(m_prevButton);
   enterFilter->installOnButtonsIn(m_nextButton);
   enterFilter->installOnButtonsIn(m_closeButton);
   enterFilter->installOnButtonsIn(m_showOnStartupCheck);
 
   QWidget::setTabOrder(m_bodyView, m_showOnStartupCheck);
-  QWidget::setTabOrder(m_showOnStartupCheck, m_nextButton);
+  QWidget::setTabOrder(m_showOnStartupCheck, m_prevButton);
+  QWidget::setTabOrder(m_prevButton, m_nextButton);
   QWidget::setTabOrder(m_nextButton, m_closeButton);
   m_closeButton->setFocus();
 
@@ -123,6 +132,11 @@ TipsDialog::TipsDialog(QWidget* parent)
 void TipsDialog::showRandomTip() {
   if (m_tips.isEmpty()) return;
   showTip(static_cast<int>(QRandomGenerator::global()->bounded(m_tips.size())));
+}
+
+void TipsDialog::showPreviousTip() {
+  if (m_tips.isEmpty()) return;
+  showTip((m_current - 1 + m_tips.size()) % m_tips.size());
 }
 
 void TipsDialog::showNextTip() {

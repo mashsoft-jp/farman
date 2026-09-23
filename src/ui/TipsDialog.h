@@ -15,7 +15,7 @@ namespace Farman {
 //
 // 本文は言語別 Markdown をリソースに同梱 (":/tips/tips_<lang>.md")。"## " 見出し
 // 1 つ = TIPS 1 件で、見出しがタイトル、続く本文が内容。開いたとき (起動時 / ヘルプ)
-// に出す 1 件はランダムに選び、「次の TIPS」は並び順に次へ進む (最後の次は 1 に戻る)。
+// に出す 1 件はランダムに選び、「前へ」「次へ」は並び順に前後へ進む (端では反対側に回る)。
 //
 // 左下の「起動時に TIPS を表示する」は Settings::showTipsOnStartup と同じ値で、
 // 切り替えるとその場で保存する。起動時に出すかどうかの判断 (1 日 1 回) は
@@ -41,7 +41,8 @@ public:
 
 private:
   void showRandomTip();   // 開いたときの 1 件
-  void showNextTip();     // 「次の TIPS」: 並び順で次、最後なら 1 へ
+  void showPreviousTip(); // 「前へ」: 並び順で前、1 なら最後へ
+  void showNextTip();     // 「次へ」: 並び順で次、最後なら 1 へ
   void showTip(int index);
 
   QList<Tip>    m_tips;
@@ -49,6 +50,7 @@ private:
   QLabel*       m_titleLabel = nullptr;
   QTextBrowser* m_bodyView = nullptr;
   QCheckBox*    m_showOnStartupCheck = nullptr;
+  QPushButton*  m_prevButton = nullptr;
   QPushButton*  m_nextButton = nullptr;
   QPushButton*  m_closeButton = nullptr;
 };

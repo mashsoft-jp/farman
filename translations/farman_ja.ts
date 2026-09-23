@@ -9922,8 +9922,13 @@ Keybindings are not affected.</source>
     </message>
     <message>
         <location filename="../src/ui/TipsDialog.cpp" line="63"/>
-        <source>Next Tip</source>
-        <translation>次の TIPS</translation>
+        <source>Previous</source>
+        <translation>前へ</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/TipsDialog.cpp" line="63"/>
+        <source>Next</source>
+        <translation>次へ</translation>
     </message>
     <message>
         <location filename="../src/ui/TipsDialog.cpp" line="70"/>
