@@ -16,14 +16,14 @@ selection, {key:select.all} selects everything. The total size of the selection 
 
 ## Jump to a file by its first letter
 
-Hold `Shift` and press a letter to move the cursor to the next file or directory
+Hold **`Shift`** and press a letter to move the cursor to the next file or directory
 starting with that letter. Press the same key again to go to the next match (it wraps
 around to the top). The list itself stays as it is — this only moves the cursor.
 
 ## Narrow down the list
 
 Press {key:view.quick_filter} to open the quick filter; only files containing what you type stay
-visible. `Esc` clears it. Sorting and detailed filters are under {key:pane.sort_filter}.
+visible. **`Esc`** clears it. Sorting and detailed filters are under {key:pane.sort_filter}.
 
 ## Bring both panes to the same place
 

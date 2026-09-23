@@ -125,9 +125,10 @@ QString TipsDialog::expandKeys(const QString& markdown) {
     // 複数のキーが割り当てられていても、TIPS では先頭の 1 つだけを見せる
     // (help.shortcuts の "?" / "Shift+?" / "Shift+/" のような同義の重複を並べない)。
     const QString first = keysToText(keys).section(QStringLiteral(", "), 0, 0);
+    // キーはコード表記 + 太字にして、本文の中で目に付くようにする。
     const QString text = (keys.isEmpty() || first == QStringLiteral("\u2014"))
       ? tr("(not assigned)")
-      : QStringLiteral("`") + first + QStringLiteral("`");
+      : QStringLiteral("**`") + first + QStringLiteral("`**");
     out.replace(m.capturedStart(0), m.capturedLength(0), text);
     from = m.capturedStart(0) + text.size();
   }
