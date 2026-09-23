@@ -9428,37 +9428,37 @@ Keybindings are not affected.</source>
         <translation type="vanished">ショートカット一覧</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="54"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="24"/>
         <source>Keybinding List</source>
         <translation>キーバインド一覧</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="72"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="42"/>
         <source>Filter (key, command name, or id)</source>
         <translation>絞り込み (キー / コマンド名 / ID)</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="92"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="62"/>
         <source>Key</source>
         <translation>キー</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="92"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="62"/>
         <source>Command</source>
         <translation>コマンド</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="187"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="157"/>
         <source>Tab / Shift+Tab</source>
         <translation>Tab / Shift+Tab</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="188"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="158"/>
         <source>Cycle focus (★ → address → 📁 → list → mode)</source>
         <translation>フォーカス循環（★→アドレス→📁→リスト→モード）</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="189"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="159"/>
         <source>Cycles focus between the pane controls; wraps to the opposite pane / preview at the ends. This key is fixed and cannot be rebound.</source>
         <translation>ペイン内のコントロール間でフォーカスを循環します（端で対向ペイン / プレビューへ）。このキーは固定で、変更はできません。</translation>
     </message>
@@ -9467,17 +9467,17 @@ Keybindings are not affected.</source>
         <translation type="vanished">組み込み</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="193"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="163"/>
         <source>Shift+letter</source>
         <translation>Shift+文字</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="194"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="164"/>
         <source>Jump to the next file starting with the typed letter</source>
         <translation>押した文字で始まる次のファイルへジャンプ</translation>
     </message>
     <message>
-        <location filename="../src/ui/ShortcutListDialog.cpp" line="195"/>
+        <location filename="../src/ui/ShortcutListDialog.cpp" line="165"/>
         <source>Moves the cursor to the next file or directory whose name starts with the typed letter, wrapping around to the top. Press again to cycle through matches. This key is fixed and cannot be rebound.</source>
         <translation>押した文字を頭文字とする次のファイル / ディレクトリへカーソルを移動します (末尾まで見つからなければ先頭へ循環)。続けて押すと次のマッチへ進みます。このキーは固定で、変更はできません。</translation>
     </message>
@@ -9911,29 +9911,34 @@ Keybindings are not affected.</source>
 <context>
     <name>Farman::TipsDialog</name>
     <message>
-        <location filename="../src/ui/TipsDialog.cpp" line="22"/>
+        <location filename="../src/ui/TipsDialog.cpp" line="25"/>
         <source>Tips</source>
         <translation>TIPS</translation>
     </message>
     <message>
-        <location filename="../src/ui/TipsDialog.cpp" line="45"/>
+        <location filename="../src/ui/TipsDialog.cpp" line="48"/>
         <source>Show tips on startup</source>
         <translation>起動時に TIPS を表示する</translation>
     </message>
     <message>
-        <location filename="../src/ui/TipsDialog.cpp" line="60"/>
+        <location filename="../src/ui/TipsDialog.cpp" line="63"/>
         <source>Next Tip</source>
         <translation>次の TIPS</translation>
     </message>
     <message>
-        <location filename="../src/ui/TipsDialog.cpp" line="67"/>
+        <location filename="../src/ui/TipsDialog.cpp" line="70"/>
         <source>Close</source>
         <translation>閉じる</translation>
     </message>
     <message>
-        <location filename="../src/ui/TipsDialog.cpp" line="104"/>
+        <location filename="../src/ui/TipsDialog.cpp" line="107"/>
         <source>(%1 / %2)  %3</source>
         <translation>(%1 / %2)  %3</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/TipsDialog.cpp" line="129"/>
+        <source>(not assigned)</source>
+        <translation>(未割り当て)</translation>
     </message>
     <message>
         <source>%1 / %2  %3</source>

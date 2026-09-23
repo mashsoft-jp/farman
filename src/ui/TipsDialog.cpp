@@ -1,8 +1,10 @@
 #include "TipsDialog.h"
 
+#include "keybinding/KeyBindingManager.h"
 #include "settings/Settings.h"
 #include "utils/Dialogs.h"
 #include "utils/EnterClickFilter.h"
+#include "utils/KeyText.h"
 #include "utils/MarkdownSanitize.h"
 
 #include <QCheckBox>
@@ -12,6 +14,7 @@
 #include <QLocale>
 #include <QPushButton>
 #include <QRandomGenerator>
+#include <QRegularExpression>
 #include <QTextBrowser>
 #include <QVBoxLayout>
 
@@ -104,7 +107,31 @@ void TipsDialog::showTip(int index) {
     tr("(%1 / %2)  %3").arg(index + 1).arg(m_tips.size()).arg(tip.title));
   // 生の "<...>" が HTML タグ扱いされて以降の本文が消えるのを防ぐ
   // (MarkdownSanitize.h のコメント参照)。
-  m_bodyView->setMarkdown(MarkdownSanitize::neutralizeRawHtml(tip.body));
+  m_bodyView->setMarkdown(MarkdownSanitize::neutralizeRawHtml(expandKeys(tip.body)));
+}
+
+QString TipsDialog::expandKeys(const QString& markdown) {
+  // "{key:file.copy}" を、そのコマンドに今割り当てられているキー ("`C`") に置き換える。
+  // ユーザーがキーバインドを変えていても TIPS の説明が実際のキーと一致するようにする。
+  // 割り当てが無ければ「(未割り当て)」。
+  static const QRegularExpression placeholder(
+    QStringLiteral("\\{key:([A-Za-z0-9_.]+)\\}"));
+  QString out = markdown;
+  QRegularExpressionMatch m;
+  int from = 0;
+  while ((m = placeholder.match(out, from)).hasMatch()) {
+    const QList<QKeySequence> keys =
+      KeyBindingManager::instance().keysForCommand(m.captured(1));
+    // 複数のキーが割り当てられていても、TIPS では先頭の 1 つだけを見せる
+    // (help.shortcuts の "?" / "Shift+?" / "Shift+/" のような同義の重複を並べない)。
+    const QString first = keysToText(keys).section(QStringLiteral(", "), 0, 0);
+    const QString text = (keys.isEmpty() || first == QStringLiteral("\u2014"))
+      ? tr("(not assigned)")
+      : QStringLiteral("`") + first + QStringLiteral("`");
+    out.replace(m.capturedStart(0), m.capturedLength(0), text);
+    from = m.capturedStart(0) + text.size();
+  }
+  return out;
 }
 
 QList<TipsDialog::Tip> TipsDialog::loadBundledTips() {

@@ -36,6 +36,8 @@ public:
   };
   static QList<Tip> loadBundledTips();
   static QList<Tip> parseTips(const QString& markdown);
+  // 本文中の "{key:<command id>}" を、そのコマンドの現在のキー表記に置き換える。
+  static QString expandKeys(const QString& markdown);
 
 private:
   void showRandomTip();   // 開いたときの 1 件
