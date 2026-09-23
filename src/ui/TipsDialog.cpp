@@ -15,10 +15,38 @@
 #include <QPushButton>
 #include <QRandomGenerator>
 #include <QRegularExpression>
+#include <QTextBlock>
 #include <QTextBrowser>
+#include <QTextCursor>
+#include <QTextDocument>
 #include <QVBoxLayout>
 
 namespace Farman {
+
+namespace {
+
+// Qt の Markdown 読み込みは、コード表記を "**...**" で囲んでも太字を落とす
+// (コード表記の文字書式で太字が上書きされる)。TIPS 本文のコード表記はキーだけなので、
+// 読み込んだあとで等幅の部分に太字と色を付け直し、本文の中でキーが目に付くようにする。
+// 色は青系 (TIPS 本文にリンクは無いので紛れない) で、背景の明暗に合わせて選ぶ。
+void emphasizeKeys(QTextDocument* doc, const QColor& background) {
+  QTextCursor cursor(doc);
+  QTextCharFormat emphasis;
+  emphasis.setFontWeight(QFont::Bold);
+  emphasis.setForeground(background.lightness() < 128 ? QColor(0x6C, 0xB4, 0xFF)
+                                                       : QColor(0x0A, 0x58, 0xCA));
+  for (QTextBlock block = doc->begin(); block.isValid(); block = block.next()) {
+    for (auto it = block.begin(); !it.atEnd(); ++it) {
+      const QTextFragment fragment = it.fragment();
+      if (!fragment.isValid() || !fragment.charFormat().fontFixedPitch()) continue;
+      cursor.setPosition(fragment.position());
+      cursor.setPosition(fragment.position() + fragment.length(), QTextCursor::KeepAnchor);
+      cursor.mergeCharFormat(emphasis);
+    }
+  }
+}
+
+}  // namespace
 
 TipsDialog::TipsDialog(QWidget* parent)
   : QDialog(parent) {
@@ -31,7 +59,7 @@ TipsDialog::TipsDialog(QWidget* parent)
 
   m_titleLabel = new QLabel(this);
   QFont titleFont = m_titleLabel->font();
-  titleFont.setPointSizeF(titleFont.pointSizeF() * 1.25);
+  titleFont.setPointSizeF(titleFont.pointSizeF() * 1.4);
   titleFont.setBold(true);
   m_titleLabel->setFont(titleFont);
   m_titleLabel->setWordWrap(true);
@@ -40,6 +68,10 @@ TipsDialog::TipsDialog(QWidget* parent)
   m_bodyView = new QTextBrowser(this);
   m_bodyView->setOpenExternalLinks(true);
   m_bodyView->setFrameShape(QFrame::NoFrame);
+  // 本文 (特に太字のキー) を読みやすくするため、大きめにする (見出しの 1.4 倍よりは小さく)。
+  QFont bodyFont = m_bodyView->font();
+  bodyFont.setPointSizeF(bodyFont.pointSizeF() * 1.25);
+  m_bodyView->setFont(bodyFont);
   outer->addWidget(m_bodyView, /*stretch=*/1);
 
   auto* bottom = new QHBoxLayout();
@@ -108,6 +140,7 @@ void TipsDialog::showTip(int index) {
   // 生の "<...>" が HTML タグ扱いされて以降の本文が消えるのを防ぐ
   // (MarkdownSanitize.h のコメント参照)。
   m_bodyView->setMarkdown(MarkdownSanitize::neutralizeRawHtml(expandKeys(tip.body)));
+  emphasizeKeys(m_bodyView->document(), m_bodyView->palette().color(QPalette::Base));
 }
 
 QString TipsDialog::expandKeys(const QString& markdown) {
@@ -125,7 +158,8 @@ QString TipsDialog::expandKeys(const QString& markdown) {
     // 複数のキーが割り当てられていても、TIPS では先頭の 1 つだけを見せる
     // (help.shortcuts の "?" / "Shift+?" / "Shift+/" のような同義の重複を並べない)。
     const QString first = keysToText(keys).section(QStringLiteral(", "), 0, 0);
-    // キーはコード表記 + 太字にして、本文の中で目に付くようにする。
+    // キーはコード表記 + 太字にして、本文の中で目に付くようにする
+    // (Qt の読み込みでは太字が落ちるので、表示時に emphasizeKeys で付け直し、色も付ける)。
     const QString text = (keys.isEmpty() || first == QStringLiteral("\u2014"))
       ? tr("(not assigned)")
       : QStringLiteral("**`") + first + QStringLiteral("`**");
