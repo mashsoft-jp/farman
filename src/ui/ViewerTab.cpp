@@ -5,6 +5,7 @@
 #include "viewer/IViewerPlugin.h"
 #include "viewer/ViewerDispatcher.h"
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QEvent>
@@ -38,6 +39,25 @@ ViewerTab::ViewerTab(QWidget* parent)
 
 void ViewerTab::setupUi() {
   auto* mainLayout = new QVBoxLayout(this);
+
+  // ─── Viewer Display グループ (「2. 動作」タブから移設) ───
+  // ビュアーを本体内に表示 (Inline) するか別ウィンドウ (External) で開くか。
+  QGroupBox* viewerGroup = new QGroupBox(tr("Viewer Display"), this);
+  QFormLayout* viewerForm = new QFormLayout(viewerGroup);
+  viewerForm->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+
+  m_viewerModeCombo = new QComboBox(this);
+  m_viewerModeCombo->addItem(tr("Inline (in main window)"),
+                             static_cast<int>(ViewerMode::Inline));
+  m_viewerModeCombo->addItem(tr("External (separate windows)"),
+                             static_cast<int>(ViewerMode::External));
+  m_viewerModeCombo->setToolTip(tr(
+    "Inline: show the viewer inside the main window (Enter / Esc returns to "
+    "the file list).\n"
+    "External: open a separate window per file (multiple files can be open "
+    "side by side, can be moved to another display)."));
+  viewerForm->addRow(tr("Display mode:"), m_viewerModeCombo);
+  mainLayout->addWidget(viewerGroup);
 
   // ─── プラグイン一覧 (旧 Help → Plugins... ダイアログ) ───
   auto* listGroup = new QGroupBox(tr("Installed Plugins"), this);
@@ -176,6 +196,15 @@ bool ViewerTab::eventFilter(QObject* watched, QEvent* event) {
 }
 
 void ViewerTab::loadSettings() {
+  // Viewer display mode (Inline / External)
+  const auto viewerMode = Settings::instance().viewerMode();
+  for (int i = 0; i < m_viewerModeCombo->count(); ++i) {
+    if (m_viewerModeCombo->itemData(i).toInt() == static_cast<int>(viewerMode)) {
+      m_viewerModeCombo->setCurrentIndex(i);
+      break;
+    }
+  }
+
   m_pluginRecords = ViewerDispatcher::instance().pluginRecords();
   // 優先度 (0 が最優先) の昇順に並べる。外部 (0〜9999) → PDF/CSV/Markdown
   // (10000) → コア (99996〜99999) の順になり、コア (固定) ビュアーが一番下に
@@ -693,6 +722,10 @@ void ViewerTab::loadExtensionState() {
 void ViewerTab::save() {
   auto& settings = Settings::instance();
   m_restartRequiredOnSave = false;
+
+  // Viewer display mode (Inline / External)
+  settings.setViewerMode(
+    static_cast<ViewerMode>(m_viewerModeCombo->currentData().toInt()));
 
   // プラグインの有効 / 無効 (次回起動から有効)。編集は一覧のチェックと詳細
   // ダイアログで行い、ここでは一覧に出ているプラグインの分だけ書き換える。

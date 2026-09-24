@@ -1995,26 +1995,9 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>ビュアー表示</translation>
     </message>
     <message>
-        <location filename="../src/ui/BehaviorTab.cpp" line="489"/>
-        <source>Inline (in main window)</source>
-        <translation>Inline (メインウィンドウ内)</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/BehaviorTab.cpp" line="491"/>
-        <source>External (separate windows)</source>
-        <translation>External (独立ウィンドウ)</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/BehaviorTab.cpp" line="493"/>
-        <source>Inline: show the viewer inside the main window (Enter / Esc returns to the file list).
-External: open a separate window per file (multiple files can be open side by side, can be moved to another display).</source>
-        <translation>Inline: メインウィンドウ内のビュアーパネルで表示 (Enter / Esc でファイルリストへ戻る)。
-External: ファイル毎に独立したウィンドウを開く (複数並べる / 別ディスプレイへ移動可)。</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/BehaviorTab.cpp" line="498"/>
-        <source>Display mode:</source>
-        <translation>表示モード:</translation>
+        <location filename="../src/ui/BehaviorTab.cpp" line="490"/>
+        <source>The display mode setting has moved to &quot;%1&quot;.</source>
+        <translation>表示モードの設定は「%1」に移動しました。</translation>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="296"/>
@@ -10515,6 +10498,33 @@ Keybindings are not affected.</source>
         <location filename="../src/ui/ViewerTab.cpp" line="508"/>
         <source>Settings</source>
         <translation>設定</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ViewerTab.cpp" line="45"/>
+        <source>Viewer Display</source>
+        <translation>ビュアー表示</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ViewerTab.cpp" line="489"/>
+        <source>Inline (in main window)</source>
+        <translation>Inline (メインウィンドウ内)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ViewerTab.cpp" line="491"/>
+        <source>External (separate windows)</source>
+        <translation>External (独立ウィンドウ)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ViewerTab.cpp" line="493"/>
+        <source>Inline: show the viewer inside the main window (Enter / Esc returns to the file list).
+External: open a separate window per file (multiple files can be open side by side, can be moved to another display).</source>
+        <translation>Inline: メインウィンドウ内のビュアーパネルで表示 (Enter / Esc でファイルリストへ戻る)。
+External: ファイル毎に独立したウィンドウを開く (複数並べる / 別ディスプレイへ移動可)。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ViewerTab.cpp" line="498"/>
+        <source>Display mode:</source>
+        <translation>表示モード:</translation>
     </message>
 </context>
 <context>

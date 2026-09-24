@@ -9,6 +9,7 @@
 #include <QWidget>
 
 class QCheckBox;
+class QComboBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
@@ -20,6 +21,7 @@ namespace Farman {
 class IViewerPlugin;
 
 // 設定 → Viewer ページ。ビュアープラグインに関する診断情報と設定を集約する:
+//   - ビュアーの表示モード (本体内 / 別ウィンドウ)
 //   - インストール済みビュアープラグインの一覧 (ロード状況 + 有効 / 無効)
 //   - 各行の「詳細...」ダイアログで区分・プラグイン ID・パス・エラー全文を確認し、
 //     拡張子の紐付けと、プラグインが持つ設定ページもそこで編集する
@@ -84,6 +86,8 @@ private:
   QStringList defaultExtensionsForPlugin(IViewerPlugin* plugin) const;
   QStringList defaultExtensionsFromList(const QStringList& extensions) const;
 
+  // ビュアーの表示モード (Inline / External)。
+  QComboBox*    m_viewerModeCombo = nullptr;
   // 一覧の全行をまとめて有効 / 無効にする三状態チェック。
   QCheckBox*    m_allCheck    = nullptr;
   QTableWidget* m_pluginTable = nullptr;

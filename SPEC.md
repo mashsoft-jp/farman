@@ -1390,10 +1390,11 @@ External ウィンドウは `(Text, external)` のように `, external` を付�
 
 切替経路:
 
-- **Settings → Behavior カテゴリ → Viewer Display グループ → Display mode**
+- **Settings → 5. Viewer カテゴリ → Viewer Display グループ → Display mode**
   (永続設定。`settings.json` の `behavior.viewerMode` に `inline` /
-  `external` で保存)。表示モードのみだった旧「Viewers」カテゴリは廃止し、
-  この設定は Behavior カテゴリへ移設した (拡張子の対応付け等は Plugins カテゴリ)。
+  `external` で保存)。v1.1.0 で Behavior カテゴリから Viewer カテゴリへ移した
+  (ビュアーの設定を 1 か所にまとめるため)。Behavior カテゴリの同じ位置には
+  「表示モードの設定は「5. ビュアー」に移動しました」という案内だけを残す。
 - **View メニュー → External Viewer Window** (チェック付きトグル項目)。
   選択する都度 Settings に書き込み、即時反映される。`Settings::save()` まで
   含めて完結するので、再起動後も状態が残る。
@@ -2290,8 +2291,8 @@ List Display へ移動済み。ビュアー固有の設定は Viewers カテゴ�
 #### 4. Viewers カテゴリ (廃止)
 
 独立した「Viewers」カテゴリは廃止した。表示モード (Inline / External) は
-**Behavior カテゴリ → Viewer Display** に移し、拡張子の対応付けは **Plugins**
-カテゴリへ集約済み。以下は各ビュアー設定項目の仕様 (配置先タブは上記に移行)。
+現在 **5. Viewer カテゴリ → Viewer Display** にある (v1.1.0 で Behavior カテゴリから
+移した)。拡張子の対応付けは **Plugins** カテゴリへ集約済み。以下は各ビュアー設定項目の仕様 (配置先タブは上記に移行)。
 
 3 ビュアー (Text Viewer / Image Viewer / Binary Viewer) の設定項目:
 各ビュアーの主要項目は横並び (左寄せ) で配置する。
