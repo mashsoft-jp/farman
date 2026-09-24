@@ -4,6 +4,7 @@
 #include "utils/Dialogs.h"
 #include <QDateTime>
 #include <QVBoxLayout>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -266,9 +267,13 @@ void GeneralTab::setupUi() {
   // Log の下: Confirm on exit / Language
   // (Tab 順を「ログ → 終了時確認 → 言語」にするため、Confirm/Language は
   //  ログのウィジェットを構築し終えてからここで生成する)
+  //
+  // チェックは 2 列に並べる: 1 行目はアプリの起動・終了に関わる「終了時に確認」と
+  // 「二重起動を禁止する (再起動後に有効)」、2 行目に「ツールバーを表示」。
+  // 3 列だと列幅 (長い「二重起動…」に揃う) がはみ出し、訳が長い言語ではさらに
+  // 足りなくなるため 2 列にしている。Tab 順は見た目の順 (生成順) になる。
   m_confirmOnExitCheck = new QCheckBox(tr("Confirm on exit"), this);
   m_confirmOnExitCheck->setToolTip(tr("Show confirmation dialog when closing the application"));
-  mainLayout->addWidget(m_confirmOnExitCheck);
 
   m_singleInstanceCheck = new QCheckBox(
     tr("Prevent multiple instances (takes effect on next launch)"), this);
@@ -276,13 +281,21 @@ void GeneralTab::setupUi() {
     tr("If on, launching farman while another instance is already running "
        "will bring the existing window to the front instead of starting a "
        "new process. Off allows multiple parallel instances."));
-  mainLayout->addWidget(m_singleInstanceCheck);
 
   m_showToolbarCheck = new QCheckBox(tr("Show toolbar"), this);
   m_showToolbarCheck->setToolTip(
     tr("Show the icon toolbar under the menu bar. Can also be toggled from "
        "the View menu."));
-  mainLayout->addWidget(m_showToolbarCheck);
+
+  auto* optionsGrid = new QGridLayout();
+  optionsGrid->setContentsMargins(0, 0, 0, 0);
+  optionsGrid->setHorizontalSpacing(24);
+  optionsGrid->addWidget(m_confirmOnExitCheck, 0, 0);
+  optionsGrid->addWidget(m_singleInstanceCheck, 0, 1);
+  optionsGrid->addWidget(m_showToolbarCheck, 1, 0);
+  // 2 列目の右は空けて左寄せにする (列が画面幅いっぱいに広がらないように)。
+  optionsGrid->setColumnStretch(2, 1);
+  mainLayout->addLayout(optionsGrid);
 
   m_languageCombo = new QComboBox(this);
   m_languageCombo->addItem(tr("Auto (System)"), static_cast<int>(LanguageMode::Auto));

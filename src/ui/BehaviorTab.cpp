@@ -138,14 +138,20 @@ void BehaviorTab::setupUi() {
        "This can also be controlled from the dialog itself ('Do not show this "
        "dialog next time')."));
 
-  // 2 列均等幅の Grid に左寄せで並べる
+  // 2 列均等幅の Grid に左寄せで 2 行に並べる。1 行目はカーソルの動き (ループ /
+  // Shift+文字のジャンプ)、2 行目はディレクトリの移動 (履歴の保存 / 同期ブラウズ)。
+  // いちばん長い「同期ブラウズ…」でも英語・日本語とも 1 列に収まる幅 (約 356px)。
   QGridLayout* navGrid = new QGridLayout();
   navGrid->setColumnStretch(0, 1);
   navGrid->setColumnStretch(1, 1);
   navGrid->addWidget(m_cursorLoopCheck,                     0, 0, Qt::AlignLeft);
-  navGrid->addWidget(m_persistHistoryCheck,                 0, 1, Qt::AlignLeft);
-  navGrid->addWidget(m_typeAheadDotfilesCheck,              1, 0, 1, 2, Qt::AlignLeft);
-  navGrid->addWidget(m_syncBrowseShowDisabledDialogCheck,   2, 0, 1, 2, Qt::AlignLeft);
+  navGrid->addWidget(m_typeAheadDotfilesCheck,              0, 1, Qt::AlignLeft);
+  navGrid->addWidget(m_persistHistoryCheck,                 1, 0, Qt::AlignLeft);
+  navGrid->addWidget(m_syncBrowseShowDisabledDialogCheck,   1, 1, Qt::AlignLeft);
+  // Tab 順を見た目の順 (左上 → 右上 → 左下 → 右下) にする (生成順とは異なる)。
+  QWidget::setTabOrder(m_cursorLoopCheck,        m_typeAheadDotfilesCheck);
+  QWidget::setTabOrder(m_typeAheadDotfilesCheck, m_persistHistoryCheck);
+  QWidget::setTabOrder(m_persistHistoryCheck,    m_syncBrowseShowDisabledDialogCheck);
   navigationLayout->addLayout(navGrid);
 
   mainLayout->addWidget(navigationGroup);
