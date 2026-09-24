@@ -25,6 +25,12 @@ around to the top). The list itself stays as it is — this only moves the curso
 Press {key:view.quick_filter} to open the quick filter; only files containing what you type stay
 visible. **`Esc`** clears it. Sorting and detailed filters are under {key:pane.sort_filter}.
 
+## Sort each directory its own way
+
+{key:pane.sort_filter} changes sorting and filters for the current directory.
+Check "Override defaults for this directory" to save them, so the directory opens the same way next time.
+Turn off "Sort dot files first" and dot files such as ".bashrc" are placed by their name without the leading ".".
+
 ## Bring both panes to the same place
 
 {key:pane.sync_other_to_active} moves the other pane to this pane's directory,
