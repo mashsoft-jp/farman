@@ -1115,6 +1115,18 @@ QString dirsPlacementLabel(SortDirsType t) {
   return {};
 }
 
+// モデルにいま効いているソート・フィルタが、s と同じか。
+bool sameSortFilter(const FileListModel* model, const PaneSettings& s) {
+  return model->sortKey() == s.sortKey
+      && model->sortOrder() == s.sortOrder
+      && model->sortKey2nd() == s.sortKey2nd
+      && model->sortDirsType() == s.sortDirsType
+      && model->sortDotFirst() == s.sortDotFirst
+      && model->sortCS() == s.sortCS
+      && model->attrFilter() == s.attrFilter
+      && model->nameFilters() == s.nameFilters;
+}
+
 } // anonymous namespace
 
 void FileListPane::refreshSortFilterStatus() {
@@ -1134,7 +1146,8 @@ void FileListPane::refreshSortFilterStatus() {
   QStringList sortTail;
   sortTail << dirsPlacementLabel(m_model->sortDirsType());
   if (m_model->sortCS() == Qt::CaseSensitive) sortTail << tr("CS");
-  if (m_model->sortDotFirst())                sortTail << tr("Dot-first");
+  // ドットファイルの扱いは ON / OFF どちらも出す (OFF は先頭の "." を除いた名前で並ぶ)。
+  sortTail << (m_model->sortDotFirst() ? tr("Dot-first") : tr("Dot-ignored"));
 
   const QString sortStr = sortKeys.join(" / ") + QStringLiteral(" · ") + sortTail.join(" · ");
 
@@ -1189,7 +1202,23 @@ void FileListPane::refreshSortFilterStatus() {
 
   const QString filterStr = filterParts.isEmpty() ? tr("(none)") : filterParts.join(" · ");
 
-  m_sortFilterStatusLabel->setText(tr("Sort: %1  │  Filter: %2").arg(sortStr, filterStr));
+  // いま効いている設定の出どころ: このディレクトリ用に保存したもの (カスタム) / デフォルト /
+  // 保存せずに一時的に変えたもの (ダイアログで保存せずに OK、見出しクリックなど)。
+  const auto& settings = Settings::instance();
+  const QString path = currentPath();
+  QString source;
+  if (!path.isEmpty() && settings.hasPathOverride(path)
+      && sameSortFilter(m_model, settings.pathOverride(path))) {
+    source = tr("Custom");
+  } else if (!settings.hasPathOverride(path)
+             && sameSortFilter(m_model, settings.paneSettings(m_paneType))) {
+    source = tr("Default");
+  } else {
+    source = tr("Temporary");
+  }
+
+  m_sortFilterStatusLabel->setText(QStringLiteral("[%1]  ").arg(source)
+    + tr("Sort: %1  │  Filter: %2").arg(sortStr, filterStr));
 }
 
 void FileListPane::setActive(bool active) {

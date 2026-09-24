@@ -3929,6 +3929,26 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
         <source>Add Bookmark</source>
         <translation>ブックマークを追加</translation>
     </message>
+    <message>
+        <location filename="../src/ui/FileListPane.cpp" line="1150"/>
+        <source>Dot-ignored</source>
+        <translation>ドット無視</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileListPane.cpp" line="1150"/>
+        <source>Custom</source>
+        <translation>カスタム</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileListPane.cpp" line="1150"/>
+        <source>Default</source>
+        <translation>デフォルト</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileListPane.cpp" line="1150"/>
+        <source>Temporary</source>
+        <translation>一時的</translation>
+    </message>
 </context>
 <context>
     <name>Farman::FileManagerPanel</name>
