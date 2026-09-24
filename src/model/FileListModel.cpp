@@ -1217,8 +1217,19 @@ int FileListModel::compareItems(const FileItem* a, const FileItem* b, SortKey ke
     case SortKey::None:
       return 0;
     case SortKey::Name: {
-      QString nameA = a->name();
-      QString nameB = b->name();
+      const QString nameA = a->name();
+      const QString nameB = b->name();
+      if (m_dotFirst) return nameA.compare(nameB, m_cs);
+      // 「ドットファイルを先頭に」が OFF のときは、先頭のドット 1 つを除いた名前で
+      // 比べて、ドットファイルを名前の並びに混ぜる (".bashrc" は "b" の位置)。
+      // そのままだと "." が英数字より前なので、OFF でもほぼ先頭に固まってしまう。
+      const bool aDot = nameA.startsWith(QLatin1Char('.'));
+      const bool bDot = nameB.startsWith(QLatin1Char('.'));
+      const int cmp = QStringView(nameA).sliced(aDot ? 1 : 0)
+                        .compare(QStringView(nameB).sliced(bDot ? 1 : 0), m_cs);
+      if (cmp != 0) return cmp;
+      // ".bashrc" と "bashrc" のようにドットを除くと同じ名前なら、ドット無しを先にする。
+      if (aDot != bDot) return aDot ? 1 : -1;
       return nameA.compare(nameB, m_cs);
     }
     case SortKey::Size: {

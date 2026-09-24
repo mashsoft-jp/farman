@@ -1730,8 +1730,8 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="93"/>
-        <source>Place files/folders starting with &apos;.&apos; at the beginning</source>
-        <translation>&apos;.&apos; で始まるファイル / ディレクトリを先頭に表示</translation>
+        <source>Place files/folders starting with &apos;.&apos; at the beginning. When off, they are sorted by name ignoring the leading &apos;.&apos;</source>
+        <translation>&apos;.&apos; で始まるファイル / ディレクトリを先頭に表示します。オフのときは先頭の &apos;.&apos; を除いた名前で並べます</translation>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="95"/>

@@ -90,7 +90,8 @@ void BehaviorTab::setupUi() {
 
   // Checkboxes (Sort dot files / Case sensitive を 1 行に並べる)
   m_sortDotFirstCheck = new QCheckBox(tr("Sort dot files first"), this);
-  m_sortDotFirstCheck->setToolTip(tr("Place files/folders starting with '.' at the beginning"));
+  m_sortDotFirstCheck->setToolTip(tr("Place files/folders starting with '.' at the beginning. "
+     "When off, they are sorted by name ignoring the leading '.'"));
 
   m_sortCaseSensitiveCheck = new QCheckBox(tr("Case sensitive sorting"), this);
   m_sortCaseSensitiveCheck->setToolTip(tr("Enable case-sensitive sorting (A-Z then a-z)"));
