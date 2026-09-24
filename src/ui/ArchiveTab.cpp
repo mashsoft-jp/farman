@@ -77,7 +77,7 @@ void ArchiveTab::setupUi() {
 
   auto* hint = new QLabel(
     tr("Formats that are turned on are recognized by their file name and can "
-       "be browsed like a folder. Use \"Details...\" to change the file "
+       "be browsed like a directory. Use \"Details...\" to change the file "
        "patterns and the defaults used when creating an archive. Turning a "
        "plugin format on or off takes effect after restarting farman."),
     formatGroup);

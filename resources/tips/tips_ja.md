@@ -53,7 +53,7 @@
 {key:bookmark.toggle} で今のディレクトリをブックマークに登録 / 解除、{key:bookmark.list} で一覧を
 開きます。{key:history.show} を押すと、最近訪れたディレクトリの履歴から戻れます。
 
-## アーカイブはフォルダのように開ける
+## アーカイブはディレクトリと同じように開ける
 
 zip / tar / 7z などのアーカイブは、{key:navigate.enter} でそのまま中に入ってブラウジングできます。
 {key:file.pack} で選択ファイルを圧縮、{key:file.unpack} でアーカイブを展開します。
@@ -72,7 +72,7 @@ zip / tar / 7z などのアーカイブは、{key:navigate.enter} でそのま�
 
 {key:view.list} で一覧、{key:view.thumbnail_small} / {key:view.thumbnail_medium} /
 {key:view.thumbnail_large} で小 / 中 / 大のサムネイル表示になります。
-画像の多いフォルダを眺めるときに便利です。
+画像の多いディレクトリを眺めるときに便利です。
 
 ## 1 ペインで広く使う
 

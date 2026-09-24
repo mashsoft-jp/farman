@@ -1195,7 +1195,7 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>アーカイブ形式</translation>
     </message>
     <message>
-        <source>Formats that are turned on are recognized by their file name and can be browsed like a folder. Use &quot;Details...&quot; to change the file name patterns and the defaults used when creating an archive. Turning a plugin format on or off takes effect after restarting farman.</source>
+        <source>Formats that are turned on are recognized by their file name and can be browsed like a directory. Use &quot;Details...&quot; to change the file name patterns and the defaults used when creating an archive. Turning a plugin format on or off takes effect after restarting farman.</source>
         <translation type="vanished">有効にした形式は、ファイル名で認識されフォルダのように開けるようになります。「詳細...」でファイル名パターンと、アーカイブ作成時の既定値を変更できます。プラグイン形式の有効 / 無効の変更は farman の再起動後に反映されます。</translation>
     </message>
     <message>
@@ -1225,7 +1225,7 @@ Row Background: fill the entire row with the cursor color.</source>
     <message>
         <location filename="../src/ui/ArchiveTab.cpp" line="79"/>
         <source>Formats that are turned on are recognized by their file name and can be browsed like a folder. Use &quot;Details...&quot; to change the file patterns and the defaults used when creating an archive. Turning a plugin format on or off takes effect after restarting farman.</source>
-        <translation>有効にした形式は、ファイル名で認識されフォルダのように開けるようになります。「詳細...」でファイルパターンと、アーカイブ作成時の既定値を変更できます。プラグイン形式の有効 / 無効の変更は farman の再起動後に反映されます。</translation>
+        <translation>有効にした形式は、ファイル名で認識されディレクトリと同じように開けるようになります。「詳細...」でファイルパターンと、アーカイブ作成時の既定値を変更できます。プラグイン形式の有効 / 無効の変更は farman の再起動後に反映されます。</translation>
     </message>
     <message>
         <location filename="../src/ui/ArchiveTab.cpp" line="89"/>

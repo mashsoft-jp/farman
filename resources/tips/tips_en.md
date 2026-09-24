@@ -52,10 +52,10 @@ Images, PDFs and videos work too.
 {key:bookmark.toggle} adds or removes the current directory as a bookmark,
 {key:bookmark.list} opens the list. {key:history.show} shows the directories you visited recently so you can jump back.
 
-## Archives open like folders
+## Archives open just like directories
 
 zip, tar, 7z and other archives can be entered with {key:navigate.enter} and browsed as if they
-were folders. {key:file.pack} packs the selected files, {key:file.unpack} extracts an archive.
+were directories. {key:file.pack} packs the selected files, {key:file.unpack} extracts an archive.
 
 ## Compare two directories
 
@@ -71,7 +71,7 @@ text editor. Choose which applications to use under Settings → External Apps.
 ## Switch to thumbnails
 
 {key:view.list} shows the list, {key:view.thumbnail_small} / {key:view.thumbnail_medium} /
-{key:view.thumbnail_large} show small, medium and large thumbnails. Useful for folders full of images.
+{key:view.thumbnail_large} show small, medium and large thumbnails. Useful for directories full of images.
 
 ## Use one wide pane
 
