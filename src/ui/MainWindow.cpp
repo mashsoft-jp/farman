@@ -2044,13 +2044,15 @@ void MainWindow::createMenus() {
   QMenu* helpMenu = bar->addMenu(tr("&Help"));
   // キーバインド一覧 (`?` キー)
   addCmd(helpMenu, "help.shortcuts", tr("Keybinding List"), /*global=*/true);
+  // 使い方の TIPS (起動時の自動表示と同じダイアログ)。キーバインド一覧と並ぶ
+  // 「使い方を知る」項目なので、プラグイン関係より上に置く。
+  addCmd(helpMenu, "help.tips",      tr("Tips..."),       /*global=*/true);
   addCmd(helpMenu, "help.plugins",         tr("Plugins..."),         /*global=*/true);
   addCmd(helpMenu, "help.viewer_plugins",  tr("Viewer Plugins..."),  /*global=*/true);
   addCmd(helpMenu, "help.archive_plugins", tr("Archive Plugins..."), /*global=*/true);
   helpMenu->addSeparator();
   // アップデート内容の再表示 (起動時の自動表示と同じダイアログ)。
   addCmd(helpMenu, "help.whats_new", tr("What's New..."), /*global=*/true);
-  addCmd(helpMenu, "help.tips",      tr("Tips..."),       /*global=*/true);
   // 手動アップデートチェック (macOS の慣習で menuRole = ApplicationSpecific
   // を当てると標準で Help メニューに残る。Help → "Check for Updates..." は
   // Sparkle 系アプリの慣習で違和感ない位置)。
