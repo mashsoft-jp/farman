@@ -9632,6 +9632,26 @@ Keybindings are not affected.</source>
         <source>Save these settings as a per-directory override. They take priority over the Behavior tab defaults whenever this directory is opened. Unchecking a previously saved directory removes its override and falls back to the defaults.</source>
         <translation>これらの設定を、このディレクトリ専用の上書きとして保存します。Behavior タブのデフォルトより優先され、このディレクトリを開いたときに自動適用されます。保存済みのディレクトリでチェックを外すと上書きを削除し、デフォルトに戻ります。</translation>
     </message>
+    <message>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="258"/>
+        <source>, </source>
+        <translation>、</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="259"/>
+        <source>Saved settings for this directory are applied.</source>
+        <translation>このディレクトリの保存済みの設定が適用されています。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="261"/>
+        <source>Temporary settings (not saved) are applied.</source>
+        <translation>一時的な設定 (未保存) が適用されています。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortFilterDialog.cpp" line="263"/>
+        <source>Differs from the defaults: %1</source>
+        <translation>デフォルトと異なる項目: %1</translation>
+    </message>
 </context>
 <context>
     <name>Farman::TextView</name>

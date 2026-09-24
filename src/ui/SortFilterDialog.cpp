@@ -15,8 +15,22 @@
 
 namespace Farman {
 
+namespace {
+
+// ラベル末尾の ":" (日本語訳の "：" も) を落として、項目名として並べられる形にする。
+QString itemName(const QString& label) {
+  QString name = label.trimmed();
+  while (name.endsWith(QLatin1Char(':')) || name.endsWith(QChar(0xFF1A))) {
+    name.chop(1);
+  }
+  return name.trimmed();
+}
+
+}  // namespace
+
 SortFilterDialog::SortFilterDialog(const QString& directoryPath,
                                    const PaneSettings& initial,
+                                   const PaneSettings& defaults,
                                    bool initiallySaved,
                                    QWidget* parent)
   : QDialog(parent)
@@ -34,11 +48,12 @@ SortFilterDialog::SortFilterDialog(const QString& directoryPath,
   , m_saveCheck(nullptr)
   , m_buttonBox(nullptr)
   , m_result(initial) {
-  setupUi(directoryPath, initial, initiallySaved);
+  setupUi(directoryPath, initial, defaults, initiallySaved);
 }
 
 void SortFilterDialog::setupUi(const QString& directoryPath,
                                const PaneSettings& initial,
+                               const PaneSettings& defaults,
                                bool initiallySaved) {
   setWindowTitle(tr("Sort & Filter"));
   resize(520, 0);
@@ -47,6 +62,14 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
 
   // 対象パスの見出し (他のダイアログと同じ見出しを共通ヘルパで作る)
   mainLayout->addWidget(pathHeaderLabel(directoryPath, this));
+
+  // デフォルトと違う設定が効いているときの案内 (中身は項目を作ったあとで埋める)。
+  auto* differsLabel = new QLabel(this);
+  differsLabel->setWordWrap(true);
+  differsLabel->setStyleSheet(QStringLiteral(
+    "QLabel { padding: 6px 8px; border-radius: 4px; background-color: palette(alternate-base); }"));
+  differsLabel->hide();
+  mainLayout->addWidget(differsLabel);
 
   // ── Alt ショートカットの方針 ───────────────────────────────
   // 検索ダイアログ等と同じく、入力行のラベルとチェックボックスに Alt+key を
@@ -210,6 +233,37 @@ void SortFilterDialog::setupUi(const QString& directoryPath,
   m_nameFiltersEdit->setText(initial.nameFilters.join(' '));
 
   m_saveCheck->setChecked(initiallySaved);
+
+  // 開いた時点の設定がペインのデフォルトと違えば、その旨と違う項目を出す。
+  // 保存済みの上書きか、保存せずに一時的に変えたものかも区別する。
+  // 項目名はダイアログ内のラベルと同じ文言にして、どこが違うか探しやすくする。
+  const AttrFilterFlags targetMask = AttrFilter::DirsOnly | AttrFilter::FilesOnly;
+  QStringList differs;
+  if (initial.sortKey != defaults.sortKey) differs << itemName(tr("Sort by:"));
+  if (initial.sortKey2nd != defaults.sortKey2nd) differs << itemName(tr("Then by:"));
+  if (initial.sortOrder != defaults.sortOrder) differs << itemName(tr("Order:"));
+  if (initial.sortDirsType != defaults.sortDirsType) {
+    differs << itemName(tr("Directory Placement:"));
+  }
+  if (initial.sortDotFirst != defaults.sortDotFirst) differs << tr("Sort dot files first");
+  if (initial.sortCS != defaults.sortCS) differs << tr("Case sensitive");
+  if ((initial.attrFilter & AttrFilter::ShowHidden) != (defaults.attrFilter & AttrFilter::ShowHidden)) {
+    differs << tr("Show hidden files");
+  }
+  if ((initial.attrFilter & targetMask) != (defaults.attrFilter & targetMask)) {
+    differs << itemName(tr("Show:"));
+  }
+  if (initial.nameFilters != defaults.nameFilters) differs << itemName(tr("Name filters:"));
+
+  if (!differs.isEmpty()) {
+    // 状態の説明と項目の一覧は行を分ける (続けると項目がどこから始まるか読みにくい)。
+    const QString state = initiallySaved
+      ? tr("Saved settings for this directory are applied.")
+      : tr("Temporary settings (not saved) are applied.");
+    differsLabel->setText(state + QLatin1Char('\n')
+      + tr("Differs from the defaults: %1").arg(differs.join(tr(", "))));
+    differsLabel->show();
+  }
 }
 
 void SortFilterDialog::onAccepted() {

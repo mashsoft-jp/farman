@@ -2654,10 +2654,24 @@ void FileManagerPanel::openSortFilterDialog() {
   auto& settings = Settings::instance();
   const bool alreadySaved = settings.hasPathOverride(path);
 
-  // 初期値は override があればそれ、なければペインの既定
-  PaneSettings initial = alreadySaved
-                         ? settings.pathOverride(path)
-                         : settings.paneSettings(m_activePane);
+  // 初期値は override があればそれ。無ければ、いま表示に効いているソート・フィルタ
+  // (保存せずに一時的に変えたものを含む) をモデルから取る。ペインの既定を出すと、
+  // 一時的に変えた直後に開き直したとき表示とダイアログの内容が食い違う。
+  PaneSettings initial;
+  if (alreadySaved) {
+    initial = settings.pathOverride(path);
+  } else {
+    const FileListModel* current = pane->model();
+    initial = settings.paneSettings(m_activePane);
+    initial.sortKey      = current->sortKey();
+    initial.sortOrder    = current->sortOrder();
+    initial.sortKey2nd   = current->sortKey2nd();
+    initial.sortDirsType = current->sortDirsType();
+    initial.sortDotFirst = current->sortDotFirst();
+    initial.sortCS       = current->sortCS();
+    initial.attrFilter   = current->attrFilter();
+    initial.nameFilters  = current->nameFilters();
+  }
 
   // ダイアログ表示前のカーソル位置 (= ファイル名) を覚えておく。
   // ソート / フィルタを適用すると beginResetModel/endResetModel で currentIndex が
@@ -2668,7 +2682,8 @@ void FileManagerPanel::openSortFilterDialog() {
     savedCursorName = it->name();
   }
 
-  SortFilterDialog dialog(path, initial, alreadySaved, this);
+  SortFilterDialog dialog(path, initial, settings.paneSettings(m_activePane),
+                          alreadySaved, this);
   if (dialog.exec() != QDialog::Accepted) {
     return;
   }

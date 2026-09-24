@@ -13,12 +13,15 @@ namespace Farman {
 
 // 現在開いているディレクトリ用のソート・フィルタ編集ダイアログ。
 // OK 時にシグナル経由で編集後の PaneSettings と保存フラグを返す。
+// initial がペインのデフォルト (defaults) と違うときは、保存済みの上書きか
+// 一時的な設定かと、違う項目を上部に表示する。
 class SortFilterDialog : public QDialog {
   Q_OBJECT
 
 public:
   SortFilterDialog(const QString& directoryPath,
                    const PaneSettings& initial,
+                   const PaneSettings& defaults,
                    bool initiallySaved,
                    QWidget* parent = nullptr);
   ~SortFilterDialog() override = default;
@@ -32,6 +35,7 @@ private slots:
 private:
   void setupUi(const QString& directoryPath,
                const PaneSettings& initial,
+               const PaneSettings& defaults,
                bool initiallySaved);
 
   // Sort controls
