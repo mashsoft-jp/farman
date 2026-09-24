@@ -1,30 +1,52 @@
-# What's New in farman 1.0.1
+# What's New in farman 1.1.0
 
-### Overwrite confirmation for copy and move
+### Install plugins inside the app
 
-- The overwrite dialog has a new **"Apply this choice to all remaining conflicts"**
-  check box (Alt+A, ⌥A on macOS). Tick it and press OK, and the rest of that copy
-  or move uses the same choice (overwrite / rename / skip) without asking again.
-  If you chose "Rename to", the remaining conflicts are named with the auto-rename
-  template. The choice lasts only for that operation and is not saved in Settings.
-- "Skip this file" used to cancel the whole operation. It now skips just that
-  file and carries on. Skipped files still count toward the progress, so the
-  operation finishes at 100%.
-- The Source / Destination rows in the dialog are now aligned with the heading
-  for easier reading.
+- The new **Settings → Plugins** page lets you install, update and uninstall
+  external plugins in one place. You no longer have to copy files into the
+  plugin directory by hand.
+- Drag and drop a plugin file onto the page, or pick one with "Install from
+  File...", to install it.
+- Official plugins can be installed or updated right from the list with
+  "Install" / "Update". "Check for Updates" looks up the latest versions, and
+  plugins with an update are marked with ❗ in bold.
+- Installs, updates and uninstalls take effect the next time farman starts. Use
+  the "Restart farman" button on the page to restart right away.
+- You can also open this page from Help → "Plugins..." (Ctrl+Shift+P) or the
+  toolbar. The Settings pages are now numbered 4. Plugins / 5. Viewer /
+  6. Archive, and so on.
 
-### Disk space in the status bar
+### Tips on startup
 
-- The status bar was showing disk space as GiB (1024-based) values. It now
-  shows GB (1000-based) values. Note that the free space is what the OS reports
-  as actually free; it does not include the "purgeable" space that macOS counts
-  in "Available".
+- farman now shows a usage tip once a day on startup, introducing shortcuts and
+  easy-to-miss features one at a time.
+- Browse the tips with "Previous" / "Next". Keys in the text follow your current
+  keybindings.
+- Open them any time from Help → "Tips...". To stop showing them on
+  startup, uncheck the box at the bottom left of the dialog or in
+  Settings → General.
+
+### Sort and filter
+
+- Fixed temporary settings (applied without "Override defaults for this
+  directory") appearing as the defaults when the dialog was reopened.
+- When the dialog opens with settings that differ from the defaults, it now
+  says whether they are saved or temporary, and which items differ.
+- The sort / filter line under each pane now starts with **[Default] /
+  [Temporary] / [Custom]** (saved for this directory), so you can tell which
+  settings are in effect. It also shows how dot files are handled (Dot-first /
+  Dot-ignored).
+- With "Sort dot files first" turned off, dot files are now sorted by their name
+  without the leading "." (.bashrc sorts among the b's).
+
+### Settings
+
+- The viewer display mode (in the main window / separate windows) has moved from
+  the "Behavior" page to the "Viewer" page.
+- Check boxes on the "General" and "Behavior" pages are laid out in two columns
+  so they are easier to scan.
 
 ### Bug fixes
 
-- Fixed the disk usage in the status bar showing a doubled percent sign, such as
-  "23%% used".
-- Fixed the "(⌥O)" hint on the Search button disappearing while a search was
-  running and after it finished.
-- Fixed a typo in the Japanese label of "Sync Active Pane to Other" in the View
-  menu.
+- Fixed the Size column in search results using the OS language for its units
+  (such as "36 バイト") even when the UI was set to English.
