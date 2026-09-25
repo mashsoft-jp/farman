@@ -1,6 +1,6 @@
 ## Open the keybinding list any time
 
-Press {key:help.shortcuts} to open a list of the shortcuts you can use right now; press it again to
+Press {key:help.shortcuts} to open the keybinding list, showing the keys you can use right now; press it again to
 close. You can change the keys under Settings → Keybindings.
 
 ## Shortcuts for copy, move and delete
