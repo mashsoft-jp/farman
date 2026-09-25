@@ -46,6 +46,11 @@
 - Check boxes on the "General" and "Behavior" pages are laid out in two columns
   so they are easier to scan.
 
+### Log pane
+
+- Click the log pane to focus it, then press Cmd+C (Ctrl+C on Windows / Linux) to
+  copy the selected text to the clipboard. Cmd+A (Ctrl+A) selects the whole log.
+
 ### Bug fixes
 
 - Fixed the Size column in search results using the OS language for its units
