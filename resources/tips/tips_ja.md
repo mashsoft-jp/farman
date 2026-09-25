@@ -37,7 +37,7 @@
 {key:pane.sync_other_to_active} で反対側のペインをこちらと同じディレクトリに、
 {key:pane.sync_active_to_other} でこちらを反対側に合わせます。{key:pane.sync_browse_toggle} で同期ブラウズをオンにすると、移動が両方に反映されます。
 
-## ビュアーで開く、開き方を選ぶ
+## ビュアーで開く、使うビュアーを選ぶ
 
 {key:view.file} (または {key:navigate.enter}) でファイルを内蔵ビュアーで開きます。
 {key:view.choose} を押すと、
