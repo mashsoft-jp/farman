@@ -186,14 +186,21 @@ jobs:
       # 重い TU (MainWindow.cpp など) を 4 並列で走らせるとメモリピークが
       # ランナー上限を超え、ランナー側エージェントごと OOM kill される
       # ("The hosted runner lost communication with the server")。
-      # 並列度を 2 に落としてピーク使用メモリを抑える。macOS / Windows は
-      # 余裕があるのでそのまま nproc 並列で OK。
+      # 並列度を 2 に落としてピーク使用メモリを抑える。
       - name: Build (Linux)
         if: runner.os == 'Linux'
         run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 2
 
-      - name: Build (macOS / Windows)
-        if: runner.os != 'Linux'
+      # macOS arm64 ランナーは 3 vCPU / 7 GB と小さく、`--parallel` 無制限だと
+      # 重い翻訳単位が同時多発してメモリ逼迫 → clang がストールし、45 分の
+      # タイムアウトまで固まる。release.yml と同じく 2 並列に制限する。
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 2
+
+      # Windows ランナーはメモリに余裕があり無制限並列でも安定しているので据え置き。
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
         run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
 
       # ──────── Deploy: 配布可能なパッケージへ整形 ────────
