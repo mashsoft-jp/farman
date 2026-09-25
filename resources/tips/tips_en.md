@@ -55,7 +55,8 @@ Images, PDFs and videos work too.
 ## Archives open just like directories
 
 zip, tar, 7z and other archives can be entered with {key:navigate.enter} and browsed as if they
-were directories. {key:file.pack} packs the selected files, {key:file.unpack} extracts an archive.
+were directories. Archives inside an archive open the same way (set how many levels deep under
+Settings → Archive). {key:file.pack} packs the selected files, {key:file.unpack} extracts an archive.
 
 ## Compare two directories
 
