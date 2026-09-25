@@ -102,6 +102,28 @@ public:
   QT_TRANSLATE_NOOP("QPlatformTheme", "&No"),
 };
 
+// テキスト入力系ウィジェットの右クリックメニュー (ログペイン / ビュアーの
+// QPlainTextEdit、パス欄などの QLineEdit) も同じ理由で Windows / Linux では
+// 英語になるため、それぞれの文脈の訳を farman のカタログに持たせる。
+[[maybe_unused]] static const char* const kTextContextMenuTexts[] = {
+  QT_TRANSLATE_NOOP("QWidgetTextControl", "&Undo"),
+  QT_TRANSLATE_NOOP("QWidgetTextControl", "&Redo"),
+  QT_TRANSLATE_NOOP("QWidgetTextControl", "Cu&t"),
+  QT_TRANSLATE_NOOP("QWidgetTextControl", "&Copy"),
+  QT_TRANSLATE_NOOP("QWidgetTextControl", "Copy &Link Location"),
+  QT_TRANSLATE_NOOP("QWidgetTextControl", "&Paste"),
+  QT_TRANSLATE_NOOP("QWidgetTextControl", "Delete"),
+  QT_TRANSLATE_NOOP("QWidgetTextControl", "Select All"),
+  QT_TRANSLATE_NOOP("QLineEdit", "&Undo"),
+  QT_TRANSLATE_NOOP("QLineEdit", "&Redo"),
+  QT_TRANSLATE_NOOP("QLineEdit", "Cu&t"),
+  QT_TRANSLATE_NOOP("QLineEdit", "&Copy"),
+  QT_TRANSLATE_NOOP("QLineEdit", "&Paste"),
+  QT_TRANSLATE_NOOP("QLineEdit", "Delete"),
+  QT_TRANSLATE_NOOP("QLineEdit", "Select All"),
+  QT_TRANSLATE_NOOP("QUnicodeControlCharacterMenu", "Insert Unicode control character"),
+};
+
 // 二重起動検出用のサーバー名。HOME や AppConfigLocation のハッシュを混ぜて
 // 同一ユーザーの異なるセッション (例: SSH 経由の別ホスト) で衝突しないように
 // する。マルチユーザー環境でも同じ socket 名を取り合わないように、
