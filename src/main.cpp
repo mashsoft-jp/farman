@@ -7,9 +7,12 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QLocale>
+#include <QPainter>
 #include <QProxyStyle>
 #include <QStandardPaths>
 #include <QStyleHints>
+#include <QStyleOption>
+#include <QTableView>
 #include <QTranslator>
 #include "ui/MainWindow.h"
 #include "viewer/ViewerDispatcher.h"
@@ -52,6 +55,39 @@ public:
 #endif
     return QProxyStyle::styleHint(hint, option, widget, returnData);
   }
+
+#ifdef Q_OS_WIN
+  // Windows 11 スタイルは表 (QTableView) の選択セルをパレットの Highlight では
+  // なく、ごく薄いグレー (fillSubtleSecondary) の角丸で塗るため、設定画面の
+  // プラグイン一覧などで選択行の色がほぼ変わらず、各セル左端のアクセントの印
+  // だけが目立つ。macOS / Fusion と同じく、選択セル全体を Highlight で塗り、
+  // 文字は HighlightedText で描くように差し替える (選択表示を自前で描いている
+  // ファイル一覧のデリゲートは State_Selected を外して呼ぶので影響しない)。
+  void drawControl(ControlElement element, const QStyleOption* option,
+                   QPainter* painter, const QWidget* widget = nullptr) const override {
+    if (element == CE_ItemViewItem && (option->state & State_Selected) &&
+        qobject_cast<const QTableView*>(widget) &&
+        baseStyle()->name().compare(QLatin1String("windows11"), Qt::CaseInsensitive) == 0) {
+      if (const auto* vopt = qstyleoption_cast<const QStyleOptionViewItem*>(option)) {
+        QPalette::ColorGroup cg = (vopt->state & State_Enabled) ? QPalette::Normal
+                                                                 : QPalette::Disabled;
+        if (cg == QPalette::Normal && !(vopt->state & State_Active)) {
+          cg = QPalette::Inactive;
+        }
+        painter->fillRect(vopt->rect, vopt->palette.brush(cg, QPalette::Highlight));
+
+        QStyleOptionViewItem opt(*vopt);
+        opt.state &= ~(State_Selected | State_MouseOver);
+        opt.backgroundBrush = Qt::NoBrush;
+        opt.palette.setBrush(cg, QPalette::Text,
+                             vopt->palette.brush(cg, QPalette::HighlightedText));
+        QProxyStyle::drawControl(element, &opt, painter, widget);
+        return;
+      }
+    }
+    QProxyStyle::drawControl(element, option, painter, widget);
+  }
+#endif
 
 #ifdef Q_OS_MAC
   QSize sizeFromContents(ContentsType type, const QStyleOption* option,
