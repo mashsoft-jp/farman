@@ -76,8 +76,9 @@ text editor. Choose which applications to use under Settings → External Apps.
 
 ## Use one wide pane
 
-{key:pane.toggle_single} switches to a single pane so the file list fills the window. Press it
-again to go back to two panes.
+{key:pane.toggle_single} switches to a single pane that uses the full width of the window. Press
+it again to go back to two panes. The columns shown (size, date modified and so on) and the size /
+date formats can be set separately for dual pane and single pane (Settings → Behavior → List Display).
 
 ## Copy paths or file names
 
