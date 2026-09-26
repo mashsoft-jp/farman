@@ -1931,12 +1931,12 @@ Row Background: fill the entire row with the cursor color.</source>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="406"/>
         <source>Dual pane</source>
-        <translation>2画面</translation>
+        <translation>2 ペイン</translation>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="412"/>
         <source>Single pane</source>
-        <translation>1画面</translation>
+        <translation>1 ペイン</translation>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="439"/>
@@ -3993,12 +3993,12 @@ Used as the initial value in the Search dialog&apos;s Exclude dirs field.</sourc
     <message>
         <location filename="../src/ui/FileManagerPanel.cpp" line="533"/>
         <source>Sync Browse cannot be enabled while single pane mode is active.</source>
-        <translation>シングルペイン中は同期ブラウズを有効にできません。</translation>
+        <translation>1 ペイン表示中は同期ブラウズを有効にできません。</translation>
     </message>
     <message>
         <location filename="../src/ui/FileManagerPanel.cpp" line="548"/>
         <source>Sync Browse toggle ignored: single pane mode is active.</source>
-        <translation>シングルペイン中のため、同期ブラウズのトグル操作を無視しました。</translation>
+        <translation>1 ペイン表示中のため、同期ブラウズのトグル操作を無視しました。</translation>
     </message>
     <message>
         <location filename="../src/ui/FileManagerPanel.cpp" line="622"/>
@@ -5966,7 +5966,7 @@ File system: %3</source>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="1148"/>
         <source>Toggle Single Pane Mode</source>
-        <translation>1画面 / 2画面 切替</translation>
+        <translation>1 ペイン / 2 ペイン 切替</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="1160"/>

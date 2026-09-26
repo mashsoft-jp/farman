@@ -105,12 +105,12 @@
     <section class="doc-section" id="basics">
       <h2>基本操作</h2>
       <ul class="doc-list">
-        <li class="f-item">farman は<strong>左右にペインを並べるデュアルペイン</strong>のファイラです。一方を「コピー元」、もう一方を「コピー先」として、ペイン間でファイルをやり取りします。</li>
+        <li class="f-item">farman は<strong>左右に 2 つのペインを並べる 2 ペイン</strong>のファイラです。一方を「コピー元」、もう一方を「コピー先」として、ペイン間でファイルをやり取りします。</li>
         <li class="f-item">操作対象は<strong>アクティブペイン</strong>（カーソルがある側）。<code>Tab</code> や左右キーの端でペインを切り替えます。</li>
         <li class="f-item">カーソル移動は <code>↑</code> <code>↓</code>、ディレクトリに入るのは <code>Enter</code>、親ディレクトリへ戻るのは <code>Backspace</code>。</li>
         <li class="f-item"><strong>選択</strong>は <code>Space</code>（選択して下へ）/ <code>Shift+Space</code>（移動なしで選択）。<code>i</code> で選択反転、<code>Ctrl+A</code> で全選択。</li>
         <li class="f-item"><code>Shift+文字</code> で、その文字を頭文字とする次のファイルへカーソルジャンプ（連打で次の一致へ）。</li>
-        <li class="f-item">レイアウトは <strong>デュアルペイン（2 画面）/ シングルペイン（1 画面）/ プレビュー</strong> の 3 種類。<code>Ctrl+O</code> でデュアル / シングルを切替、プレビューはツールバー / 設定から。（設定・コマンドでは「2 画面 / 1 画面」とも表記）</li>
+        <li class="f-item">レイアウトは <strong>2 ペイン / 1 ペイン / プレビュー</strong> の 3 種類。<code>Ctrl+O</code> で 2 ペイン / 1 ペインを切替、プレビューはツールバー / 設定から。</li>
         <li class="f-item">macOS では <code>Ctrl</code> は <code>⌘</code>(Command) に割り当てられます。</li>
       </ul>
     </section>
@@ -119,10 +119,10 @@
     <section class="doc-section" id="layout">
       <h2>表示モード・ペイン</h2>
       <ul class="doc-list">
-        <li class="f-item"><strong>表示レイアウト</strong>: <strong>デュアルペイン（2 画面）/ シングルペイン（1 画面）/ プレビュー（Quick View）</strong> の 3 種類。<code>Ctrl+O</code> でデュアル / シングルを切替、プレビューはツールバー / 設定から。プレビューは片側でファイルを選ぶと、もう片側に内容を即表示します。（設定・コマンドでは「2 画面 / 1 画面」とも表記）
+        <li class="f-item"><strong>表示レイアウト</strong>: <strong>2 ペイン / 1 ペイン / プレビュー（Quick View）</strong> の 3 種類。<code>Ctrl+O</code> で 2 ペイン / 1 ペインを切替、プレビューはツールバー / 設定から。プレビューは片側でファイルを選ぶと、もう片側に内容を即表示します。
           <div class="doc-figure-row">
-            <figure class="doc-figure"><img src="../screenshots/01-main-2pane.png" width="1200" height="700" alt="デュアルペイン（2 画面）" loading="lazy" /><figcaption>デュアルペイン（2 画面）</figcaption></figure>
-            <figure class="doc-figure"><img src="../screenshots/15-single-pane.png" width="1200" height="700" alt="シングルペイン（1 画面）" loading="lazy" /><figcaption>シングルペイン（1 画面）</figcaption></figure>
+            <figure class="doc-figure"><img src="../screenshots/01-main-2pane.png" width="1200" height="700" alt="2 ペイン" loading="lazy" /><figcaption>2 ペイン</figcaption></figure>
+            <figure class="doc-figure"><img src="../screenshots/15-single-pane.png" width="1200" height="700" alt="1 ペイン" loading="lazy" /><figcaption>1 ペイン</figcaption></figure>
             <figure class="doc-figure"><img src="../screenshots/34-preview-mode.png" width="1200" height="700" alt="プレビュー（Quick View）" loading="lazy" /><figcaption>プレビュー（Quick View）</figcaption></figure>
           </div></li>
         <li class="f-item"><strong>サムネイル表示</strong>: リスト / 小・中・大の 4 段階（<code>Cmd/Ctrl+1〜4</code>）。画像や PDF の 1 ページ目に対応。
@@ -189,7 +189,7 @@
           <tr class="f-item"><td><kbd>Ctrl+Enter</kbd></td><td>ビュアーを選んで開く（インストール済みプラグインから自動生成。動画・音声なども選択可）</td></tr>
           <tr class="f-item"><td><kbd>s</kbd></td><td>このペインのソート・フィルタ設定</td></tr>
           <tr class="f-item"><td><kbd>/</kbd></td><td>即時フィルタ（Quick Filter）の表示</td></tr>
-          <tr class="f-item"><td><kbd>Ctrl+O</kbd></td><td>シングル / デュアルペイン切替</td></tr>
+          <tr class="f-item"><td><kbd>Ctrl+O</kbd></td><td>1 ペイン / 2 ペイン切替</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+L</kbd></td><td>ログペインの表示切替</td></tr>
           <tr class="f-item"><td><kbd>y</kbd></td><td>同期ブラウズの切替</td></tr>
           <tr class="f-item"><td><kbd>Ctrl+→</kbd> / <kbd>Ctrl+←</kbd></td><td>ペインのディレクトリを反対側へ同期</td></tr>
