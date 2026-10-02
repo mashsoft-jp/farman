@@ -1,9 +1,11 @@
 #pragma once
 
+#include <QPointer>
 #include <QWidget>
 #include "types.h"
 #include "core/DirectoryHistory.h"
 #include "core/DirectoryCompare.h"
+#include "core/PathLock.h"
 
 class QSplitter;
 class QKeyEvent;
@@ -16,6 +18,8 @@ class FileListModel;
 class LogPane;
 class PreviewPane;
 class PreviewController;
+class ProgressDialog;
+class WorkerBase;
 
 class FileManagerPanel : public QWidget {
   Q_OBJECT
@@ -85,6 +89,18 @@ public:
   void changeAttributes();
   void createArchive();
   void extractArchive();
+
+  // ── バックグラウンド実行 ───────────────────
+  // コピー / 移動の進捗ダイアログで「バックグラウンドで実行」を押すと、処理を
+  // 続けたままダイアログを隠して操作に戻れる。同時に回せるのは 1 つだけで、
+  // 実行中はコピー元・コピー先のディレクトリ (配下と上位を含む) へのファイル
+  // 操作を拒否する (PathLock)。
+  bool hasBackgroundTask() const;
+  bool isBackgroundTaskMove() const { return m_bgIsMove; }
+  // ステータスバーから呼ぶ: 隠した進捗ダイアログを再表示する。
+  void showBackgroundProgress();
+  // 終了時に呼ぶ: バックグラウンドの処理を中止し、終わるまで待つ。
+  void abortBackgroundTask();
 
   // ── ディレクトリ比較 ─────────────────────
   // 左右ペインのカレントディレクトリを突き合わせて、結果を両ペインに着色表示する。
@@ -171,6 +187,11 @@ signals:
   void layoutModeChanged(LayoutMode mode);
   // ログペインの表示が切り替わったとき (同上)。
   void logPaneVisibleChanged(bool visible);
+  // バックグラウンド実行の進捗表示 (ステータスバー用)。空文字列なら実行なし。
+  void backgroundStatusChanged(const QString& text);
+  // バックグラウンド実行の開始 / 終了。進捗ダイアログの「バックグラウンドで
+  // 実行」ボタンの有効 / 無効を切り替えるのに使う。
+  void backgroundTaskChanged(bool running);
 
 private slots:
   void onLeftPaneCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
@@ -211,6 +232,17 @@ private:
   void maybeSyncFollow(PaneType navigatedPane,
                        const QString& oldPath,
                        const QString& newPath);
+
+  // コピー / 移動の進捗ダイアログに「バックグラウンドで実行」を組み込む。
+  // lockDirs は実行中にロックするディレクトリ (コピー元の親とコピー先)。
+  void attachBackgroundOption(ProgressDialog* dialog, WorkerBase* worker,
+                              bool isMove, const QStringList& lockDirs);
+  // バックグラウンドに回した処理が終わったときの後始末。
+  void finishBackgroundTask(ProgressDialog* dialog, bool success);
+  // items / destDirs がバックグラウンド実行中のディレクトリに触れるなら、
+  // エラーダイアログを出して false を返す (判定規則は PathLock を参照)。
+  bool ensureNotLockedByBackground(const QStringList& items,
+                                   const QStringList& destDirs = QStringList());
 
   QSplitter* m_splitter;
   FileListPane* m_leftPane;
@@ -256,6 +288,12 @@ private:
   // ペイン遷移 (navigatePane) で自動 OFF。
   bool             m_compareMode = false;
   CompareOptions   m_compareOptions;
+
+  // ── バックグラウンド実行 ───────────────────
+  QPointer<WorkerBase>     m_bgWorker;
+  QPointer<ProgressDialog> m_bgDialog;
+  PathLock                 m_bgLock;
+  bool                     m_bgIsMove = false;
 };
 
 } // namespace Farman

@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "FileManagerPanel.h"
+#include "ClickableLabel.h"
 #include "FileListPane.h"
 #include "ViewerPanel.h"
 #include "SettingsDialog.h"
@@ -298,7 +299,25 @@ void MainWindow::setupUi() {
   m_statusDiskLabel = new QLabel(this);
   m_statusDiskLabel->setObjectName(QStringLiteral("diskLabel"));
   m_statusDiskLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  // バックグラウンド実行中のコピー / 移動の進捗。クリックで進捗ダイアログを
+  // 再表示してキャンセルなどができる。実行していないときは隠す。
+  auto* backgroundLabel = new ClickableLabel(this);
+  backgroundLabel->setObjectName(QStringLiteral("backgroundLabel"));
+  backgroundLabel->setCursor(Qt::PointingHandCursor);
+  backgroundLabel->setToolTip(tr("Click to show the progress"));
+  backgroundLabel->hide();
+  m_statusBackgroundLabel = backgroundLabel;
+  connect(backgroundLabel, &ClickableLabel::clicked, this, [this]() {
+    m_fileManagerPanel->showBackgroundProgress();
+  });
+  connect(m_fileManagerPanel, &FileManagerPanel::backgroundStatusChanged,
+          this, [this](const QString& text) {
+    m_statusBackgroundLabel->setText(text);
+    m_statusBackgroundLabel->setVisible(!text.isEmpty());
+  });
+
   statusBar()->addWidget(m_statusPathLabel, /*stretch*/ 1);
+  statusBar()->addPermanentWidget(m_statusBackgroundLabel);
   statusBar()->addPermanentWidget(m_statusCompareLabel);
   statusBar()->addPermanentWidget(m_statusSyncBrowseLabel);
   statusBar()->addPermanentWidget(m_statusDiskLabel);
@@ -2782,11 +2801,39 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
 void MainWindow::closeEvent(QCloseEvent* event) {
   auto& settings = Settings::instance();
 
+  // バックグラウンドでコピー / 移動を実行中なら、中止して終了するかを尋ねる。
+  // 中止を選んだら、それが終了の確認も兼ねるので下の確認は出さない。
+  // セッションマネージャ経由の終了では尋ねずに中止する。
+  bool exitConfirmed = false;
+  if (m_fileManagerPanel->hasBackgroundTask()) {
+    if (!qApp->isSavingSession()) {
+      const bool isMove = m_fileManagerPanel->isBackgroundTaskMove();
+      const int choice = choose(this, tr("Background Task Running"),
+        isMove ? tr("A move is running in the background.\n"
+                    "Stop it and exit farman?")
+               : tr("A copy is running in the background.\n"
+                    "Stop it and exit farman?"),
+        {
+          { tr("Stop and Exit"), Qt::Key_S },
+          { tr("Cancel"),        Qt::Key_X },
+        },
+        /*defaultIndex=*/1,
+        /*cancelIndex=*/1,
+        DialogIcon::Warning);
+      if (choice != 0) {
+        event->ignore();
+        return;
+      }
+      exitConfirmed = true;
+    }
+    m_fileManagerPanel->abortBackgroundTask();
+  }
+
   // Show confirmation dialog if enabled.
   // OS のシャットダウン / 再起動 / ログアウトなどセッションマネージャ経由の
   // 終了要求では確認せずに終了する (ダイアログ待ちで OS の終了を
   // ブロックしないため)。状態の保存処理は通常どおり下で実行される。
-  if (settings.confirmOnExit() && !qApp->isSavingSession()) {
+  if (settings.confirmOnExit() && !qApp->isSavingSession() && !exitConfirmed) {
     if (!confirm(this, tr("Confirm Exit"),
                  tr("Are you sure you want to exit farman?"))) {
       event->ignore();

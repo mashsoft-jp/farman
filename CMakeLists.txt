@@ -179,6 +179,7 @@ qt_add_executable(farman
   src/core/ThumbnailCache.cpp
   src/core/ThumbnailWorker.cpp
   src/core/DirectorySizeCache.cpp
+  src/core/PathLock.cpp
   src/core/DirectorySizeWorker.cpp
   src/core/UpdateChecker.cpp
   src/core/UpdateDownloader.cpp

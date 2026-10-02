@@ -134,6 +134,9 @@ private:
   // ディレクトリ比較モード中のインジケータ ("Compare: SizeMtime" 等)。
   // OFF 時は空文字列 (= 何も出ない)。
   QLabel*      m_statusCompareLabel     = nullptr;
+  // バックグラウンドで実行中のコピー / 移動の進捗 ("バックグラウンドでコピー中:
+  // 42% …")。実行していないときは隠す。クリックで進捗ダイアログを再表示する。
+  QLabel*      m_statusBackgroundLabel  = nullptr;
   // アクティブペインのカレントが属するボリュームの使用量
   // (例: "245 GB free / 500 GB (51% used)")。ビュアー表示中は隠す。
   QLabel*      m_statusDiskLabel        = nullptr;

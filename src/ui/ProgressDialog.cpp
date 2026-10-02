@@ -72,8 +72,25 @@ void ProgressDialog::setupUI(const QString& operationName) {
   buttonLayout->addWidget(m_autoCloseCheck);
   buttonLayout->addStretch();
 
+  // バックグラウンドで実行: コピー / 移動のときだけ呼び出し側が表示する。
+  m_backgroundButton = new QPushButton(tr("Run in Background"), this);
+  applyAltShortcut(m_backgroundButton, Qt::Key_B);
+  m_backgroundButton->hide();
+  connect(m_backgroundButton, &QPushButton::clicked, this, [this]() {
+    if (m_inBackground) {
+      hide();  // 再表示中は隠すだけ (処理は続く)
+      return;
+    }
+    emit backgroundRequested();
+  });
+  buttonLayout->addWidget(m_backgroundButton);
+
   m_cancelButton = new QPushButton(tr("Cancel"), this);
   applyAltShortcut(m_cancelButton, Qt::Key_X);
+  // Enter の既定はキャンセル (ボタン以外にフォーカスがあるとき)。明示しないと、
+  // 先に並ぶ「バックグラウンドで実行」が既定になってしまう。各ボタンは Tab で
+  // フォーカスしたときだけ Enter の対象になる。
+  m_cancelButton->setDefault(true);
   connect(m_cancelButton, &QPushButton::clicked, this, &ProgressDialog::onCancel);
   buttonLayout->addWidget(m_cancelButton);
 
@@ -84,7 +101,40 @@ void ProgressDialog::setupUI(const QString& operationName) {
   // macOS の System Settings → 「キーボードナビゲーション」設定に依存させずに
   // Tab で全コントロールを辿れるようにする。
   m_autoCloseCheck->setFocusPolicy(Qt::StrongFocus);
+  m_backgroundButton->setFocusPolicy(Qt::StrongFocus);
   m_cancelButton->setFocusPolicy(Qt::StrongFocus);
+}
+
+void ProgressDialog::enableBackgroundOption(bool enable) {
+  m_backgroundButton->setVisible(enable && !m_workerFinished);
+}
+
+void ProgressDialog::setBackgroundAvailable(bool available) {
+  // 自分がバックグラウンド実行中なら、ボタンは「隠す」として常に押せる。
+  if (m_inBackground) return;
+  m_backgroundButton->setEnabled(available);
+  m_backgroundButton->setToolTip(
+    available ? QString()
+              : tr("Another copy or move is already running in the background. "
+                   "This becomes available when it finishes."));
+}
+
+void ProgressDialog::setRunningInBackground(bool background) {
+  m_inBackground = background;
+  if (background) {
+    m_backgroundButton->setEnabled(true);
+    m_backgroundButton->setToolTip(QString());
+    m_backgroundButton->setText(tr("Hide"));
+    applyAltShortcut(m_backgroundButton, Qt::Key_H);
+  }
+}
+
+void ProgressDialog::reject() {
+  if (m_workerFinished) {
+    QDialog::reject();
+    return;
+  }
+  if (m_inBackground) hide();
 }
 
 void ProgressDialog::setWorker(WorkerBase* worker) {
@@ -146,8 +196,13 @@ void ProgressDialog::onProgressUpdated(const WorkerProgress& progress) {
 }
 
 void ProgressDialog::onFinished(bool success) {
-  // 自動で閉じる設定が ON なら従来通りすぐ閉じる
-  if (m_autoCloseCheck && m_autoCloseCheck->isChecked()) {
+  m_workerFinished = true;
+  m_backgroundButton->hide();
+
+  // 自動で閉じる設定が ON なら従来通りすぐ閉じる。バックグラウンド実行中は
+  // 閉じるかどうかを呼び出し側が結果を見て決める (失敗したら見せる) ので、
+  // ここでは閉じずに完了状態の表示だけ整える。
+  if (!m_inBackground && m_autoCloseCheck && m_autoCloseCheck->isChecked()) {
     if (success) accept();
     else         reject();
     return;

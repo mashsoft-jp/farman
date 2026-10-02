@@ -64,6 +64,32 @@
 
 namespace Farman {
 
+namespace {
+
+// コピー / 移動でロックするディレクトリ: コピー元アイテムの親ディレクトリと
+// コピー先ディレクトリ。
+QStringList transferLockDirs(const QStringList& srcPaths, const QString& destDir) {
+  QStringList dirs;
+  for (const QString& src : srcPaths) {
+    dirs.append(QFileInfo(src).absolutePath());
+  }
+  dirs.append(destDir);
+  return dirs;
+}
+
+// コピー / 移動で書き込むパス (コピー先に同名で置かれるパス)。上位ディレクトリ
+// へのコピーで、ロック中のディレクトリを同名で上書きするケースを拾うのに使う。
+QStringList transferTargets(const QStringList& srcPaths, const QString& destDir) {
+  QStringList targets;
+  const QDir dest(destDir);
+  for (const QString& src : srcPaths) {
+    targets.append(dest.absoluteFilePath(QFileInfo(src).fileName()));
+  }
+  return targets;
+}
+
+} // namespace
+
 FileManagerPanel::FileManagerPanel(QWidget* parent)
   : QWidget(parent)
   , m_splitter(nullptr)
@@ -617,6 +643,11 @@ void FileManagerPanel::handleExternalDrop(FileListPane* destPane,
   // ドロップを受けたペインをアクティブ化しておく
   setActivePane(destPane == m_leftPane ? PaneType::Left : PaneType::Right);
 
+  if (!ensureNotLockedByBackground(transferTargets(srcPaths, destDir) + srcPaths,
+                                   {destDir})) {
+    return;
+  }
+
   // Copy / Move / Cancel をユーザーに尋ねる
   const int choice = choose(this,
     tr("Drop Files"),
@@ -659,10 +690,22 @@ void FileManagerPanel::handleExternalDrop(FileListPane* destPane,
   ProgressDialog* dialog = new ProgressDialog(
     isMove ? tr("Moving files...") : tr("Copying files..."), this);
   dialog->setWorker(worker);
+  attachBackgroundOption(dialog, worker, isMove,
+                         transferLockDirs(srcPaths, destDir));
 
   const int srcCount = srcPaths.size();
   connect(worker, &WorkerBase::finished, this,
-    [this, isMove, srcCount, destDir](bool success) {
+    [this, dialog, worker, isMove, srcCount, destDir](bool success) {
+      // バックグラウンドに回していた場合は、後始末 (ロック解除・失敗時の表示)
+      // をしてから worker を片付ける。前面で実行した場合は exec() 後に片付ける。
+      const bool background = dialog->isRunningInBackground();
+      if (background) {
+        finishBackgroundTask(dialog, success);
+        // スレッドが抜け切ってから消す (既に抜けていれば即座に)。deleteLater は
+        // 2 回呼んでも安全。
+        connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+        if (worker->isFinished()) worker->deleteLater();
+      }
       Logger::instance().log(success ? Logger::Info : Logger::Error,
         QStringLiteral("%1 %2: %3 item(s) → %4")
           .arg(isMove ? QStringLiteral("Move") : QStringLiteral("Copy"))
@@ -671,11 +714,11 @@ void FileManagerPanel::handleExternalDrop(FileListPane* destPane,
       // 両ペインを再読込 (移動元・移動先のどちらが反対側ペインかは不明なので両方)
       m_leftPane->setPath(m_leftPane->currentPath());
       m_rightPane->setPath(m_rightPane->currentPath());
-      activePane()->view()->setFocus();
+      if (!background) activePane()->view()->setFocus();
     });
 
   worker->start();
-  dialog->exec();
+  if (dialog->exec() == ProgressDialog::BackgroundResult) return;
   worker->wait();
   worker->deleteLater();
   dialog->deleteLater();
@@ -1683,6 +1726,9 @@ void FileManagerPanel::copySelectedFiles() {
   // ── アーカイブからの抽出コピー ──────────────────
   // srcPane がアーカイブモードのときは、選択エントリだけを反対パネルに展開する。
   if (srcModel->isInArchiveMode()) {
+    if (!ensureNotLockedByBackground({srcModel->archiveRootPath()}, {destDir})) {
+      return;
+    }
     // 選択エントリを集める (なければカーソル行 1 件、".." 除く)。
     // アーカイブモードでは selectedFilePaths() が "<archive>!/..." 形式の絶対パスを
     // 返してくるので、ここでは ArchiveEntry 経由で pathInArchive を集める。
@@ -1787,6 +1833,8 @@ void FileManagerPanel::copySelectedFiles() {
     return;
   }
 
+  if (!ensureNotLockedByBackground(selectedFiles)) return;
+
   // 確認ダイアログ（コピー元・一覧・コピー先・上書きモード）
   TransferConfirmDialog confirm(
     TransferConfirmDialog::Copy,
@@ -1804,6 +1852,12 @@ void FileManagerPanel::copySelectedFiles() {
                                ? destDir
                                : confirm.destinationDir();
 
+  // 書き込み先がバックグラウンド実行中のディレクトリに触れないか
+  if (!ensureNotLockedByBackground(transferTargets(selectedFiles, actualDest),
+                                   {actualDest})) {
+    return;
+  }
+
   // Create worker and dialog
   CopyWorker* worker = new CopyWorker(selectedFiles, actualDest, this);
   worker->setOverwriteMode(overwriteMode);
@@ -1818,13 +1872,18 @@ void FileManagerPanel::copySelectedFiles() {
   );
   ProgressDialog* dialog = new ProgressDialog(tr("Copying files..."), this);
   dialog->setWorker(worker);
+  attachBackgroundOption(dialog, worker, /*isMove=*/false,
+                         transferLockDirs(selectedFiles, actualDest));
 
   const int copiedCount = selectedFiles.size();
   const QString copiedDest = actualDest;
 
   connect(worker, &WorkerBase::finished, this,
       [this, dialog, srcPane, destPane, copiedCount, copiedDest](bool success) {
-    // 完了時のダイアログ開閉は ProgressDialog 側 (auto-close チェックの状態で判断) に任せる
+    // 完了時のダイアログ開閉は ProgressDialog 側 (auto-close チェックの状態で判断) に任せる。
+    // バックグラウンドに回していた場合は、後始末 (ロック解除・失敗時の表示) をする。
+    const bool background = dialog->isRunningInBackground();
+    if (background) finishBackgroundTask(dialog, success);
     Logger::instance().log(success ? Logger::Info : Logger::Error,
       QStringLiteral("Copy %1: %2 item(s) → %3")
         .arg(success ? QStringLiteral("done") : QStringLiteral("failed"))
@@ -1883,11 +1942,12 @@ void FileManagerPanel::copySelectedFiles() {
     restoreCursor(srcPane, srcCurrentFile, srcCurrentRow);
     restoreCursor(destPane, destCurrentFile, destCurrentRow);
 
-    // Clear selections
-    srcPane->model()->setSelectedAll(false);
-
-    // Restore focus to active pane
-    activePane()->view()->setFocus();
+    // 選択を解除してフォーカスを戻す。バックグラウンドで終わったときは、
+    // その間にユーザーが始めた選択や操作を崩さないよう触らない。
+    if (!background) {
+      srcPane->model()->setSelectedAll(false);
+      activePane()->view()->setFocus();
+    }
 
     // 比較モード中ならファイル操作後に再比較して overlay を最新化する。
     // (setPath で overlay 自体は保持されるが、内容は古いままなので。)
@@ -1943,6 +2003,8 @@ void FileManagerPanel::moveSelectedFiles() {
     return;
   }
 
+  if (!ensureNotLockedByBackground(selectedFiles)) return;
+
   // 確認ダイアログ
   TransferConfirmDialog confirm(
     TransferConfirmDialog::Move,
@@ -1960,6 +2022,12 @@ void FileManagerPanel::moveSelectedFiles() {
                                ? destDir
                                : confirm.destinationDir();
 
+  // 書き込み先がバックグラウンド実行中のディレクトリに触れないか
+  if (!ensureNotLockedByBackground(transferTargets(selectedFiles, actualDest),
+                                   {actualDest})) {
+    return;
+  }
+
   // Create worker and dialog
   MoveWorker* worker = new MoveWorker(selectedFiles, actualDest, this);
   worker->setOverwriteMode(overwriteMode);
@@ -1974,13 +2042,18 @@ void FileManagerPanel::moveSelectedFiles() {
   );
   ProgressDialog* dialog = new ProgressDialog(tr("Moving files..."), this);
   dialog->setWorker(worker);
+  attachBackgroundOption(dialog, worker, /*isMove=*/true,
+                         transferLockDirs(selectedFiles, actualDest));
 
   const int movedCount = selectedFiles.size();
   const QString movedDest = actualDest;
 
   connect(worker, &WorkerBase::finished, this,
       [this, dialog, srcPane, destPane, movedCount, movedDest](bool success) {
-    // 完了時のダイアログ開閉は ProgressDialog 側 (auto-close チェックの状態で判断) に任せる
+    // 完了時のダイアログ開閉は ProgressDialog 側 (auto-close チェックの状態で判断) に任せる。
+    // バックグラウンドに回していた場合は、後始末 (ロック解除・失敗時の表示) をする。
+    const bool background = dialog->isRunningInBackground();
+    if (background) finishBackgroundTask(dialog, success);
     Logger::instance().log(success ? Logger::Info : Logger::Error,
       QStringLiteral("Move %1: %2 item(s) → %3")
         .arg(success ? QStringLiteral("done") : QStringLiteral("failed"))
@@ -2039,11 +2112,12 @@ void FileManagerPanel::moveSelectedFiles() {
     restoreCursor(srcPane, srcCurrentFile, srcCurrentRow);
     restoreCursor(destPane, destCurrentFile, destCurrentRow);
 
-    // Clear selections
-    srcPane->model()->setSelectedAll(false);
-
-    // Restore focus to active pane
-    activePane()->view()->setFocus();
+    // 選択を解除してフォーカスを戻す。バックグラウンドで終わったときは、
+    // その間にユーザーが始めた選択や操作を崩さないよう触らない。
+    if (!background) {
+      srcPane->model()->setSelectedAll(false);
+      activePane()->view()->setFocus();
+    }
 
     // 比較モード中ならファイル操作後に再比較して overlay を最新化する。
     // (setPath で overlay 自体は保持されるが、内容は古いままなので。)
@@ -2079,6 +2153,7 @@ void FileManagerPanel::deleteSelectedFiles() {
   if (selectedFiles.isEmpty()) {
     return;
   }
+  if (!ensureNotLockedByBackground(selectedFiles)) return;
 
   // Ask for confirmation
   QString message;
@@ -2235,6 +2310,7 @@ void FileManagerPanel::createDirectory() {
     return;
   }
   QString currentPath = srcPane->currentPath();
+  if (!ensureNotLockedByBackground({}, {currentPath})) return;
 
   // Ask for directory name
   bool ok = false;
@@ -2254,6 +2330,8 @@ void FileManagerPanel::createDirectory() {
 
   // Create directory
   QString newDirPath = currentPath + "/" + dirName;
+  // 名前に区切りを含めて配下に作る場合も、ロック中のディレクトリに触れないか
+  if (!ensureNotLockedByBackground({newDirPath})) return;
   QDir dir;
   if (!dir.mkpath(newDirPath)) {
     Logger::instance().error(QStringLiteral("Mkdir failed: %1").arg(newDirPath));
@@ -2290,6 +2368,7 @@ void FileManagerPanel::createFile() {
     return;
   }
   QString currentPath = srcPane->currentPath();
+  if (!ensureNotLockedByBackground({}, {currentPath})) return;
 
   bool ok = false;
   QString fileName = inputText(
@@ -2307,6 +2386,7 @@ void FileManagerPanel::createFile() {
   }
 
   const QString newFilePath = currentPath + "/" + fileName;
+  if (!ensureNotLockedByBackground({newFilePath})) return;
   if (QFileInfo::exists(newFilePath)) {
     critical(
       this, tr("Error"),
@@ -2365,6 +2445,7 @@ void FileManagerPanel::changeAttributes() {
     }
   }
   if (paths.isEmpty()) return;
+  if (!ensureNotLockedByBackground(paths)) return;
 
   PropertiesDialog dlg(paths, this);
   if (dlg.exec() == QDialog::Accepted) {
@@ -2417,6 +2498,7 @@ void FileManagerPanel::createArchive() {
     }
   }
   if (paths.isEmpty()) return;
+  if (!ensureNotLockedByBackground(paths)) return;
 
   // 既定の出力先は「相手ペイン」のカレント (Copy/Move と同じ UX)。
   // ダイアログ内で ↑/↓ により「自分ペイン (srcPane)」とトグルできる。
@@ -2448,6 +2530,11 @@ void FileManagerPanel::createArchive() {
     if (!ok || newName.trimmed().isEmpty()) return;
     outputPath = QDir(QFileInfo(outputPath).absolutePath())
                    .absoluteFilePath(newName.trimmed());
+  }
+
+  if (!ensureNotLockedByBackground({outputPath},
+                                   {QFileInfo(outputPath).absolutePath()})) {
+    return;
   }
 
   ArchiveCreateWorker* worker = new ArchiveCreateWorker(
@@ -2524,6 +2611,7 @@ void FileManagerPanel::extractArchive() {
   }
 
   const QString archivePath = item->absolutePath();
+  if (!ensureNotLockedByBackground({archivePath})) return;
   // 展開先の既定は「相手ペイン」(Copy/Move と同じ UX)。↑/↓ でアーカイブが
   // 置かれているディレクトリ (= srcPane のカレント) にトグルできる。
   // 1 ペイン / プレビュー時はアクティブペインを既定展開先に
@@ -2539,6 +2627,7 @@ void FileManagerPanel::extractArchive() {
 
   const QString outputDir = dlg.outputDirectory();
   if (outputDir.isEmpty()) return;
+  if (!ensureNotLockedByBackground({}, {outputDir})) return;
   const bool createSubdir = dlg.createSubdirectory();
 
   // 展開先を確定する。
@@ -2604,6 +2693,8 @@ void FileManagerPanel::extractArchive() {
       }
     }
   }
+
+  if (!ensureNotLockedByBackground({targetDir}, {outputDir})) return;
 
   ArchiveExtractWorker* worker = new ArchiveExtractWorker(
     archivePath, targetDir, password, this);
@@ -2769,6 +2860,13 @@ void FileManagerPanel::bulkRenameItems() {
   if (names.isEmpty()) return;
 
   const QString dirPath = srcPane->currentPath();
+  {
+    QStringList items;
+    for (const QString& n : std::as_const(names)) {
+      items.append(dirPath + QLatin1Char('/') + n);
+    }
+    if (!ensureNotLockedByBackground(items)) return;
+  }
 
   BulkRenameDialog dialog(dirPath, names, this);
   if (dialog.exec() != QDialog::Accepted) return;
@@ -2839,6 +2937,7 @@ void FileManagerPanel::renameItem() {
   // (Google ドライブ等のバックグラウンド同期で発生しやすい)。ダイアログ後に
   // `item` を参照すると use-after-free になるので、以降は退避値のみを使う。
   const bool itemIsDir = item->isDir();
+  if (!ensureNotLockedByBackground({oldPath})) return;
 
   // Ask for new name. ファイルはカーソルを末尾ではなく拡張子の手前に置く
   // (例: "foo.txt" を選んだ状態で `r` を押すと "foo" が選択される)。
@@ -2862,6 +2961,7 @@ void FileManagerPanel::renameItem() {
   // Check if new name already exists
   QString parentPath = QFileInfo(oldPath).path();
   QString newPath = parentPath + "/" + newName;
+  if (!ensureNotLockedByBackground({newPath})) return;
 
   if (QFileInfo::exists(newPath)) {
     critical(
@@ -3047,6 +3147,132 @@ void FileManagerPanel::selectCompareNewer() {
   }
   Logger::instance().info(
     tr("Compare select: Newer-than-other rows (%1 newly selected)").arg(selected));
+}
+
+// ── バックグラウンド実行 ─────────────────────
+
+bool FileManagerPanel::hasBackgroundTask() const {
+  return !m_bgWorker.isNull();
+}
+
+void FileManagerPanel::attachBackgroundOption(ProgressDialog* dialog,
+                                              WorkerBase* worker,
+                                              bool isMove,
+                                              const QStringList& lockDirs) {
+  dialog->enableBackgroundOption(true);
+  dialog->setBackgroundAvailable(!hasBackgroundTask());
+  // 他のバックグラウンド実行が終わったら、このダイアログのボタンを押せるようにする。
+  connect(this, &FileManagerPanel::backgroundTaskChanged, dialog,
+          [dialog](bool running) { dialog->setBackgroundAvailable(!running); });
+
+  connect(dialog, &ProgressDialog::backgroundRequested, this,
+    [this, dialog, worker, isMove, lockDirs]() {
+      if (hasBackgroundTask() || dialog->isWorkerFinished()) return;
+      m_bgWorker = worker;
+      m_bgDialog = dialog;
+      m_bgIsMove = isMove;
+      m_bgLock.setDirectories(lockDirs);
+      dialog->setRunningInBackground(true);
+
+      QStringList shown;
+      for (const QString& d : m_bgLock.directories()) {
+        shown.append(QDir::toNativeSeparators(d));
+      }
+      Logger::instance().info(
+        QStringLiteral("%1 continues in background (locked: %2)")
+          .arg(isMove ? QStringLiteral("Move") : QStringLiteral("Copy"))
+          .arg(shown.join(QStringLiteral(", "))));
+
+      emit backgroundStatusChanged(isMove ? tr("Moving in background...")
+                                          : tr("Copying in background..."));
+      emit backgroundTaskChanged(true);
+
+      // exec() を BackgroundResult で抜けさせる (ダイアログは隠れる)。以降は
+      // ステータスバーから再表示したときに、操作を妨げないよう非モーダルで出す。
+      dialog->done(ProgressDialog::BackgroundResult);
+      dialog->setModal(false);
+      activePane()->view()->setFocus();
+    });
+
+  connect(worker, &WorkerBase::progressUpdated, this,
+    [this, worker, isMove](const WorkerProgress& p) {
+      if (m_bgWorker != worker) return;
+      QString text;
+      if (p.filesTotal > 0) {
+        const int pct = (p.filesDone * 100) / p.filesTotal;
+        text = (isMove ? tr("Moving in background: %1% (%2 / %3 files)")
+                       : tr("Copying in background: %1% (%2 / %3 files)"))
+                 .arg(pct).arg(p.filesDone).arg(p.filesTotal);
+      } else {
+        text = isMove ? tr("Moving in background...")
+                      : tr("Copying in background...");
+      }
+      emit backgroundStatusChanged(text);
+    });
+}
+
+void FileManagerPanel::finishBackgroundTask(ProgressDialog* dialog, bool success) {
+  m_bgWorker = nullptr;
+  m_bgDialog = nullptr;
+  m_bgLock.clear();
+  emit backgroundStatusChanged(QString());
+  emit backgroundTaskChanged(false);
+
+  if (!dialog) return;
+  if (success) {
+    // 成功: 隠れたままなら片付けるだけ (結果はステータスバーとログに出る)。
+    // 再表示中なら「自動で閉じる」に従う。
+    if (!dialog->isVisible()) {
+      dialog->deleteLater();
+    } else if (dialog->isAutoCloseChecked()) {
+      dialog->accept();
+      dialog->deleteLater();
+    } else {
+      connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
+    }
+    return;
+  }
+  // 失敗 (キャンセルを含む): 完了状態の進捗ダイアログを出して知らせる。
+  connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
+  dialog->show();
+  dialog->raise();
+  dialog->activateWindow();
+}
+
+void FileManagerPanel::showBackgroundProgress() {
+  if (!m_bgDialog) return;
+  m_bgDialog->show();
+  m_bgDialog->raise();
+  m_bgDialog->activateWindow();
+}
+
+void FileManagerPanel::abortBackgroundTask() {
+  if (!m_bgWorker) return;
+  Logger::instance().warn(QStringLiteral("Background %1 aborted on exit")
+    .arg(m_bgIsMove ? QStringLiteral("move") : QStringLiteral("copy")));
+  m_bgWorker->requestCancel();
+  m_bgWorker->wait();
+}
+
+bool FileManagerPanel::ensureNotLockedByBackground(const QStringList& items,
+                                                   const QStringList& destDirs) {
+  if (!m_bgLock.conflicts(items, destDirs)) return true;
+
+  QStringList shown;
+  for (const QString& d : m_bgLock.directories()) {
+    shown.append(QDir::toNativeSeparators(d));
+  }
+  Logger::instance().warn(
+    QStringLiteral("Operation refused: directory is in use by a background %1")
+      .arg(m_bgIsMove ? QStringLiteral("move") : QStringLiteral("copy")));
+  critical(this, tr("Directory In Use"),
+    (m_bgIsMove
+       ? tr("A move is running in the background. Files in the following "
+            "directories cannot be changed until it finishes:\n\n%1")
+       : tr("A copy is running in the background. Files in the following "
+            "directories cannot be changed until it finishes:\n\n%1"))
+      .arg(shown.join(QLatin1Char('\n'))));
+  return false;
 }
 
 } // namespace Farman
