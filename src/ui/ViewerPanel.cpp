@@ -54,6 +54,8 @@ void ViewerPanel::setupUi() {
   // ===== Image Viewer =====
   m_imageView = new ImageView(this);
   m_stack->addWidget(m_imageView);
+  connect(m_imageView, &ImageView::transientMessage,
+          this, &ViewerPanel::viewerMessage);
 
   // ===== Binary Viewer (fallback) =====
   m_binaryView = new BinaryView(this);

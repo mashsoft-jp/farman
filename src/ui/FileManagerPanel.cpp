@@ -173,6 +173,8 @@ void FileManagerPanel::setupUi() {
 
   // Preview ペインで Esc が押されたら、ファイルリストの active pane へ
   // フォーカスを戻す (Tab で入った → テキスト選択した → Esc で戻る の動線)。
+  connect(m_previewPane->imageView(), &ImageView::transientMessage,
+          this, &FileManagerPanel::actionCompleted);
   connect(m_previewPane, &PreviewPane::escapePressed, this, [this]() {
     if (FileListPane* pane = activePane()) {
       if (auto* v = pane->view()) v->setFocus(Qt::OtherFocusReason);

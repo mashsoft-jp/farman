@@ -82,6 +82,12 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::Key_T)});
   add(d, "image", "viewer.image.toggle_animation", QCoreApplication::translate("ViewerCommands", "Play / pause animation"),
       {QKeySequence(Qt::Key_Space)});
+  add(d, "image", "viewer.image.stop_animation", QCoreApplication::translate("ViewerCommands", "Stop animation (back to first frame)"),
+      {QKeySequence(Qt::Key_S)});
+  add(d, "image", "viewer.image.prev_frame", QCoreApplication::translate("ViewerCommands", "Previous frame"),
+      {QKeySequence(Qt::Key_Comma)});
+  add(d, "image", "viewer.image.next_frame", QCoreApplication::translate("ViewerCommands", "Next frame"),
+      {QKeySequence(Qt::Key_Period)});
   add(d, "image", "viewer.image.info", QCoreApplication::translate("ViewerCommands", "Show image information"),
       {QKeySequence(Qt::Key_I)});
   add(d, "image", "viewer.image.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
@@ -89,6 +95,8 @@ QList<ViewerCommandDef> viewerCommandDefs() {
        QKeySequence(Qt::SHIFT | Qt::Key_Equal)});
   add(d, "image", "viewer.image.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
       {QKeySequence(Qt::Key_Minus), QKeySequence(Qt::SHIFT | Qt::Key_Minus)});
+  add(d, "image", "viewer.image.copy", QCoreApplication::translate("ViewerCommands", "Copy image to clipboard"),
+      {QKeySequence(QKeySequence::Copy)});
 
   // ── バイナリビュアー ──（HexView のカーソル移動は固定なので含めない）
   add(d, "binary", "viewer.binary.find_focus", QCoreApplication::translate("ViewerCommands", "Focus search field"),

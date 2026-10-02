@@ -6,10 +6,12 @@
 #include "keybinding/ViewerCommands.h"
 #include "utils/ExifReader.h"
 
+#include <QClipboard>
 #include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFontDatabase>
+#include <QGuiApplication>
 #include <QPlainTextEdit>
 #include <QToolButton>
 #include "utils/EnterClickFilter.h"
@@ -30,9 +32,50 @@
 #include <QResizeEvent>
 #include <QScrollArea>
 #include <QSignalBlocker>
+#include <QSpinBox>
 #include <QVBoxLayout>
 
 namespace Farman {
+
+namespace {
+
+// コマ番号の入力欄。前 / 次のコマのキー (設定で再割り当て可能) を入力欄の中でも
+// 効かせ、Enter は値を確定するだけにして親へ流さない (流すと本体内ビュアーが
+// 「Enter でファイル一覧へ戻る」と解釈して閉じてしまう)。
+class FrameSpinBox : public QSpinBox {
+public:
+  using QSpinBox::QSpinBox;
+
+  // ImageView が保持するショートカットマップを指す (push で更新されると
+  // ここからも最新が見える)。
+  void setShortcutMap(const ViewerShortcutMap* map) { m_shortcutMap = map; }
+
+protected:
+  void keyPressEvent(QKeyEvent* event) override {
+    const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(event);
+    const QString cmd =
+      m_shortcutMap ? m_shortcutMap->commandForSeq(seq) : QString();
+    if (cmd == QLatin1String("viewer.image.prev_frame")) {
+      stepBy(-1);
+      event->accept();
+      return;
+    }
+    if (cmd == QLatin1String("viewer.image.next_frame")) {
+      stepBy(+1);
+      event->accept();
+      return;
+    }
+    QSpinBox::keyPressEvent(event);
+    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+      event->accept();
+    }
+  }
+
+private:
+  const ViewerShortcutMap* m_shortcutMap = nullptr;
+};
+
+} // namespace
 
 // 画像描画ウィジェット。背景 (チェック柄 / 単色) と画像を自前描画する。
 class ImageDisplay : public QWidget {
@@ -272,6 +315,41 @@ void ImageView::setupUi() {
   m_animButton->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_animButton);
 
+  // 完全停止 (アニメ画像のみ)。一時停止と違い、先頭のコマへ戻す。
+  m_animStopButton = new QToolButton(m_toolbar);
+  m_animStopButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/stop.svg")));
+  ViewerHints::tag(m_animStopButton, QStringLiteral("viewer.image.stop_animation"),
+    tr("Stop animation and return to the first frame (%1)"));
+  m_animStopButton->setFocusPolicy(Qt::StrongFocus);
+  m_animStopButton->setEnabled(false);
+  connect(m_animStopButton, &QToolButton::clicked,
+          this,             &ImageView::stopAnimation);
+  m_toolbar->addWidget(m_animStopButton);
+
+  // コマ番号の入力欄 + 「/ 全体のコマ数」。数値を打って Enter、または ▲▼ /
+  // ↑↓ で増減するとそのコマを表示する (再生中なら一時停止する)。入力途中の
+  // 値で飛ばないよう、確定 (Enter / フォーカス移動 / ▲▼) したときだけ反映する。
+  auto* frameSpin = new FrameSpinBox(m_toolbar);
+  frameSpin->setShortcutMap(&m_shortcuts);
+  m_frameSpin = frameSpin;
+  m_frameSpin->setRange(1, 1);
+  m_frameSpin->setKeyboardTracking(false);
+  m_frameSpin->setAlignment(Qt::AlignRight);
+  m_frameSpin->setFixedWidth(70);
+  m_frameSpin->setFocusPolicy(Qt::StrongFocus);
+  m_frameSpin->setToolTip(
+    tr("Frame number: type a number or use the arrows to step through frames"));
+  connect(m_frameSpin, qOverload<int>(&QSpinBox::valueChanged), this,
+          [this](int value) { seekToFrame(value - 1); });
+  m_frameSpinAction = m_toolbar->addWidget(m_frameSpin);
+
+  m_frameTotalLabel = new QLabel(m_toolbar);
+  m_frameTotalLabel->setContentsMargins(2, 0, 6, 0);
+  m_frameTotalLabel->setToolTip(tr("Total frames"));
+  m_frameTotalAction = m_toolbar->addWidget(m_frameTotalLabel);
+  m_frameSpinAction->setVisible(false);
+  m_frameTotalAction->setVisible(false);
+
   // 透明部分のモード (checkable トグル)。OFF = Checker、ON = SolidColor。
   m_transparencyButton = new QToolButton(m_toolbar);
   m_transparencyButton->setCheckable(true);
@@ -337,7 +415,9 @@ void ImageView::setupUi() {
   // 順次差し込まれる。
   setTabOrder(m_zoomCombo,          m_fitButton);
   setTabOrder(m_fitButton,          m_animButton);
-  setTabOrder(m_animButton,         m_transparencyButton);
+  setTabOrder(m_animButton,         m_animStopButton);
+  setTabOrder(m_animStopButton,     m_frameSpin);
+  setTabOrder(m_frameSpin,          m_transparencyButton);
   setTabOrder(m_transparencyButton, m_rotateCwButton);
   setTabOrder(m_rotateCwButton,     m_infoButton);
   setTabOrder(m_infoButton,         m_scrollArea);
@@ -451,11 +531,16 @@ void ImageView::applyDisplayState() {
 
   // アニメ再生 / 停止の切替
   if (m_movie) {
+    // 停止は「その場のコマで一時停止」。巻き戻さないので、止めたコマをそのまま
+    // 見られ (クリップボードへのコピーもそのコマになる)、再開すると続きから動く。
     if (m_fileIsAnimated && m_animation) {
-      if (m_movie->state() != QMovie::Running) m_movie->start();
-    } else {
-      if (m_movie->state() == QMovie::Running) m_movie->stop();
-      m_movie->jumpToFrame(0);
+      if (m_movie->state() == QMovie::Paused) {
+        m_movie->setPaused(false);
+      } else if (m_movie->state() == QMovie::NotRunning) {
+        m_movie->start();
+      }
+    } else if (m_movie->state() == QMovie::Running) {
+      m_movie->setPaused(true);
     }
   }
 
@@ -553,6 +638,7 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
     } else {
       m_movie = movie;
       m_display->setMovie(movie);
+      connect(movie, &QMovie::frameChanged, this, &ImageView::updateFrameControls);
       // 初期 1 フレーム描画
       movie->jumpToFrame(0);
       // QMovie 経由のアニメ画像でも自然サイズが取れる場合がある。
@@ -600,6 +686,8 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
       m_animButton->setChecked(false);
     }
   }
+  if (m_animStopButton) m_animStopButton->setEnabled(playEnabled);
+  updateFrameControls();
 
   // Info ダイアログが開いていれば内容を新ファイルに差し替え。
   refreshImageInfoDialog();
@@ -669,6 +757,8 @@ void ImageView::clearContent() {
   m_naturalImageSize = QSize();
   m_loadedImage = QImage();
   m_display->clearImage();
+  if (m_animStopButton) m_animStopButton->setEnabled(false);
+  updateFrameControls();
 }
 
 bool ImageView::eventFilter(QObject* watched, QEvent* event) {
@@ -681,6 +771,17 @@ bool ImageView::eventFilter(QObject* watched, QEvent* event) {
       // フォーカスは focusProxy 経由で scrollArea/viewport にあるので、
       // ここでビュアーのキー操作を拾う (スクロール系キーは scrollArea に任せる)。
       if (handleViewerKey(static_cast<QKeyEvent*>(event))) return true;
+    } else if (event->type() == QEvent::ShortcutOverride) {
+      // プレビューレイアウトではこのビューがファイル操作パネルの中に入るため、
+      // パネル側の同じキー (既定の Ctrl/Cmd+C = パスをコピー) のショートカットが
+      // 先に発火してしまう。画像にフォーカスがある間は画像のコピーを優先する。
+      auto* ke = static_cast<QKeyEvent*>(event);
+      const QString cmd =
+        m_shortcuts.commandForSeq(ViewerShortcutMap::sequenceForEvent(ke));
+      if (cmd == QLatin1String("viewer.image.copy")) {
+        event->accept();
+        return true;
+      }
     }
   }
   return QWidget::eventFilter(watched, event);
@@ -727,6 +828,27 @@ bool ImageView::handleViewerKey(QKeyEvent* event) {
       return true;
     }
     return false;
+  }
+  if (cmd == QLatin1String("viewer.image.stop_animation")) {
+    // アニメ画像のときだけ (それ以外は既定動作に任せる)。
+    if (m_animStopButton && m_animStopButton->isEnabled()) {
+      stopAnimation();
+      return true;
+    }
+    return false;
+  }
+  if (cmd == QLatin1String("viewer.image.prev_frame")
+      || cmd == QLatin1String("viewer.image.next_frame")) {
+    // アニメ画像のときだけ (それ以外は既定動作に任せる)。
+    if (m_animStopButton && m_animStopButton->isEnabled()) {
+      stepFrame(cmd == QLatin1String("viewer.image.next_frame") ? +1 : -1);
+      return true;
+    }
+    return false;
+  }
+  if (cmd == QLatin1String("viewer.image.copy")) {
+    copyImageToClipboard();
+    return true;
   }
   if (cmd == QLatin1String("viewer.image.zoom_in")) {
     stepZoom(true);
@@ -971,6 +1093,125 @@ void ImageView::rotateCw90() {
   if (m_rotationLabel) {
     m_rotationLabel->setText(QStringLiteral("%1°").arg(next));
   }
+}
+
+void ImageView::stopAnimation() {
+  if (!m_fileIsAnimated || !m_movie) return;
+  // 再生ボタンを停止側に揃えてから (ここで一時停止になる)、完全に止めて先頭の
+  // コマへ戻す。次に再生すると先頭から始まる。
+  if (m_animButton && m_animButton->isChecked()) {
+    m_animButton->setChecked(false);
+  }
+  m_movie->stop();
+  m_movie->jumpToFrame(0);
+  updateFrameControls();
+}
+
+void ImageView::updateFrameControls() {
+  if (!m_frameSpin || !m_frameTotalLabel) return;
+  // コマ送りできるのは、再生ボタンが有効なアニメ画像 (複数コマ) のときだけ。
+  const bool animated = m_fileIsAnimated && m_movie
+                     && m_animStopButton && m_animStopButton->isEnabled();
+  if (m_frameSpinAction)  m_frameSpinAction->setVisible(animated);
+  if (m_frameTotalAction) m_frameTotalAction->setVisible(animated);
+  if (!animated) return;
+
+  // コマ番号は 1 始まりで見せる。全体のコマ数が事前に分からない形式
+  // (frameCount() == 0) では上限を決められないので、総数は出さず回り込みもしない。
+  const int current = qMax(0, m_movie->currentFrameNumber()) + 1;
+  const int total   = m_movie->frameCount();
+  const QSignalBlocker blocker(m_frameSpin);
+  m_frameSpin->setRange(1, total > 0 ? total : 999999);
+  m_frameSpin->setWrapping(total > 0);
+  // 再生中に入力欄へ番号を打っている間は、流れていくコマ番号で上書きしない。
+  if (!(m_frameSpin->hasFocus() && m_movie->state() == QMovie::Running)) {
+    m_frameSpin->setValue(current);
+  }
+  m_frameTotalLabel->setText(total > 0 ? QStringLiteral("/ %1").arg(total)
+                                       : QString());
+}
+
+void ImageView::seekToFrame(int index) {
+  if (!m_fileIsAnimated || !m_movie) return;
+  if (!m_animStopButton || !m_animStopButton->isEnabled()) return;
+
+  // 再生中なら、まず一時停止する (コマ送りは止めた状態で行う)。
+  if (m_animButton && m_animButton->isChecked()) {
+    m_animButton->setChecked(false);
+  }
+
+  const int total = m_movie->frameCount();
+  int target = index;
+  if (total > 0) {
+    target = ((index % total) + total) % total;  // 端を越えたら反対側へ回り込む
+  } else if (target < 0) {
+    target = 0;
+  }
+
+  // QMovie (キャッシュなし) は「次のコマ」と「先頭」にしか確実に移動できない。
+  // 離れたコマや前のコマへは、必要なら先頭へ戻ってから目的の 1 つ手前まで
+  // 順に進め、最後の 1 コマだけ通常どおり進めて表示を更新する。途中のコマは
+  // 画面に出さないよう、その間だけ QMovie のシグナルを止める。
+  const int current = m_movie->currentFrameNumber();
+  if (target != current) {
+    if (target == 0) {
+      m_movie->jumpToFrame(0);
+    } else {
+      const bool wasBlocked = m_movie->blockSignals(true);
+      bool ok = true;
+      if (target < current) {
+        m_movie->jumpToFrame(0);
+        ok = (m_movie->currentFrameNumber() == 0);
+      }
+      while (ok && m_movie->currentFrameNumber() < target - 1) {
+        const int before = m_movie->currentFrameNumber();
+        m_movie->jumpToFrame(before + 1);
+        ok = (m_movie->currentFrameNumber() == before + 1);
+      }
+      m_movie->blockSignals(wasBlocked);
+      // 総数が分からない形式で末尾を越えた場合などは ok == false。そのときは
+      // 進められたところ (シグナルを止めていたので画面は未更新) を表示し直す。
+      if (ok) {
+        m_movie->jumpToFrame(target);
+      } else {
+        emit m_movie->frameChanged(m_movie->currentFrameNumber());
+      }
+    }
+  }
+  updateFrameControls();
+}
+
+void ImageView::stepFrame(int delta) {
+  if (!m_movie) return;
+  seekToFrame(m_movie->currentFrameNumber() + delta);
+}
+
+void ImageView::copyImageToClipboard() {
+  if (m_filePath.isEmpty()) return;
+
+  QImage image;
+  if (m_fileIsAnimated) {
+    // アニメ画像は、いま表示しているコマをコピーする。再生中なら先に一時停止
+    // して、コピーしたコマが画面に残るようにする (ボタンの表示も停止に揃う)。
+    if (m_animButton && m_animButton->isChecked()) {
+      m_animButton->setChecked(false);
+    }
+    if (m_movie) image = m_movie->currentImage();
+    // まだ 1 コマも描かれていないなど、取れなかったときは先頭のコマで代用する。
+    if (image.isNull()) image = QImageReader(m_filePath).read();
+  } else {
+    image = m_loadedImage;
+    // QMovie で開けず静止画として読み直した経路では m_loadedImage が空。
+    if (image.isNull()) image.load(m_filePath);
+  }
+  if (image.isNull()) return;
+
+  const int rotation = m_display ? m_display->rotation() : 0;
+  if (rotation != 0) {
+    image = image.transformed(QTransform().rotate(rotation));
+  }
+  QGuiApplication::clipboard()->setImage(image);
+  emit transientMessage(tr("Copied image to clipboard"));
 }
 
 void ImageView::refreshImageInfoDialog() {

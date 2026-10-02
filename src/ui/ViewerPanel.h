@@ -85,6 +85,8 @@ signals:
   // ステータスバー連携用: 表示中ファイルのパスと、ビュアー固有の要約。
   // 何も表示していなければ両方空文字列。
   void viewerStatusChanged(const QString& path, const QString& summary);
+  // ステータスバーへ一時的に出す知らせ (画像をコピーした、など)。
+  void viewerMessage(const QString& message);
 
 private slots:
   // statusInfoChanged(QString) を出すプラグインビュー (media 等) からの中継。

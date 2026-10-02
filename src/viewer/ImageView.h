@@ -13,6 +13,7 @@
 class QAction;
 class QComboBox;
 class QLabel;
+class QSpinBox;
 class QMovie;
 class QScrollArea;
 class QToolBar;
@@ -100,6 +101,11 @@ protected:
   // 再生/停止, +/-=ズーム)。MediaView と同じ作法で focus 内でのみ処理する。
   void keyPressEvent(QKeyEvent* event) override;
 
+signals:
+  // ホスト (本体 / 別ウィンドウ / プレビュー) のステータスバーに一時的に出して
+  // ほしい短い知らせ。いまは「画像をコピーした」の通知に使う。
+  void transientMessage(const QString& message);
+
 private slots:
   // ツールバーの "i" ボタンと `i` キーから呼ばれる。
   // 既にダイアログが開いていれば閉じる、無ければ最新のメタデータで開く
@@ -112,6 +118,20 @@ private slots:
   QString buildImageInfoText() const;
   // ツールバーの回転ボタンから呼ばれる。表示の回転を 90 度ずつ進める。
   void rotateCw90();
+  // アニメを完全に止めて先頭のコマへ戻す (再生 / 一時停止とは別の操作)。
+  void stopAnimation();
+  // コマ番号の入力欄と「/ 全体のコマ数」を今の状態に合わせる (アニメ画像以外
+  // では隠す)。
+  void updateFrameControls();
+  // コマ送り: 再生中なら一時停止してから、指定のコマ (0 始まり) を表示する。
+  // 全体のコマ数が分かる形式では、端を越えたら反対側の端へ回り込む。
+  void seekToFrame(int index);
+  // 今のコマから delta 個進める / 戻す (前のコマ = -1、次のコマ = +1)。
+  void stepFrame(int delta);
+  // 表示中の画像をクリップボードへコピーする (Ctrl/Cmd+C)。ズームは反映せず
+  // 元の大きさのまま、回転は表示どおりに反映する。アニメ画像は表示中のコマ
+  // (再生中なら一時停止してから)。
+  void copyImageToClipboard();
 
 private:
   void setupUi();
@@ -145,6 +165,14 @@ private:
   // アニメ再生 / 停止のトグル。OFF (停止中) は ▶、ON (再生中) は ⏸ アイコンを
   // 都度切替える。GIF / WebP 等のアニメ画像でのみ有効化される。
   QToolButton* m_animButton        = nullptr;
+  // 完全停止 (先頭のコマへ戻す) ボタンと、コマ番号の入力欄 + 「/ 全体のコマ数」。
+  // 入力欄は数値を打つか ▲▼ で増減してコマ送りする。どれもアニメ画像のとき
+  // だけ意味を持つので、入力欄と総数はアニメ画像以外では隠す。
+  QToolButton* m_animStopButton    = nullptr;
+  QSpinBox*    m_frameSpin         = nullptr;
+  QLabel*      m_frameTotalLabel   = nullptr;
+  QAction*     m_frameSpinAction   = nullptr;
+  QAction*     m_frameTotalAction  = nullptr;
   // 透明部分の表示モード (Checker / SolidColor) のトグル。OFF = Checker、
   // ON = SolidColor。
   QToolButton* m_transparencyButton = nullptr;

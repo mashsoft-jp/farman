@@ -1,5 +1,6 @@
 #include "ImageViewerWindow.h"
 #include "ImageView.h"
+#include "settings/Settings.h"
 #include "utils/CancellableLoadPage.h"
 
 #include <QApplication>
@@ -33,6 +34,13 @@ void ImageViewerWindow::setupUi() {
   m_stack     = new QStackedWidget(this);
   m_loadPage  = new CancellableLoadPage(this);
   m_imageView = new ImageView(this);
+  // 画像をコピーしたなどの知らせは、このウィンドウのステータスバーに一時的に出す
+  // (秒数は本体と同じ設定に従う。0 = 表示しない)。
+  connect(m_imageView, &ImageView::transientMessage, this,
+          [this](const QString& message) {
+    const int seconds = Settings::instance().actionStatusSeconds();
+    if (seconds > 0) statusBar()->showMessage(message, seconds * 1000);
+  });
   m_stack->addWidget(m_loadPage);
   m_stack->addWidget(m_imageView);
   setCentralWidget(m_stack);

@@ -345,6 +345,8 @@ void MainWindow::setupUi() {
   });
   connect(m_fileManagerPanel, &FileManagerPanel::actionCompleted,
           this, &MainWindow::flashStatusMessage);
+  connect(m_viewerPanel, &ViewerPanel::viewerMessage,
+          this, &MainWindow::flashStatusMessage);
   connect(m_viewerPanel, &ViewerPanel::viewerStatusChanged,
           this, [this](const QString& path, const QString& summary) {
     m_viewerStatusPath = path;
