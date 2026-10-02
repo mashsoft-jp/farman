@@ -26,6 +26,30 @@
   startup, uncheck the box at the bottom left of the dialog or in
   Settings → General.
 
+### Run copy and move in the background
+
+- The progress dialog for copy and move now has a "Run in Background" button.
+  A long copy or move keeps running while you go back to other work.
+- While it runs, the status bar shows its progress. Click it to bring the
+  progress dialog back, where you can also cancel.
+- Only one operation can run in the background at a time. While it runs, file
+  operations (copy, move, delete, rename and so on) on its source and
+  destination directories are not allowed.
+- The progress dialog no longer closes with Esc while an operation is running.
+  Use Cancel to stop it.
+
+### Image viewer
+
+- Press Cmd+C (Ctrl+C on Windows / Linux) to copy the displayed image to the
+  clipboard. A rotated image is copied in the orientation you see.
+- Animated images (GIF / WebP) can now be stepped frame by frame. Type a number
+  into the frame box on the toolbar, or use its arrows or the `,` and `.` keys to
+  move to the previous or next frame.
+- Pausing an animation now stops on the current frame. A separate "Stop" button
+  (S key) returns to the first frame.
+- Copying an animated image copies the frame being displayed (playback is
+  paused first).
+
 ### Sort and filter
 
 - Fixed temporary settings (applied without "Override defaults for this
@@ -53,5 +77,9 @@
 
 ### Bug fixes
 
+- Fixed the right-click menu of the log pane, path fields and other text fields
+  appearing in English on Windows / Linux even when the UI was set to Japanese.
+- Fixed the selected row in the lists on the settings pages (Plugins, Viewer and
+  so on) not being highlighted across the whole row on Windows.
 - Fixed the Size column in search results using the OS language for its units
   (such as "36 バイト") even when the UI was set to English.
