@@ -5124,67 +5124,72 @@ What would you like to do?</source>
         <translation>時計回りに 90° 回転（表示のみ） (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="388"/>
+        <location filename="../src/viewer/ImageView.cpp" line="383"/>
+        <source>Copy image to clipboard (%1)</source>
+        <translation>画像をクリップボードにコピー (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/viewer/ImageView.cpp" line="399"/>
         <source>Show image information / metadata (%1)</source>
         <translation>画像情報 / メタデータを表示 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="965"/>
+        <location filename="../src/viewer/ImageView.cpp" line="979"/>
         <source>File: %1</source>
         <translation>ファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="966"/>
+        <location filename="../src/viewer/ImageView.cpp" line="980"/>
         <source>Format: %1</source>
         <translation>フォーマット: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="968"/>
+        <location filename="../src/viewer/ImageView.cpp" line="982"/>
         <source>Size: %1 x %2 px</source>
         <translation>サイズ: %1 × %2 px</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="970"/>
+        <location filename="../src/viewer/ImageView.cpp" line="984"/>
         <source>File size: %1</source>
         <translation>ファイルサイズ: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="984"/>
+        <location filename="../src/viewer/ImageView.cpp" line="998"/>
         <source>Color depth: %1 bpp</source>
         <translation>色深度: %1 bpp</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="991"/>
+        <location filename="../src/viewer/ImageView.cpp" line="1005"/>
         <source>Frames: %1</source>
         <translation>フレーム数: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="1009"/>
+        <location filename="../src/viewer/ImageView.cpp" line="1023"/>
         <source>Resolution: %1 x %2 DPI</source>
         <translation>解像度: %1 × %2 DPI</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="1020"/>
+        <location filename="../src/viewer/ImageView.cpp" line="1034"/>
         <source>Color profile: %1</source>
         <translation>カラープロファイル: %1</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="1029"/>
+        <location filename="../src/viewer/ImageView.cpp" line="1043"/>
         <source>--- Embedded text ---</source>
         <translation>--- 埋め込みテキスト ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="1045"/>
+        <location filename="../src/viewer/ImageView.cpp" line="1059"/>
         <source>--- Exif ---</source>
         <translation>--- Exif ---</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="1064"/>
+        <location filename="../src/viewer/ImageView.cpp" line="1078"/>
         <source>Image Information</source>
         <translation>画像情報</translation>
     </message>
     <message>
-        <location filename="../src/viewer/ImageView.cpp" line="1214"/>
+        <location filename="../src/viewer/ImageView.cpp" line="1228"/>
         <source>Copied image to clipboard</source>
         <translation>画像をクリップボードにコピーしました</translation>
     </message>

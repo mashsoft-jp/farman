@@ -376,6 +376,17 @@ void ImageView::setupUi() {
   m_rotationLabel->setToolTip(tr("Current display rotation angle"));
   m_toolbar->addWidget(m_rotationLabel);
 
+  // クリップボードへコピー (Ctrl/Cmd+C と同じ)。アニメ画像は表示中のコマ。
+  m_copyButton = new QToolButton(m_toolbar);
+  m_copyButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/copy.svg")));
+  ViewerHints::tag(m_copyButton, QStringLiteral("viewer.image.copy"),
+    tr("Copy image to clipboard (%1)"));
+  m_copyButton->setFocusPolicy(Qt::StrongFocus);
+  m_copyButton->setEnabled(false);
+  connect(m_copyButton, &QToolButton::clicked,
+          this,         &ImageView::copyImageToClipboard);
+  m_toolbar->addWidget(m_copyButton);
+
   // 画像メタデータダイアログを開くボタン (フォーマット情報・コメント
   // 等のテキストメタデータをまとめて表示する)。
   m_infoButton = new QToolButton(m_toolbar);
@@ -419,7 +430,8 @@ void ImageView::setupUi() {
   setTabOrder(m_animStopButton,     m_frameSpin);
   setTabOrder(m_frameSpin,          m_transparencyButton);
   setTabOrder(m_transparencyButton, m_rotateCwButton);
-  setTabOrder(m_rotateCwButton,     m_infoButton);
+  setTabOrder(m_rotateCwButton,     m_copyButton);
+  setTabOrder(m_copyButton,         m_infoButton);
   setTabOrder(m_infoButton,         m_scrollArea);
   m_lastToolbarWidget = m_infoButton;
 
@@ -687,6 +699,7 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
     }
   }
   if (m_animStopButton) m_animStopButton->setEnabled(playEnabled);
+  if (m_copyButton) m_copyButton->setEnabled(!m_filePath.isEmpty());
   updateFrameControls();
 
   // Info ダイアログが開いていれば内容を新ファイルに差し替え。
@@ -758,6 +771,7 @@ void ImageView::clearContent() {
   m_loadedImage = QImage();
   m_display->clearImage();
   if (m_animStopButton) m_animStopButton->setEnabled(false);
+  if (m_copyButton) m_copyButton->setEnabled(false);
   updateFrameControls();
 }
 

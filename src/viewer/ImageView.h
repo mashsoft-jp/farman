@@ -179,6 +179,8 @@ private:
   // 画像メタデータ (フォーマット情報・QImageReader::text / 将来は Exif も) を
   // モーダルダイアログで表示するボタン。
   QToolButton* m_infoButton          = nullptr;
+  // 表示中の画像をクリップボードへコピーするボタン (Ctrl/Cmd+C と同じ)。
+  QToolButton* m_copyButton          = nullptr;
   // 時計回り 90° ずつ画面表示だけを回転させるボタン。ファイル切替で 0 にリセット。
   // ファイル本体は変更しない (= 保存しない)。
   QToolButton* m_rotateCwButton      = nullptr;

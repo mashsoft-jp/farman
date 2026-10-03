@@ -40,8 +40,8 @@
 
 ### Image viewer
 
-- Press Cmd+C (Ctrl+C on Windows / Linux) to copy the displayed image to the
-  clipboard. A rotated image is copied in the orientation you see.
+- Click the copy button on the toolbar or press Cmd+C (Ctrl+C on Windows / Linux)
+  to copy the displayed image to the clipboard. A rotated image is copied in the orientation you see.
 - Animated images (GIF / WebP) can now be stepped frame by frame. Type a number
   into the frame box on the toolbar, or use its arrows or the `,` and `.` keys to
   move to the previous or next frame.
