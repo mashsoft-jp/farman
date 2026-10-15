@@ -89,6 +89,8 @@ void SearchDialog::setupUi(const QString& initialPath) {
   m_patternEdit = new QLineEdit(this);
   m_patternEdit->setPlaceholderText(tr("e.g. *.txt *.cpp (space-separated, empty for all)"));
   m_patternEdit->setFocusPolicy(Qt::StrongFocus);
+  // 名前パターンは空白区切りで複数入れる欄なので、拡張子ではなく空白を区切りにする。
+  applyLineEditUpDownCursor(m_patternEdit, LineEditUpDownBoundary::Whitespace);
   form->addRow(altBuddyLabel(tr("Name pattern:"), Qt::Key_N, m_patternEdit, this),
                m_patternEdit);
 

@@ -45,6 +45,7 @@ void BulkRenameDialog::setupUi() {
 
   m_templateEdit = new QLineEdit(this);
   m_templateEdit->setText(QStringLiteral("{name}.{ext}"));
+  applyLineEditUpDownCursor(m_templateEdit);
   m_templateEdit->setToolTip(
     tr("Template for the new name. Placeholders:\n"
        "  {name}  original base name (no extension)\n"
@@ -82,6 +83,8 @@ void BulkRenameDialog::setupUi() {
   findLayout->setContentsMargins(0, 0, 0, 0);
   m_findEdit    = new QLineEdit(this);
   m_replaceEdit = new QLineEdit(this);
+  applyLineEditUpDownCursor(m_findEdit);
+  applyLineEditUpDownCursor(m_replaceEdit);
   m_regexCheck  = new QCheckBox(tr("Regex"), this);
   applyAltShortcut(m_regexCheck, Qt::Key_R);   // 正規表現
   m_findEdit->setPlaceholderText(tr("Find"));

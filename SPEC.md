@@ -2219,6 +2219,13 @@ Settings ダイアログは 8 つのトップレベルカテゴリ (`1. General`
   - 左パネル: デフォルト（Home）or 前回終了時のパス or 固定パス
   - 右パネル: デフォルト（Home）or 前回終了時のパス or 固定パス
 - 終了時に確認するか（`Confirm on exit`）
+- **1 行入力欄の ↑↓ を区切り単位のカーソル移動にする** (`lineEditUpDownByDelimiter`、デフォルト ON)
+  - 名前変更・アーカイブ名・一括リネーム・検索の名前パターンなどの 1 行入力欄が対象。
+  - ON: ↑ = 先頭 / ↓ = 末尾。ただし最後の `.` (先頭の `.` は除く) があれば、
+    `.` より前で ↓ / `.` より後ろで ↑ を押すと `.` の直前で止まる。
+    検索の名前パターンは空白区切りで、↓ は最後の空白の直後 (次の値の先頭) へ、
+    ↑ は空白の直前へ止まる。Shift 併用で選択範囲を拡張。
+  - OFF: ↑↓ には何も割り当てない (Qt 標準の動き)。
 - 言語設定 (`Auto (System)` / `English` / `日本語 (Japanese)`、デフォルト Auto)
   - 翻訳ファイルは Qt Linguist の `.ts` を `qt_add_translations` でビルド時に
     `.qm` 化してリソース埋め込み。`cmake --build build --target update_translations`

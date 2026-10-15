@@ -4554,6 +4554,16 @@ What would you like to do?</source>
         <translation>メニューバーの下に表示するツールバーをトグル。View メニューからも切り替え可能。</translation>
     </message>
     <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="291"/>
+        <source>Move cursor by delimiter with Up/Down in text fields</source>
+        <translation>テキスト入力欄で ↑↓ キーを区切り単位のカーソル移動にする</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GeneralTab.cpp" line="293"/>
+        <source>If on, Up/Down in single-line text fields (rename, name pattern, etc.) move the cursor to the start / end, stopping at the extension dot or the last space on the way. Off leaves Up/Down to the system default.</source>
+        <translation>ON のとき、1 行入力欄 (名前変更・検索の名前パターンなど) で ↑↓ が先頭 / 末尾への移動になり、途中の拡張子の「.」や最後の空白で止まります。OFF にすると ↑↓ はシステム標準の動きのままです。</translation>
+    </message>
+    <message>
         <location filename="../src/ui/GeneralTab.cpp" line="301"/>
         <source>Auto (System)</source>
         <translation>自動 (システム)</translation>

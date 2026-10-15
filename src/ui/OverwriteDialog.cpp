@@ -114,6 +114,8 @@ void OverwriteDialog::setupUi(const QString& srcPath, const QString& dstPath) {
             onActionChanged();
           });
 
+  applyLineEditUpDownCursor(m_renameEdit);
+
   // 初期選択: ベース名を選択しつつカーソルを拡張子の手前に置く。
   // 拡張子はそのまま残しつつ、ユーザーがすぐにベース名だけタイプし直せるようにする。
   // 拡張子は「最後の '.' 以降」とみなす ("foo.tar.gz" なら "foo.tar" を選択)。

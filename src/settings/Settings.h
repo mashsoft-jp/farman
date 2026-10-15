@@ -228,6 +228,12 @@ public:
   bool confirmOnExit()                  const;
   void setConfirmOnExit(bool confirm);
 
+  // 1 行入力欄 (名前変更・検索の名前パターンなど) で ↑↓ を区切り単位の
+  // カーソル移動にするか。ON なら ↑ = 先頭 / ↓ = 末尾に加えて、拡張子 / 空白の
+  // 区切りで止まる。OFF なら ↑↓ には何も割り当てない (Qt 標準の動き)。
+  bool lineEditUpDownByDelimiter()      const;
+  void setLineEditUpDownByDelimiter(bool enabled);
+
   // 二重起動を禁止するか。ON のとき既に farman が動いていれば、新規プロセス
   // は起動せず既存ウィンドウを前面に出す。
   bool singleInstance()                 const;
@@ -733,6 +739,7 @@ private:
   QString          m_customInitialPath[static_cast<int>(PaneType::Count)];
 
   bool             m_confirmOnExit   = false;
+  bool             m_lineEditUpDownByDelimiter = true;
   // 複数選択時のコピー区切り (パス / 名前で共通)。
   CopySeparator    m_copySeparator = CopySeparator::Comma;
   // アクション完了通知の表示秒数 (0 = 表示しない)。

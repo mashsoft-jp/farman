@@ -163,6 +163,7 @@ void CreateArchiveDialog::setupUi(const QString& defaultOutputDir) {
   // Output filename
   m_nameEdit = new QLineEdit(this);
   m_nameEdit->setFocusPolicy(Qt::StrongFocus);
+  applyLineEditUpDownCursor(m_nameEdit);
   auto* nameLabel = altBuddyLabel(tr("File name:"), Qt::Key_N, m_nameEdit, this);
   form->addRow(nameLabel, m_nameEdit);
 

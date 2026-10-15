@@ -1,5 +1,6 @@
 #include "Dialogs.h"
 #include "FarmanMessageBox.h"
+#include "settings/Settings.h"
 #include <QApplication>
 #include <QCalendarWidget>
 #include <QCoreApplication>
@@ -11,6 +12,7 @@
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QLabel>
+#include <QEvent>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QShortcut>
@@ -293,6 +295,83 @@ QLabel* pathHeaderLabel(const QString& path, QWidget* parent) {
   return label;
 }
 
+namespace {
+// QLineEdit に ↑ = 先頭 / ↓ = 末尾の動きを与えるイベントフィルタ。
+class UpDownCursorFilter : public QObject {
+public:
+  UpDownCursorFilter(QLineEdit* edit, LineEditUpDownBoundary boundary)
+    : QObject(edit), m_boundary(boundary) {}
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override {
+    if (event->type() != QEvent::KeyPress) return false;
+    auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() != Qt::Key_Up && ke->key() != Qt::Key_Down) return false;
+    if (!Settings::instance().lineEditUpDownByDelimiter()) return false;
+    // Ctrl / Alt / Meta 併用は他の用途に譲る (Shift は選択拡張として扱う)。
+    if (ke->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) {
+      return false;
+    }
+    auto* edit = qobject_cast<QLineEdit*>(watched);
+    if (!edit) return false;
+    const bool select = ke->modifiers() & Qt::ShiftModifier;
+    const int cur = edit->cursorPosition();
+    const QString text = edit->text();
+    int sep = -1;      // 区切りの位置 (なければ -1)
+    int sepDown = -1;  // ↓ の移動先 (拡張子は '.' の直前、空白は空白の直後)
+    if (m_boundary == LineEditUpDownBoundary::Whitespace) {
+      // 末尾の空白を除いた中で最後の空白の連なりの先頭。先頭の空白は含めない。
+      int end = text.length();
+      while (end > 0 && text.at(end - 1).isSpace()) {
+        --end;
+      }
+      int i = end - 1;
+      while (i >= 0 && !text.at(i).isSpace()) {
+        --i;
+      }
+      if (i >= 0) {
+        while (i > 0 && text.at(i - 1).isSpace()) {
+          --i;
+        }
+        sep = i;
+        sepDown = i;
+        while (sepDown < end && text.at(sepDown).isSpace()) {
+          ++sepDown;
+        }
+      }
+    } else {
+      // 拡張子の区切り ('.') は最後の '.'。先頭 '.' (ドットファイル) は含めない。
+      sep = text.lastIndexOf(QLatin1Char('.'));
+      sepDown = sep;
+    }
+    const bool hasSep = sep > 0;
+    int target;
+    if (ke->key() == Qt::Key_Up) {
+      // 区切りより後ろにいるときは区切りの直前へ。それ以外は先頭。
+      target = (hasSep && cur > sep) ? sep : 0;
+    } else {
+      // 移動先より前にいるときは移動先へ (拡張子なら '.' の直前、空白なら次の
+      // 値の先頭)。それ以外は末尾。
+      target = (hasSep && cur < sepDown) ? sepDown : text.length();
+    }
+    // Shift 併用時に選択の起点を保つため、home/end ではなく相対移動で動かす。
+    if (target < cur) {
+      edit->cursorBackward(select, cur - target);
+    } else if (target > cur) {
+      edit->cursorForward(select, target - cur);
+    }
+    return true;
+  }
+
+private:
+  LineEditUpDownBoundary m_boundary;
+};
+} // namespace
+
+void applyLineEditUpDownCursor(QLineEdit* edit, LineEditUpDownBoundary boundary) {
+  if (!edit) return;
+  edit->installEventFilter(new UpDownCursorFilter(edit, boundary));
+}
+
 QString inputText(QWidget* parent,
                   const QString& title,
                   const QString& label,
@@ -318,6 +397,7 @@ QString inputText(QWidget* parent,
 
   auto* edit = new QLineEdit(defaultValue, &dlg);
   edit->setFocusPolicy(Qt::StrongFocus);
+  applyLineEditUpDownCursor(edit);
   if (cursor == TextInputCursor::BeforeExtension) {
     // ベース名を選択しつつカーソルを拡張子の手前に置く。拡張子は「最後の '.'
     // 以降」とみなす。先頭 '.' (ドットファイル) は拡張子ではなくベース名の一部。

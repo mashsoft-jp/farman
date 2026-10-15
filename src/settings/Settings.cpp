@@ -149,6 +149,7 @@ void Settings::applyDefaults() {
   m_customInitialPath[static_cast<int>(PaneType::Left)].clear();
   m_customInitialPath[static_cast<int>(PaneType::Right)].clear();
   m_confirmOnExit = false;
+  m_lineEditUpDownByDelimiter = true;
   m_copySeparator = CopySeparator::Comma;
   m_actionStatusSeconds = 4;
   m_singleInstance = true;
@@ -896,6 +897,10 @@ bool Settings::confirmOnExit() const {
   return m_confirmOnExit;
 }
 
+bool Settings::lineEditUpDownByDelimiter() const {
+  return m_lineEditUpDownByDelimiter;
+}
+
 bool Settings::singleInstance() const {
   return m_singleInstance;
 }
@@ -1290,6 +1295,10 @@ void Settings::setSyncBrowseShowDisabledDialog(bool show) {
 
 void Settings::setConfirmOnExit(bool confirm) {
   m_confirmOnExit = confirm;
+}
+
+void Settings::setLineEditUpDownByDelimiter(bool enabled) {
+  m_lineEditUpDownByDelimiter = enabled;
 }
 
 LanguageMode Settings::language() const { return m_language; }
@@ -2155,6 +2164,8 @@ void Settings::load() {
   // Load behavior settings
   QJsonObject behavior = root.value("behavior").toObject();
   m_confirmOnExit = behavior.value("confirmOnExit").toBool(false);
+  m_lineEditUpDownByDelimiter =
+    behavior.value("lineEditUpDownByDelimiter").toBool(true);
   {
     const QString sep = behavior.value("copySeparator").toString("comma");
     if      (sep == QLatin1String("commaSpace")) m_copySeparator = CopySeparator::CommaSpace;
@@ -2966,6 +2977,7 @@ void Settings::save() const {
   // Save behavior settings
   QJsonObject behavior;
   behavior["confirmOnExit"] = m_confirmOnExit;
+  behavior["lineEditUpDownByDelimiter"] = m_lineEditUpDownByDelimiter;
   behavior["copySeparator"] =
     (m_copySeparator == CopySeparator::CommaSpace) ? QStringLiteral("commaSpace")
   : (m_copySeparator == CopySeparator::Lf)         ? QStringLiteral("lf")

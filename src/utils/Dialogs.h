@@ -7,6 +7,7 @@
 class QWidget;
 class QAbstractButton;
 class QLabel;
+class QLineEdit;
 class QDateTimeEdit;
 class QPushButton;
 
@@ -162,6 +163,18 @@ void applyCalendarPopupStyle(QDateTimeEdit* edit);
 // (ペインが隠れていたり、2 画面でどちらが対象か紛らわしい場面のため)。
 // 見た目はソート / フィルタダイアログの見出しに合わせる。
 QLabel* pathHeaderLabel(const QString& path, QWidget* parent);
+
+// 1 行入力欄で ↑ キーを先頭、↓ キーを末尾へのカーソル移動にする
+// (Shift 併用で選択範囲を拡張)。1 行なので上下に移動先の行が無く、
+// 既定では何も起きないキーを Home / End 相当に割り当てる。
+// ただし最後の '.' (拡張子の区切り。先頭 '.' は除く) がある場合は、
+// ↓ で '.' より前にいるとき、↑ で '.' より後ろにいるときに '.' の直前へ移動する。
+// Whitespace を指定すると、'.' の代わりに最後の空白 (末尾・先頭の空白は除く) を
+// 区切りとして同じ動きにする (空白区切りで複数の値を入れる欄向け)。
+// ただし ↓ は空白の直前ではなく直後 (次の値の先頭) へ移動する。
+enum class LineEditUpDownBoundary { Extension, Whitespace };
+void applyLineEditUpDownCursor(QLineEdit* edit,
+                               LineEditUpDownBoundary boundary = LineEditUpDownBoundary::Extension);
 
 // headerPath が空でなければ、入力欄の上に pathHeaderLabel を出す。
 QString inputText(QWidget* parent,

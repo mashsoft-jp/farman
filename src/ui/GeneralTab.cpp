@@ -287,12 +287,20 @@ void GeneralTab::setupUi() {
     tr("Show the icon toolbar under the menu bar. Can also be toggled from "
        "the View menu."));
 
+  m_lineEditUpDownCheck = new QCheckBox(
+    tr("Move cursor by delimiter with Up/Down in text fields"), this);
+  m_lineEditUpDownCheck->setToolTip(
+    tr("If on, Up/Down in single-line text fields (rename, name pattern, etc.) "
+       "move the cursor to the start / end, stopping at the extension dot or "
+       "the last space on the way. Off leaves Up/Down to the system default."));
+
   auto* optionsGrid = new QGridLayout();
   optionsGrid->setContentsMargins(0, 0, 0, 0);
   optionsGrid->setHorizontalSpacing(24);
   optionsGrid->addWidget(m_confirmOnExitCheck, 0, 0);
   optionsGrid->addWidget(m_singleInstanceCheck, 0, 1);
   optionsGrid->addWidget(m_showToolbarCheck, 1, 0);
+  optionsGrid->addWidget(m_lineEditUpDownCheck, 1, 1);
   // 2 列目の右は空けて左寄せにする (列が画面幅いっぱいに広がらないように)。
   optionsGrid->setColumnStretch(2, 1);
   mainLayout->addLayout(optionsGrid);
@@ -411,6 +419,7 @@ void GeneralTab::loadSettings() {
 
   m_confirmOnExitCheck->setChecked(settings.confirmOnExit());
   m_singleInstanceCheck->setChecked(settings.singleInstance());
+  m_lineEditUpDownCheck->setChecked(settings.lineEditUpDownByDelimiter());
   m_showTipsCheck->setChecked(settings.showTipsOnStartup());
   m_showToolbarCheck->setChecked(settings.showToolbar());
   for (int i = 0; i < m_languageCombo->count(); ++i) {
@@ -493,6 +502,7 @@ void GeneralTab::save() {
   settings.setCustomInitialPath(PaneType::Right, m_rightCustomPathEdit->text().trimmed());
   settings.setConfirmOnExit(m_confirmOnExitCheck->isChecked());
   settings.setSingleInstance(m_singleInstanceCheck->isChecked());
+  settings.setLineEditUpDownByDelimiter(m_lineEditUpDownCheck->isChecked());
   settings.setShowTipsOnStartup(m_showTipsCheck->isChecked());
   settings.setShowToolbar(m_showToolbarCheck->isChecked());
   settings.setLanguage(static_cast<LanguageMode>(m_languageCombo->currentData().toInt()));
