@@ -116,20 +116,13 @@
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">Repository</a></p>
 
           <div class="plugin-updates whatsnew">
-            <h4>What's new in the latest version <span class="wn-date">0.3.0 · 2026-09-15</span></h4>
+            <h4>What's new in the latest version <span class="wn-date">0.3.1 · 2026-10-16</span></h4>
 
-            <h5>Multi-part FBX models are now assembled correctly</h5>
+            <h5>Fixed some parts (such as the face) appearing at floor level in models without animation</h5>
             <ul>
-              <li>The position, rotation and scale stored in the FBX node hierarchy are now applied to each mesh. Models that place the same shape from several nodes (for example dungeon backgrounds built from floor and wall parts) used to render with every part stacked at the origin. They now appear laid out the same way as in Unity Editor or your DCC tool.</li>
-              <li>Mirrored (flipped) parts keep the correct face orientation.</li>
-              <li>Models with skeletal animation render the same as before.</li>
-            </ul>
-
-            <h5>Back-face culling</h5>
-            <ul>
-              <li>Added back-face culling, which skips drawing the back side of polygons. This matches the single-sided rendering of game engines such as Unity, so the viewer now gives a closer preview of how a model will look in-engine. It is on by default.</li>
-              <li>Toggle it with the toolbar button or the <code>C</code> key. Turn it off when you want to see both sides. The key can be changed in farman's Settings → Key Bindings.</li>
-              <li>Wireframe mode always draws both sides so the structure stays visible.</li>
+              <li>Fixed an issue where, in FBX files that have a skeleton but no animation, parts authored in head-local coordinates (such as a character's face) were drawn at floor level. They now appear in the same position as in Unity Editor.</li>
+              <li>Also fixed a possible misplacement of parts in FBX files where bones with the same name have a different bind-pose (inverse bind) matrix per mesh.</li>
+              <li>Models with animation render the same as before.</li>
             </ul>
             <p class="doc-note">Notes for earlier versions are on the <a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">releases page</a>, in Japanese and English.</p>
           </div>
