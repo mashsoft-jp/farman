@@ -6,6 +6,7 @@
 #include <QCoreApplication>
 #include <QDateTimeEdit>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
@@ -299,21 +300,33 @@ namespace {
 // QLineEdit に ↑ = 先頭 / ↓ = 末尾の動きを与えるイベントフィルタ。
 class UpDownCursorFilter : public QObject {
 public:
-  UpDownCursorFilter(QLineEdit* edit, LineEditUpDownBoundary boundary)
-    : QObject(edit), m_boundary(boundary) {}
+  // 監視対象は QLineEdit か、編集可能な QComboBox。QComboBox ではフォーカスが
+  // コンボ本体にあり、キーはコンボから内部の QLineEdit へ直接渡される (イベント
+  // フィルタを通らない) ので、コンボの場合はコンボ自身に取り付ける。
+  UpDownCursorFilter(QObject* target, LineEditUpDownBoundary boundary)
+    : QObject(target), m_boundary(boundary) {}
 protected:
   bool eventFilter(QObject* watched, QEvent* event) override {
     if (event->type() != QEvent::KeyPress) return false;
     auto* ke = static_cast<QKeyEvent*>(event);
     if (ke->key() != Qt::Key_Up && ke->key() != Qt::Key_Down) return false;
-    if (!Settings::instance().lineEditUpDownByDelimiter()) return false;
     // Ctrl / Alt / Meta 併用は他の用途に譲る (Shift は選択拡張として扱う)。
     if (ke->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) {
       return false;
     }
-    auto* edit = qobject_cast<QLineEdit*>(watched);
+    auto* combo = qobject_cast<QComboBox*>(watched);
+    QLineEdit* edit = combo ? combo->lineEdit() : qobject_cast<QLineEdit*>(watched);
     if (!edit) return false;
     const bool select = ke->modifiers() & Qt::ShiftModifier;
+    // コンボでは、区切り単位の移動が OFF のとき、または ON でカーソルが末尾に
+    // あるときの ↓ で、履歴のドロップダウンリストを開く。
+    const bool enabled = Settings::instance().lineEditUpDownByDelimiter();
+    if (combo && ke->key() == Qt::Key_Down && !select
+        && (!enabled || edit->cursorPosition() == edit->text().length())) {
+      combo->showPopup();
+      return true;
+    }
+    if (!enabled) return false;
     const int cur = edit->cursorPosition();
     const QString text = edit->text();
     int sep = -1;      // 区切りの位置 (なければ -1)
@@ -370,6 +383,11 @@ private:
 void applyLineEditUpDownCursor(QLineEdit* edit, LineEditUpDownBoundary boundary) {
   if (!edit) return;
   edit->installEventFilter(new UpDownCursorFilter(edit, boundary));
+}
+
+void applyLineEditUpDownCursor(QComboBox* combo, LineEditUpDownBoundary boundary) {
+  if (!combo || !combo->lineEdit()) return;
+  combo->installEventFilter(new UpDownCursorFilter(combo, boundary));
 }
 
 QString inputText(QWidget* parent,

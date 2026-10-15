@@ -52,7 +52,8 @@ private:
   QStringList m_originalNames;
 
   // Inputs
-  QLineEdit*  m_templateEdit       = nullptr;
+  QComboBox*  m_templateCombo      = nullptr;  // 編集可。履歴から選べる
+  QLineEdit*  m_templateEdit       = nullptr;  // m_templateCombo の入力欄
   QLineEdit*  m_findEdit           = nullptr;
   QLineEdit*  m_replaceEdit        = nullptr;
   QCheckBox*  m_regexCheck         = nullptr;

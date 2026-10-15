@@ -8,6 +8,7 @@ class QWidget;
 class QAbstractButton;
 class QLabel;
 class QLineEdit;
+class QComboBox;
 class QDateTimeEdit;
 class QPushButton;
 
@@ -174,6 +175,12 @@ QLabel* pathHeaderLabel(const QString& path, QWidget* parent);
 // ただし ↓ は空白の直前ではなく直後 (次の値の先頭) へ移動する。
 enum class LineEditUpDownBoundary { Extension, Whitespace };
 void applyLineEditUpDownCursor(QLineEdit* edit,
+                               LineEditUpDownBoundary boundary = LineEditUpDownBoundary::Extension);
+// 編集可能な QComboBox 版。キー入力が内部の QLineEdit に届く前にコンボで受ける
+// 必要があるため、QLineEdit 版とは別に用意する。同じ動きに加えて、↓ で
+// ドロップダウンリストを開く (区切り単位の移動が OFF のとき、または ON で
+// カーソルが末尾にあるとき)。
+void applyLineEditUpDownCursor(QComboBox* combo,
                                LineEditUpDownBoundary boundary = LineEditUpDownBoundary::Extension);
 
 // headerPath が空でなければ、入力欄の上に pathHeaderLabel を出す。

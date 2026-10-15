@@ -83,6 +83,8 @@ public:
   void deleteSelectedFiles();
   void createDirectory();
   void createFile();
+  // 2 件以上選択中なら選択ファイルを 1 件ずつ順にリネーム (キュー。キャンセルで
+  // 残りも中止)。それ以外はカーソル行 1 件。一括リネームは bulkRenameItems()。
   void renameItem();
   // 選択した複数 (or カーソル行) を BulkRenameDialog で一括リネーム
   void bulkRenameItems();

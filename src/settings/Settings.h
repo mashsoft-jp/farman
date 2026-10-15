@@ -228,6 +228,13 @@ public:
   bool confirmOnExit()                  const;
   void setConfirmOnExit(bool confirm);
 
+  // 一括リネームで使ったテンプレートの履歴 (新しい順、最大 kMaxBulkRenameTemplates 件)。
+  // 追加は rememberBulkRenameTemplate() で行い、空文字・既に履歴にあるものは
+  // 記憶しない。
+  static constexpr int kMaxBulkRenameTemplates = 10;
+  QStringList bulkRenameTemplates()     const;
+  void rememberBulkRenameTemplate(const QString& tmpl);
+
   // 1 行入力欄 (名前変更・検索の名前パターンなど) で ↑↓ を区切り単位の
   // カーソル移動にするか。ON なら ↑ = 先頭 / ↓ = 末尾に加えて、拡張子 / 空白の
   // 区切りで止まる。OFF なら ↑↓ には何も割り当てない (Qt 標準の動き)。
@@ -739,6 +746,7 @@ private:
   QString          m_customInitialPath[static_cast<int>(PaneType::Count)];
 
   bool             m_confirmOnExit   = false;
+  QStringList      m_bulkRenameTemplates;
   bool             m_lineEditUpDownByDelimiter = true;
   // 複数選択時のコピー区切り (パス / 名前で共通)。
   CopySeparator    m_copySeparator = CopySeparator::Comma;

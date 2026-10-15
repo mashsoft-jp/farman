@@ -149,6 +149,7 @@ void Settings::applyDefaults() {
   m_customInitialPath[static_cast<int>(PaneType::Left)].clear();
   m_customInitialPath[static_cast<int>(PaneType::Right)].clear();
   m_confirmOnExit = false;
+  m_bulkRenameTemplates.clear();
   m_lineEditUpDownByDelimiter = true;
   m_copySeparator = CopySeparator::Comma;
   m_actionStatusSeconds = 4;
@@ -895,6 +896,18 @@ QString Settings::copySeparatorText() const {
 
 bool Settings::confirmOnExit() const {
   return m_confirmOnExit;
+}
+
+QStringList Settings::bulkRenameTemplates() const {
+  return m_bulkRenameTemplates;
+}
+
+void Settings::rememberBulkRenameTemplate(const QString& tmpl) {
+  if (tmpl.isEmpty() || m_bulkRenameTemplates.contains(tmpl)) return;
+  m_bulkRenameTemplates.prepend(tmpl);
+  while (m_bulkRenameTemplates.size() > kMaxBulkRenameTemplates) {
+    m_bulkRenameTemplates.removeLast();
+  }
 }
 
 bool Settings::lineEditUpDownByDelimiter() const {
@@ -2164,6 +2177,14 @@ void Settings::load() {
   // Load behavior settings
   QJsonObject behavior = root.value("behavior").toObject();
   m_confirmOnExit = behavior.value("confirmOnExit").toBool(false);
+  m_bulkRenameTemplates.clear();
+  for (const QJsonValue& v : behavior.value("bulkRenameTemplates").toArray()) {
+    const QString t = v.toString();
+    if (!t.isEmpty() && !m_bulkRenameTemplates.contains(t)
+        && m_bulkRenameTemplates.size() < kMaxBulkRenameTemplates) {
+      m_bulkRenameTemplates.append(t);
+    }
+  }
   m_lineEditUpDownByDelimiter =
     behavior.value("lineEditUpDownByDelimiter").toBool(true);
   {
@@ -2977,6 +2998,7 @@ void Settings::save() const {
   // Save behavior settings
   QJsonObject behavior;
   behavior["confirmOnExit"] = m_confirmOnExit;
+  behavior["bulkRenameTemplates"] = QJsonArray::fromStringList(m_bulkRenameTemplates);
   behavior["lineEditUpDownByDelimiter"] = m_lineEditUpDownByDelimiter;
   behavior["copySeparator"] =
     (m_copySeparator == CopySeparator::CommaSpace) ? QStringLiteral("commaSpace")

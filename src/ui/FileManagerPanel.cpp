@@ -2921,90 +2921,126 @@ void FileManagerPanel::renameItem() {
     return;
   }
 
-  QModelIndex currentIndex = srcPane->view()->currentIndex();
-  if (!currentIndex.isValid()) {
-    return;
-  }
-
-  const FileItem* item = srcModel->itemAt(currentIndex);
-  if (!item || item->isDotDot()) {
-    return;
-  }
-
-  QString oldName = item->name();
-  QString oldPath = item->absolutePath();
+  // 対象の集め方: 2 件以上選択中なら選択ファイルすべてを一覧順に 1 件ずつ
+  // リネームする (キュー)。それ以外 (選択なし / 1 件) はカーソル行の 1 件だけ。
   // isDir も含めて必要な情報はダイアログを開く前に退避する。
   // inputText() はネストしたイベントループを回すため、その間に
   // QFileSystemWatcher 経由でモデルが refresh されると `item` が破棄され得る
   // (Google ドライブ等のバックグラウンド同期で発生しやすい)。ダイアログ後に
   // `item` を参照すると use-after-free になるので、以降は退避値のみを使う。
-  const bool itemIsDir = item->isDir();
-  if (!ensureNotLockedByBackground({oldPath})) return;
-
-  // Ask for new name. ファイルはカーソルを末尾ではなく拡張子の手前に置く
-  // (例: "foo.txt" を選んだ状態で `r` を押すと "foo" が選択される)。
-  // ディレクトリは名前中のドットに拡張子としての意味が無い ("photos.2024" など)
-  // ので全体を選択する。コピー衝突時の OverwriteDialog のリネーム入力欄も同じ。
-  bool ok = false;
-  QString newName = inputText(
-    this,
-    tr("Rename"),
-    tr("Enter new name:"),
-    oldName,
-    &ok,
-    itemIsDir ? TextInputCursor::SelectAll : TextInputCursor::BeforeExtension,
-    srcPane->currentPath()
-  );
-
-  if (!ok || newName.isEmpty() || newName == oldName) {
-    return;
+  struct RenameTarget {
+    QString name;
+    QString path;
+    bool    isDir = false;
+  };
+  QList<RenameTarget> targets;
+  for (int i = 0; i < srcModel->rowCount(); ++i) {
+    const FileItem* it = srcModel->itemAt(i);
+    if (it && !it->isDotDot() && it->isSelected()) {
+      targets.append({it->name(), it->absolutePath(), it->isDir()});
+    }
+  }
+  if (targets.size() < 2) {
+    targets.clear();
+    QModelIndex currentIndex = srcPane->view()->currentIndex();
+    if (!currentIndex.isValid()) {
+      return;
+    }
+    const FileItem* item = srcModel->itemAt(currentIndex);
+    if (!item || item->isDotDot()) {
+      return;
+    }
+    targets.append({item->name(), item->absolutePath(), item->isDir()});
   }
 
-  // Check if new name already exists
-  QString parentPath = QFileInfo(oldPath).path();
-  QString newPath = parentPath + "/" + newName;
-  if (!ensureNotLockedByBackground({newPath})) return;
+  const QString dirPath = srcPane->currentPath();
+  QString lastRenamed;     // 最後にリネームできた新名 (カーソル移動用)
+  QString lastOldName;
+  int     renamedCount = 0;
 
-  if (QFileInfo::exists(newPath)) {
-    critical(
+  for (int index = 0; index < targets.size(); ++index) {
+    const RenameTarget& target = targets.at(index);
+    const QString& oldName = target.name;
+    const QString& oldPath = target.path;
+    const bool itemIsDir   = target.isDir;
+    if (!ensureNotLockedByBackground({oldPath})) continue;
+
+    // Ask for new name. ファイルはカーソルを末尾ではなく拡張子の手前に置く
+    // (例: "foo.txt" を選んだ状態で `r` を押すと "foo" が選択される)。
+    // ディレクトリは名前中のドットに拡張子としての意味が無い ("photos.2024" など)
+    // ので全体を選択する。コピー衝突時の OverwriteDialog のリネーム入力欄も同じ。
+    bool ok = false;
+    QString newName = inputText(
       this,
-      tr("Error"),
-      tr("A file or directory with the name '%1' already exists.").arg(newName)
+      targets.size() > 1 ? tr("Rename (%1 / %2)").arg(index + 1).arg(targets.size())
+                         : tr("Rename"),
+      tr("Enter new name:"),
+      oldName,
+      &ok,
+      itemIsDir ? TextInputCursor::SelectAll : TextInputCursor::BeforeExtension,
+      dirPath
     );
-    return;
+
+    // キャンセルはキュー全体の中止。空 / 変更なしはこの 1 件だけ飛ばす。
+    if (!ok) break;
+    if (newName.isEmpty() || newName == oldName) continue;
+
+    // Check if new name already exists
+    QString parentPath = QFileInfo(oldPath).path();
+    QString newPath = parentPath + "/" + newName;
+    if (!ensureNotLockedByBackground({newPath})) continue;
+
+    if (QFileInfo::exists(newPath)) {
+      critical(
+        this,
+        tr("Error"),
+        tr("A file or directory with the name '%1' already exists.").arg(newName)
+      );
+      continue;
+    }
+
+    // Rename (item はダイアログ後に破棄され得るため退避した itemIsDir を使う)
+    bool success = false;
+    if (itemIsDir) {
+      QDir dir;
+      success = dir.rename(oldPath, newPath);
+    } else {
+      QFile file;
+      success = file.rename(oldPath, newPath);
+    }
+
+    if (!success) {
+      Logger::instance().error(QStringLiteral("Rename failed: %1 → %2")
+        .arg(oldPath, newPath));
+      critical(
+        this,
+        tr("Error"),
+        tr("Failed to rename '%1' to '%2'.").arg(oldName, newName)
+      );
+      continue;
+    }
+    Logger::instance().info(QStringLiteral("Rename: %1 → %2").arg(oldName, newName));
+    lastRenamed = newName;
+    lastOldName = oldName;
+    ++renamedCount;
   }
 
-  // Rename (item はダイアログ後に破棄され得るため退避した itemIsDir を使う)
-  bool success = false;
-  if (itemIsDir) {
-    QDir dir;
-    success = dir.rename(oldPath, newPath);
+  if (renamedCount == 0) {
+    return;
+  }
+  if (renamedCount == 1) {
+    emit actionCompleted(tr("Renamed: %1 → %2").arg(lastOldName, lastRenamed));
   } else {
-    QFile file;
-    success = file.rename(oldPath, newPath);
+    emit actionCompleted(tr("Renamed %n item(s)", nullptr, renamedCount));
   }
 
-  if (!success) {
-    Logger::instance().error(QStringLiteral("Rename failed: %1 → %2")
-      .arg(oldPath, newPath));
-    critical(
-      this,
-      tr("Error"),
-      tr("Failed to rename '%1' to '%2'.").arg(oldName, newName)
-    );
-    return;
-  }
-  Logger::instance().info(QStringLiteral("Rename: %1 → %2").arg(oldName, newName));
-  emit actionCompleted(tr("Renamed: %1 → %2").arg(oldName, newName));
-
-  // Refresh and move cursor to renamed item
+  // Refresh and move cursor to renamed item (複数のときは最後にリネームしたもの)
   QString currentPath = srcPane->currentPath();
   srcPane->setPath(currentPath);
 
-  // Find and select the renamed item
   for (int i = 0; i < srcModel->rowCount(); ++i) {
     const FileItem* renamedItem = srcModel->itemAt(i);
-    if (renamedItem && renamedItem->name() == newName) {
+    if (renamedItem && renamedItem->name() == lastRenamed) {
       srcPane->view()->setCurrentIndex(srcModel->index(i, 0));
       break;
     }

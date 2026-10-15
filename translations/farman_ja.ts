@@ -4405,6 +4405,11 @@ What would you like to do?</source>
         <translation>リネーム</translation>
     </message>
     <message>
+        <location filename="../src/ui/FileManagerPanel.cpp" line="2975"/>
+        <source>Rename (%1 / %2)</source>
+        <translation>リネーム (%1 / %2)</translation>
+    </message>
+    <message>
         <location filename="../src/ui/FileManagerPanel.cpp" line="2952"/>
         <source>Enter new name:</source>
         <translation>新しい名前を入力:</translation>

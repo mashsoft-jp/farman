@@ -1,4 +1,5 @@
 #include "BulkRenameDialog.h"
+#include "settings/Settings.h"
 #include "utils/Dialogs.h"
 
 #include <QCheckBox>
@@ -23,6 +24,11 @@
 
 namespace Farman {
 
+namespace {
+// テンプレート欄の初期値。履歴にも記憶しない。
+const QString kDefaultTemplate = QStringLiteral("{name}.{ext}");
+} // namespace
+
 BulkRenameDialog::BulkRenameDialog(const QString& sourceDir,
                                    const QStringList& names,
                                    QWidget* parent)
@@ -43,10 +49,17 @@ void BulkRenameDialog::setupUi() {
   QFormLayout* form = new QFormLayout(inputGroup);
   form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
-  m_templateEdit = new QLineEdit(this);
-  m_templateEdit->setText(QStringLiteral("{name}.{ext}"));
-  applyLineEditUpDownCursor(m_templateEdit);
-  m_templateEdit->setToolTip(
+  // テンプレートは編集可能なドロップダウン。過去に使ったテンプレートを履歴
+  // (新しい順) から選べ、履歴に無い新しいパターンもそのまま入力できる。
+  m_templateCombo = new QComboBox(this);
+  m_templateCombo->setEditable(true);
+  m_templateCombo->setInsertPolicy(QComboBox::NoInsert);
+  m_templateCombo->setCompleter(nullptr);
+  m_templateCombo->addItems(Settings::instance().bulkRenameTemplates());
+  m_templateEdit = m_templateCombo->lineEdit();
+  m_templateEdit->setText(kDefaultTemplate);
+  applyLineEditUpDownCursor(m_templateCombo);
+  m_templateCombo->setToolTip(
     tr("Template for the new name. Placeholders:\n"
        "  {name}  original base name (no extension)\n"
        "  {ext}   original extension (without dot)\n"
@@ -72,9 +85,9 @@ void BulkRenameDialog::setupUi() {
   QVBoxLayout* templateCellLayout = new QVBoxLayout(templateCell);
   templateCellLayout->setContentsMargins(0, 0, 0, 0);
   templateCellLayout->setSpacing(2);
-  templateCellLayout->addWidget(m_templateEdit);
+  templateCellLayout->addWidget(m_templateCombo);
   templateCellLayout->addWidget(placeholderHelp);
-  form->addRow(altBuddyLabel(tr("Template:"), Qt::Key_T, m_templateEdit, this),
+  form->addRow(altBuddyLabel(tr("Template:"), Qt::Key_T, m_templateCombo, this),
                templateCell);
 
   // Find / Replace + regex
@@ -339,6 +352,14 @@ void BulkRenameDialog::onAccept() {
     if (newN.isEmpty()) continue;
     if (newN == m_originalNames[i]) continue;
     m_renames.append({m_originalNames[i], newN});
+  }
+  // 使ったテンプレートを履歴に残す。初期値のままのものは記憶しない
+  // (既に履歴にあるものは rememberBulkRenameTemplate() が無視する)。
+  const QString tmpl = m_templateEdit->text();
+  if (tmpl != kDefaultTemplate) {
+    Settings& settings = Settings::instance();
+    settings.rememberBulkRenameTemplate(tmpl);
+    settings.save();
   }
   accept();
 }
