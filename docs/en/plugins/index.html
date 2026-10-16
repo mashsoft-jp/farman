@@ -102,7 +102,7 @@
       <div class="plugin-list">
         <article class="feature" id="plugin-3d" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
           <h3>3D model viewer (FBX)</h3>
-          <p>Display <code>.fbx</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, bone (skeleton) display, and back-face culling. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
+          <p>Display <code>.fbx</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, bone (skeleton) display, back-face culling, and a node hierarchy info panel. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
           <figure class="doc-figure plugin-figure">
             <img src="../../screenshots/ex-01-3d-model-viewer.png" width="1200" height="792" alt="A FBX model shown in the 3D model viewer" loading="lazy" />
             <figcaption>3D model viewer (textures and skeletal animation)</figcaption>
@@ -116,13 +116,21 @@
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">Repository</a></p>
 
           <div class="plugin-updates whatsnew">
-            <h4>What's new in the latest version <span class="wn-date">0.3.1 · 2026-10-16</span></h4>
+            <h4>What's new in the latest version <span class="wn-date">0.4.0 · 2026-10-17</span></h4>
 
-            <h5>Fixed some parts (such as the face) appearing at floor level in models without animation</h5>
+            <h5>Added a node info panel (press <code>i</code>)</h5>
             <ul>
-              <li>Fixed an issue where, in FBX files that have a skeleton but no animation, parts authored in head-local coordinates (such as a character's face) were drawn at floor level. They now appear in the same position as in Unity Editor.</li>
-              <li>Also fixed a possible misplacement of parts in FBX files where bones with the same name have a different bind-pose (inverse bind) matrix per mesh.</li>
-              <li>Models with animation render the same as before.</li>
+              <li>A node info panel can now be shown on the right side of the view. Toggle it with the <code>i</code> key or the "i" button at the right end of the toolbar (hidden by default).</li>
+              <li>It shows the node hierarchy inside the FBX as a tree with connecting lines. Each node can be expanded or collapsed, and there are "Expand all" / "Collapse all" buttons. Bones are marked <code>[bone]</code>, and nodes that hold meshes show the mesh names.</li>
+              <li>Selecting a node shows its details below the tree: type, parent and children, position / rotation / scale, mesh vertex and triangle counts and material, the number of vertices a bone affects, and the total of the meshes under the node.</li>
+              <li>The selected node is also highlighted in the 3D view. Meshes and groups are tinted, and for a bone the area it influences is tinted, with a ring and its name drawn on the joint.</li>
+              <li>Information about the whole model (file name, mesh count, vertex count, textures, and so on) now appears above the controls panel in the top-left corner.</li>
+            </ul>
+
+            <h5>Models without animation now appear in the same pose as in Unity Editor</h5>
+            <ul>
+              <li>FBX files that have a skeleton but no animation are now shown in the joint pose stored in the file (for example, arms lowered) instead of the T-pose. Parts attached to a bone, such as a sword, follow the hand and appear in the correct place.</li>
+              <li>Fixed a rendering problem with FBX files where each mesh has a different bone reference (characters with many parts and more than 100 bones, for example).</li>
             </ul>
             <p class="doc-note">Notes for earlier versions are on the <a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">releases page</a>, in Japanese and English.</p>
           </div>
