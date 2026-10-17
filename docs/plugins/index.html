@@ -174,17 +174,18 @@
     <!-- 導入手順 -->
     <section class="doc-section" id="install">
       <h2>導入手順</h2>
-      <p>外部プラグインは、farman のプラグインディレクトリに置いて読み込みます。手順はどのプラグインでも共通です。</p>
+      <p>外部プラグインは、farman の <strong>設定 → プラグイン</strong>（ヘルプ → プラグイン... からも開けます）でインストール・更新・アンインストールできます。ファイルを手でコピーする必要はありません。手順はどのプラグインでも共通です。</p>
       <ol class="doc-list">
-        <li>お使いの OS 用のファイルを、そのプラグインの配布ページからダウンロードします（macOS: <code>.dylib</code> / Windows: <code>.dll</code> / Linux: <code>.so</code>）。</li>
-        <li>farman の <strong>設定 → プラグイン</strong> で「<strong>開く</strong>」ボタンを押し、プラグインディレクトリを開きます。ビュアープラグインは <code>viewers</code>、アーカイブプラグインは <code>archives</code> のサブフォルダにファイルを置きます。</li>
-        <li>同じ画面で「<strong>外部プラグインの読込みを許可する</strong>」をオンにします（既定はオフ）。</li>
-        <li>farman を再起動します。設定 → プラグインの一覧に読み込まれたプラグインが表示されれば導入完了です。</li>
+        <li>設定 → プラグインを開き、「<strong>外部プラグインの読み込みを許可する</strong>」をオンにします（既定はオフ）。</li>
+        <li><strong>公式プラグイン</strong>は、まだ入れていないものが「外部プラグイン」の一覧に並びます。目的のプラグインの「<strong>インストール</strong>」を押すと、最新版を取得して導入します。</li>
+        <li><strong>手元のファイル</strong>（第三者のプラグインなど）は、お使いの OS 用のファイル（macOS: <code>.dylib</code> / Windows: <code>.dll</code> / Linux: <code>.so</code>）をダウンロードし、ページ下部の枠に<strong>ドラッグ＆ドロップ</strong>するか、「<strong>ファイルからインストール...</strong>」で選びます。ビュアー用かアーカイブ用かは自動で判別します。</li>
+        <li>導入は次回起動時に反映されます。ページの「<strong>farman を再起動</strong>」ボタンで、その場で再起動できます。再起動後、一覧に読み込み済みのプラグインが表示されれば導入完了です。</li>
       </ol>
       <figure class="doc-figure plugin-figure plugin-figure-sm">
-        <img src="../screenshots/ex-how-to-install.png" width="1000" height="652" alt="設定 → プラグインでプラグインディレクトリを開き、外部プラグインの読込みを許可する" loading="lazy" />
-        <figcaption>設定 → プラグイン（「開く」でプラグインディレクトリを表示・「外部プラグインの読込みを許可する」をオン）</figcaption>
+        <img src="../screenshots/ex-how-to-install.png" width="1000" height="652" alt="設定 → プラグインで外部プラグインの読み込みを許可し、ファイルをドロップするか「ファイルからインストール...」で導入する" loading="lazy" />
+        <figcaption>設定 → プラグイン（上: 「外部プラグインの読み込みを許可する」をオン / 下: ドロップまたは「ファイルからインストール...」）</figcaption>
       </figure>
+      <p class="doc-note">更新するときは、一覧の「更新を確認」で最新版を調べ、更新があるプラグインの「更新する」を押します。アンインストールも同じ一覧の「アンインストール...」から行います。プラグインディレクトリ（ページ下部の「開く」）の <code>viewers</code> / <code>archives</code> サブフォルダへ直接ファイルを置く従来の方法も使えます。</p>
       <p class="doc-note">macOS: 公式プラグインは署名 + 公証済みでそのまま読み込めます。未署名の第三者プラグインはダウンロード時の隔離により初回ロードがブロックされることがあります（提供元の案内に従ってください）。Windows: 未署名のプラグインは SmartScreen の警告が出ることがあります。</p>
     </section>
 
