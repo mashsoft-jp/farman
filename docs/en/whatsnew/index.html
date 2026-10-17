@@ -47,6 +47,89 @@
       What's new in each version. These are the same notes shown in the app under "Help → What's New...", listed newest first.
     </p>
 
+    <!-- 1.1.0 -->
+    <section class="doc-section" id="v1-1-0">
+      <h2>farman 1.1.0 <span class="wn-date">2026-10-17</span></h2>
+      <div class="whatsnew">
+        <h3>Install plugins inside the app</h3>
+        <ul>
+          <li>The new <strong>Settings → Plugins</strong> page lets you install, update and uninstall external plugins in one place. You no longer have to copy files into the plugin directory by hand.</li>
+          <li>Drag and drop a plugin file onto the page, or pick one with "Install from File...", to install it.</li>
+          <li>Official plugins can be installed or updated right from the list with "Install" / "Update". "Check for Updates" looks up the latest versions, and plugins with an update are marked with ❗ in bold.</li>
+          <li>Installs, updates and uninstalls take effect the next time farman starts. Use the "Restart farman" button on the page to restart right away.</li>
+          <li>You can also open this page from Help → "Plugins..." (Ctrl+Shift+P) or the toolbar. The Settings pages are now numbered 4. Plugins / 5. Viewer / 6. Archive, and so on.</li>
+        </ul>
+
+        <h3>Tips on startup</h3>
+        <ul>
+          <li>farman now shows a usage tip once a day on startup, introducing shortcuts and easy-to-miss features one at a time.</li>
+          <li>Browse the tips with "Previous" / "Next". Keys in the text follow your current keybindings.</li>
+          <li>Open them any time from Help → "Tips...". To stop showing them on startup, uncheck the box at the bottom left of the dialog or in Settings → General.</li>
+        </ul>
+
+        <h3>Run copy and move in the background</h3>
+        <ul>
+          <li>The progress dialog for copy and move now has a "Run in Background" button. A long copy or move keeps running while you go back to other work.</li>
+          <li>While it runs, the status bar shows its progress. Click it to bring the progress dialog back, where you can also cancel.</li>
+          <li>Only one operation can run in the background at a time. While it runs, file operations (copy, move, delete, rename and so on) on its source and destination directories are not allowed.</li>
+          <li>The progress dialog no longer closes with Esc while an operation is running. Use Cancel to stop it.</li>
+        </ul>
+
+        <h3>Image viewer</h3>
+        <ul>
+          <li>Click the copy button on the toolbar or press Cmd+C (Ctrl+C on Windows / Linux) to copy the displayed image to the clipboard. A rotated image is copied in the orientation you see.</li>
+          <li>Animated images (GIF / WebP) can now be stepped frame by frame. Type a number into the frame box on the toolbar, or use its arrows or the <code>,</code> and <code>.</code> keys to move to the previous or next frame.</li>
+          <li>Pausing an animation now stops on the current frame. A separate "Stop" button (S key) returns to the first frame.</li>
+          <li>Copying an animated image copies the frame being displayed (playback is paused first).</li>
+        </ul>
+
+        <h3>Sort and filter</h3>
+        <ul>
+          <li>Fixed temporary settings (applied without "Override defaults for this directory") appearing as the defaults when the dialog was reopened.</li>
+          <li>When the dialog opens with settings that differ from the defaults, it now says whether they are saved or temporary, and which items differ.</li>
+          <li>The sort / filter line under each pane now starts with <strong>[Default] / [Temporary] / [Custom]</strong> (saved for this directory), so you can tell which settings are in effect. It also shows how dot files are handled (Dot-first / Dot-ignored).</li>
+          <li>With "Sort dot files first" turned off, dot files are now sorted by their name without the leading "." (.bashrc sorts among the b's).</li>
+        </ul>
+
+        <h3>Cursor movement in text fields</h3>
+        <ul>
+          <li>In single-line fields such as Rename, New, Create Archive, Bulk Rename and the search name pattern, Up now moves the cursor to the start and Down to the end. Hold Shift to extend the selection.</li>
+          <li>In file names, Down before the "." stops just before it, and Up after the "." also stops just before it. The search name pattern is space-separated, so Down jumps to the start of the next pattern.</li>
+          <li>You can turn this off under Settings → General ("Move cursor by delimiter with Up/Down in text fields"). It is on by default.</li>
+        </ul>
+
+        <h3>Rename</h3>
+        <ul>
+          <li>When several files are selected, Rename (r) now renames them one by one in order (it used to rename only the cursor row). The title shows progress such as "(1 / 3)", and cancelling stops the rest.</li>
+          <li>The Bulk Rename template field is now a drop-down of past templates. The last 10 templates you used are remembered (the default and duplicates are not). Press Down with the cursor at the end to open the history.</li>
+        </ul>
+
+        <h3>Size display</h3>
+        <ul>
+          <li>Settings → Behavior "List Display" is now "Display Formats", and sizes outside the file list (selection total, disk free space, transfer progress, properties, preview, viewer and search results) can be shown as Bytes, KB/MB/GB (1000) or KiB/MiB/GiB (1024). The default is KB/MB/GB.</li>
+          <li>The selection total, which was shown in KiB/MiB, now follows this setting.</li>
+        </ul>
+
+        <h3>Settings</h3>
+        <ul>
+          <li>The viewer display mode (in the main window / separate windows) has moved from the "Behavior" page to the "Viewer" page.</li>
+          <li>Check boxes on the "General" and "Behavior" pages are laid out in two columns so they are easier to scan.</li>
+        </ul>
+
+        <h3>Log pane</h3>
+        <ul>
+          <li>Click the log pane to focus it, then press Cmd+C (Ctrl+C on Windows / Linux) to copy the selected text to the clipboard. Cmd+A (Ctrl+A) selects the whole log.</li>
+        </ul>
+
+        <h3>Bug fixes</h3>
+        <ul>
+          <li>Fixed the right-click menu of the log pane, path fields and other text fields appearing in English on Windows / Linux even when the UI was set to Japanese.</li>
+          <li>Fixed the selected row in the lists on the settings pages (Plugins, Viewer and so on) not being highlighted across the whole row on Windows.</li>
+          <li>Fixed the Size column in search results using the OS language for its units (such as "36 バイト") even when the UI was set to English.</li>
+        </ul>
+      </div>
+    </section>
+
     <!-- 1.0.1 -->
     <section class="doc-section" id="v1-0-1">
       <h2>farman 1.0.1 <span class="wn-date">2026-09-18</span></h2>

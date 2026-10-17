@@ -63,6 +63,34 @@
 - With "Sort dot files first" turned off, dot files are now sorted by their name
   without the leading "." (.bashrc sorts among the b's).
 
+### Cursor movement in text fields
+
+- In single-line fields such as Rename, New, Create Archive, Bulk Rename and the
+  search name pattern, Up now moves the cursor to the start and Down to the end.
+  Hold Shift to extend the selection.
+- In file names, Down before the "." stops just before it, and Up after the "."
+  also stops just before it. The search name pattern is space-separated, so Down
+  jumps to the start of the next pattern.
+- You can turn this off under Settings → General ("Move cursor by delimiter with
+  Up/Down in text fields"). It is on by default.
+
+### Rename
+
+- When several files are selected, Rename (r) now renames them one by one in
+  order (it used to rename only the cursor row). The title shows progress such as
+  "(1 / 3)", and cancelling stops the rest.
+- The Bulk Rename template field is now a drop-down of past templates. The last
+  10 templates you used are remembered (the default and duplicates are not).
+  Press Down with the cursor at the end to open the history.
+
+### Size display
+
+- Settings → Behavior "List Display" is now "Display Formats", and sizes outside
+  the file list (selection total, disk free space, transfer progress, properties,
+  preview, viewer and search results) can be shown as Bytes, KB/MB/GB (1000) or
+  KiB/MiB/GiB (1024). The default is KB/MB/GB.
+- The selection total, which was shown in KiB/MiB, now follows this setting.
+
 ### Settings
 
 - The viewer display mode (in the main window / separate windows) has moved from
