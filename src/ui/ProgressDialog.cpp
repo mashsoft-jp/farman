@@ -1,4 +1,5 @@
 #include "ProgressDialog.h"
+#include "utils/SizeFormat.h"
 #include "settings/Settings.h"
 #include "utils/Dialogs.h"
 #include <QVBoxLayout>
@@ -166,10 +167,9 @@ void ProgressDialog::onProgressUpdated(const WorkerProgress& progress) {
     m_fileProgressBar->setRange(0, 100);
     m_fileProgressBar->setValue(filePct);
     m_fileProgressBar->setFormat(QStringLiteral("%p%"));
-    const QLocale loc(QLocale::English);
     m_fileByteLabel->setText(tr("%1 / %2")
-                               .arg(loc.formattedDataSize(progress.processed))
-                               .arg(loc.formattedDataSize(progress.total)));
+                               .arg(formatDataSize(progress.processed))
+                               .arg(formatDataSize(progress.total)));
   } else if (!m_fileProgressBar->isHidden()) {
     // 一度表示済みでファイル間 (processed=0, total=-1) のとき。0% に戻す。
     m_fileProgressBar->setValue(0);

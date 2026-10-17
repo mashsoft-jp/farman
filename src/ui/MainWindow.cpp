@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "utils/SizeFormat.h"
 #include "FileManagerPanel.h"
 #include "ClickableLabel.h"
 #include "FileListPane.h"
@@ -537,16 +538,12 @@ void MainWindow::updateDiskStatus() {
     return;
   }
   const int usedPct = static_cast<int>(((total - free) * 100) / total);
-  // バイト単位は英語固定 (SPEC.md「バイトサイズの表記」と整合)。
-  // ボリューム容量は GB 単位 (1000 ベース、1 GB = 10^9 B) の SI 形式で出す。
-  // GiB 単位 (1024 ベース) の値に "GB" と表記すると単位として誤りで、バグに
-  // 見えるため (例: 994.66 GB のディスクが 926 GB と出る)。Windows の
-  // エクスプローラーは 1024 ベースを GB と表記するので、そちらとは一致しない。
-  const QLocale en(QLocale::English);
-  const QString freeStr  = en.formattedDataSize(free,  1,
-                              QLocale::DataSizeSIFormat);
-  const QString totalStr = en.formattedDataSize(total, 0,
-                              QLocale::DataSizeSIFormat);
+  // 表記 (SI の KB/MB/GB・IEC の KiB/MiB/GiB・バイト) は設定の generalSizeFormat に
+  // 従う。既定は SI (1 GB = 10^9 B)。SI のとき GiB 値に "GB" と付けると単位として
+  // 誤りで、バグに見えるため (例: 994.66 GB のディスクが 926 GB と出る)、換算と
+  // ラベルは formatDataSize が揃えて出す。
+  const QString freeStr  = formatDataSize(free,  1);
+  const QString totalStr = formatDataSize(total, 0);
   m_statusDiskLabel->setText(
     tr("%1 free / %2 (%3% used)").arg(freeStr, totalStr).arg(usedPct));
   // tooltip にボリューム名 / マウントポイント / ファイルシステム種別

@@ -1,4 +1,5 @@
 #include "FileManagerPanel.h"
+#include "utils/SizeFormat.h"
 #include "FileListPane.h"
 #include "FileListThumbnailView.h"
 #include "LogPane.h"
@@ -1636,7 +1637,7 @@ void FileManagerPanel::emitActivePaneStatus() {
     summary = tr("%1 / %2 items selected (%3)")
                 .arg(selectedCount)
                 .arg(totalCount)
-                .arg(QLocale(QLocale::English).formattedDataSize(selectedBytes));
+                .arg(formatDataSize(selectedBytes));
   } else {
     summary = tr("%1 items").arg(totalCount);
   }

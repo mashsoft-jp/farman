@@ -109,6 +109,7 @@ void Settings::applyDefaults() {
   // Auto にも変更できる。
   m_fileSizeFormatDual         = FileSizeFormat::SI;
   m_fileSizeFormatSingle       = FileSizeFormat::SI;
+  m_generalSizeFormat          = FileSizeFormat::SI;
   m_fileSizeThousandsSeparatorDual   = true;
   m_fileSizeThousandsSeparatorSingle = true;
   m_fileListRowHeight          = 0;
@@ -698,6 +699,15 @@ void Settings::setFileSizeFormatDual(FileSizeFormat fmt) {
 
 FileSizeFormat Settings::fileSizeFormatSingle() const {
   return m_fileSizeFormatSingle;
+}
+
+FileSizeFormat Settings::generalSizeFormat() const {
+  return m_generalSizeFormat;
+}
+
+void Settings::setGeneralSizeFormat(FileSizeFormat fmt) {
+  // Auto は一覧専用。ここでは既定の SI に丸める。
+  m_generalSizeFormat = (fmt == FileSizeFormat::Auto) ? FileSizeFormat::SI : fmt;
 }
 
 void Settings::setFileSizeFormatSingle(FileSizeFormat fmt) {
@@ -2113,6 +2123,12 @@ void Settings::load() {
     activeNormal   = extractGroup(catColors, "normal");
     activeSelected = extractGroup(catColors, "selected");
   }
+  m_generalSizeFormat = FileSizeFormat::SI;
+  if (appearance.contains("generalSizeFormat")) {
+    const FileSizeFormat g = stringToFileSizeFormat(
+      appearance.value("generalSizeFormat").toString());
+    if (g != FileSizeFormat::Auto) m_generalSizeFormat = g;
+  }
 
   auto loadCat = [&](FileCategory cat) {
     int idx = static_cast<int>(cat);
@@ -2932,6 +2948,7 @@ void Settings::save() const {
   appearance["addressFont"] = addressFontObj;
   appearance["fileSizeFormatDual"]         = fileSizeFormatToString(m_fileSizeFormatDual);
   appearance["fileSizeFormatSingle"]       = fileSizeFormatToString(m_fileSizeFormatSingle);
+  appearance["generalSizeFormat"]          = fileSizeFormatToString(m_generalSizeFormat);
   appearance["fileSizeThousandsSeparatorDual"]   = m_fileSizeThousandsSeparatorDual;
   appearance["fileSizeThousandsSeparatorSingle"] = m_fileSizeThousandsSeparatorSingle;
   auto saveCols = [](const ListColumnVisibility& v) -> QJsonObject {

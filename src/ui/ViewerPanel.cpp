@@ -1,4 +1,5 @@
 #include "ViewerPanel.h"
+#include "utils/SizeFormat.h"
 #include "core/Logger.h"
 #include "settings/Settings.h"
 #include "utils/MediaMatchers.h"
@@ -347,8 +348,7 @@ void ViewerPanel::reapplyViewerShortcuts() {
 void ViewerPanel::showLoadingState(const QString& filePath) {
   const QFileInfo fi(filePath);
   m_loadingTitle->setText(tr("Loading..."));
-  const QString sizeStr = QLocale(QLocale::English)
-                            .formattedDataSize(fi.size());
+  const QString sizeStr = formatDataSize(fi.size());
   // ファイル名 (太字相当) と サイズ・パスを 2 行で。
   m_loadingDetail->setText(QStringLiteral("%1\n%2 — %3")
                              .arg(fi.fileName(), sizeStr, fi.absolutePath()));

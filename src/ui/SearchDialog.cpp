@@ -1,4 +1,5 @@
 #include "SearchDialog.h"
+#include "utils/SizeFormat.h"
 #include "core/workers/SearchWorker.h"
 #include "settings/Settings.h"
 #include "utils/Dialogs.h"
@@ -35,8 +36,8 @@ namespace Farman {
 namespace {
 
 QString humanSize(qint64 bytes) {
-  // 単位は英語固定 (SPEC.md「バイトサイズの表記」)。システムロケールに依存させない。
-  return QLocale(QLocale::English).formattedDataSize(bytes);
+  // 設定 (generalSizeFormat) に従う。単位は英語固定 (SPEC.md「バイトサイズの表記」)。
+  return formatDataSize(bytes);
 }
 
 } // anonymous namespace

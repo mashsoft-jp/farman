@@ -1,4 +1,5 @@
 #include "PropertiesDialog.h"
+#include "utils/SizeFormat.h"
 #include "core/workers/PropertiesWorker.h"
 #include "core/workers/WorkerBase.h"
 #include "utils/Dialogs.h"
@@ -39,9 +40,14 @@ QString formatSize(qint64 bytes) {
   const QString num = QLocale(QLocale::English).toString(bytes);
   // 単位は略さず "bytes" と書く ("B" だとビットと紛らわしいため)。1 だけ単数形。
   const QString unit = (bytes == 1) ? QStringLiteral("byte") : QStringLiteral("bytes");
-  // 1 KiB 未満は換算しても同じ値になるので、括弧書きの人間向け表記は付けない。
-  if (bytes < 1024) return QStringLiteral("%1 %2").arg(num, unit);
-  const QString human = QLocale(QLocale::English).formattedDataSize(bytes);
+  // 1 KB (IEC は 1 KiB) 未満は換算しても同じ値になるので、括弧書きの人間向け
+  // 表記は付けない。バイト表記の設定のときも同じ数値の繰り返しになるので付けない。
+  const FileSizeFormat fmt = Settings::instance().generalSizeFormat();
+  const qint64 unitBase = (fmt == FileSizeFormat::IEC) ? 1024 : 1000;
+  if (fmt == FileSizeFormat::Bytes || bytes < unitBase) {
+    return QStringLiteral("%1 %2").arg(num, unit);
+  }
+  const QString human = formatDataSize(bytes);
   return QStringLiteral("%1 %2 (%3)").arg(num, unit, human);
 }
 

@@ -1040,6 +1040,15 @@ CLI 版を優先表示)。
 ### バイトサイズの表記
 - 単位は英語 (`B`, `KB`, `MB`, `GB`) で固定 (`QLocale(QLocale::English).formattedDataSize`)。
   システムロケールに依存しない。
+- 一覧以外 (選択合計 / ディスク空き容量 / 転送の進捗 / プロパティ / プレビュー /
+  ビュアー / 検索結果) の表記は、設定 (動作 → List Display の「一覧以外のサイズ表示」、
+  `generalSizeFormat`、デフォルト SI) に従う。`utils/SizeFormat.h` の
+  `formatDataSize()` が選ぶ。
+  - `si`: KB / MB / GB (1000 進)
+  - `iec`: KiB / MiB / GiB (1024 進)
+  - `bytes`: 桁区切り付きのバイト数 (`12,345,678 B`)。プロパティでは括弧書きの
+    換算値を付けない。
+  - 一覧の表記 (`fileSizeFormatDual` / `fileSizeFormatSingle`) とは独立。
 
 ---
 

@@ -415,6 +415,28 @@ void BehaviorTab::setupUi() {
     m_fileSizeThousandsSepSingleCheck,
     m_listColumnSingleCheck));
 
+  // 一覧以外 (選択合計 / ディスク空き容量 / 転送の進捗 / プロパティなど) の
+  // サイズ表記。一覧の Dual / Single とは独立。
+  {
+    auto* generalRow = new QHBoxLayout();
+    auto* generalLabel = new QLabel(
+      tr("Other size displays (selection total, free space, progress, properties):"),
+      this);
+    generalLabel->setWordWrap(true);
+    m_generalSizeFormatCombo = new QComboBox(this);
+    m_generalSizeFormatCombo->addItem(tr("Bytes"),              static_cast<int>(FileSizeFormat::Bytes));
+    m_generalSizeFormatCombo->addItem(tr("KB/MB/GB (1000)"),    static_cast<int>(FileSizeFormat::SI));
+    m_generalSizeFormatCombo->addItem(tr("KiB/MiB/GiB (1024)"), static_cast<int>(FileSizeFormat::IEC));
+    m_generalSizeFormatCombo->setToolTip(
+      tr("Choose how sizes are displayed outside the file list: the selection "
+         "total, disk free space, transfer progress, properties, preview, "
+         "viewer and search results."));
+    generalLabel->setBuddy(m_generalSizeFormatCombo);
+    generalRow->addWidget(generalLabel, 1);
+    generalRow->addWidget(m_generalSizeFormatCombo);
+    listDisplayLayout->addLayout(generalRow);
+  }
+
   // 念のため明示的に Tab 順を組む (各グループ内 + グループ間)。
   // size → date → thousands → cols(0..N-1)、最後に Single の先頭へ。
   auto chain = [](QWidget* a, QWidget* b) { QWidget::setTabOrder(a, b); };
@@ -579,6 +601,7 @@ void BehaviorTab::loadSettings() {
   };
   applySizeFormat(m_fileSizeFormatDualCombo,   settings.fileSizeFormatDual());
   applySizeFormat(m_fileSizeFormatSingleCombo, settings.fileSizeFormatSingle());
+  applySizeFormat(m_generalSizeFormatCombo,    settings.generalSizeFormat());
   m_fileSizeThousandsSepDualCheck->setChecked(settings.fileSizeThousandsSeparatorDual());
   m_fileSizeThousandsSepSingleCheck->setChecked(settings.fileSizeThousandsSeparatorSingle());
   m_dateTimeFormatDualCombo->setCurrentText(settings.dateTimeFormatDual());
@@ -688,6 +711,8 @@ void BehaviorTab::save() {
     m_fileSizeFormatDualCombo->currentData().toInt()));
   settings.setFileSizeFormatSingle(static_cast<FileSizeFormat>(
     m_fileSizeFormatSingleCombo->currentData().toInt()));
+  settings.setGeneralSizeFormat(static_cast<FileSizeFormat>(
+    m_generalSizeFormatCombo->currentData().toInt()));
   settings.setFileSizeThousandsSeparatorDual(m_fileSizeThousandsSepDualCheck->isChecked());
   settings.setFileSizeThousandsSeparatorSingle(m_fileSizeThousandsSepSingleCheck->isChecked());
   settings.setDateTimeFormatDual(m_dateTimeFormatDualCombo->currentText());

@@ -1,4 +1,5 @@
 #include "PreviewPane.h"
+#include "utils/SizeFormat.h"
 
 #include <QApplication>
 #include <QFileIconProvider>
@@ -130,8 +131,7 @@ void PreviewPane::showDirectorySize(qint64 totalBytes, int fileCount,
                                      int dirCount, bool finished) {
   if (m_directoryCountBase.isEmpty()) return;   // showDirectory 前なら無視
   if (!m_directoryCountLabel) return;
-  const QString sizeStr =
-    QLocale(QLocale::English).formattedDataSize(totalBytes);
+  const QString sizeStr = formatDataSize(totalBytes);
   // 確定済: "N items · 12.3 MB (15 files, 3 folders)"
   // 走査中: "N items · 12.3 MB (集計中…)"
   // ファイル数 / フォルダ数は走査中も含めて常に最新の暫定値を見せる

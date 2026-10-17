@@ -1894,6 +1894,16 @@ Row Background: fill the entire row with the cursor color.</source>
         <translation>自動</translation>
     </message>
     <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="414"/>
+        <source>Other size displays (selection total, free space, progress, properties):</source>
+        <translation>一覧以外のサイズ表示 (選択合計・空き容量・進捗・プロパティなど):</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="424"/>
+        <source>Choose how sizes are displayed outside the file list: the selection total, disk free space, transfer progress, properties, preview, viewer and search results.</source>
+        <translation>一覧以外のサイズ表示 (選択合計、ディスクの空き容量、転送の進捗、プロパティ、プレビュー、ビュアー、検索結果) の表記を選びます。</translation>
+    </message>
+    <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="284"/>
         <source>Choose how file sizes are displayed</source>
         <translation>ファイルサイズの表示形式を選択</translation>

@@ -53,6 +53,7 @@ private:
   // List display formats (per dual / single pane)
   QComboBox*  m_fileSizeFormatDualCombo        = nullptr;
   QComboBox*  m_fileSizeFormatSingleCombo      = nullptr;
+  QComboBox*  m_generalSizeFormatCombo         = nullptr;  // 一覧以外のサイズ表記
   QCheckBox*  m_fileSizeThousandsSepDualCheck  = nullptr;
   QCheckBox*  m_fileSizeThousandsSepSingleCheck= nullptr;
   QComboBox*  m_dateTimeFormatDualCombo        = nullptr;

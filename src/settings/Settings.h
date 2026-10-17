@@ -133,6 +133,10 @@ public:
   void           setFileSizeFormatDual(FileSizeFormat fmt);
   FileSizeFormat fileSizeFormatSingle()      const;
   void           setFileSizeFormatSingle(FileSizeFormat fmt);
+  // 一覧以外 (選択合計 / ディスク空き容量 / 転送の進捗 / プロパティ / プレビュー /
+  // ビュアー / 検索結果) のサイズ表記。Bytes / SI / IEC のいずれか (Auto は使わない)。
+  FileSizeFormat generalSizeFormat()         const;
+  void           setGeneralSizeFormat(FileSizeFormat fmt);
 
   // 桁区切りカンマを使うか (`Auto` 以外で有効)。Dual / Single でそれぞれ。デフォルト ON。
   bool           fileSizeThousandsSeparatorDual()   const;
@@ -710,6 +714,7 @@ private:
   // ファイルサイズ / 日時の表示形式 (2 画面 / 1 画面で別々)
   FileSizeFormat   m_fileSizeFormatDual    = FileSizeFormat::Auto;
   FileSizeFormat   m_fileSizeFormatSingle  = FileSizeFormat::Auto;
+  FileSizeFormat   m_generalSizeFormat     = FileSizeFormat::SI;
   bool             m_fileSizeThousandsSeparatorDual   = true;  // Auto 以外で適用
   bool             m_fileSizeThousandsSeparatorSingle = true;
   ListColumnVisibility m_listColumnsDual;
