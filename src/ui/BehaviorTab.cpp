@@ -272,7 +272,7 @@ void BehaviorTab::setupUi() {
   // ─── List Display グループ: ファイルサイズ / 日時 の表示形式 ───
   // 装飾 (色やフォント) は Appearance タブ、こちらはデータの「見せ方」。
   // 2 画面 (Dual) と 1 画面 (Single) で別々の値を持てる。
-  QGroupBox* listDisplayGroup = new QGroupBox(tr("List Display"), this);
+  QGroupBox* listDisplayGroup = new QGroupBox(tr("Display Formats"), this);
   QVBoxLayout* listDisplayLayout = new QVBoxLayout(listDisplayGroup);
 
   auto makeSizeCombo = [this]() -> QComboBox* {
@@ -403,13 +403,13 @@ void BehaviorTab::setupUi() {
   // Dual グループを丸ごと作ってから Single グループを作る。
   // こうすると Dual 全フィールド → Single 全フィールド の順で Tab が回る。
   listDisplayLayout->addWidget(buildModeGroup(
-    tr("Dual pane"),
+    tr("File list (dual pane)"),
     m_fileSizeFormatDualCombo,
     m_dateTimeFormatDualCombo,
     m_fileSizeThousandsSepDualCheck,
     m_listColumnDualCheck));
   listDisplayLayout->addWidget(buildModeGroup(
-    tr("Single pane"),
+    tr("File list (single pane)"),
     m_fileSizeFormatSingleCombo,
     m_dateTimeFormatSingleCombo,
     m_fileSizeThousandsSepSingleCheck,
@@ -418,11 +418,9 @@ void BehaviorTab::setupUi() {
   // 一覧以外 (選択合計 / ディスク空き容量 / 転送の進捗 / プロパティなど) の
   // サイズ表記。一覧の Dual / Single とは独立。
   {
-    auto* generalRow = new QHBoxLayout();
-    auto* generalLabel = new QLabel(
-      tr("Other size displays (selection total, free space, progress, properties):"),
-      this);
-    generalLabel->setWordWrap(true);
+    QGroupBox* otherBox = new QGroupBox(
+      tr("Other (selection total, free space, progress, properties, etc.)"), this);
+    auto* otherLayout = new QHBoxLayout(otherBox);
     m_generalSizeFormatCombo = new QComboBox(this);
     m_generalSizeFormatCombo->addItem(tr("Bytes"),              static_cast<int>(FileSizeFormat::Bytes));
     m_generalSizeFormatCombo->addItem(tr("KB/MB/GB (1000)"),    static_cast<int>(FileSizeFormat::SI));
@@ -431,10 +429,12 @@ void BehaviorTab::setupUi() {
       tr("Choose how sizes are displayed outside the file list: the selection "
          "total, disk free space, transfer progress, properties, preview, "
          "viewer and search results."));
-    generalLabel->setBuddy(m_generalSizeFormatCombo);
-    generalRow->addWidget(generalLabel, 1);
-    generalRow->addWidget(m_generalSizeFormatCombo);
-    listDisplayLayout->addLayout(generalRow);
+    auto* sizeLabel = new QLabel(tr("File size format:"), this);
+    sizeLabel->setBuddy(m_generalSizeFormatCombo);
+    otherLayout->addWidget(sizeLabel);
+    otherLayout->addWidget(m_generalSizeFormatCombo);
+    otherLayout->addStretch(1);
+    listDisplayLayout->addWidget(otherBox);
   }
 
   // 念のため明示的に Tab 順を組む (各グループ内 + グループ間)。
@@ -453,6 +453,7 @@ void BehaviorTab::setupUi() {
   for (int i = 0; i + 1 < kColumnToggleCount; ++i) {
     chain(m_listColumnSingleCheck[i], m_listColumnSingleCheck[i + 1]);
   }
+  chain(m_listColumnSingleCheck[kColumnToggleCount - 1], m_generalSizeFormatCombo);
 
   mainLayout->addWidget(listDisplayGroup);
 

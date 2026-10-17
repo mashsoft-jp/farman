@@ -731,7 +731,7 @@ NSTableView 風に、**非アクティブ時はグレーに落とす** スタイ
 - プラットフォーム別の行非表示は `QFormLayout::setRowVisible()` で行い、
   該当しない項目はラベルごとダイアログから消えて縦サイズが詰まる
   （Windows での POSIX 概念欠落、および非シンボリックリンクでの "—" 表示の
-  無駄を避ける目的）。Settings → Behavior → List Display の列トグルと
+  無駄を避ける目的）。Settings → Behavior → Display Formats の列トグルと
   同じ「Windows-aware visibility」方針。
 - **ディレクトリの場合は再帰的にサイズを計算する**:
   - 別スレッド (`PropertiesWorker`) で配下を走査し、総バイト数 /
@@ -1041,7 +1041,7 @@ CLI 版を優先表示)。
 - 単位は英語 (`B`, `KB`, `MB`, `GB`) で固定 (`QLocale(QLocale::English).formattedDataSize`)。
   システムロケールに依存しない。
 - 一覧以外 (選択合計 / ディスク空き容量 / 転送の進捗 / プロパティ / プレビュー /
-  ビュアー / 検索結果) の表記は、設定 (動作 → List Display の「一覧以外のサイズ表示」、
+  ビュアー / 検索結果) の表記は、設定 (動作 → Display Formats →「その他」、
   `generalSizeFormat`、デフォルト SI) に従う。`utils/SizeFormat.h` の
   `formatDataSize()` が選ぶ。
   - `si`: KB / MB / GB (1000 進)
@@ -2303,12 +2303,13 @@ Settings ダイアログは 8 つのトップレベルカテゴリ (`1. General`
 - 進捗ダイアログを完了時に自動的に閉じる（`progressAutoClose`、初期値 OFF）
   - 進捗ダイアログ上のチェックボックスはその場限りの上書き。保存はしない。
 
-##### List Display グループ
+##### Display Formats グループ
 
 ファイル一覧の **データの見せ方** (装飾ではなく書式) をまとめる。
 2 画面 (Dual) と 1 画面 (Single) でそれぞれ独立した値を持ち、表示中の
-モードに応じて自動で切り替わる。Behavior カテゴリ上は「Dual pane」「Single
-pane」の 2 つのサブグループに分けて配置する。
+モードに応じて自動で切り替わる。Behavior カテゴリ上は「ファイル一覧 (2 ペイン)」
+「ファイル一覧 (1 ペイン)」の 2 つのサブグループと、一覧以外のサイズ表記を決める
+「その他」サブグループ (後述) に分けて配置する。
 
 各サブグループの内容:
 
@@ -2328,6 +2329,9 @@ pane」の 2 つのサブグループに分けて配置する。
     - Windows: Permissions / Owner / Group は Unix 概念なので、Qt 経由では
       `rw-rw-rw-` の疑似表現にしかならず実用性がないため非表示
 
+「その他」サブグループには、一覧以外 (選択合計 / ディスク空き容量 / 転送の進捗 /
+プロパティなど) のファイルサイズ表示形式 (`generalSizeFormat`) を置く。
+
 旧設定 (`fileSizeFormat` / `dateTimeFormat` の単一キー) があれば、Dual /
 Single の両方の既定値にコピーして移行する。
 
@@ -2335,7 +2339,7 @@ Single の両方の既定値にコピーして移行する。
 
 ファイルリストの見た目 (フォント・色・行高) に関する設定をまとめる。
 書式 (サイズ表示形式・日時フォーマット・列の表示) は Behavior カテゴリの
-List Display へ移動済み。ビュアー固有の設定は Viewers カテゴリへ。
+Display Formats へ移動済み。ビュアー固有の設定は Viewers カテゴリへ。
 コンポーネント単位で 3 グループに分割され、各グループ内の主要項目は横並び (左寄せ) で配置される。
 
 ##### Address グループ

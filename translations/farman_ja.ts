@@ -1870,8 +1870,8 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="275"/>
-        <source>List Display</source>
-        <translation>一覧の表示形式</translation>
+        <source>Display Formats</source>
+        <translation>表示形式</translation>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="280"/>
@@ -1895,8 +1895,13 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="414"/>
-        <source>Other size displays (selection total, free space, progress, properties):</source>
-        <translation>一覧以外のサイズ表示 (選択合計・空き容量・進捗・プロパティなど):</translation>
+        <source>Other (selection total, free space, progress, properties, etc.)</source>
+        <translation>その他 (選択合計・空き容量・進捗・プロパティなど)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/BehaviorTab.cpp" line="428"/>
+        <source>File size format:</source>
+        <translation>ファイルサイズの表示形式:</translation>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="424"/>
@@ -1940,13 +1945,13 @@ Row Background: fill the entire row with the cursor color.</source>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="406"/>
-        <source>Dual pane</source>
-        <translation>2 ペイン</translation>
+        <source>File list (dual pane)</source>
+        <translation>ファイル一覧 (2 ペイン)</translation>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="412"/>
-        <source>Single pane</source>
-        <translation>1 ペイン</translation>
+        <source>File list (single pane)</source>
+        <translation>ファイル一覧 (1 ペイン)</translation>
     </message>
     <message>
         <location filename="../src/ui/BehaviorTab.cpp" line="439"/>
