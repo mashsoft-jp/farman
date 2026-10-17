@@ -136,6 +136,15 @@
               <li>FBX files that have a skeleton but no animation are now shown in the joint pose stored in the file (for example, arms lowered) instead of the T-pose. Parts attached to a bone, such as a sword, follow the hand and appear in the correct place.</li>
               <li>Fixed a rendering problem with FBX files where each mesh has a different bone reference (characters with many parts and more than 100 bones, for example).</li>
             </ul>
+            <h5>Accessories attached to bones now follow the animation</h5>
+            <ul>
+              <li>Fixed an issue where meshes without skinning that are children of a bone (such as a sword or staff held in a hand) did not follow the animation and stayed fixed at their starting position.</li>
+            </ul>
+
+            <h5>Other</h5>
+            <ul>
+              <li>The information about the whole model and the toolbar now show only the texture file name instead of the full path (the full path is in the toolbar tooltip). A long path used to make the panel overlap the model and push the "i" button out of the toolbar.</li>
+            </ul>
             <p class="doc-note">Notes for earlier versions are on the <a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">releases page</a>, in Japanese and English.</p>
           </div>
         </article>
