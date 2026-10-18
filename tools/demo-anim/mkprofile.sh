@@ -2,6 +2,7 @@
 # mkprofile.sh <ja|en> — 隔離プロファイル (out/home-<lang>) に最小限の settings.json を作る
 set -euo pipefail
 S="$(cd "$(dirname "$0")" && pwd)"; L="$1"; H="$S/out/home-$L"
+VER="$(sed -n 's/^project(farman VERSION \([0-9.]*\).*/\1/p' "$S/../../CMakeLists.txt")"
 rm -rf "$H"; mkdir -p "$H/Library/Preferences/Farman/farman" "$H/Library/Application Support"
 cat > "$H/Library/Preferences/Farman/farman/settings.json" <<JSON
 {
@@ -11,7 +12,8 @@ cat > "$H/Library/Preferences/Farman/farman/settings.json" <<JSON
     "singleInstance": false,
     "confirmOnExit": false,
     "autoUpdate": {"channel": "stable", "checkOnStartup": false},
-    "whatsNewShownVersion": "1.0.1",
+    "whatsNewShownVersion": "$VER",
+    "showTipsOnStartup": false,
     "computeDirectorySizes": true,
     "defaultBookmarksInstalled": true,
     "persistHistory": false,
