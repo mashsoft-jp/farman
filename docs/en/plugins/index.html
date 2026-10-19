@@ -122,16 +122,12 @@
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">Repository</a></p>
 
           <div class="plugin-updates whatsnew">
-            <h4>What's new in the latest version <span class="wn-date">1.0.0 · 2026-10-19</span></h4>
+            <h4>What's new in the latest version <span class="wn-date">1.0.1 · 2026-10-19</span></h4>
 
-            <h5>Display OBJ, glTF, glb and Blender 3D models, in addition to FBX</h5>
+            <h5>Fix a collapsed body during animation in FBX files with a bone and a mesh of the same name</h5>
             <ul>
-              <li>The supported extensions are now <code>.obj</code>, <code>.gltf</code>, <code>.glb</code> and <code>.blend</code>, in addition to <code>.fbx</code>. Opening any of them from farman's file list starts the 3D model viewer.</li>
-              <li><strong>glTF / glb</strong>: As with FBX, textures (embedded in <code>.glb</code>, or external files for <code>.gltf</code>), skeletons, skinning, animation and the node hierarchy are displayed.</li>
-              <li><strong>OBJ</strong>: Meshes, materials (<code>.mtl</code>) and textures are displayed.</li>
-              <li><strong>Blender (<code>.blend</code>)</strong>: Meshes and materials are displayed. Blender uses a Z-up coordinate system, so the model is stood upright when loaded. Skeletons and animation cannot be read. Also, a <code>.blend</code> saved with a recent Blender (a compressed file, for example) may not load; in that case, please try exporting it to FBX or glTF.</li>
-              <li>For files that contain several animations, the first clip is played.</li>
-              <li>The node info panel (<code>i</code> key) added in 0.4.x, the display of models without animation in their stored pose, and accessories attached to bones following the animation all work with every format.</li>
+              <li>When an FBX contained a bone node and a mesh node with the same name (for example <code>Body</code>), the area around the hips could sag forward while the animation played. The correct node is now used for the bone, and the result matches the glTF version.</li>
+              <li>Note: Models that look faceted (flat-shaded) in OBJ / FBX / glTF are displayed as the normals stored in the file specify. A <code>.blend</code> cannot provide this information when loaded, so it is shown smooth.</li>
             </ul>
             <p class="doc-note">Notes for earlier versions are on the <a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">releases page</a>, in Japanese and English.</p>
           </div>

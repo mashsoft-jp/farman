@@ -120,16 +120,12 @@
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">リポジトリ</a></p>
 
           <div class="plugin-updates whatsnew">
-            <h4>最新版の更新内容 <span class="wn-date">1.0.0 · 2026-10-19</span></h4>
+            <h4>最新版の更新内容 <span class="wn-date">1.0.1 · 2026-10-19</span></h4>
 
-            <h5>FBX に加えて、OBJ / glTF / glb / Blender の 3D モデルを表示できるように</h5>
+            <h5>同じ名前のボーンとメッシュを持つ FBX で、アニメ時に体が崩れる不具合を修正</h5>
             <ul>
-              <li>対応する拡張子が、<code>.fbx</code> に加えて <code>.obj</code> / <code>.gltf</code> / <code>.glb</code> / <code>.blend</code> になりました。farman のファイル一覧からこれらを開くと、3D モデルビュアーが起動します。</li>
-              <li><strong>glTF / glb</strong>: FBX と同じく、テクスチャ（<code>.glb</code> の埋め込みと、<code>.gltf</code> の外部ファイルの両方）・骨格・スキニング・アニメーション・ノード階層を表示します。</li>
-              <li><strong>OBJ</strong>: メッシュ・マテリアル（<code>.mtl</code>）・テクスチャを表示します。</li>
-              <li><strong>Blender（<code>.blend</code>）</strong>: メッシュとマテリアルを表示します。Blender は Z が上の座標系なので、読み込み時に立たせて表示します。骨格とアニメーションは読み込めません。また、新しい Blender で保存した <code>.blend</code>（圧縮形式など）は読めないことがあり、その場合は FBX や glTF への書き出しをお試しください。</li>
-              <li>アニメーションが複数入っているファイルは、先頭のクリップを再生します。</li>
-              <li>0.4.x で追加した「ノード情報パネル」（<code>i</code> キー）、アニメの無いモデルの現在姿勢での表示、アニメ付きモデルでボーンに付けた小物の追従などは、すべての形式で使えます。</li>
+              <li>FBX にボーンとメッシュのノードが同じ名前（例: <code>Body</code>）で入っていると、アニメーションの再生時に股のあたりが前に垂れ下がるように崩れることがありました。ボーンとして正しいノードを使うようにして、glTF と同じ見た目になります。</li>
+              <li>（補足）OBJ / FBX / glTF で面が角ばって（フラットシェードで）見えるのは、ファイルに記録された法線のとおりの表示です。<code>.blend</code> はこの情報を読み込めないため、なめらかに表示されます。</li>
             </ul>
             <p class="doc-note">これまでの版の更新内容は、<a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">リリース一覧</a>に日本語・英語で掲載しています。</p>
           </div>
