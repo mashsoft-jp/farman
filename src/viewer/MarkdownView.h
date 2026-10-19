@@ -10,9 +10,12 @@
 
 class QLabel;
 class QLineEdit;
+class QSplitter;
 class QTextBrowser;
 class QToolBar;
 class QToolButton;
+class QTreeWidget;
+class QTreeWidgetItem;
 
 namespace Farman {
 
@@ -25,6 +28,7 @@ namespace Farman {
 //   - 数式 (KaTeX) / Mermaid / シンタックスハイライトは非対応 (将来課題)
 //   - 相対パス画像 (`![alt](path)`) は Markdown ファイルのディレクトリを
 //     setSearchPaths でベースに設定して解決する
+//   - 目次サイドバー (見出し一覧。ツールバーのボタンで開閉、クリックでジャンプ)
 //   - ツールバー「ソース表示」トグルで、整形 / 生 Markdown を切り替え可能
 class MarkdownView : public QWidget {
   Q_OBJECT
@@ -70,6 +74,8 @@ private slots:
   void findNext();
   void findPrevious();
   void focusFindInput();
+  void onTocToggled(bool visible);
+  void onTocActivated(QTreeWidgetItem* item);
 
 private:
   void setupUi();
@@ -84,9 +90,18 @@ private:
   void renderCurrent();  // m_text を m_rawSource フラグで整形 or 生表示する
   void findInDirection(bool backward);
   void refreshMatchHighlights();
+  // 整形表示のドキュメントから見出しを拾って目次ツリーを作り直す。
+  void rebuildToc();
 
   QToolBar*     m_toolbar      = nullptr;
   QToolButton*  m_rawSourceButton = nullptr;
+  QToolButton*  m_tocButton       = nullptr;
+
+  // 目次サイドバー。本文の左に並べる横スプリッタの子。見出しの無い文書と
+  // 生ソース表示ではボタンを無効にし、パネルも閉じる。
+  QSplitter*    m_splitter   = nullptr;
+  QTreeWidget*  m_tocTree    = nullptr;
+  bool          m_tocSized   = false;  // 初回表示で幅を決めたか
   QTextBrowser* m_browser      = nullptr;
   QLineEdit*    m_findEdit     = nullptr;
   QToolButton*  m_findPrevBtn  = nullptr;

@@ -51,6 +51,8 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(QKeySequence::Find)});
   add(d, "markdown", "viewer.markdown.toggle_source", QCoreApplication::translate("ViewerCommands", "Toggle raw source view"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S)});
+  add(d, "markdown", "viewer.markdown.toggle_toc", QCoreApplication::translate("ViewerCommands", "Toggle table of contents sidebar"),
+      {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B)});
   add(d, "markdown", "viewer.markdown.toggle_case", QCoreApplication::translate("ViewerCommands", "Toggle case-sensitive search"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C)});
 
