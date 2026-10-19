@@ -3,6 +3,7 @@
 #include "ViewerShortcutMap.h"
 #include "keybinding/ViewerCommands.h"
 
+#include <QAbstractButton>
 #include <QLineEdit>
 #include <QVariant>
 #include <QWidget>
@@ -18,6 +19,14 @@ const char* kTipCmd  = "farman_hint_tip_cmd";
 const char* kTipTmpl = "farman_hint_tip_tmpl";
 const char* kPhCmd   = "farman_hint_ph_cmd";
 const char* kPhTmpl  = "farman_hint_ph_tmpl";
+// ボタンの表示テキスト用 (base + キー)。
+const char* kTxtCmd  = "farman_hint_txt_cmd";
+const char* kTxtBase = "farman_hint_txt_base";
+
+void applyText(QAbstractButton* b, const QString& key) {
+  const QString base = b->property(kTxtBase).toString();
+  b->setText(key.isEmpty() ? base : QStringLiteral("%1 (%2)").arg(base, key));
+}
 
 QString expand(const QString& tmpl, const QString& key) {
   return tmpl.contains(QLatin1String("%1")) ? tmpl.arg(key) : tmpl;
@@ -51,6 +60,15 @@ void tag(QWidget* w, const QString& commandId, const QString& tmpl,
   applyTo(w, viewerCommandDefaultKeyText(commandId), placeholder);
 }
 
+void tagText(QAbstractButton* b, const QString& commandId, const QString& base) {
+  if (!b) {
+    return;
+  }
+  b->setProperty(kTxtCmd, commandId);
+  b->setProperty(kTxtBase, base);
+  applyText(b, viewerCommandDefaultKeyText(commandId));
+}
+
 void refresh(QWidget* root, const ViewerShortcutMap& map) {
   if (!root) {
     return;
@@ -66,6 +84,12 @@ void refresh(QWidget* root, const ViewerShortcutMap& map) {
     const QVariant tipCmd = w->property(kTipCmd);
     if (tipCmd.isValid()) {
       applyTo(w, keyFor(tipCmd.toString()), /*placeholder=*/false);
+    }
+    const QVariant txtCmd = w->property(kTxtCmd);
+    if (txtCmd.isValid()) {
+      if (auto* b = qobject_cast<QAbstractButton*>(w)) {
+        applyText(b, keyFor(txtCmd.toString()));
+      }
     }
     const QVariant phCmd = w->property(kPhCmd);
     if (phCmd.isValid()) {

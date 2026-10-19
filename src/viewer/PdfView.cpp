@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QLocale>
+#include <QPdfBookmarkModel>
 #include <QPdfDocument>
 #include <QPdfLink>
 #include <QPdfPageNavigator>
@@ -23,7 +24,9 @@
 #include <QSizePolicy>
 #include <QSpinBox>
 #include <QToolBar>
+#include <QSplitter>
 #include <QToolButton>
+#include <QTreeView>
 #include <QVBoxLayout>
 
 namespace Farman {
@@ -103,8 +106,8 @@ void PdfView::setupUi() {
 
   // ───── ページ操作 ─────
   m_prevButton = new QToolButton(m_toolbar);
-  m_prevButton->setText(QStringLiteral("◀"));
-  m_prevButton->setToolTip(tr("Previous page (PageUp)"));
+  ViewerHints::tagText(m_prevButton, QStringLiteral("viewer.pdf.prev_page"), QStringLiteral("◀"));
+  ViewerHints::tag(m_prevButton, QStringLiteral("viewer.pdf.prev_page"), tr("Previous page (%1)"));
   m_prevButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_prevButton, &QToolButton::clicked, this, &PdfView::onPrevPage);
   m_toolbar->addWidget(m_prevButton);
@@ -128,8 +131,8 @@ void PdfView::setupUi() {
   m_toolbar->addWidget(m_pageTotalLabel);
 
   m_nextButton = new QToolButton(m_toolbar);
-  m_nextButton->setText(QStringLiteral("▶"));
-  m_nextButton->setToolTip(tr("Next page (PageDown)"));
+  ViewerHints::tagText(m_nextButton, QStringLiteral("viewer.pdf.next_page"), QStringLiteral("▶"));
+  ViewerHints::tag(m_nextButton, QStringLiteral("viewer.pdf.next_page"), tr("Next page (%1)"));
   m_nextButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_nextButton, &QToolButton::clicked, this, &PdfView::onNextPage);
   m_toolbar->addWidget(m_nextButton);
@@ -138,21 +141,21 @@ void PdfView::setupUi() {
 
   // ───── ズーム ─────
   m_zoomOutButton = new QToolButton(m_toolbar);
-  m_zoomOutButton->setText(QStringLiteral("−"));
-  m_zoomOutButton->setToolTip(tr("Zoom out (-)"));
+  ViewerHints::tagText(m_zoomOutButton, QStringLiteral("viewer.pdf.zoom_out"), QStringLiteral("−"));
+  ViewerHints::tag(m_zoomOutButton, QStringLiteral("viewer.pdf.zoom_out"), tr("Zoom out (%1)"));
   m_zoomOutButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomOutButton, &QToolButton::clicked, this, &PdfView::onZoomOut);
   m_toolbar->addWidget(m_zoomOutButton);
 
   m_zoomInButton = new QToolButton(m_toolbar);
-  m_zoomInButton->setText(QStringLiteral("+"));
-  m_zoomInButton->setToolTip(tr("Zoom in (+)"));
+  ViewerHints::tagText(m_zoomInButton, QStringLiteral("viewer.pdf.zoom_in"), QStringLiteral("+"));
+  ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.pdf.zoom_in"), tr("Zoom in (%1)"));
   m_zoomInButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomInButton, &QToolButton::clicked, this, &PdfView::onZoomIn);
   m_toolbar->addWidget(m_zoomInButton);
 
   m_fitWidthButton = new QToolButton(m_toolbar);
-  m_fitWidthButton->setText(tr("Fit Width"));
+  ViewerHints::tagText(m_fitWidthButton, QStringLiteral("viewer.pdf.fit_width"), tr("Fit Width"));
   m_fitWidthButton->setCheckable(true);
   ViewerHints::tag(m_fitWidthButton, QStringLiteral("viewer.pdf.fit_width"),
     tr("Fit page width to view (%1)"));
@@ -161,7 +164,7 @@ void PdfView::setupUi() {
   m_toolbar->addWidget(m_fitWidthButton);
 
   m_fitPageButton = new QToolButton(m_toolbar);
-  m_fitPageButton->setText(tr("Fit Page"));
+  ViewerHints::tagText(m_fitPageButton, QStringLiteral("viewer.pdf.fit_page"), tr("Fit Page"));
   m_fitPageButton->setCheckable(true);
   ViewerHints::tag(m_fitPageButton, QStringLiteral("viewer.pdf.fit_page"),
     tr("Fit whole page in view (%1)"));
@@ -173,7 +176,7 @@ void PdfView::setupUi() {
 
   // ───── モード ─────
   m_continuousButton = new QToolButton(m_toolbar);
-  m_continuousButton->setText(tr("Continuous"));
+  ViewerHints::tagText(m_continuousButton, QStringLiteral("viewer.pdf.toggle_continuous"), tr("Continuous"));
   m_continuousButton->setCheckable(true);
   m_continuousButton->setChecked(true);
   ViewerHints::tag(m_continuousButton, QStringLiteral("viewer.pdf.toggle_continuous"),
@@ -182,6 +185,16 @@ void PdfView::setupUi() {
   connect(m_continuousButton, &QToolButton::toggled,
           this,                &PdfView::onPageModeToggled);
   m_toolbar->addWidget(m_continuousButton);
+
+  m_outlineButton = new QToolButton(m_toolbar);
+  ViewerHints::tagText(m_outlineButton, QStringLiteral("viewer.pdf.toggle_outline"), tr("Outline"));
+  m_outlineButton->setCheckable(true);
+  m_outlineButton->setEnabled(false);  // しおりがある PDF を開いたときだけ有効
+  ViewerHints::tag(m_outlineButton, QStringLiteral("viewer.pdf.toggle_outline"),
+    tr("Show the outline (bookmarks) sidebar (%1)"));
+  m_outlineButton->setFocusPolicy(Qt::StrongFocus);
+  connect(m_outlineButton, &QToolButton::toggled, this, &PdfView::onOutlineToggled);
+  m_toolbar->addWidget(m_outlineButton);
 
   m_toolbar->addSeparator();
 
@@ -204,14 +217,17 @@ void PdfView::setupUi() {
   m_toolbar->addWidget(m_findEdit);
 
   m_findPrevBtn = new QToolButton(m_toolbar);
-  m_findPrevBtn->setText(QStringLiteral("◀"));
+  // 前 / 次ヒットのキーは固定 (Shift+Enter / Enter。コマンドではない)。
+  m_findPrevBtn->setText(QStringLiteral("◀ (%1)").arg(
+    QKeySequence(Qt::SHIFT | Qt::Key_Return).toString(QKeySequence::NativeText)));
   m_findPrevBtn->setToolTip(tr("Previous match (Shift+Enter)"));
   m_findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   connect(m_findPrevBtn, &QToolButton::clicked, this, &PdfView::findPrevious);
   m_toolbar->addWidget(m_findPrevBtn);
 
   m_findNextBtn = new QToolButton(m_toolbar);
-  m_findNextBtn->setText(QStringLiteral("▶"));
+  m_findNextBtn->setText(QStringLiteral("▶ (%1)").arg(
+    QKeySequence(Qt::Key_Return).toString(QKeySequence::NativeText)));
   m_findNextBtn->setToolTip(tr("Next match (Enter)"));
   m_findNextBtn->setFocusPolicy(Qt::StrongFocus);
   connect(m_findNextBtn, &QToolButton::clicked, this, &PdfView::findNext);
@@ -239,11 +255,29 @@ void PdfView::setupUi() {
   root->addWidget(m_toolbar);
 
   // ───── 本体: QPdfView ─────
-  m_view = new QPdfView(this);
+  // 左: しおりサイドバー (既定は非表示) / 右: ページ表示。
+  m_splitter = new QSplitter(Qt::Horizontal, this);
+  m_splitter->setChildrenCollapsible(false);
+
+  m_outlineView = new QTreeView(m_splitter);
+  m_outlineView->setHeaderHidden(true);
+  m_outlineView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  m_outlineView->setMinimumWidth(160);
+  m_outlineView->hide();
+  m_outlineView->installEventFilter(this);
+  m_bookmarkModel = new QPdfBookmarkModel(this);
+  m_outlineView->setModel(m_bookmarkModel);
+  connect(m_outlineView, &QTreeView::activated, this, &PdfView::onOutlineActivated);
+  connect(m_outlineView, &QTreeView::clicked,   this, &PdfView::onOutlineActivated);
+
+  m_view = new QPdfView(m_splitter);
   m_view->setPageMode(QPdfView::PageMode::MultiPage);
   m_view->setZoomMode(QPdfView::ZoomMode::Custom);
   m_view->setZoomFactor(kDefaultZoom);
-  root->addWidget(m_view, /*stretch*/ 1);
+
+  m_splitter->setStretchFactor(0, 0);
+  m_splitter->setStretchFactor(1, 1);
+  root->addWidget(m_splitter, /*stretch*/ 1);
 
   // 既定の表示設定 (Settings → Plugins → PDF Viewer)。トグルの signal は
   // ドキュメント未ロードでも m_view に対して安全に効くので、ここで適用する。
@@ -290,6 +324,7 @@ bool PdfView::applyPreparedLoad(const PreparedLoad& r) {
   // 取らないので、こちら側で明示的に管理する必要がある。
   if (m_document) {
     m_view->setDocument(nullptr);
+    if (m_bookmarkModel) m_bookmarkModel->setDocument(nullptr);
     delete m_document;
     m_document = nullptr;
   }
@@ -305,12 +340,15 @@ bool PdfView::applyPreparedLoad(const PreparedLoad& r) {
   // ことがあり、そのままだと「空の PDF が開いた」ように見えてしまうため。
   if (err != QPdfDocument::Error::None || m_document->pageCount() <= 0) {
     m_view->setDocument(nullptr);
+    if (m_bookmarkModel) m_bookmarkModel->setDocument(nullptr);
     delete m_document;
     m_document = nullptr;
     return false;
   }
 
   m_view->setDocument(m_document);
+  if (m_bookmarkModel) m_bookmarkModel->setDocument(m_document);
+  updateOutlineAvailability();
 
   // pageNavigator は QPdfView 内部で生成されている。currentPageChanged を
   // ツールバーの spinbox に反映する。
@@ -349,6 +387,8 @@ void PdfView::clearContent() {
   if (m_view && m_document) {
     m_view->setDocument(nullptr);
   }
+  if (m_bookmarkModel) m_bookmarkModel->setDocument(nullptr);
+  updateOutlineAvailability();
   if (m_document) {
     delete m_document;
     m_document = nullptr;
@@ -575,6 +615,17 @@ bool PdfView::eventFilter(QObject* watched, QEvent* event) {
     }
   }
 
+  // しおりツリーの Enter: 項目へジャンプして吸収する。QTreeView は Enter を
+  // activated で通知したあと event を ignore するため、そのままだと親に伝わって
+  // ビュアー自体が閉じてしまう。
+  if (watched == m_outlineView && event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
+      onOutlineActivated(m_outlineView->currentIndex());
+      return true;
+    }
+  }
+
   // ビュアーのショートカット (設定で再割り当て可能) を捕捉する。TextView と同じく
   // ShortcutOverride + KeyPress 両方で捕捉して上位のショートカット (メニュー等) に
   // 取られるのを防ぐ。
@@ -585,13 +636,15 @@ bool PdfView::eventFilter(QObject* watched, QEvent* event) {
     const QString cmd =
       m_shortcuts.commandForSeq(seq);
 
-    // テキスト入力欄 (検索 / ページ番号) にフォーカスがある間は、修飾キーなしの
-    // 素キー (ズームの - / + 等) は入力を邪魔しないよう無効化する。
+    // テキスト入力欄 (検索 / ページ番号) としおりツリーにフォーカスがある間は、
+    // 修飾キーなしの素キー (ズームの - / + や前後ページの ↑ ↓ 等) は入力 / ツリー
+    // 操作を邪魔しないよう無効化する。
     const bool chord = ke->modifiers()
       & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier);
     const bool typingField =
       (m_findEdit && m_findEdit->hasFocus())
-      || (m_pageSpin && m_pageSpin->hasFocus());
+      || (m_pageSpin && m_pageSpin->hasFocus())
+      || (m_outlineView && m_outlineView->hasFocus());
 
     if (!cmd.isEmpty() && !(typingField && !chord)
         && isVisible() && window() && window()->isActiveWindow()) {
@@ -603,6 +656,47 @@ bool PdfView::eventFilter(QObject* watched, QEvent* event) {
     }
   }
   return QWidget::eventFilter(watched, event);
+}
+
+void PdfView::updateOutlineAvailability() {
+  const bool has = m_bookmarkModel && m_document
+                   && m_bookmarkModel->rowCount(QModelIndex()) > 0;
+  if (m_outlineButton) {
+    // 無効になるとき (しおり無し / 閉じた) は、開いているパネルも畳む。
+    if (!has && m_outlineButton->isChecked()) m_outlineButton->setChecked(false);
+    m_outlineButton->setEnabled(has);
+  }
+  if (m_outlineView && has) {
+    m_outlineView->expandToDepth(0);
+  }
+}
+
+void PdfView::onOutlineToggled(bool visible) {
+  if (!m_outlineView || !m_splitter) return;
+  m_outlineView->setVisible(visible);
+  if (visible && !m_outlineSized) {
+    m_outlineSized = true;
+    const int total  = m_splitter->width();
+    const int panelW = qMin(240, total / 3);
+    m_splitter->setSizes({panelW, total - panelW});
+  }
+  // 開いたらツリーにフォーカス (矢印 + Enter で移動できる)。閉じたらビューへ戻す。
+  if (visible) {
+    m_outlineView->setFocus();
+    if (!m_outlineView->currentIndex().isValid()) {
+      m_outlineView->setCurrentIndex(m_bookmarkModel->index(0, 0, QModelIndex()));
+    }
+  } else if (m_view) {
+    m_view->setFocus();
+  }
+}
+
+void PdfView::onOutlineActivated(const QModelIndex& index) {
+  if (!index.isValid() || !m_view || !m_view->pageNavigator()) return;
+  const int page = index.data(int(QPdfBookmarkModel::Role::Page)).toInt();
+  const QPointF loc = index.data(int(QPdfBookmarkModel::Role::Location)).toPointF();
+  const qreal zoom  = index.data(int(QPdfBookmarkModel::Role::Zoom)).toReal();
+  m_view->pageNavigator()->jump(page, loc, zoom);
 }
 
 void PdfView::applyShortcutBindings(const QVariantMap& bindings) {
@@ -619,6 +713,8 @@ void PdfView::dispatchViewerCommand(const QString& cmd) {
     if (m_fitPageButton) m_fitPageButton->toggle();
   } else if (cmd == QLatin1String("viewer.pdf.toggle_continuous")) {
     if (m_continuousButton) m_continuousButton->toggle();
+  } else if (cmd == QLatin1String("viewer.pdf.toggle_outline")) {
+    if (m_outlineButton && m_outlineButton->isEnabled()) m_outlineButton->toggle();
   } else if (cmd == QLatin1String("viewer.pdf.zoom_out")) {
     onZoomOut();
   } else if (cmd == QLatin1String("viewer.pdf.zoom_in")) {
