@@ -1,113 +1,50 @@
-# What's New in farman 1.1.0
+# What's New in farman 1.2.0
 
-### Install plugins inside the app
+### View Adobe Illustrator (.ai) files
 
-- The new **Settings → Plugins** page lets you install, update and uninstall
-  external plugins in one place. You no longer have to copy files into the
-  plugin directory by hand.
-- Drag and drop a plugin file onto the page, or pick one with "Install from
-  File...", to install it.
-- Official plugins can be installed or updated right from the list with
-  "Install" / "Update". "Check for Updates" looks up the latest versions, and
-  plugins with an update are marked with ❗ in bold.
-- Installs, updates and uninstalls take effect the next time farman starts. Use
-  the "Restart farman" button on the page to restart right away.
-- You can also open this page from Help → "Plugins..." (Ctrl+Shift+P) or the
-  toolbar. The Settings pages are now numbered 4. Plugins / 5. Viewer /
-  6. Archive, and so on.
+- The image viewer can now show Adobe Illustrator (.ai) files. It draws the first
+  artboard of a PDF-compatible .ai as a composite preview. Transparent areas are
+  shown with the checkerboard, like other images.
+- Legacy EPS-based .ai files, and .ai files saved with "Create PDF Compatible
+  File" turned off, cannot be shown.
+- `ai` is added to the image viewer's target files in Settings automatically.
+  If .ai files used to open in the PDF viewer, they now open in the image viewer.
 
-### Tips on startup
+### Image viewer: information in a side panel
 
-- farman now shows a usage tip once a day on startup, introducing shortcuts and
-  easy-to-miss features one at a time.
-- Browse the tips with "Previous" / "Next". Keys in the text follow your current
-  keybindings.
-- Open them any time from Help → "Tips...". To stop showing them on
-  startup, uncheck the box at the bottom left of the dialog or in
-  Settings → General.
+- The image information (metadata) opened with the "i" button (or the I key) is now
+  shown in a panel on the right of the image instead of a separate window. The
+  panel updates when you switch files, and you can drag the divider to resize it.
 
-### Run copy and move in the background
+### PDF viewer: outline (bookmarks) sidebar
 
-- The progress dialog for copy and move now has a "Run in Background" button.
-  A long copy or move keeps running while you go back to other work.
-- While it runs, the status bar shows its progress. Click it to bring the
-  progress dialog back, where you can also cancel.
-- Only one operation can run in the background at a time. While it runs, file
-  operations (copy, move, delete, rename and so on) on its source and
-  destination directories are not allowed.
-- The progress dialog no longer closes with Esc while an operation is running.
-  Use Cancel to stop it.
+- For PDFs that have an outline, the outline button on the toolbar (Cmd+Shift+B,
+  Ctrl+Shift+B on Windows / Linux) opens the list on the left. Choose an item to
+  jump to its page.
+- Opening the sidebar moves the focus to it: pick with the ↑↓ keys and press
+  Enter to jump. The button is disabled for PDFs without an outline.
 
-### Image viewer
+### Markdown viewer: table of contents sidebar
 
-- Click the copy button on the toolbar or press Cmd+C (Ctrl+C on Windows / Linux)
-  to copy the displayed image to the clipboard. A rotated image is copied in the orientation you see.
-- Animated images (GIF / WebP) can now be stepped frame by frame. Type a number
-  into the frame box on the toolbar, or use its arrows or the `,` and `.` keys to
-  move to the previous or next frame.
-- Pausing an animation now stops on the current frame. A separate "Stop" button
-  (S key) returns to the first frame.
-- Copying an animated image copies the frame being displayed (playback is
-  paused first).
+- The contents button on the toolbar (Cmd+Shift+B, Ctrl+Shift+B on Windows / Linux)
+  opens the list of headings on the left. Choose an item to scroll the text to that
+  heading.
+- The heading hierarchy is shown as is. The button is disabled for documents
+  without headings, and while the source view is on.
 
-### Sort and filter
+### Icons on the viewer toolbars
 
-- Fixed temporary settings (applied without "Override defaults for this
-  directory") appearing as the defaults when the dialog was reopened.
-- When the dialog opens with settings that differ from the defaults, it now
-  says whether they are saved or temporary, and which items differ.
-- The sort / filter line under each pane now starts with **[Default] /
-  [Temporary] / [Custom]** (saved for this directory), so you can tell which
-  settings are in effect. It also shows how dot files are handled (Dot-first /
-  Dot-ignored).
-- With "Sort dot files first" turned off, dot files are now sorted by their name
-  without the leading "." (.bashrc sorts among the b's).
-
-### Cursor movement in text fields
-
-- In single-line fields such as Rename, New, Create Archive, Bulk Rename and the
-  search name pattern, Up now moves the cursor to the start and Down to the end.
-  Hold Shift to extend the selection.
-- In file names, Down before the "." stops just before it, and Up after the "."
-  also stops just before it. The search name pattern is space-separated, so Down
-  jumps to the start of the next pattern.
-- You can turn this off under Settings → General ("Move cursor by delimiter with
-  Up/Down in text fields"). It is on by default.
-
-### Rename
-
-- When several files are selected, Rename (r) now renames them one by one in
-  order (it used to rename only the cursor row). The title shows progress such as
-  "(1 / 3)", and cancelling stops the rest.
-- The Bulk Rename template field is now a drop-down of past templates. The last
-  10 templates you used are remembered (the default and duplicates are not).
-  Press Down with the cursor at the end to open the history.
-
-### Size display
-
-- Settings → Behavior "List Display" is now "Display Formats", and sizes outside
-  the file list (selection total, disk free space, transfer progress, properties,
-  preview, viewer and search results) can be shown as Bytes, KB/MB/GB (1000) or
-  KiB/MiB/GiB (1024). The default is KB/MB/GB.
-- The selection total, which was shown in KiB/MiB, now follows this setting.
-
-### Settings
-
-- The viewer display mode (in the main window / separate windows) has moved from
-  the "Behavior" page to the "Viewer" page.
-- Check boxes on the "General" and "Behavior" pages are laid out in two columns
-  so they are easier to scan.
-
-### Log pane
-
-- Click the log pane to focus it, then press Cmd+C (Ctrl+C on Windows / Linux) to
-  copy the selected text to the clipboard. Cmd+A (Ctrl+A) selects the whole log.
+- In the Markdown, PDF, CSV and Binary viewers, the toolbar buttons that were text
+  (source view, contents, outline, zoom, previous / next page, previous / next
+  match and so on) are now icons. The "i" button of the image and media viewers is
+  an icon too. The assigned keys are still shown when you hover over a button.
 
 ### Bug fixes
 
-- Fixed the right-click menu of the log pane, path fields and other text fields
-  appearing in English on Windows / Linux even when the UI was set to Japanese.
-- Fixed the selected row in the lists on the settings pages (Plugins, Viewer and
-  so on) not being highlighted across the whole row on Windows.
-- Fixed the Size column in search results using the OS language for its units
-  (such as "36 バイト") even when the UI was set to English.
+- Fixed farman not restarting on Windows when you pressed "Restart farman" after
+  updating a plugin.
+- Fixed the Markdown viewer showing the whole document in large bold type, as if
+  it were a heading, when you switched a document that starts with a heading to the
+  source view.
+- The previous / next page buttons of the PDF viewer showed "PageUp / PageDown",
+  which was not the actual key. They now show the assigned keys.
