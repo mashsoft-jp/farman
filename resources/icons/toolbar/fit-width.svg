@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6a6a6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 左右の枠に向かって幅を合わせる -->
+  <line x1="3" y1="5" x2="3" y2="19"/>
+  <line x1="21" y1="5" x2="21" y2="19"/>
+  <line x1="7" y1="12" x2="17" y2="12"/>
+  <polyline points="10 9 7 12 10 15"/>
+  <polyline points="14 9 17 12 14 15"/>
+</svg>

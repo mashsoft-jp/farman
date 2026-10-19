@@ -392,11 +392,7 @@ void ImageView::setupUi() {
   // 画像メタデータパネル (右側) を開閉するボタン (フォーマット情報・コメント
   // 等のテキストメタデータをまとめて表示する)。
   m_infoButton = new QToolButton(m_toolbar);
-  m_infoButton->setText(QStringLiteral("i"));
-  QFont infoFont = m_infoButton->font();
-  infoFont.setItalic(true);
-  infoFont.setBold(true);
-  m_infoButton->setFont(infoFont);
+  m_infoButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/info.svg")));
   ViewerHints::tag(m_infoButton, QStringLiteral("viewer.image.info"),
     tr("Show image information / metadata (%1)"));
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
