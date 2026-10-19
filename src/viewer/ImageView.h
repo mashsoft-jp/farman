@@ -15,7 +15,9 @@ class QComboBox;
 class QLabel;
 class QSpinBox;
 class QMovie;
+class QPlainTextEdit;
 class QScrollArea;
+class QSplitter;
 class QToolBar;
 class QToolButton;
 
@@ -108,12 +110,12 @@ signals:
 
 private slots:
   // ツールバーの "i" ボタンと `i` キーから呼ばれる。
-  // 既にダイアログが開いていれば閉じる、無ければ最新のメタデータで開く
-  // (= トグル動作、モードレス)。
-  void toggleImageInfoDialog();
-  // applyPreparedLoad から呼ばれる。ダイアログが開いている状態で別のファイルを
+  // 右側の情報パネルが開いていれば閉じる、無ければ最新のメタデータで開く
+  // (= トグル動作)。
+  void toggleImageInfoPanel();
+  // applyPreparedLoad から呼ばれる。パネルが開いている状態で別のファイルを
   // 選んだ場合に、内容を最新に差し替える。
-  void refreshImageInfoDialog();
+  void refreshImageInfoPanel();
   // 内部ヘルパ: 現在の m_filePath からメタデータテキストを組み立てる。
   QString buildImageInfoText() const;
   // ツールバーの回転ボタンから呼ばれる。表示の回転を 90 度ずつ進める。
@@ -206,9 +208,11 @@ private:
   QPointer<QMovie>    m_movie;        // アニメ再生用 (m_display の親で破棄)
   bool                m_fileIsAnimated = false;
 
-  // メタデータ表示用のモードレスダイアログ (i キー / "i" ボタンでトグル)。
-  // ファイル切替時に内容を更新する。
-  QPointer<class QDialog> m_infoDialog;
+  // メタデータ表示用の右側パネル (i キー / "i" ボタンでトグル)。
+  // ファイル切替時に内容を更新する。m_scrollArea と並べる横スプリッタの子。
+  QSplitter*            m_splitter       = nullptr;
+  QPlainTextEdit*       m_infoPanel      = nullptr;
+  bool                  m_infoPanelSized = false;  // 初回表示で幅を決めたか
 
   // 表示に使う実効設定 (ローカル上書き)。Settings 変更で再同期される。
   int                   m_zoomPercent     = 100;

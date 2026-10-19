@@ -14,6 +14,7 @@
 #include <QFontDatabase>
 #include <QGuiApplication>
 #include <QPlainTextEdit>
+#include <QSplitter>
 #include <QToolButton>
 #include "utils/EnterClickFilter.h"
 #include <QEvent>
@@ -388,7 +389,7 @@ void ImageView::setupUi() {
           this,         &ImageView::copyImageToClipboard);
   m_toolbar->addWidget(m_copyButton);
 
-  // 画像メタデータダイアログを開くボタン (フォーマット情報・コメント
+  // 画像メタデータパネル (右側) を開閉するボタン (フォーマット情報・コメント
   // 等のテキストメタデータをまとめて表示する)。
   m_infoButton = new QToolButton(m_toolbar);
   m_infoButton->setText(QStringLiteral("i"));
@@ -400,13 +401,18 @@ void ImageView::setupUi() {
     tr("Show image information / metadata (%1)"));
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_infoButton, &QToolButton::clicked,
-          this,         &ImageView::toggleImageInfoDialog);
+          this,         &ImageView::toggleImageInfoPanel);
   m_toolbar->addWidget(m_infoButton);
 
   root->addWidget(m_toolbar);
 
-  // 画像表示部 (スクロール可)
-  m_scrollArea = new QScrollArea(this);
+  // 画像表示部 (スクロール可) + 右側の情報パネルを横スプリッタに載せる。
+  // 情報パネルは既定で非表示 ("i" ボタン / `i` キーで開閉)。
+  auto* splitter = new QSplitter(Qt::Horizontal, this);
+  splitter->setChildrenCollapsible(false);
+  m_splitter = splitter;
+
+  m_scrollArea = new QScrollArea(splitter);
   m_scrollArea->setWidgetResizable(false);
   m_scrollArea->setAlignment(Qt::AlignCenter);
   m_display = new ImageDisplay(m_scrollArea, this);
@@ -414,7 +420,17 @@ void ImageView::setupUi() {
   m_scrollArea->setWidget(m_display);
   // ビューポートのリサイズで ImageDisplay のサイズを再計算する
   m_scrollArea->viewport()->installEventFilter(this);
-  root->addWidget(m_scrollArea, /*stretch*/ 1);
+
+  m_infoPanel = new QPlainTextEdit(splitter);
+  m_infoPanel->setReadOnly(true);
+  m_infoPanel->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+  m_infoPanel->setLineWrapMode(QPlainTextEdit::WidgetWidth);
+  m_infoPanel->setMinimumWidth(180);
+  m_infoPanel->hide();
+
+  splitter->setStretchFactor(0, 1);
+  splitter->setStretchFactor(1, 0);
+  root->addWidget(splitter, /*stretch*/ 1);
 
   setFocusProxy(m_scrollArea);
 
@@ -679,7 +695,7 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
     if (!pm.isNull()) {
       m_display->setStaticPixmap(pm);
       m_naturalImageSize = pm.size();
-      // QImage 本体を取っておく (Info ダイアログのメタデータ用)。
+      // QImage 本体を取っておく (情報パネルのメタデータ用)。
       m_loadedImage = r.image;
     } else {
       // pixmap 化に失敗 → 古い画像が残らないようビューをクリア。
@@ -712,8 +728,8 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
   if (m_copyButton) m_copyButton->setEnabled(!m_filePath.isEmpty());
   updateFrameControls();
 
-  // Info ダイアログが開いていれば内容を新ファイルに差し替え。
-  refreshImageInfoDialog();
+  // 情報パネルが開いていれば内容を新ファイルに差し替え。
+  refreshImageInfoPanel();
 
   applyDisplayState();
 }
@@ -830,7 +846,7 @@ bool ImageView::handleViewerKey(QKeyEvent* event) {
     return false;
   }
   if (cmd == QLatin1String("viewer.image.info")) {
-    toggleImageInfoDialog();
+    toggleImageInfoPanel();
     return true;
   }
   if (cmd == QLatin1String("viewer.image.rotate")) {
@@ -1084,39 +1100,24 @@ QString ImageView::buildImageInfoText() const {
   return body;
 }
 
-void ImageView::toggleImageInfoDialog() {
-  if (m_filePath.isEmpty()) return;
-  // 既に表示中なら閉じる (= トグル動作)。
-  if (m_infoDialog && m_infoDialog->isVisible()) {
-    m_infoDialog->close();
+void ImageView::toggleImageInfoPanel() {
+  if (m_filePath.isEmpty() || !m_infoPanel) return;
+  // 表示中なら閉じる (= トグル動作)。
+  if (m_infoPanel->isVisible()) {
+    m_infoPanel->hide();
+    if (m_scrollArea) m_scrollArea->setFocus();
     return;
   }
-  // 新規もしくは閉じた状態 → 開く。
-  if (!m_infoDialog) {
-    m_infoDialog = new QDialog(this);
-    m_infoDialog->setWindowTitle(tr("Image Information"));
-    m_infoDialog->setAttribute(Qt::WA_DeleteOnClose, false);
-    m_infoDialog->resize(640, 480);
-
-    auto* layout = new QVBoxLayout(m_infoDialog);
-    auto* edit = new QPlainTextEdit(m_infoDialog);
-    edit->setObjectName(QStringLiteral("imageInfoEdit"));
-    edit->setReadOnly(true);
-    edit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-    layout->addWidget(edit);
-
-    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, m_infoDialog);
-    connect(buttons, &QDialogButtonBox::rejected, m_infoDialog, &QDialog::close);
-    layout->addWidget(buttons);
+  m_infoPanel->setPlainText(buildImageInfoText());
+  m_infoPanel->show();
+  // 初回は右側に 320 px。以降は利用者がスプリッタで動かした幅を保つ。
+  if (m_splitter && !m_infoPanelSized) {
+    m_infoPanelSized = true;
+    const int total = m_splitter->width();
+    const int panelW = qMin(320, total / 2);
+    m_splitter->setSizes({total - panelW, panelW});
   }
-  // モードレスで開く + 内容を最新化。
-  if (auto* edit = m_infoDialog->findChild<QPlainTextEdit*>(
-        QStringLiteral("imageInfoEdit"))) {
-    edit->setPlainText(buildImageInfoText());
-  }
-  m_infoDialog->show();
-  m_infoDialog->raise();
-  m_infoDialog->activateWindow();
+  if (m_scrollArea) m_scrollArea->setFocus();
 }
 
 void ImageView::rotateCw90() {
@@ -1247,12 +1248,9 @@ void ImageView::copyImageToClipboard() {
   emit transientMessage(tr("Copied image to clipboard"));
 }
 
-void ImageView::refreshImageInfoDialog() {
-  if (!m_infoDialog || !m_infoDialog->isVisible()) return;
-  if (auto* edit = m_infoDialog->findChild<QPlainTextEdit*>(
-        QStringLiteral("imageInfoEdit"))) {
-    edit->setPlainText(buildImageInfoText());
-  }
+void ImageView::refreshImageInfoPanel() {
+  if (!m_infoPanel || !m_infoPanel->isVisible()) return;
+  m_infoPanel->setPlainText(buildImageInfoText());
 }
 
 } // namespace Farman
