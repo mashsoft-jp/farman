@@ -1,5 +1,6 @@
 #include "ImageView.h"
 #include "PsdReader.h"
+#include "AiReader.h"
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
 #include "viewer/ViewerHints.h"
@@ -13,6 +14,7 @@
 #include <QFontDatabase>
 #include <QGuiApplication>
 #include <QPlainTextEdit>
+#include <QSplitter>
 #include <QToolButton>
 #include "utils/EnterClickFilter.h"
 #include <QEvent>
@@ -387,7 +389,7 @@ void ImageView::setupUi() {
           this,         &ImageView::copyImageToClipboard);
   m_toolbar->addWidget(m_copyButton);
 
-  // 画像メタデータダイアログを開くボタン (フォーマット情報・コメント
+  // 画像メタデータパネル (右側) を開閉するボタン (フォーマット情報・コメント
   // 等のテキストメタデータをまとめて表示する)。
   m_infoButton = new QToolButton(m_toolbar);
   m_infoButton->setText(QStringLiteral("i"));
@@ -399,13 +401,18 @@ void ImageView::setupUi() {
     tr("Show image information / metadata (%1)"));
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_infoButton, &QToolButton::clicked,
-          this,         &ImageView::toggleImageInfoDialog);
+          this,         &ImageView::toggleImageInfoPanel);
   m_toolbar->addWidget(m_infoButton);
 
   root->addWidget(m_toolbar);
 
-  // 画像表示部 (スクロール可)
-  m_scrollArea = new QScrollArea(this);
+  // 画像表示部 (スクロール可) + 右側の情報パネルを横スプリッタに載せる。
+  // 情報パネルは既定で非表示 ("i" ボタン / `i` キーで開閉)。
+  auto* splitter = new QSplitter(Qt::Horizontal, this);
+  splitter->setChildrenCollapsible(false);
+  m_splitter = splitter;
+
+  m_scrollArea = new QScrollArea(splitter);
   m_scrollArea->setWidgetResizable(false);
   m_scrollArea->setAlignment(Qt::AlignCenter);
   m_display = new ImageDisplay(m_scrollArea, this);
@@ -413,7 +420,17 @@ void ImageView::setupUi() {
   m_scrollArea->setWidget(m_display);
   // ビューポートのリサイズで ImageDisplay のサイズを再計算する
   m_scrollArea->viewport()->installEventFilter(this);
-  root->addWidget(m_scrollArea, /*stretch*/ 1);
+
+  m_infoPanel = new QPlainTextEdit(splitter);
+  m_infoPanel->setReadOnly(true);
+  m_infoPanel->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+  m_infoPanel->setLineWrapMode(QPlainTextEdit::WidgetWidth);
+  m_infoPanel->setMinimumWidth(180);
+  m_infoPanel->hide();
+
+  splitter->setStretchFactor(0, 1);
+  splitter->setStretchFactor(1, 0);
+  root->addWidget(splitter, /*stretch*/ 1);
 
   setFocusProxy(m_scrollArea);
 
@@ -581,13 +598,22 @@ ImageView::PreparedLoad ImageView::prepareLoad(const QString& filePath) {
     // そのフォーマットとしてデコードしようとし、一部プラグインがハングする
     // ことがある (CI ビルドで「読み込み中」のまま固まる事象)。内容が既知の
     // 画像フォーマットに一致しなければデコーダを起動せず即 read error にする。
-    QImageReader reader(filePath);
-    reader.setDecideFormatFromContent(true);
-    QImage img = reader.read();
+    // .ai (PDF 互換) は Qt PDF の imageformats プラグインでも読めてしまうが、
+    // そちらは 72 dpi 相当の低解像度になる。AiReader (2 倍解像度) を優先し、
+    // 失敗したら通常の QImageReader にフォールバックする。
+    const QString ext = QFileInfo(filePath).suffix().toLower();
+    QImage img;
+    if (ext == QLatin1String("ai")) {
+      img = AiReader::decodeComposite(filePath);
+    }
+    if (img.isNull()) {
+      QImageReader reader(filePath);
+      reader.setDecideFormatFromContent(true);
+      img = reader.read();
+    }
     if (img.isNull()) {
       // Qt 6 同梱の imageformats プラグインには PSD ハンドラが無い。
       // 拡張子 / signature が PSD 系なら自前リーダで合成済プレビューを取得する。
-      const QString ext = QFileInfo(filePath).suffix().toLower();
       if (ext == QLatin1String("psd") || ext == QLatin1String("psb")) {
         img = PsdReader::decodeComposite(filePath);
       }
@@ -669,7 +695,7 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
     if (!pm.isNull()) {
       m_display->setStaticPixmap(pm);
       m_naturalImageSize = pm.size();
-      // QImage 本体を取っておく (Info ダイアログのメタデータ用)。
+      // QImage 本体を取っておく (情報パネルのメタデータ用)。
       m_loadedImage = r.image;
     } else {
       // pixmap 化に失敗 → 古い画像が残らないようビューをクリア。
@@ -702,8 +728,8 @@ void ImageView::applyPreparedLoad(const PreparedLoad& r) {
   if (m_copyButton) m_copyButton->setEnabled(!m_filePath.isEmpty());
   updateFrameControls();
 
-  // Info ダイアログが開いていれば内容を新ファイルに差し替え。
-  refreshImageInfoDialog();
+  // 情報パネルが開いていれば内容を新ファイルに差し替え。
+  refreshImageInfoPanel();
 
   applyDisplayState();
 }
@@ -820,7 +846,7 @@ bool ImageView::handleViewerKey(QKeyEvent* event) {
     return false;
   }
   if (cmd == QLatin1String("viewer.image.info")) {
-    toggleImageInfoDialog();
+    toggleImageInfoPanel();
     return true;
   }
   if (cmd == QLatin1String("viewer.image.rotate")) {
@@ -914,16 +940,29 @@ bool ImageView::detectAnimated(const QString& filePath) {
   return count != 1;  // 0 (不明) は再生候補に残す
 }
 
+namespace {
+
+// ステータスバー / 情報ダイアログに出すフォーマット名。QImageReader が認識できる
+// 形式ならその短縮名 (PNG / JPEG / ...)、認識できない形式 (PSD など) は拡張子を
+// 大文字化する。.ai は Qt PDF プラグインが "PDF" と答えるが、ユーザーには AI と見せる。
+QString displayFormatName(const QString& filePath, const QByteArray& readerFormat) {
+  const QString ext = QFileInfo(filePath).suffix();
+  if (ext.compare(QLatin1String("ai"), Qt::CaseInsensitive) == 0) {
+    return QStringLiteral("AI");
+  }
+  QString fmt = QString::fromLatin1(readerFormat).toUpper();
+  if (fmt.isEmpty()) fmt = ext.toUpper();
+  return fmt;
+}
+
+}  // namespace
+
 QString ImageView::statusInfo() const {
   if (m_filePath.isEmpty()) return QString();
   QImageReader reader(m_filePath);
   // フォーマット / サイズが QImageReader で取れない場合は拡張子 +
   // 実 QImage / m_naturalImageSize を使う (PSD などのフォールバック)。
-  QString fmt = QString::fromLatin1(reader.format()).toUpper();
-  if (fmt.isEmpty()) {
-    const QString ext = QFileInfo(m_filePath).suffix().toUpper();
-    if (!ext.isEmpty()) fmt = ext;
-  }
+  const QString fmt = displayFormatName(m_filePath, reader.format());
   QSize sz = reader.size();
   if (!sz.isValid() || sz.width() <= 0 || sz.height() <= 0) {
     if (!m_loadedImage.isNull())            sz = m_loadedImage.size();
@@ -961,11 +1000,7 @@ QString ImageView::buildImageInfoText() const {
   // 認識できないフォーマット (= PSD のような Qt 同梱プラグイン非対応形式) の
   // 場合は拡張子を大文字化して表示する (例: "PSD")。"(unknown)" のままだと
   // ユーザーから見て「何の画像か」が分からない。
-  QString fmt = QString::fromLatin1(reader.format()).toUpper();
-  if (fmt.isEmpty()) {
-    const QString ext = QFileInfo(m_filePath).suffix().toUpper();
-    if (!ext.isEmpty()) fmt = ext;
-  }
+  const QString fmt = displayFormatName(m_filePath, reader.format());
   // Size: QImageReader が認識できれば読めるが、PSD 等は -1×-1 を返してくる。
   // フォールバックとして実際にロードした QImage / 表示中の自然サイズを使う。
   QSize sz = reader.size();
@@ -1065,39 +1100,24 @@ QString ImageView::buildImageInfoText() const {
   return body;
 }
 
-void ImageView::toggleImageInfoDialog() {
-  if (m_filePath.isEmpty()) return;
-  // 既に表示中なら閉じる (= トグル動作)。
-  if (m_infoDialog && m_infoDialog->isVisible()) {
-    m_infoDialog->close();
+void ImageView::toggleImageInfoPanel() {
+  if (m_filePath.isEmpty() || !m_infoPanel) return;
+  // 表示中なら閉じる (= トグル動作)。
+  if (m_infoPanel->isVisible()) {
+    m_infoPanel->hide();
+    if (m_scrollArea) m_scrollArea->setFocus();
     return;
   }
-  // 新規もしくは閉じた状態 → 開く。
-  if (!m_infoDialog) {
-    m_infoDialog = new QDialog(this);
-    m_infoDialog->setWindowTitle(tr("Image Information"));
-    m_infoDialog->setAttribute(Qt::WA_DeleteOnClose, false);
-    m_infoDialog->resize(640, 480);
-
-    auto* layout = new QVBoxLayout(m_infoDialog);
-    auto* edit = new QPlainTextEdit(m_infoDialog);
-    edit->setObjectName(QStringLiteral("imageInfoEdit"));
-    edit->setReadOnly(true);
-    edit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-    layout->addWidget(edit);
-
-    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, m_infoDialog);
-    connect(buttons, &QDialogButtonBox::rejected, m_infoDialog, &QDialog::close);
-    layout->addWidget(buttons);
+  m_infoPanel->setPlainText(buildImageInfoText());
+  m_infoPanel->show();
+  // 初回は右側に 320 px。以降は利用者がスプリッタで動かした幅を保つ。
+  if (m_splitter && !m_infoPanelSized) {
+    m_infoPanelSized = true;
+    const int total = m_splitter->width();
+    const int panelW = qMin(320, total / 2);
+    m_splitter->setSizes({total - panelW, panelW});
   }
-  // モードレスで開く + 内容を最新化。
-  if (auto* edit = m_infoDialog->findChild<QPlainTextEdit*>(
-        QStringLiteral("imageInfoEdit"))) {
-    edit->setPlainText(buildImageInfoText());
-  }
-  m_infoDialog->show();
-  m_infoDialog->raise();
-  m_infoDialog->activateWindow();
+  if (m_scrollArea) m_scrollArea->setFocus();
 }
 
 void ImageView::rotateCw90() {
@@ -1228,12 +1248,9 @@ void ImageView::copyImageToClipboard() {
   emit transientMessage(tr("Copied image to clipboard"));
 }
 
-void ImageView::refreshImageInfoDialog() {
-  if (!m_infoDialog || !m_infoDialog->isVisible()) return;
-  if (auto* edit = m_infoDialog->findChild<QPlainTextEdit*>(
-        QStringLiteral("imageInfoEdit"))) {
-    edit->setPlainText(buildImageInfoText());
-  }
+void ImageView::refreshImageInfoPanel() {
+  if (!m_infoPanel || !m_infoPanel->isVisible()) return;
+  m_infoPanel->setPlainText(buildImageInfoText());
 }
 
 } // namespace Farman

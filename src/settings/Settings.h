@@ -866,7 +866,7 @@ private:
 
   // Image viewer
   QStringList           m_imageViewerExtensions   = {
-    "png", "jp*g", "gif", "bmp", "svg", "webp", "ico", "tif*", "psd"
+    "png", "jp*g", "gif", "bmp", "svg", "webp", "ico", "tif*", "psd", "ai"
   };
   QStringList           m_imageViewerMimePatterns = { "image/*" };
   int                   m_imageViewerZoomPercent      = 100;

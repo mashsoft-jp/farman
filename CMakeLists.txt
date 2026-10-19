@@ -221,6 +221,7 @@ qt_add_executable(farman
   src/viewer/CsvView.cpp
   src/viewer/CsvViewerWindow.cpp
   src/viewer/PsdReader.cpp
+  src/viewer/AiReader.cpp
   src/keybinding/ICommand.cpp
   src/keybinding/CommandRegistry.cpp
   src/keybinding/CommandLayout.cpp
@@ -498,6 +499,7 @@ add_farman_official_viewer_plugin(ImageViewerPlugin plugins/official/image-viewe
   src/viewer/ImageView.cpp
   src/viewer/ImageViewerWindow.cpp
   src/viewer/PsdReader.cpp
+  src/viewer/AiReader.cpp
   src/utils/ExifReader.cpp
   ${FARMAN_PLUGIN_COMMON_SOURCES}
 )
