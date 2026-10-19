@@ -8,6 +8,7 @@
 #include "GeneralTab.h"
 #include "ExternalAppsTab.h"
 #include "settings/Settings.h"
+#include "utils/RestartSupport.h"
 #include "keybinding/KeyBindingManager.h"
 #include "keybinding/ViewerKeyBindingManager.h"
 #include "viewer/ViewerDispatcher.h"
@@ -42,6 +43,11 @@ namespace {
 // ことがあるため、Settings の save() 後に Qt のクリーンアップを
 // スキップして即終了する。
 [[noreturn]] void restartFarman() {
+  // 新プロセスには旧プロセス (= このプロセス) の PID を渡し、旧プロセスの終了を待ってから
+  // 起動処理を進めさせる (RestartSupport.h 参照。Windows で再起動しない不具合の対策)。
+  const QStringList waitArgs{
+    QStringLiteral("--%1").arg(QString::fromLatin1(RestartSupport::kWaitPidOption)),
+    QString::number(QCoreApplication::applicationPid())};
 #ifdef Q_OS_MACOS
   // applicationFilePath() は <bundle>.app/Contents/MacOS/<exe> を返す。
   // 裸の exe を直接起動すると LaunchServices が別アプリ扱いし、Dock に
@@ -50,9 +56,10 @@ namespace {
   const int idx = bundlePath.indexOf(QStringLiteral("/Contents/MacOS/"));
   if (idx > 0) bundlePath.truncate(idx);
   QProcess::startDetached(QStringLiteral("/usr/bin/open"),
-                          QStringList{QStringLiteral("-n"), bundlePath});
+                          QStringList{QStringLiteral("-n"), bundlePath,
+                                      QStringLiteral("--args")} + waitArgs);
 #else
-  QProcess::startDetached(QApplication::applicationFilePath(), QStringList());
+  QProcess::startDetached(QApplication::applicationFilePath(), waitArgs);
 #endif
   // プラグイン契約 (アンロード前に shutdown() を 1 回) をこの経路でも守る。
   // _Exit はデストラクタを走らせないため、アンロード済みコードに触れる

@@ -191,6 +191,7 @@ qt_add_executable(farman
   src/utils/EnterClickFilter.cpp
   src/utils/CancellableLoadPage.cpp
   src/utils/ArchivePath.cpp
+  src/utils/RestartSupport.cpp
   src/utils/MediaMatchers.cpp
   src/utils/MarkdownSanitize.cpp
   src/utils/ExifReader.cpp

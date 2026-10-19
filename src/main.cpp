@@ -20,6 +20,7 @@
 #include "core/ArchiveFormatCatalog.h"
 #include "core/PluginInstaller.h"
 #include "utils/ArchivePath.h"
+#include "utils/RestartSupport.h"
 #include "settings/Settings.h"
 
 #ifdef FARMAN_HAVE_HEIF
@@ -197,7 +198,20 @@ int main(int argc, char *argv[]) {
     QStringLiteral("Qt6-based dual-pane file manager"));
   parser.addHelpOption();
   parser.addVersionOption();
+  // 再起動で起動されたときだけ付く内部オプション (ヘルプには出さない)。
+  QCommandLineOption waitPidOption(
+    QString::fromLatin1(Farman::RestartSupport::kWaitPidOption),
+    QStringLiteral("Wait for the given process to exit before starting (internal)."),
+    QStringLiteral("pid"));
+  waitPidOption.setFlags(QCommandLineOption::HiddenFromHelp);
+  parser.addOption(waitPidOption);
   parser.process(app);
+
+  // 再起動なら、旧プロセスの終了を待ってから以降の起動処理 (単一インスタンス判定 /
+  // プラグインの導入反映) を進める。
+  if (parser.isSet(waitPidOption)) {
+    Farman::RestartSupport::waitForProcessExit(parser.value(waitPidOption).toLongLong());
+  }
 
   // macOS では既定で Tab がテキスト系ウィジェットしかフォーカスしない
   // (TabFocusTextControls)。farman ではツールバーのトグルボタン / コンボなど
