@@ -30,7 +30,7 @@ const QColor   kDefChecker2(0xF0, 0xF0, 0xF0);
 // 既定の対象ファイルパターン (Settings::m_imageViewerExtensions と一致させる)。
 const QStringList kDefExtensions = {
   "*.png", "*.jp*g", "*.gif", "*.bmp", "*.svg", "*.webp", "*.ico", "*.tif*",
-  "*.psd", "*.heic", "*.heif"
+  "*.psd", "*.ai", "*.heic", "*.heif"
 };
 } // namespace
 

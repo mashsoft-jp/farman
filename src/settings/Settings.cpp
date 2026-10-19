@@ -221,11 +221,11 @@ void Settings::applyDefaults() {
   m_textViewerLineNumberBg    = QColor(0xF0, 0xF0, 0xF0);
 
   // ── 画像ビュアー ─────────────────
-  // psd は ImageView が合成プレビューに対応 (PsdReader)。heic / heif は動画と
+  // psd / ai は ImageView が合成プレビューに対応 (PsdReader / AiReader)。heic / heif は動画と
   // 同じ ISO BMFF コンテナで内容スニッフが当てにならず、拡張子で明示しないと
   // メディアビュアーに奪われるため必ず入れておく。
   m_imageViewerExtensions       = { "*.png", "*.jp*g", "*.gif", "*.bmp", "*.svg",
-                                    "*.webp", "*.ico", "*.tif*", "*.psd",
+                                    "*.webp", "*.ico", "*.tif*", "*.psd", "*.ai",
                                     "*.heic", "*.heif" };
   m_imageViewerMimePatterns     = { "image/*" };
   m_imageViewerZoomPercent      = 100;
@@ -1223,7 +1223,7 @@ constexpr int kMediaExtensionsRevision = 2;
 
 // 画像ビュアーの既定対応拡張子のリビジョン。メディアビュアーと同じ仕組みで、
 // 新しい既定拡張子を追加するたびに増やす。
-constexpr int kImageExtensionsRevision = 2;
+constexpr int kImageExtensionsRevision = 3;
 
 QString normalizeViewerAssociationExtension(QString extension) {
   extension = extension.trimmed().toLower();
@@ -2535,6 +2535,8 @@ void Settings::load() {
         // revision 2 (farman 1.0.0): それまで ImageViewerPlugin 側にコード固定で
         // 持っていた psd / heic / heif を設定側の既定へ移した分。
         {2, {"psd", "heic", "heif"}},
+        // revision 3 (farman 1.2.0): Illustrator (.ai) の合成プレビュー表示 (AiReader)。
+        {3, {"ai"}},
       };
       const int savedRev = imageViewer.value("extensionsRevision").toInt(1);
       for (int r = savedRev + 1; r <= kImageExtensionsRevision; ++r) {

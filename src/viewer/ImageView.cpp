@@ -1,5 +1,6 @@
 #include "ImageView.h"
 #include "PsdReader.h"
+#include "AiReader.h"
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
 #include "viewer/ViewerHints.h"
@@ -581,13 +582,22 @@ ImageView::PreparedLoad ImageView::prepareLoad(const QString& filePath) {
     // そのフォーマットとしてデコードしようとし、一部プラグインがハングする
     // ことがある (CI ビルドで「読み込み中」のまま固まる事象)。内容が既知の
     // 画像フォーマットに一致しなければデコーダを起動せず即 read error にする。
-    QImageReader reader(filePath);
-    reader.setDecideFormatFromContent(true);
-    QImage img = reader.read();
+    // .ai (PDF 互換) は Qt PDF の imageformats プラグインでも読めてしまうが、
+    // そちらは 72 dpi 相当の低解像度になる。AiReader (2 倍解像度) を優先し、
+    // 失敗したら通常の QImageReader にフォールバックする。
+    const QString ext = QFileInfo(filePath).suffix().toLower();
+    QImage img;
+    if (ext == QLatin1String("ai")) {
+      img = AiReader::decodeComposite(filePath);
+    }
+    if (img.isNull()) {
+      QImageReader reader(filePath);
+      reader.setDecideFormatFromContent(true);
+      img = reader.read();
+    }
     if (img.isNull()) {
       // Qt 6 同梱の imageformats プラグインには PSD ハンドラが無い。
       // 拡張子 / signature が PSD 系なら自前リーダで合成済プレビューを取得する。
-      const QString ext = QFileInfo(filePath).suffix().toLower();
       if (ext == QLatin1String("psd") || ext == QLatin1String("psb")) {
         img = PsdReader::decodeComposite(filePath);
       }
@@ -914,16 +924,29 @@ bool ImageView::detectAnimated(const QString& filePath) {
   return count != 1;  // 0 (不明) は再生候補に残す
 }
 
+namespace {
+
+// ステータスバー / 情報ダイアログに出すフォーマット名。QImageReader が認識できる
+// 形式ならその短縮名 (PNG / JPEG / ...)、認識できない形式 (PSD など) は拡張子を
+// 大文字化する。.ai は Qt PDF プラグインが "PDF" と答えるが、ユーザーには AI と見せる。
+QString displayFormatName(const QString& filePath, const QByteArray& readerFormat) {
+  const QString ext = QFileInfo(filePath).suffix();
+  if (ext.compare(QLatin1String("ai"), Qt::CaseInsensitive) == 0) {
+    return QStringLiteral("AI");
+  }
+  QString fmt = QString::fromLatin1(readerFormat).toUpper();
+  if (fmt.isEmpty()) fmt = ext.toUpper();
+  return fmt;
+}
+
+}  // namespace
+
 QString ImageView::statusInfo() const {
   if (m_filePath.isEmpty()) return QString();
   QImageReader reader(m_filePath);
   // フォーマット / サイズが QImageReader で取れない場合は拡張子 +
   // 実 QImage / m_naturalImageSize を使う (PSD などのフォールバック)。
-  QString fmt = QString::fromLatin1(reader.format()).toUpper();
-  if (fmt.isEmpty()) {
-    const QString ext = QFileInfo(m_filePath).suffix().toUpper();
-    if (!ext.isEmpty()) fmt = ext;
-  }
+  const QString fmt = displayFormatName(m_filePath, reader.format());
   QSize sz = reader.size();
   if (!sz.isValid() || sz.width() <= 0 || sz.height() <= 0) {
     if (!m_loadedImage.isNull())            sz = m_loadedImage.size();
@@ -961,11 +984,7 @@ QString ImageView::buildImageInfoText() const {
   // 認識できないフォーマット (= PSD のような Qt 同梱プラグイン非対応形式) の
   // 場合は拡張子を大文字化して表示する (例: "PSD")。"(unknown)" のままだと
   // ユーザーから見て「何の画像か」が分からない。
-  QString fmt = QString::fromLatin1(reader.format()).toUpper();
-  if (fmt.isEmpty()) {
-    const QString ext = QFileInfo(m_filePath).suffix().toUpper();
-    if (!ext.isEmpty()) fmt = ext;
-  }
+  const QString fmt = displayFormatName(m_filePath, reader.format());
   // Size: QImageReader が認識できれば読めるが、PSD 等は -1×-1 を返してくる。
   // フォールバックとして実際にロードした QImage / 表示中の自然サイズを使う。
   QSize sz = reader.size();
