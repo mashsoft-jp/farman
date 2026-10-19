@@ -18,10 +18,13 @@
 #include <QLineEdit>
 #include <QLocale>
 #include <QPalette>
+#include <QAbstractTextDocumentLayout>
 #include <QScrollBar>
 #include <QSizePolicy>
 #include <QStringDecoder>
 #include <QStringList>
+#include <QSplitter>
+#include <QTextBlock>
 #include <QTextBrowser>
 #include <QTextCharFormat>
 #include <QTextCursor>
@@ -29,6 +32,7 @@
 #include <QTextEdit>
 #include <QToolBar>
 #include <QToolButton>
+#include <QTreeWidget>
 #include <QVBoxLayout>
 
 // uchardet のインストール先によって <uchardet.h> 直下にあるか
@@ -94,6 +98,16 @@ void MarkdownView::setupUi() {
   connect(m_rawSourceButton, &QToolButton::toggled,
           this,              &MarkdownView::onToggleRawSource);
   m_toolbar->addWidget(m_rawSourceButton);
+
+  m_tocButton = new QToolButton(m_toolbar);
+  m_tocButton->setText(tr("Contents"));
+  m_tocButton->setCheckable(true);
+  m_tocButton->setEnabled(false);  // 見出しのある文書を整形表示しているときだけ有効
+  ViewerHints::tag(m_tocButton, QStringLiteral("viewer.markdown.toggle_toc"),
+                   tr("Show the table of contents sidebar (%1)"));
+  m_tocButton->setFocusPolicy(Qt::StrongFocus);
+  connect(m_tocButton, &QToolButton::toggled, this, &MarkdownView::onTocToggled);
+  m_toolbar->addWidget(m_tocButton);
 
   m_toolbar->addSeparator();
 
@@ -164,10 +178,26 @@ void MarkdownView::setupUi() {
 
   root->addWidget(m_toolbar);
 
-  m_browser = new QTextBrowser(this);
+  // 左: 目次サイドバー (既定は非表示) / 右: 本文。
+  m_splitter = new QSplitter(Qt::Horizontal, this);
+  m_splitter->setChildrenCollapsible(false);
+
+  m_tocTree = new QTreeWidget(m_splitter);
+  m_tocTree->setHeaderHidden(true);
+  m_tocTree->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  m_tocTree->setMinimumWidth(160);
+  m_tocTree->hide();
+  m_tocTree->installEventFilter(this);
+  connect(m_tocTree, &QTreeWidget::itemActivated, this, &MarkdownView::onTocActivated);
+  connect(m_tocTree, &QTreeWidget::itemClicked,   this, &MarkdownView::onTocActivated);
+
+  m_browser = new QTextBrowser(m_splitter);
   m_browser->setOpenExternalLinks(true);  // リンクはクリックで OS 既定ブラウザ
   m_browser->setReadOnly(true);
-  root->addWidget(m_browser, /*stretch*/ 1);
+
+  m_splitter->setStretchFactor(0, 0);
+  m_splitter->setStretchFactor(1, 1);
+  root->addWidget(m_splitter, /*stretch*/ 1);
 
   setFocusProxy(m_browser);
 
@@ -297,6 +327,77 @@ void MarkdownView::renderCurrent() {
   m_browser->verticalScrollBar()->setValue(0);
   // 再描画後にハイライトを掛け直す (検索文字列が入っていれば)
   refreshMatchHighlights();
+  rebuildToc();
+}
+
+void MarkdownView::rebuildToc() {
+  if (!m_tocTree || !m_browser) return;
+  m_tocTree->clear();
+
+  // 整形表示のときだけ見出しを拾う (生ソース表示は plain text で見出し情報が無い)。
+  if (!m_rawSource) {
+    // 階層は見出しレベルの上がり下がりで組む。h1 を飛ばして h2 から始まる文書や
+    // h2 → h4 のような飛びがあっても、直近の「より浅い見出し」の子にする。
+    QList<QTreeWidgetItem*> stack;
+    QList<int>              levels;
+    for (QTextBlock b = m_browser->document()->begin(); b.isValid(); b = b.next()) {
+      const int level = b.blockFormat().headingLevel();
+      const QString title = b.text().trimmed();
+      if (level < 1 || title.isEmpty()) continue;
+
+      while (!levels.isEmpty() && levels.last() >= level) {
+        levels.removeLast();
+        stack.removeLast();
+      }
+      auto* item = stack.isEmpty() ? new QTreeWidgetItem(m_tocTree)
+                                   : new QTreeWidgetItem(stack.last());
+      item->setText(0, title);
+      item->setData(0, Qt::UserRole, b.blockNumber());
+      stack.append(item);
+      levels.append(level);
+    }
+    m_tocTree->expandAll();
+  }
+
+  const bool has = m_tocTree->topLevelItemCount() > 0;
+  if (m_tocButton) {
+    // 使えなくなるとき (見出し無し / 生ソース表示) は、開いているパネルも畳む。
+    if (!has && m_tocButton->isChecked()) m_tocButton->setChecked(false);
+    m_tocButton->setEnabled(has);
+  }
+}
+
+void MarkdownView::onTocToggled(bool visible) {
+  if (!m_tocTree || !m_splitter) return;
+  m_tocTree->setVisible(visible);
+  if (visible && !m_tocSized) {
+    m_tocSized = true;
+    const int total  = m_splitter->width();
+    const int panelW = qMin(240, total / 3);
+    m_splitter->setSizes({panelW, total - panelW});
+  }
+  // 開いたらツリーにフォーカス (矢印 + Enter で移動できる)。閉じたら本文へ戻す。
+  if (visible) {
+    m_tocTree->setFocus();
+    if (!m_tocTree->currentItem() && m_tocTree->topLevelItemCount() > 0) {
+      m_tocTree->setCurrentItem(m_tocTree->topLevelItem(0));
+    }
+  } else if (m_browser) {
+    m_browser->setFocus();
+  }
+}
+
+void MarkdownView::onTocActivated(QTreeWidgetItem* item) {
+  if (!item || !m_browser) return;
+  const QTextBlock block =
+    m_browser->document()->findBlockByNumber(item->data(0, Qt::UserRole).toInt());
+  if (!block.isValid()) return;
+  // 見出しが本文ビューの先頭に来るようにスクロールする。
+  const QRectF rect =
+    m_browser->document()->documentLayout()->blockBoundingRect(block);
+  m_browser->verticalScrollBar()->setValue(qRound(rect.top()));
+  QTextCursor c(block);
+  m_browser->setTextCursor(c);
 }
 
 void MarkdownView::onToggleRawSource(bool rawSource) {
@@ -314,6 +415,7 @@ void MarkdownView::clearContent() {
     m_browser->setExtraSelections({});
     m_browser->clear();
   }
+  rebuildToc();
   if (m_findEdit)   m_findEdit->clear();
   if (m_findStatus) m_findStatus->clear();
 }
@@ -411,6 +513,15 @@ bool MarkdownView::eventFilter(QObject* watched, QEvent* event) {
       return true;
     }
   }
+  // 目次ツリーの Enter: 項目へジャンプして吸収する (QTreeWidget は Enter を
+  // activated で通知したあと event を ignore するため、親に伝わってビュアーが閉じる)。
+  if (watched == m_tocTree && event->type() == QEvent::KeyPress) {
+    auto* ke = static_cast<QKeyEvent*>(event);
+    if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
+      onTocActivated(m_tocTree->currentItem());
+      return true;
+    }
+  }
   if (event->type() == QEvent::ShortcutOverride
       || event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
@@ -438,6 +549,8 @@ void MarkdownView::dispatchViewerCommand(const QString& cmd) {
     focusFindInput();
   } else if (cmd == QLatin1String("viewer.markdown.toggle_source")) {
     if (m_rawSourceButton) m_rawSourceButton->toggle();
+  } else if (cmd == QLatin1String("viewer.markdown.toggle_toc")) {
+    if (m_tocButton && m_tocButton->isEnabled()) m_tocButton->toggle();
   } else if (cmd == QLatin1String("viewer.markdown.toggle_case")) {
     if (m_findCsButton) m_findCsButton->toggle();
   }
