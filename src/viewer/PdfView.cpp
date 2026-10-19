@@ -106,7 +106,7 @@ void PdfView::setupUi() {
 
   // ───── ページ操作 ─────
   m_prevButton = new QToolButton(m_toolbar);
-  ViewerHints::tagText(m_prevButton, QStringLiteral("viewer.pdf.prev_page"), QStringLiteral("◀"));
+  m_prevButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-left.svg")));
   ViewerHints::tag(m_prevButton, QStringLiteral("viewer.pdf.prev_page"), tr("Previous page (%1)"));
   m_prevButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_prevButton, &QToolButton::clicked, this, &PdfView::onPrevPage);
@@ -131,7 +131,7 @@ void PdfView::setupUi() {
   m_toolbar->addWidget(m_pageTotalLabel);
 
   m_nextButton = new QToolButton(m_toolbar);
-  ViewerHints::tagText(m_nextButton, QStringLiteral("viewer.pdf.next_page"), QStringLiteral("▶"));
+  m_nextButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-right.svg")));
   ViewerHints::tag(m_nextButton, QStringLiteral("viewer.pdf.next_page"), tr("Next page (%1)"));
   m_nextButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_nextButton, &QToolButton::clicked, this, &PdfView::onNextPage);
@@ -141,21 +141,21 @@ void PdfView::setupUi() {
 
   // ───── ズーム ─────
   m_zoomOutButton = new QToolButton(m_toolbar);
-  ViewerHints::tagText(m_zoomOutButton, QStringLiteral("viewer.pdf.zoom_out"), QStringLiteral("−"));
+  m_zoomOutButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/zoom-out.svg")));
   ViewerHints::tag(m_zoomOutButton, QStringLiteral("viewer.pdf.zoom_out"), tr("Zoom out (%1)"));
   m_zoomOutButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomOutButton, &QToolButton::clicked, this, &PdfView::onZoomOut);
   m_toolbar->addWidget(m_zoomOutButton);
 
   m_zoomInButton = new QToolButton(m_toolbar);
-  ViewerHints::tagText(m_zoomInButton, QStringLiteral("viewer.pdf.zoom_in"), QStringLiteral("+"));
+  m_zoomInButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/zoom-in.svg")));
   ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.pdf.zoom_in"), tr("Zoom in (%1)"));
   m_zoomInButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomInButton, &QToolButton::clicked, this, &PdfView::onZoomIn);
   m_toolbar->addWidget(m_zoomInButton);
 
   m_fitWidthButton = new QToolButton(m_toolbar);
-  ViewerHints::tagText(m_fitWidthButton, QStringLiteral("viewer.pdf.fit_width"), tr("Fit Width"));
+  m_fitWidthButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-width.svg")));
   m_fitWidthButton->setCheckable(true);
   ViewerHints::tag(m_fitWidthButton, QStringLiteral("viewer.pdf.fit_width"),
     tr("Fit page width to view (%1)"));
@@ -164,7 +164,7 @@ void PdfView::setupUi() {
   m_toolbar->addWidget(m_fitWidthButton);
 
   m_fitPageButton = new QToolButton(m_toolbar);
-  ViewerHints::tagText(m_fitPageButton, QStringLiteral("viewer.pdf.fit_page"), tr("Fit Page"));
+  m_fitPageButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-to-window.svg")));
   m_fitPageButton->setCheckable(true);
   ViewerHints::tag(m_fitPageButton, QStringLiteral("viewer.pdf.fit_page"),
     tr("Fit whole page in view (%1)"));
@@ -176,7 +176,7 @@ void PdfView::setupUi() {
 
   // ───── モード ─────
   m_continuousButton = new QToolButton(m_toolbar);
-  ViewerHints::tagText(m_continuousButton, QStringLiteral("viewer.pdf.toggle_continuous"), tr("Continuous"));
+  m_continuousButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/continuous.svg")));
   m_continuousButton->setCheckable(true);
   m_continuousButton->setChecked(true);
   ViewerHints::tag(m_continuousButton, QStringLiteral("viewer.pdf.toggle_continuous"),
@@ -187,7 +187,7 @@ void PdfView::setupUi() {
   m_toolbar->addWidget(m_continuousButton);
 
   m_outlineButton = new QToolButton(m_toolbar);
-  ViewerHints::tagText(m_outlineButton, QStringLiteral("viewer.pdf.toggle_outline"), tr("Outline"));
+  m_outlineButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/list.svg")));
   m_outlineButton->setCheckable(true);
   m_outlineButton->setEnabled(false);  // しおりがある PDF を開いたときだけ有効
   ViewerHints::tag(m_outlineButton, QStringLiteral("viewer.pdf.toggle_outline"),
@@ -217,17 +217,14 @@ void PdfView::setupUi() {
   m_toolbar->addWidget(m_findEdit);
 
   m_findPrevBtn = new QToolButton(m_toolbar);
-  // 前 / 次ヒットのキーは固定 (Shift+Enter / Enter。コマンドではない)。
-  m_findPrevBtn->setText(QStringLiteral("◀ (%1)").arg(
-    QKeySequence(Qt::SHIFT | Qt::Key_Return).toString(QKeySequence::NativeText)));
+  m_findPrevBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-up.svg")));
   m_findPrevBtn->setToolTip(tr("Previous match (Shift+Enter)"));
   m_findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   connect(m_findPrevBtn, &QToolButton::clicked, this, &PdfView::findPrevious);
   m_toolbar->addWidget(m_findPrevBtn);
 
   m_findNextBtn = new QToolButton(m_toolbar);
-  m_findNextBtn->setText(QStringLiteral("▶ (%1)").arg(
-    QKeySequence(Qt::Key_Return).toString(QKeySequence::NativeText)));
+  m_findNextBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-down.svg")));
   m_findNextBtn->setToolTip(tr("Next match (Enter)"));
   m_findNextBtn->setFocusPolicy(Qt::StrongFocus);
   connect(m_findNextBtn, &QToolButton::clicked, this, &PdfView::findNext);

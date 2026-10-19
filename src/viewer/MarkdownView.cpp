@@ -89,7 +89,7 @@ void MarkdownView::setupUi() {
   m_rawSource = Settings::instance().markdownViewerShowSource();
 
   m_rawSourceButton = new QToolButton(m_toolbar);
-  m_rawSourceButton->setText(tr("Source"));
+  m_rawSourceButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/code.svg")));
   m_rawSourceButton->setCheckable(true);
   m_rawSourceButton->setChecked(m_rawSource);
   ViewerHints::tag(m_rawSourceButton, QStringLiteral("viewer.markdown.toggle_source"),
@@ -100,7 +100,7 @@ void MarkdownView::setupUi() {
   m_toolbar->addWidget(m_rawSourceButton);
 
   m_tocButton = new QToolButton(m_toolbar);
-  m_tocButton->setText(tr("Contents"));
+  m_tocButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/list.svg")));
   m_tocButton->setCheckable(true);
   m_tocButton->setEnabled(false);  // 見出しのある文書を整形表示しているときだけ有効
   ViewerHints::tag(m_tocButton, QStringLiteral("viewer.markdown.toggle_toc"),
@@ -130,7 +130,7 @@ void MarkdownView::setupUi() {
   m_toolbar->addWidget(m_findEdit);
 
   m_findPrevBtn = new QToolButton(m_toolbar);
-  m_findPrevBtn->setText(QStringLiteral("◀"));
+  m_findPrevBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-up.svg")));
   m_findPrevBtn->setToolTip(tr("Previous match (Shift+Enter)"));
   m_findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   connect(m_findPrevBtn, &QToolButton::clicked,
@@ -138,7 +138,7 @@ void MarkdownView::setupUi() {
   m_toolbar->addWidget(m_findPrevBtn);
 
   m_findNextBtn = new QToolButton(m_toolbar);
-  m_findNextBtn->setText(QStringLiteral("▶"));
+  m_findNextBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-down.svg")));
   m_findNextBtn->setToolTip(tr("Next match (Enter)"));
   m_findNextBtn->setFocusPolicy(Qt::StrongFocus);
   connect(m_findNextBtn, &QToolButton::clicked,

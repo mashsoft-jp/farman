@@ -351,11 +351,7 @@ void MediaView::setupUi() {
 
   // 情報 (メタデータ) ボタン。ImageView と同じく斜体太字の "i"。
   m_infoButton = new QToolButton(m_toolbar);
-  m_infoButton->setText(QStringLiteral("i"));
-  QFont infoFont = m_infoButton->font();
-  infoFont.setItalic(true);
-  infoFont.setBold(true);
-  m_infoButton->setFont(infoFont);
+  m_infoButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/info.svg")));
   m_infoButton->setToolTip(tr("Show media information / metadata (I)"));
   m_infoButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_infoButton, &QToolButton::clicked,

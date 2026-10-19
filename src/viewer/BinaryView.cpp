@@ -982,7 +982,8 @@ void BinaryView::setupUi() {
   m_addressMaxLabel = new QLabel(toolbar);
   m_addressMaxLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
   toolbar->addWidget(m_addressMaxLabel);
-  QPushButton* goButton = new QPushButton(tr("Go"), toolbar);
+  QPushButton* goButton = new QPushButton(toolbar);
+  goButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/arrow-right.svg")));
   goButton->setFocusPolicy(Qt::StrongFocus);
   goButton->setToolTip(tr("Jump to the address (Enter)"));
   toolbar->addWidget(goButton);
@@ -1023,9 +1024,11 @@ void BinaryView::setupUi() {
 
   ViewerHints::tag(m_searchEdit, QStringLiteral("viewer.binary.find_focus"),
     tr("Text to find (%1 to focus, Enter=next, Shift+Enter=prev)"));
-  // ボタンのラベルにはショートカットを併記せず、ツールチップで案内する。
-  QPushButton* findPrevBtn = new QPushButton(tr("Prev"), searchBar);
-  QPushButton* findNextBtn = new QPushButton(tr("Next"), searchBar);
+  // アイコンのみのボタン。ショートカットはツールチップで案内する。
+  QPushButton* findPrevBtn = new QPushButton(searchBar);
+  QPushButton* findNextBtn = new QPushButton(searchBar);
+  findPrevBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-up.svg")));
+  findNextBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-down.svg")));
   findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   findNextBtn->setFocusPolicy(Qt::StrongFocus);
   ViewerHints::tag(findPrevBtn, QStringLiteral("viewer.binary.find_prev"),

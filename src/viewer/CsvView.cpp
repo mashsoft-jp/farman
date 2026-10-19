@@ -462,7 +462,7 @@ void CsvView::setupUi() {
 
   // ── ヘッダ行扱い ──
   m_headerToggle = new QToolButton(m_toolbar);
-  m_headerToggle->setText(tr("First row = header"));
+  m_headerToggle->setIcon(QIcon(QStringLiteral(":/icons/toolbar/table-header.svg")));
   m_headerToggle->setCheckable(true);
   m_headerToggle->setChecked(true);
   ViewerHints::tag(m_headerToggle, QStringLiteral("viewer.csv.toggle_header"),
@@ -491,14 +491,14 @@ void CsvView::setupUi() {
   m_toolbar->addWidget(m_findEdit);
 
   m_findPrevBtn = new QToolButton(m_toolbar);
-  m_findPrevBtn->setText(QStringLiteral("◀"));
+  m_findPrevBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-up.svg")));
   m_findPrevBtn->setToolTip(tr("Previous match (Shift+Enter)"));
   m_findPrevBtn->setFocusPolicy(Qt::StrongFocus);
   connect(m_findPrevBtn, &QToolButton::clicked, this, &CsvView::findPrevious);
   m_toolbar->addWidget(m_findPrevBtn);
 
   m_findNextBtn = new QToolButton(m_toolbar);
-  m_findNextBtn->setText(QStringLiteral("▶"));
+  m_findNextBtn->setIcon(QIcon(QStringLiteral(":/icons/toolbar/chevron-down.svg")));
   m_findNextBtn->setToolTip(tr("Next match (Enter)"));
   m_findNextBtn->setFocusPolicy(Qt::StrongFocus);
   connect(m_findNextBtn, &QToolButton::clicked, this, &CsvView::findNext);
