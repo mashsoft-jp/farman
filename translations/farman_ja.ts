@@ -6782,12 +6782,12 @@ Stop it and exit farman?</source>
         <translation type="vanished">Markdown のソースを表示（オフ = HTML レンダリング）。ショートカット: %1。</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="136"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="134"/>
         <source>Previous match (Shift+Enter)</source>
         <translation>前のマッチへ (Shift+Enter)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="145"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="142"/>
         <source>Next match (Enter)</source>
         <translation>次のマッチへ (Enter)</translation>
     </message>
@@ -6815,27 +6815,22 @@ Stop it and exit farman?</source>
         <translation>目次サイドバーを表示 (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="157"/>
-        <source>Case</source>
-        <translation>大小区別</translation>
-    </message>
-    <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="159"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="153"/>
         <source>Toggle case-sensitive search (%1)</source>
         <translation>検索の大文字・小文字の区別を切り替える (%1)</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="504"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="498"/>
         <source>Not found</source>
         <translation>見つかりません</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="505"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="499"/>
         <source>%1 matches</source>
         <translation>%1 件</translation>
     </message>
     <message>
-        <location filename="../src/viewer/MarkdownView.cpp" line="569"/>
+        <location filename="../src/viewer/MarkdownView.cpp" line="563"/>
         <source>%1 lines · %2 · %3</source>
         <translation>%1 行 · %2 · %3</translation>
     </message>
