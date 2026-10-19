@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>farman Plugins — list, install, and development</title>
-  <meta name="description" content="List of farman external plugins and how to install them. Add viewers and archive formats after the fact. Official 3D model viewer (FBX) and LZH (LHA) plugins and more, plus a link to the plugin development guide." />
+  <meta name="description" content="List of farman external plugins and how to install them. Add viewers and archive formats after the fact. Official 3D model viewer (FBX / OBJ / glTF / Blender) and LZH (LHA) plugins and more, plus a link to the plugin development guide." />
 
   <meta property="og:title" content="farman Plugins" />
   <meta property="og:description" content="farman external plugins: list, install steps, and development guide." />
@@ -96,24 +96,25 @@
     <section class="doc-section" id="list">
       <h2>Available plugins</h2>
       <nav class="plugin-toc" aria-label="Plugin list contents">
-        <a href="#plugin-3d">3D model viewer (FBX)</a>
+        <a href="#plugin-3d">3D model viewer (FBX / OBJ / glTF / Blender)</a>
         <a href="#plugin-lzh">LZH (LHA) archive</a>
       </nav>
       <div class="plugin-list">
         <article class="feature" id="plugin-3d" data-plugin-repo="mashsoft-jp/farman-plugin-3d">
-          <h3>3D model viewer (FBX)</h3>
-          <p>Display <code>.fbx</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, bone (skeleton) display, back-face culling, and a node hierarchy info panel. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
+          <h3>3D model viewer (FBX / OBJ / glTF / Blender)</h3>
+          <p>Display <code>.fbx</code>, <code>.obj</code>, <code>.gltf</code>, <code>.glb</code> and <code>.blend</code> 3D models inside farman. Supports textures (external and embedded), skeletal animation, multiple materials, a floor grid, wireframe, bone (skeleton) display, back-face culling, and a node hierarchy info panel. Rotate, pan, and zoom with the mouse or keyboard (the keys are configurable under Settings → Keybindings).</p>
           <figure class="doc-figure plugin-figure">
-            <img src="../../screenshots/ex-01-3d-model-viewer.png" width="1200" height="632" alt="A character FBX shown in the 3D model viewer" loading="lazy" />
+            <img src="../../screenshots/ex-01-3d-model-viewer.png" width="1200" height="632" alt="A character 3D model shown in the 3D model viewer" loading="lazy" />
             <figcaption>3D model viewer (textures and skeletal animation)</figcaption>
           </figure>
           <figure class="doc-figure plugin-figure">
-            <img src="../../screenshots/ex-02-3d-node-panel.png" width="1200" height="632" alt="The node info panel showing the FBX hierarchy, with the selected mesh highlighted in the 3D view" loading="lazy" />
+            <img src="../../screenshots/ex-02-3d-node-panel.png" width="1200" height="632" alt="The node info panel showing the model hierarchy, with the selected mesh highlighted in the 3D view" loading="lazy" />
             <figcaption>Node info panel (<code>i</code> key): the hierarchy and details, with the selected node highlighted in the 3D view</figcaption>
           </figure>
           <p class="doc-note">Model in the screenshots: Mage from <a href="https://kaylousberg.itch.io/kaykit-adventurers" rel="noopener">KayKit Adventurers</a> by Kay Lousberg (<a href="https://creativecommons.org/publicdomain/zero/1.0/" rel="noopener">CC0</a>).</p>
           <ul class="plugin-meta">
             <li>Type: viewer</li>
+            <li>Formats: FBX (<code>.fbx</code>), glTF (<code>.gltf</code>, <code>.glb</code>), OBJ (<code>.obj</code>), Blender (<code>.blend</code>, meshes and materials only)</li>
             <li>Platforms: macOS / Windows / Linux</li>
             <li>Compatible farman: 0.9.9 or later</li>
           </ul>
@@ -121,30 +122,16 @@
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">Repository</a></p>
 
           <div class="plugin-updates whatsnew">
-            <h4>What's new in the latest version <span class="wn-date">0.4.0 · 2026-10-17</span></h4>
+            <h4>What's new in the latest version <span class="wn-date">1.0.0 · 2026-10-19</span></h4>
 
-            <h5>Added a node info panel (press <code>i</code>)</h5>
+            <h5>Display OBJ, glTF, glb and Blender 3D models, in addition to FBX</h5>
             <ul>
-              <li>A node info panel can now be shown on the right side of the view. Toggle it with the <code>i</code> key or the "i" button at the right end of the toolbar (hidden by default).</li>
-              <li>It shows the node hierarchy inside the FBX as a tree with connecting lines. Each node can be expanded or collapsed, and there are "Expand all" / "Collapse all" buttons. Bones are marked <code>[bone]</code>, and nodes that hold meshes show the mesh names.</li>
-              <li>Selecting a node shows its details below the tree: type, parent and children, position / rotation / scale, mesh vertex and triangle counts and material, the number of vertices a bone affects, and the total of the meshes under the node.</li>
-              <li>The selected node is also highlighted in the 3D view. Meshes and groups are tinted, and for a bone the area it influences is tinted, with a ring and its name drawn on the joint.</li>
-              <li>Information about the whole model (file name, mesh count, vertex count, textures, and so on) now appears above the controls panel in the top-left corner.</li>
-            </ul>
-
-            <h5>Models without animation now appear in the same pose as in Unity Editor</h5>
-            <ul>
-              <li>FBX files that have a skeleton but no animation are now shown in the joint pose stored in the file (for example, arms lowered) instead of the T-pose. Parts attached to a bone, such as a sword, follow the hand and appear in the correct place.</li>
-              <li>Fixed a rendering problem with FBX files where each mesh has a different bone reference (characters with many parts and more than 100 bones, for example).</li>
-            </ul>
-            <h5>Accessories attached to bones now follow the animation</h5>
-            <ul>
-              <li>Fixed an issue where meshes without skinning that are children of a bone (such as a sword or staff held in a hand) did not follow the animation and stayed fixed at their starting position.</li>
-            </ul>
-
-            <h5>Other</h5>
-            <ul>
-              <li>The information about the whole model and the toolbar now show only the texture file name instead of the full path (the full path is in the toolbar tooltip). A long path used to make the panel overlap the model and push the "i" button out of the toolbar.</li>
+              <li>The supported extensions are now <code>.obj</code>, <code>.gltf</code>, <code>.glb</code> and <code>.blend</code>, in addition to <code>.fbx</code>. Opening any of them from farman's file list starts the 3D model viewer.</li>
+              <li><strong>glTF / glb</strong>: As with FBX, textures (embedded in <code>.glb</code>, or external files for <code>.gltf</code>), skeletons, skinning, animation and the node hierarchy are displayed.</li>
+              <li><strong>OBJ</strong>: Meshes, materials (<code>.mtl</code>) and textures are displayed.</li>
+              <li><strong>Blender (<code>.blend</code>)</strong>: Meshes and materials are displayed. Blender uses a Z-up coordinate system, so the model is stood upright when loaded. Skeletons and animation cannot be read. Also, a <code>.blend</code> saved with a recent Blender (a compressed file, for example) may not load; in that case, please try exporting it to FBX or glTF.</li>
+              <li>For files that contain several animations, the first clip is played.</li>
+              <li>The node info panel (<code>i</code> key) added in 0.4.x, the display of models without animation in their stored pose, and accessories attached to bones following the animation all work with every format.</li>
             </ul>
             <p class="doc-note">Notes for earlier versions are on the <a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">releases page</a>, in Japanese and English.</p>
           </div>
