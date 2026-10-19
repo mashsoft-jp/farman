@@ -63,6 +63,8 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_O)});
   add(d, "pdf", "viewer.pdf.toggle_continuous", QCoreApplication::translate("ViewerCommands", "Toggle continuous scrolling"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_N)});
+  add(d, "pdf", "viewer.pdf.toggle_outline", QCoreApplication::translate("ViewerCommands", "Toggle outline sidebar"),
+      {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B)});
   add(d, "pdf", "viewer.pdf.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
       {QKeySequence(Qt::Key_Plus), QKeySequence(Qt::Key_Equal),
        QKeySequence(Qt::SHIFT | Qt::Key_Equal)});

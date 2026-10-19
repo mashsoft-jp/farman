@@ -7,10 +7,14 @@
 
 #include <atomic>
 
+class QPdfBookmarkModel;
 class QPdfDocument;
 class QPdfSearchModel;
 class QPdfView;
+class QModelIndex;
 class QSpinBox;
+class QSplitter;
+class QTreeView;
 class QLabel;
 class QLineEdit;
 class QToolBar;
@@ -24,6 +28,7 @@ namespace Farman {
 //   - ツールバー: 前ページ / 次ページ / ページジャンプ / ズーム +- /
 //     ページ幅にフィット / ページ全体にフィット / モード切替 (Single / Continuous) /
 //     全文検索 (QPdfSearchModel)。
+//   - しおり (アウトライン) サイドバー (QPdfBookmarkModel)。ツールバーのボタンで開閉。
 //   - テキスト選択 / 回転は Phase 1 ではスコープ外 (将来課題)。回転は
 //     QPdfView 単体では実現できず、QPdfDocumentRenderOptions を介した
 //     カスタム描画が必要なため Phase 2 以降。
@@ -83,6 +88,8 @@ private slots:
   void findNext();
   void findPrevious();
   void focusFindInput();
+  void onOutlineToggled(bool visible);
+  void onOutlineActivated(const QModelIndex& index);
 
 private:
   void setupUi();
@@ -95,6 +102,7 @@ private:
   void updatePageLabel();
   void jumpToSearchResult(int index);
   void updateFindStatus();
+  void updateOutlineAvailability();
 
   QToolBar*     m_toolbar       = nullptr;
   QToolButton*  m_prevButton    = nullptr;
@@ -106,6 +114,14 @@ private:
   QToolButton*  m_fitWidthButton = nullptr;
   QToolButton*  m_fitPageButton  = nullptr;
   QToolButton*  m_continuousButton = nullptr;
+  QToolButton*  m_outlineButton    = nullptr;
+
+  // しおり (アウトライン) サイドバー。ビュー本体の左に並べる横スプリッタの子。
+  // しおりの無い PDF ではボタンを無効にし、パネルも閉じる。
+  QSplitter*          m_splitter      = nullptr;
+  QTreeView*          m_outlineView   = nullptr;
+  QPdfBookmarkModel*  m_bookmarkModel = nullptr;
+  bool                m_outlineSized  = false;  // 初回表示で幅を決めたか
 
   // 検索 (QPdfSearchModel ベース)。QPdfView::setSearchModel でビューに渡すと
   // 全件ハイライトが入る。setCurrentSearchResultIndex で現在ヒットへスクロール。

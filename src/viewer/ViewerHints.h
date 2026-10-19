@@ -2,6 +2,7 @@
 
 #include <QString>
 
+class QAbstractButton;
 class QWidget;
 
 namespace Farman {
@@ -23,6 +24,11 @@ namespace ViewerHints {
 // よう w にプロパティを保存する。
 void tag(QWidget* w, const QString& commandId, const QString& tmpl,
          bool placeholder = false);
+
+// ボタンの表示テキストを「base (キー)」にし、割り当て変更に追随させる。base は
+// tr() 済みのキー抜きのテキスト。キーが無い (未割り当て) ときは base だけを出す。
+// ツールチップではなくボタン上に常時ショートカットを見せたいとき用 (PDF ビュアー等)。
+void tagText(QAbstractButton* b, const QString& commandId, const QString& base);
 
 // root と全子孫のうち tag 済みウィジェットを、map の現在割り当て (無ければ既定)
 // で再設定する。ビュアーの applyShortcutBindings から呼ぶ。
