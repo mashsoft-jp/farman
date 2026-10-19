@@ -316,6 +316,14 @@ void MarkdownView::renderCurrent() {
   if (!m_browser) return;
   if (m_rawSource) {
     m_browser->setPlainText(m_text);
+    // 整形表示 (setMarkdown) の直後だと、先頭ブロックの見出し書式 (太字 / 大きい
+    // 文字 / headingLevel) が setPlainText の文字にも引き継がれてしまう。生ソース表示
+    // は素のテキストなので、全体の文字書式とブロック書式を既定に戻す。
+    QTextCursor reset(m_browser->document());
+    reset.select(QTextCursor::Document);
+    reset.setCharFormat(QTextCharFormat());
+    reset.setBlockCharFormat(QTextCharFormat());
+    reset.setBlockFormat(QTextBlockFormat());
   } else {
     // CommonMark + GFM 拡張 (テーブル / タスクリスト / 取り消し線 / autolink)
     m_browser->document()->setMarkdown(
