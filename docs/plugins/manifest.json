@@ -8,12 +8,12 @@
       "fileName": "ModelViewerPlugin",
       "minFarmanVersion": "0.9.9",
       "name": {
-        "ja": "3D モデルビュアー (FBX)",
-        "en": "3D model viewer (FBX)"
+        "ja": "3D モデルビュアー (FBX / OBJ / glTF / Blender)",
+        "en": "3D model viewer (FBX / OBJ / glTF / Blender)"
       },
       "description": {
-        "ja": ".fbx 形式の 3D モデルを farman 内で表示します。テクスチャ・スケルタルアニメーション・複数マテリアル・ワイヤーフレーム・ボーン表示に対応し、マウス / キーボードで回転・平行移動・拡大縮小できます。",
-        "en": "Displays .fbx 3D models inside farman. Supports textures, skeletal animation, multiple materials, wireframe and bone display; rotate, pan and zoom with the mouse or keyboard."
+        "ja": ".fbx / .obj / .gltf / .glb / .blend 形式の 3D モデルを farman 内で表示します。テクスチャ・スケルタルアニメーション・複数マテリアル・ワイヤーフレーム・ボーン表示・ノード階層の情報パネルに対応し、マウス / キーボードで回転・平行移動・拡大縮小できます。(Blender はメッシュとマテリアルのみ)",
+        "en": "Displays .fbx, .obj, .gltf, .glb and .blend 3D models inside farman. Supports textures, skeletal animation, multiple materials, wireframe, bone display and a node hierarchy info panel; rotate, pan and zoom with the mouse or keyboard. (Blender: meshes and materials only)"
       }
     },
     {
