@@ -122,12 +122,13 @@
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">Repository</a></p>
 
           <div class="plugin-updates whatsnew">
-            <h4>What's new in the latest version <span class="wn-date">1.0.1 · 2026-10-19</span></h4>
+            <h4>What's new in the latest version <span class="wn-date">1.1.0 · 2026-10-20</span></h4>
 
-            <h5>Fix a collapsed body during animation in FBX files with a bone and a mesh of the same name</h5>
+            <h5>Switch between animation clips</h5>
             <ul>
-              <li>When an FBX contained a bone node and a mesh node with the same name (for example <code>Body</code>), the area around the hips could sag forward while the animation played. The correct node is now used for the bone, and the result matches the glTF version.</li>
-              <li>Note: Models that look faceted (flat-shaded) in OBJ / FBX / glTF are displayed as the normals stored in the file specify. A <code>.blend</code> cannot provide this information when loaded, so it is shown smooth.</li>
+              <li>For files that contain several animations (glTF / FBX), you can now choose which clip to play. Use the selector in the toolbar, or the <code>[</code> / <code>]</code> keys. The selector is hidden for files with one clip or fewer.</li>
+              <li>The animation length in the model info at the top left now follows the selected clip.</li>
+              <li>The help panel (<code>H</code>) shows "[ / ] : clip switch" only when the file has several clips.</li>
             </ul>
             <p class="doc-note">Notes for earlier versions are on the <a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">releases page</a>, in Japanese and English.</p>
           </div>

@@ -120,12 +120,13 @@
              <a class="btn btn-ghost btn-sm" href="https://github.com/mashsoft-jp/farman-plugin-3d" rel="noopener">リポジトリ</a></p>
 
           <div class="plugin-updates whatsnew">
-            <h4>最新版の更新内容 <span class="wn-date">1.0.1 · 2026-10-19</span></h4>
+            <h4>最新版の更新内容 <span class="wn-date">1.1.0 · 2026-10-20</span></h4>
 
-            <h5>同じ名前のボーンとメッシュを持つ FBX で、アニメ時に体が崩れる不具合を修正</h5>
+            <h5>アニメーションのクリップを切り替えられるように</h5>
             <ul>
-              <li>FBX にボーンとメッシュのノードが同じ名前（例: <code>Body</code>）で入っていると、アニメーションの再生時に股のあたりが前に垂れ下がるように崩れることがありました。ボーンとして正しいノードを使うようにして、glTF と同じ見た目になります。</li>
-              <li>（補足）OBJ / FBX / glTF で面が角ばって（フラットシェードで）見えるのは、ファイルに記録された法線のとおりの表示です。<code>.blend</code> はこの情報を読み込めないため、なめらかに表示されます。</li>
+              <li>アニメーションが複数入っているファイル（glTF / FBX）で、再生するクリップを選べるようになりました。ツールバーの選択ボックス、または <code>[</code> / <code>]</code> キーで切り替えます。クリップが 1 つ以下のファイルでは、選択ボックスは出ません。</li>
+              <li>左上のモデル情報のアニメ時間も、選んだクリップの長さになります。</li>
+              <li>操作説明（<code>H</code>）に、クリップが複数あるときだけ「[ / ] : クリップ切替」を表示します。</li>
             </ul>
             <p class="doc-note">これまでの版の更新内容は、<a href="https://github.com/mashsoft-jp/farman-plugin-3d/releases" rel="noopener">リリース一覧</a>に日本語・英語で掲載しています。</p>
           </div>
