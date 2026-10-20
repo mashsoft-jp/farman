@@ -37,6 +37,8 @@
     .plugin-figure img:hover { transform: scale(1.01);
       box-shadow: 0 2px 6px rgba(0,0,0,.10), 0 12px 28px rgba(0,0,0,.12); }
     .plugin-figure figcaption { font-size: .82rem; color: var(--fg-muted); margin-top: 6px; }
+    /* 図の出典などの注釈。図の直下に小さく、「※」をぶら下げて表示する。 */
+    .plugin-credit { font-size: .78rem; line-height: 1.6; margin: -4px 0 12px; padding-left: 1.1em; text-indent: -1.1em; }
     /* Smaller figure (e.g. the settings screen in the install steps) */
     .plugin-figure.plugin-figure-sm { max-width: 570px; }
     /* The plugin list is a single column; each card holds the description,
@@ -107,7 +109,7 @@
             <img src="../../screenshots/ex-01-3d-model-viewer.webp" width="880" height="463" alt="Opening a 3D model from farman's file list, switching animation clips, and selecting nodes in the info panel hierarchy to highlight them in the 3D view" loading="lazy" />
             <figcaption>Opening a 3D model from farman's file list (switching animation clips, and the node info panel with the <code>i</code> key highlighting the selected node in the 3D view)</figcaption>
           </figure>
-          <p class="doc-note">Model in the demo: Mage from <a href="https://kaylousberg.itch.io/kaykit-adventurers" rel="noopener">KayKit Adventurers</a> and animations from <a href="https://kaylousberg.itch.io/kaykit-character-animations" rel="noopener">KayKit Character Animations</a>, all by Kay Lousberg (<a href="https://creativecommons.org/publicdomain/zero/1.0/" rel="noopener">CC0</a>). The animations were combined with Mage into a single file for the demo.</p>
+          <p class="doc-note plugin-credit">* Model in the demo: Mage from <a href="https://kaylousberg.itch.io/kaykit-adventurers" rel="noopener">KayKit Adventurers</a> and animations from <a href="https://kaylousberg.itch.io/kaykit-character-animations" rel="noopener">KayKit Character Animations</a>, by Kay Lousberg (<a href="https://creativecommons.org/publicdomain/zero/1.0/" rel="noopener">CC0</a>). For the demo, Mage and the animations were combined into a single file.</p>
           <ul class="plugin-meta">
             <li>Type: viewer</li>
             <li>Formats: FBX (<code>.fbx</code>), glTF (<code>.gltf</code>, <code>.glb</code>), OBJ (<code>.obj</code>), Blender (<code>.blend</code>, meshes and materials only)</li>
