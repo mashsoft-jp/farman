@@ -111,6 +111,8 @@ private:
   // 行番号 / ワードラップは ON/OFF の二値なのでアイコンのチェック付きトグル。
   QToolButton*  m_lineNumbersButton = nullptr;
   QToolButton*  m_wordWrapButton    = nullptr;
+  QToolButton*  m_zoomOutButton     = nullptr;
+  QToolButton*  m_zoomInButton      = nullptr;
 
   // 検索コントロール群 (ヘッダ常設)
   QLineEdit*    m_findEdit     = nullptr;

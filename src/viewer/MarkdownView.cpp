@@ -3,6 +3,7 @@
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
 #include "viewer/ViewerHints.h"
+#include "viewer/ViewerZoom.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 #include "utils/MarkdownSanitize.h"
@@ -32,6 +33,7 @@
 #include <QTextEdit>
 #include <QToolBar>
 #include <QToolButton>
+#include <QWheelEvent>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
@@ -108,6 +110,16 @@ void MarkdownView::setupUi() {
   m_tocButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_tocButton, &QToolButton::toggled, this, &MarkdownView::onTocToggled);
   m_toolbar->addWidget(m_tocButton);
+
+  // 拡大縮小 (虫眼鏡 +/-)。PDF / 画像ビュアーと同じアイコン。
+  m_zoomOutButton = ViewerZoom::makeButton(m_toolbar, /*zoomIn=*/false);
+  ViewerHints::tag(m_zoomOutButton, QStringLiteral("viewer.markdown.zoom_out"), tr("Zoom out (%1)"));
+  connect(m_zoomOutButton, &QToolButton::clicked, this, [this]() { zoomBy(-1); });
+  m_toolbar->addWidget(m_zoomOutButton);
+  m_zoomInButton = ViewerZoom::makeButton(m_toolbar, /*zoomIn=*/true);
+  ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.markdown.zoom_in"), tr("Zoom in (%1)"));
+  connect(m_zoomInButton, &QToolButton::clicked, this, [this]() { zoomBy(1); });
+  m_toolbar->addWidget(m_zoomInButton);
 
   m_toolbar->addSeparator();
 
@@ -212,9 +224,19 @@ void MarkdownView::setupUi() {
   });
 }
 
+void MarkdownView::zoomBy(int delta) {
+  const int next = ViewerZoom::clampSteps(m_zoomSteps + delta);
+  if (next == m_zoomSteps) return;
+  m_zoomSteps = next;
+  // 見出し等は既定フォントからの相対サイズなので、再描画 (= 先頭へ戻る) せずに
+  // 既定フォントの差し替えだけで追従する。
+  applyViewerAppearance();
+}
+
 void MarkdownView::applyViewerAppearance() {
   Settings& s = Settings::instance();
-  m_browser->document()->setDefaultFont(s.markdownViewerFont());
+  m_browser->document()->setDefaultFont(
+    ViewerZoom::zoomedFont(s.markdownViewerFont(), m_zoomSteps));
 
   // テーマ既定パレットを起点に、明示指定された色だけ上書きする。
   QPalette pal = qApp->palette(m_browser);
@@ -509,6 +531,18 @@ void MarkdownView::refreshMatchHighlights() {
 }
 
 bool MarkdownView::eventFilter(QObject* watched, QEvent* event) {
+  // Ctrl/Cmd + ホイール: QTextBrowser 標準のズームはウィジェットのフォントを
+  // 書き換えて設定フォントを失うので、zoomBy に統一する。
+  if (m_browser && watched == m_browser->viewport() && event->type() == QEvent::Wheel) {
+    auto* we = static_cast<QWheelEvent*>(event);
+    if (we->modifiers() & Qt::ControlModifier) {
+      const int dy = we->angleDelta().y();
+      if (dy != 0) {
+        zoomBy(dy > 0 ? 1 : -1);
+      }
+      return true;
+    }
+  }
   if (watched == m_findEdit && event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
     if (ke->key() == Qt::Key_Escape) {
@@ -559,6 +593,10 @@ void MarkdownView::dispatchViewerCommand(const QString& cmd) {
     if (m_rawSourceButton) m_rawSourceButton->toggle();
   } else if (cmd == QLatin1String("viewer.markdown.toggle_toc")) {
     if (m_tocButton && m_tocButton->isEnabled()) m_tocButton->toggle();
+  } else if (cmd == QLatin1String("viewer.markdown.zoom_in")) {
+    zoomBy(1);
+  } else if (cmd == QLatin1String("viewer.markdown.zoom_out")) {
+    zoomBy(-1);
   } else if (cmd == QLatin1String("viewer.markdown.toggle_case")) {
     if (m_findCsButton) m_findCsButton->toggle();
   }

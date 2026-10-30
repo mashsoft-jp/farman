@@ -4,20 +4,29 @@
 
 ## プロジェクト概要
 
-Farman は Qt6 ベースの C++ アプリケーションです。ビルドシステムには CMake を使用し、C++20 標準に準拠しています。Qt は macOS の Homebrew 経由で `/opt/homebrew/opt/qt` にインストールされています。
+Farman は Qt6 ベースの C++ アプリケーションです。ビルドシステムには CMake を使用し、C++20 標準に準拠しています。
+
+開発機 (macOS) の Qt は、CI / 配布版と同じ **Qt 6.10.3** を aqtinstall で
+`~/Qt/6.10.3/macos` に入れて使います。Homebrew の Qt (`/opt/homebrew/opt/qt`、
+最新版で CI と食い違う) は普段のビルドに使いません。
+- CI の `QT_VERSION` (本体 `release.yml` と各プラグインのワークフロー) を上げるときは、
+  開発機の Qt も同じバージョンに入れ直す。
+- 外部プラグイン (3D / LZH) は本体と同じ Qt で作り直さないと、読み込み時にクラッシュする。
+  本体の Qt を変えたら、プラグインも同じ Qt で再ビルドして
+  `~/Library/Application Support/Farman/farman/plugins/` に入れ直す。
 
 ## ビルドシステム
 
 ### 前提条件
 - CMake 3.21 以上
-- Qt6 (Core および Widgets モジュール)
+- Qt 6.10.3 (Core / Widgets のほか qt5compat・qtimageformats・qtpdf・qtmultimedia)
 - C++20 対応コンパイラ
 
 ### プロジェクトのビルド方法
 
 設定とビルド:
 ```bash
-cmake -B build -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt
+cmake -B build -DCMAKE_PREFIX_PATH=$HOME/Qt/6.10.3/macos
 cmake --build build
 ```
 
@@ -36,7 +45,7 @@ Linux では `build/farman` がそのまま生成される。
 クリーンビルド:
 ```bash
 rm -rf build
-cmake -B build -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt
+cmake -B build -DCMAKE_PREFIX_PATH=$HOME/Qt/6.10.3/macos
 cmake --build build
 ```
 

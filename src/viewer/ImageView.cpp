@@ -4,6 +4,7 @@
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
 #include "viewer/ViewerHints.h"
+#include "viewer/ViewerZoom.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/ExifReader.h"
 
@@ -300,6 +301,17 @@ void ImageView::setupUi() {
   m_zoomCombo->setFocusPolicy(Qt::StrongFocus);
   m_toolbar->addWidget(m_zoomCombo);
 
+  // 虫眼鏡 +/- ボタン (PDF ビュアーと同じアイコン)。キーボードの zoom_in / zoom_out と
+  // 同じ stepZoom (25% 刻み、Fit 中は解除して手動ズームへ) を呼ぶ。
+  m_zoomOutButton = ViewerZoom::makeButton(m_toolbar, /*zoomIn=*/false);
+  ViewerHints::tag(m_zoomOutButton, QStringLiteral("viewer.image.zoom_out"), tr("Zoom out (%1)"));
+  connect(m_zoomOutButton, &QToolButton::clicked, this, [this]() { stepZoom(false); });
+  m_toolbar->addWidget(m_zoomOutButton);
+  m_zoomInButton = ViewerZoom::makeButton(m_toolbar, /*zoomIn=*/true);
+  ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.image.zoom_in"), tr("Zoom in (%1)"));
+  connect(m_zoomInButton, &QToolButton::clicked, this, [this]() { stepZoom(true); });
+  m_toolbar->addWidget(m_zoomInButton);
+
   // 「ウィンドウに合わせる」(checkable + アイコン)。チェック ON で fitToWindow。
   m_fitButton = new QToolButton(m_toolbar);
   m_fitButton->setCheckable(true);
@@ -437,7 +449,9 @@ void ImageView::setupUi() {
   // 順序: zoomCombo → fitCheck → animButton → transparencyCombo → scrollArea。
   // addToolbarWidget で追加された widget は m_lastToolbarWidget の後に
   // 順次差し込まれる。
-  setTabOrder(m_zoomCombo,          m_fitButton);
+  setTabOrder(m_zoomCombo,          m_zoomOutButton);
+  setTabOrder(m_zoomOutButton,      m_zoomInButton);
+  setTabOrder(m_zoomInButton,       m_fitButton);
   setTabOrder(m_fitButton,          m_animButton);
   setTabOrder(m_animButton,         m_animStopButton);
   setTabOrder(m_animStopButton,     m_frameSpin);

@@ -159,6 +159,8 @@ private:
   // ツールバー風デザインに揃える。addToolbarWidget で末尾に widget を追加。
   QToolBar*    m_toolbar           = nullptr;
   QComboBox*   m_zoomCombo         = nullptr;
+  QToolButton* m_zoomOutButton     = nullptr;
+  QToolButton* m_zoomInButton      = nullptr;
   // 「ウィンドウに合わせる」のチェック付きトグルボタン (アイコンのみ)。
   QToolButton* m_fitButton         = nullptr;
   // Fit ボタンの QAction。addToolbarWidget が「ウィンドウを画像に合わせる」を

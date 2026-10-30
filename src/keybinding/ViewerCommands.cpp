@@ -31,6 +31,10 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_W)});
   add(d, "text", "viewer.text.toggle_case", QCoreApplication::translate("ViewerCommands", "Toggle case-sensitive search"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C)});
+  add(d, "text", "viewer.text.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
+      {QKeySequence(QKeySequence::ZoomIn), QKeySequence(Qt::CTRL | Qt::Key_Equal)});
+  add(d, "text", "viewer.text.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
+      {QKeySequence(QKeySequence::ZoomOut)});
   add(d, "text", "viewer.text.copy", QCoreApplication::translate("ViewerCommands", "Copy selection"),
       {QKeySequence(QKeySequence::Copy)});
 
@@ -53,6 +57,10 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S)});
   add(d, "markdown", "viewer.markdown.toggle_toc", QCoreApplication::translate("ViewerCommands", "Toggle table of contents sidebar"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B)});
+  add(d, "markdown", "viewer.markdown.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
+      {QKeySequence(QKeySequence::ZoomIn), QKeySequence(Qt::CTRL | Qt::Key_Equal)});
+  add(d, "markdown", "viewer.markdown.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
+      {QKeySequence(QKeySequence::ZoomOut)});
   add(d, "markdown", "viewer.markdown.toggle_case", QCoreApplication::translate("ViewerCommands", "Toggle case-sensitive search"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C)});
 

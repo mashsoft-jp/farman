@@ -80,6 +80,7 @@ private slots:
 private:
   void setupUi();
   void dispatchViewerCommand(const QString& commandId);
+  void zoomBy(int delta);
   // 本体 (キーバインド設定) から push されるショートカット割り当てを保持する
   // (ローカル保持・ストレージは読まない)。QMetaObject::invokeMethod で本体から
   // 一様に呼べるよう Q_INVOKABLE。
@@ -96,6 +97,9 @@ private:
   QToolBar*     m_toolbar      = nullptr;
   QToolButton*  m_rawSourceButton = nullptr;
   QToolButton*  m_tocButton       = nullptr;
+  QToolButton*  m_zoomOutButton   = nullptr;
+  QToolButton*  m_zoomInButton    = nullptr;
+  int           m_zoomSteps       = 0;  // 設定フォントからの pt 差
 
   // 目次サイドバー。本文の左に並べる横スプリッタの子。見出しの無い文書と
   // 生ソース表示ではボタンを無効にし、パネルも閉じる。
