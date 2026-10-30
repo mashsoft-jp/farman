@@ -32,6 +32,17 @@
 - The heading hierarchy is shown as is. The button is disabled for documents
   without headings, and while the source view is on.
 
+### Zoom in every viewer
+
+- The text, Markdown, CSV and binary viewers can now zoom. Use the zoom box on the
+  toolbar (pick 50% / 100% / 200% and so on, or type a value) and the magnifier
+  "−" / "+" buttons. Ctrl (Cmd on Mac) + mouse wheel zooms as well.
+- Every viewer, including PDF, image and media, now has a button to reset zoom to 100%.
+- The zoom keys are the same in all viewers: `+` to zoom in, `-` to zoom out and `0` to
+  reset to 100% (the `+` key on a Japanese keyboard works too). No modifier key is needed,
+  and typing in a search box takes priority over the shortcuts. You can change the keys in
+  the key bindings settings.
+
 ### Icons on the viewer toolbars
 
 - In the Markdown, PDF, CSV and Binary viewers, the toolbar buttons that were text
