@@ -1,6 +1,11 @@
 #include "ViewerShortcutMap.h"
 
+#include <QAbstractSpinBox>
+#include <QApplication>
 #include <QKeyEvent>
+#include <QLineEdit>
+#include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QStringList>
 
 namespace Farman {
@@ -58,6 +63,31 @@ QKeySequence ViewerShortcutMap::sequenceForEvent(const QKeyEvent* ke) {
   Qt::KeyboardModifiers mods = ke->modifiers();
   mods &= ~Qt::KeypadModifier;
   return QKeySequence(QKeyCombination(mods, static_cast<Qt::Key>(key)));
+}
+
+bool ViewerShortcutMap::isTypingIntoTextField(const QKeyEvent* ke) {
+  if (!ke || (ke->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+    return false;
+  }
+  // F3 / Enter などの非文字キーは対象外 (文字として入力されるキーだけ手放す)。
+  const QString text = ke->text();
+  if (text.isEmpty() || !text.at(0).isPrint()) {
+    return false;
+  }
+  QWidget* w = QApplication::focusWidget();
+  if (!w) {
+    return false;
+  }
+  if (qobject_cast<QLineEdit*>(w) || qobject_cast<QAbstractSpinBox*>(w)) {
+    return true;
+  }
+  if (auto* te = qobject_cast<QTextEdit*>(w)) {
+    return !te->isReadOnly();
+  }
+  if (auto* pe = qobject_cast<QPlainTextEdit*>(w)) {
+    return !pe->isReadOnly();
+  }
+  return false;
 }
 
 } // namespace Farman

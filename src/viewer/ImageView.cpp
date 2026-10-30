@@ -311,6 +311,10 @@ void ImageView::setupUi() {
   ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.image.zoom_in"), tr("Zoom in (%1)"));
   connect(m_zoomInButton, &QToolButton::clicked, this, [this]() { stepZoom(true); });
   m_toolbar->addWidget(m_zoomInButton);
+  m_zoomResetButton = ViewerZoom::makeResetButton(m_toolbar);
+  ViewerHints::tag(m_zoomResetButton, QStringLiteral("viewer.image.zoom_reset"), tr("Reset zoom to 100% (%1)"));
+  connect(m_zoomResetButton, &QToolButton::clicked, this, [this]() { resetZoom(); });
+  m_toolbar->addWidget(m_zoomResetButton);
 
   // 「ウィンドウに合わせる」(checkable + アイコン)。チェック ON で fitToWindow。
   m_fitButton = new QToolButton(m_toolbar);
@@ -451,7 +455,8 @@ void ImageView::setupUi() {
   // 順次差し込まれる。
   setTabOrder(m_zoomCombo,          m_zoomOutButton);
   setTabOrder(m_zoomOutButton,      m_zoomInButton);
-  setTabOrder(m_zoomInButton,       m_fitButton);
+  setTabOrder(m_zoomInButton,       m_zoomResetButton);
+  setTabOrder(m_zoomResetButton,    m_fitButton);
   setTabOrder(m_fitButton,          m_animButton);
   setTabOrder(m_animButton,         m_animStopButton);
   setTabOrder(m_animStopButton,     m_frameSpin);
@@ -908,7 +913,25 @@ bool ImageView::handleViewerKey(QKeyEvent* event) {
     stepZoom(false);
     return true;
   }
+  if (cmd == QLatin1String("viewer.image.zoom_reset")) {
+    resetZoom();
+    return true;
+  }
   return false;
+}
+
+void ImageView::resetZoom() {
+  if (!m_zoomCombo) return;
+  // Fit 中は解除して手動ズーム (100%) に切り替える (stepZoom と同じ流れ)。
+  if (m_fitToWindow && m_fitButton) {
+    QSignalBlocker b(m_fitButton);
+    m_fitButton->setChecked(false);
+    m_fitToWindow = false;
+    updateZoomEnabled();
+    if (m_display) m_display->setFitToWindow(false);
+  }
+  // コンボへ反映 → currentTextChanged 経由で m_display->setZoomPercent が走る。
+  m_zoomCombo->setCurrentText(QString::number(ViewerZoom::kDefaultPercent) + QLatin1Char('%'));
 }
 
 void ImageView::stepZoom(bool zoomIn) {

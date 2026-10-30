@@ -3,6 +3,7 @@
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
 #include "viewer/ViewerHints.h"
+#include "viewer/ViewerZoom.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
@@ -24,6 +25,7 @@
 #include <QTableView>
 #include <QToolBar>
 #include <QToolButton>
+#include <QWheelEvent>
 #include <QVBoxLayout>
 
 #include <uchardet.h>
@@ -472,6 +474,33 @@ void CsvView::setupUi() {
 
   m_toolbar->addSeparator();
 
+  // 拡大縮小 (倍率コンボ + 虫眼鏡 +/- と 100% へのリセット)。
+  m_zoomCombo = ViewerZoom::makeCombo(m_toolbar);
+  m_zoomCombo->setToolTip(tr("Zoom level"));
+  m_toolbar->addWidget(m_zoomCombo);
+  m_zoomOutButton = ViewerZoom::makeButton(m_toolbar, /*zoomIn=*/false);
+  ViewerHints::tag(m_zoomOutButton, QStringLiteral("viewer.csv.zoom_out"), tr("Zoom out (%1)"));
+  connect(m_zoomOutButton, &QToolButton::clicked, this, [this]() { zoomBy(-1); });
+  m_toolbar->addWidget(m_zoomOutButton);
+  m_zoomInButton = ViewerZoom::makeButton(m_toolbar, /*zoomIn=*/true);
+  ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.csv.zoom_in"), tr("Zoom in (%1)"));
+  connect(m_zoomInButton, &QToolButton::clicked, this, [this]() { zoomBy(1); });
+  m_toolbar->addWidget(m_zoomInButton);
+  m_zoomResetButton = ViewerZoom::makeResetButton(m_toolbar);
+  ViewerHints::tag(m_zoomResetButton, QStringLiteral("viewer.csv.zoom_reset"), tr("Reset zoom to 100% (%1)"));
+  connect(m_zoomResetButton, &QToolButton::clicked, this,
+          [this]() { setZoomPercent(ViewerZoom::kDefaultPercent); });
+  m_toolbar->addWidget(m_zoomResetButton);
+  // 直接入力は確定 (Enter / プリセット選択) 時に反映する (途中の値で飛ばないように)。
+  auto applyZoomText = [this]() {
+    const int pct = ViewerZoom::parsePercent(m_zoomCombo->currentText());
+    setZoomPercent(pct > 0 ? pct : m_zoomPercent);
+  };
+  connect(m_zoomCombo, QOverload<int>::of(&QComboBox::activated), this, applyZoomText);
+  connect(m_zoomCombo->lineEdit(), &QLineEdit::editingFinished, this, applyZoomText);
+
+  m_toolbar->addSeparator();
+
   // ── 検索 (TextView / PdfView / MarkdownView と同じレイアウト) ──
   auto* findLabel = new QLabel(tr("Find:"), m_toolbar);
   ViewerHints::tag(findLabel, QStringLiteral("viewer.csv.find_focus"),
@@ -560,17 +589,9 @@ void CsvView::setupUi() {
   // 固定され、以後のテーマ切替 (qApp->setPalette) に追従しなくなる。テーマ変更
   // 時に stylesheet を一旦クリアして再適用することで QStyleSheetStyle を
   // 再ポリッシュさせ、現在のパレットへ更新させる。
-  auto applyViewerAppearance = [this]() {
-    const QFont f = Settings::instance().csvViewerFont();
-    m_table->setFont(f);
-    m_table->horizontalHeader()->setFont(f);
-    m_table->verticalHeader()->setFont(f);
-    m_table->setStyleSheet(QString());
-    m_table->setStyleSheet(inactiveSelectionStyleSheet());
-  };
   applyViewerAppearance();
   connect(&Settings::instance(), &Settings::settingsChanged, this,
-          applyViewerAppearance);
+          &CsvView::applyViewerAppearance);
 
   connect(m_encodingCombo, &QComboBox::currentTextChanged,
           this,             &CsvView::onEncodingComboChanged);
@@ -702,7 +723,8 @@ void CsvView::applyPreparedLoad(const PreparedLoad& r) {
   m_table->resizeColumnsToContents();
   // ただし極端に広い列はクリップ
   for (int c = 0; c < m_model->columnCount(); ++c) {
-    if (m_table->columnWidth(c) > 360) m_table->setColumnWidth(c, 360);
+    const int maxWidth = 360 * m_zoomPercent / 100;
+    if (m_table->columnWidth(c) > maxWidth) m_table->setColumnWidth(c, maxWidth);
   }
 
   // 先頭行を「現在行 + 選択行」として初期化しておく。これがないと最初に
@@ -736,7 +758,8 @@ void CsvView::reloadFromBuffer() {
                      m_headerToggle && m_headerToggle->isChecked());
   m_table->resizeColumnsToContents();
   for (int c = 0; c < m_model->columnCount(); ++c) {
-    if (m_table->columnWidth(c) > 360) m_table->setColumnWidth(c, 360);
+    const int maxWidth = 360 * m_zoomPercent / 100;
+    if (m_table->columnWidth(c) > maxWidth) m_table->setColumnWidth(c, maxWidth);
   }
   if (m_model->rowCount() > 0) {
     m_table->setCurrentIndex(m_model->index(0, 0));
@@ -865,7 +888,48 @@ void CsvView::focusFindInput() {
   m_findEdit->selectAll();
 }
 
+void CsvView::applyViewerAppearance() {
+  if (!m_table) return;
+  const QFont f = ViewerZoom::zoomedFont(Settings::instance().csvViewerFont(), m_zoomPercent);
+  m_table->setFont(f);
+  m_table->horizontalHeader()->setFont(f);
+  m_table->verticalHeader()->setFont(f);
+  // 行の高さもフォントに合わせて伸縮させる (固定 20px だと拡大時に文字が欠ける)。
+  m_table->verticalHeader()->setMinimumSectionSize(16 * m_zoomPercent / 100);
+  m_table->verticalHeader()->setDefaultSectionSize(20 * m_zoomPercent / 100);
+  m_table->setStyleSheet(QString());
+  m_table->setStyleSheet(inactiveSelectionStyleSheet());
+}
+
+void CsvView::zoomBy(int direction) {
+  setZoomPercent(ViewerZoom::stepPercent(m_zoomPercent, direction > 0));
+}
+
+void CsvView::setZoomPercent(int percent) {
+  const int next = ViewerZoom::clampPercent(percent);
+  const int prev = m_zoomPercent;
+  m_zoomPercent = next;
+  ViewerZoom::setComboPercent(m_zoomCombo, next);
+  if (next == prev) return;
+  // 列幅 (自動調整済み / ユーザー変更済み) は倍率の比で伸縮させて見た目を保つ。
+  for (int c = 0; c < m_model->columnCount(); ++c) {
+    m_table->setColumnWidth(c, qMax(1, qRound(m_table->columnWidth(c) * double(next) / prev)));
+  }
+  applyViewerAppearance();
+}
+
 bool CsvView::eventFilter(QObject* watched, QEvent* event) {
+  // Ctrl/Cmd + ホイール: 拡大縮小 (表の上のみ)。
+  if (m_table && watched == m_table->viewport() && event->type() == QEvent::Wheel) {
+    auto* we = static_cast<QWheelEvent*>(event);
+    if (we->modifiers() & Qt::ControlModifier) {
+      const int dy = we->angleDelta().y();
+      if (dy != 0) {
+        zoomBy(dy > 0 ? 1 : -1);
+      }
+      return true;
+    }
+  }
   if (watched == m_findEdit && event->type() == QEvent::KeyPress) {
     auto* ke = static_cast<QKeyEvent*>(event);
     if (ke->key() == Qt::Key_Escape) {
@@ -883,7 +947,7 @@ bool CsvView::eventFilter(QObject* watched, QEvent* event) {
     auto* ke = static_cast<QKeyEvent*>(event);
     const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
     const QString cmd =
-      m_shortcuts.commandForSeq(seq);
+      ViewerShortcutMap::isTypingIntoTextField(ke) ? QString() : m_shortcuts.commandForSeq(seq);
     if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
         dispatchViewerCommand(cmd);
@@ -911,6 +975,12 @@ void CsvView::dispatchViewerCommand(const QString& cmd) {
     if (m_headerToggle) m_headerToggle->toggle();
   } else if (cmd == QLatin1String("viewer.csv.toggle_case")) {
     if (m_findCsButton) m_findCsButton->toggle();
+  } else if (cmd == QLatin1String("viewer.csv.zoom_in")) {
+    zoomBy(1);
+  } else if (cmd == QLatin1String("viewer.csv.zoom_out")) {
+    zoomBy(-1);
+  } else if (cmd == QLatin1String("viewer.csv.zoom_reset")) {
+    setZoomPercent(ViewerZoom::kDefaultPercent);
   }
 }
 

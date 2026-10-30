@@ -13,6 +13,7 @@ class QComboBox;
 class QLabel;
 class QLineEdit;
 class QRadioButton;
+class QToolButton;
 
 namespace Farman {
 
@@ -96,6 +97,8 @@ private:
   void setupUi();
   void dispatchViewerCommand(const QString& commandId);
   void syncFromSettings();
+  void zoomBy(int direction);
+  void setZoomPercent(int percent);
   void rebuildEncodingItems();
   void applyModelFormat();       // unit/endian/encoding を HexView へ反映して再描画
   void jumpToAddress();          // アドレス入力欄の 16 進値へスクロール
@@ -111,6 +114,12 @@ private:
   QComboBox*      m_unitCombo     = nullptr;
   QComboBox*      m_endianCombo   = nullptr;
   QComboBox*      m_encodingCombo = nullptr;
+  // 拡大縮小 (フォントの倍率 %)。設定変更でフォントが再適用されても保持する。
+  QComboBox*      m_zoomCombo        = nullptr;
+  QToolButton*    m_zoomOutButton    = nullptr;
+  QToolButton*    m_zoomInButton     = nullptr;
+  QToolButton*    m_zoomResetButton  = nullptr;
+  int             m_zoomPercent      = 100;
   QLineEdit*      m_addressEdit   = nullptr;
   // アドレス入力欄の右に表示する、指定可能なアドレスの上限 ("/ 3FFFFFFF" 等)。
   QLabel*         m_addressMaxLabel = nullptr;

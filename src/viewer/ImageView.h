@@ -149,6 +149,7 @@ private:
   ViewerShortcutMap m_shortcuts;
   // +/- キーによる拡大 / 縮小。Fit 中は解除して現在の実効倍率から段階変更する。
   void stepZoom(bool zoomIn);
+  void resetZoom();
   // ズームコンボの表示値を更新する。Fit 中はその時の実効倍率
   // (effectiveZoomPercent) を、手動時は m_zoomPercent を表示する。
   void updateZoomComboText();
@@ -161,6 +162,7 @@ private:
   QComboBox*   m_zoomCombo         = nullptr;
   QToolButton* m_zoomOutButton     = nullptr;
   QToolButton* m_zoomInButton      = nullptr;
+  QToolButton* m_zoomResetButton   = nullptr;
   // 「ウィンドウに合わせる」のチェック付きトグルボタン (アイコンのみ)。
   QToolButton* m_fitButton         = nullptr;
   // Fit ボタンの QAction。addToolbarWidget が「ウィンドウを画像に合わせる」を

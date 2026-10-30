@@ -167,6 +167,10 @@ private slots:
   void focusFindInput();
 
 private:
+  void zoomBy(int direction);
+  void setZoomPercent(int percent);
+  // 表示フォント (拡大率込み) と行の高さをテーブルへ反映する。
+  void applyViewerAppearance();
   void setupUi();
   void dispatchViewerCommand(const QString& commandId);
   // 本体 (キーバインド設定) から push されるショートカット割り当てを保持する
@@ -187,6 +191,13 @@ private:
   QComboBox*  m_encodingCombo    = nullptr;
   QComboBox*  m_delimiterCombo   = nullptr;
   QToolButton* m_headerToggle    = nullptr;
+
+  // 拡大縮小 (設定フォントに対する倍率 %)。
+  QComboBox*   m_zoomCombo       = nullptr;
+  QToolButton* m_zoomOutButton   = nullptr;
+  QToolButton* m_zoomInButton    = nullptr;
+  QToolButton* m_zoomResetButton = nullptr;
+  int          m_zoomPercent     = 100;
 
   // 検索 UI
   QLineEdit*   m_findEdit     = nullptr;

@@ -68,7 +68,7 @@ public:
   // TextView::syncFromSettings から呼ばれる。エディタ全体の見た目を再適用する。
   void applyAppearance() {
     const Settings& s = Settings::instance();
-    setFont(ViewerZoom::zoomedFont(s.textViewerFont(), m_zoomSteps));
+    setFont(ViewerZoom::zoomedFont(s.textViewerFont(), m_zoomPercent));
 
     // 本体が適用済みの qApp テーマパレットを起点にし、明示指定 (有効色) の role
     // だけ上書きする。widget の現在パレット (palette()) を起点にすると、前回
@@ -86,16 +86,15 @@ public:
     setPalette(pal);
   }
 
-  // 拡大縮小 (設定フォントからの pt 差)。設定変更でフォントが再適用されても
-  // m_zoomSteps は保持されるので、拡大状態は維持される。
-  void zoomBy(int delta) {
-    const int next = ViewerZoom::clampSteps(m_zoomSteps + delta);
-    if (next == m_zoomSteps) return;
-    m_zoomSteps = next;
-    setFont(ViewerZoom::zoomedFont(Settings::instance().textViewerFont(), m_zoomSteps));
+  // 拡大縮小 (設定フォントに対する倍率 %)。設定変更でフォントが再適用されても
+  // m_zoomPercent は保持されるので、拡大状態は維持される。
+  void setZoomPercent(int percent) {
+    m_zoomPercent = ViewerZoom::clampPercent(percent);
+    setFont(ViewerZoom::zoomedFont(Settings::instance().textViewerFont(), m_zoomPercent));
     updateLineNumberAreaWidth();
     m_lineNumberArea->update();
   }
+  int zoomPercent() const { return m_zoomPercent; }
 
   // ローカルで設定変更 (line numbers / word wrap) 後に呼ばれる。
   void applyLocalLayout(bool wordWrap, bool showLineNumbers) {
@@ -114,13 +113,13 @@ public:
   }
 
 protected:
-  // Ctrl/Cmd + ホイールは QPlainTextEdit 標準のズームではなく zoomBy に統一する
-  // (標準だと設定フォントとの差分が m_zoomSteps に残らず、設定変更で戻ってしまう)。
+  // Ctrl/Cmd + ホイールは QPlainTextEdit 標準のズームではなく TextView::zoomBy に統一する
+  // (標準だと設定フォントとの差分が m_zoomPercent に残らず、設定変更で戻ってしまう)。
   void wheelEvent(QWheelEvent* event) override {
     if (event->modifiers() & Qt::ControlModifier) {
       const int dy = event->angleDelta().y();
       if (dy != 0) {
-        zoomBy(dy > 0 ? 1 : -1);
+        m_host->zoomBy(dy > 0 ? 1 : -1);
       }
       event->accept();
       return;
@@ -175,11 +174,22 @@ private:
   }
 
   TextView* m_host;
-  int       m_zoomSteps = 0;
+  int       m_zoomPercent = 100;
   QWidget*  m_lineNumberArea;
 };
 
 // ---------- TextView ----------
+void TextView::zoomBy(int direction) {
+  if (!m_editArea) return;
+  setZoomPercent(ViewerZoom::stepPercent(m_editArea->zoomPercent(), direction > 0));
+}
+
+void TextView::setZoomPercent(int percent) {
+  if (!m_editArea) return;
+  m_editArea->setZoomPercent(percent);
+  ViewerZoom::setComboPercent(m_zoomCombo, m_editArea->zoomPercent());
+}
+
 
 TextView::TextView(QWidget* parent)
   : QWidget(parent)
@@ -249,13 +259,19 @@ void TextView::setupUi() {
   m_wordWrapButton->setFocusPolicy(Qt::StrongFocus);
   toolbar->addWidget(m_wordWrapButton);
 
-  // 拡大縮小 (虫眼鏡 +/-)。PDF / 画像ビュアーと同じアイコン。
+  // 拡大縮小 (倍率コンボ + 虫眼鏡 +/-)。PDF / 画像ビュアーと同じアイコン。
+  m_zoomCombo = ViewerZoom::makeCombo(toolbar);
+  m_zoomCombo->setToolTip(tr("Zoom level"));
+  toolbar->addWidget(m_zoomCombo);
   m_zoomOutButton = ViewerZoom::makeButton(toolbar, /*zoomIn=*/false);
   ViewerHints::tag(m_zoomOutButton, QStringLiteral("viewer.text.zoom_out"), tr("Zoom out (%1)"));
   toolbar->addWidget(m_zoomOutButton);
   m_zoomInButton = ViewerZoom::makeButton(toolbar, /*zoomIn=*/true);
   ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.text.zoom_in"), tr("Zoom in (%1)"));
   toolbar->addWidget(m_zoomInButton);
+  m_zoomResetButton = ViewerZoom::makeResetButton(toolbar);
+  ViewerHints::tag(m_zoomResetButton, QStringLiteral("viewer.text.zoom_reset"), tr("Reset zoom to 100% (%1)"));
+  toolbar->addWidget(m_zoomResetButton);
 
   // 検索コントロール群 (常設)。Tab で順に辿れる位置に置く。
   toolbar->addSeparator();
@@ -337,12 +353,18 @@ void TextView::setupUi() {
     m_showLineNumbers = on;
     applyEditAreaSettings();
   });
-  connect(m_zoomOutButton, &QToolButton::clicked, this, [this]() {
-    m_editArea->zoomBy(-1);
-  });
-  connect(m_zoomInButton, &QToolButton::clicked, this, [this]() {
-    m_editArea->zoomBy(1);
-  });
+  connect(m_zoomOutButton, &QToolButton::clicked, this, [this]() { zoomBy(-1); });
+  connect(m_zoomInButton, &QToolButton::clicked, this, [this]() { zoomBy(1); });
+  connect(m_zoomResetButton, &QToolButton::clicked, this,
+          [this]() { setZoomPercent(ViewerZoom::kDefaultPercent); });
+  // 直接入力は確定 (Enter / プリセット選択) 時に反映する。入力途中の値を逐次
+  // 反映すると、「150」を打つ途中の「1」で最小倍率へ飛んでしまう。
+  auto applyZoomText = [this]() {
+    const int pct = ViewerZoom::parsePercent(m_zoomCombo->currentText());
+    setZoomPercent(pct > 0 ? pct : m_editArea->zoomPercent());
+  };
+  connect(m_zoomCombo, QOverload<int>::of(&QComboBox::activated), this, applyZoomText);
+  connect(m_zoomCombo->lineEdit(), &QLineEdit::editingFinished, this, applyZoomText);
   connect(m_wordWrapButton, &QToolButton::toggled, this, [this](bool on) {
     m_wordWrap = on;
     applyEditAreaSettings();
@@ -635,7 +657,7 @@ bool TextView::eventFilter(QObject* watched, QEvent* event) {
     auto* ke = static_cast<QKeyEvent*>(event);
     const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
     const QString cmd =
-      m_shortcuts.commandForSeq(seq);
+      ViewerShortcutMap::isTypingIntoTextField(ke) ? QString() : m_shortcuts.commandForSeq(seq);
     if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
         dispatchViewerCommand(cmd);
@@ -662,9 +684,11 @@ void TextView::dispatchViewerCommand(const QString& cmd) {
   } else if (cmd == QLatin1String("viewer.text.toggle_word_wrap")) {
     if (m_wordWrapButton) m_wordWrapButton->toggle();
   } else if (cmd == QLatin1String("viewer.text.zoom_in")) {
-    if (m_editArea) m_editArea->zoomBy(1);
+    zoomBy(1);
   } else if (cmd == QLatin1String("viewer.text.zoom_out")) {
-    if (m_editArea) m_editArea->zoomBy(-1);
+    zoomBy(-1);
+  } else if (cmd == QLatin1String("viewer.text.zoom_reset")) {
+    setZoomPercent(ViewerZoom::kDefaultPercent);
   } else if (cmd == QLatin1String("viewer.text.toggle_case")) {
     if (m_findCsButton) m_findCsButton->toggle();
   } else if (cmd == QLatin1String("viewer.text.copy")) {

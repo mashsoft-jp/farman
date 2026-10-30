@@ -111,7 +111,17 @@ void MarkdownView::setupUi() {
   connect(m_tocButton, &QToolButton::toggled, this, &MarkdownView::onTocToggled);
   m_toolbar->addWidget(m_tocButton);
 
-  // 拡大縮小 (虫眼鏡 +/-)。PDF / 画像ビュアーと同じアイコン。
+  // 拡大縮小 (倍率コンボ + 虫眼鏡 +/-)。PDF / 画像ビュアーと同じアイコン。
+  m_zoomCombo = ViewerZoom::makeCombo(m_toolbar);
+  m_zoomCombo->setToolTip(tr("Zoom level"));
+  // 直接入力は確定 (Enter / プリセット選択) 時に反映する (途中の値で飛ばないように)。
+  auto applyZoomText = [this]() {
+    const int pct = ViewerZoom::parsePercent(m_zoomCombo->currentText());
+    setZoomPercent(pct > 0 ? pct : m_zoomPercent);
+  };
+  connect(m_zoomCombo, QOverload<int>::of(&QComboBox::activated), this, applyZoomText);
+  connect(m_zoomCombo->lineEdit(), &QLineEdit::editingFinished, this, applyZoomText);
+  m_toolbar->addWidget(m_zoomCombo);
   m_zoomOutButton = ViewerZoom::makeButton(m_toolbar, /*zoomIn=*/false);
   ViewerHints::tag(m_zoomOutButton, QStringLiteral("viewer.markdown.zoom_out"), tr("Zoom out (%1)"));
   connect(m_zoomOutButton, &QToolButton::clicked, this, [this]() { zoomBy(-1); });
@@ -120,6 +130,11 @@ void MarkdownView::setupUi() {
   ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.markdown.zoom_in"), tr("Zoom in (%1)"));
   connect(m_zoomInButton, &QToolButton::clicked, this, [this]() { zoomBy(1); });
   m_toolbar->addWidget(m_zoomInButton);
+  m_zoomResetButton = ViewerZoom::makeResetButton(m_toolbar);
+  ViewerHints::tag(m_zoomResetButton, QStringLiteral("viewer.markdown.zoom_reset"), tr("Reset zoom to 100% (%1)"));
+  connect(m_zoomResetButton, &QToolButton::clicked, this,
+          [this]() { setZoomPercent(ViewerZoom::kDefaultPercent); });
+  m_toolbar->addWidget(m_zoomResetButton);
 
   m_toolbar->addSeparator();
 
@@ -224,10 +239,13 @@ void MarkdownView::setupUi() {
   });
 }
 
-void MarkdownView::zoomBy(int delta) {
-  const int next = ViewerZoom::clampSteps(m_zoomSteps + delta);
-  if (next == m_zoomSteps) return;
-  m_zoomSteps = next;
+void MarkdownView::zoomBy(int direction) {
+  setZoomPercent(ViewerZoom::stepPercent(m_zoomPercent, direction > 0));
+}
+
+void MarkdownView::setZoomPercent(int percent) {
+  m_zoomPercent = ViewerZoom::clampPercent(percent);
+  ViewerZoom::setComboPercent(m_zoomCombo, m_zoomPercent);
   // 見出し等は既定フォントからの相対サイズなので、再描画 (= 先頭へ戻る) せずに
   // 既定フォントの差し替えだけで追従する。
   applyViewerAppearance();
@@ -236,7 +254,7 @@ void MarkdownView::zoomBy(int delta) {
 void MarkdownView::applyViewerAppearance() {
   Settings& s = Settings::instance();
   m_browser->document()->setDefaultFont(
-    ViewerZoom::zoomedFont(s.markdownViewerFont(), m_zoomSteps));
+    ViewerZoom::zoomedFont(s.markdownViewerFont(), m_zoomPercent));
 
   // テーマ既定パレットを起点に、明示指定された色だけ上書きする。
   QPalette pal = qApp->palette(m_browser);
@@ -569,7 +587,7 @@ bool MarkdownView::eventFilter(QObject* watched, QEvent* event) {
     auto* ke = static_cast<QKeyEvent*>(event);
     const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
     const QString cmd =
-      m_shortcuts.commandForSeq(seq);
+      ViewerShortcutMap::isTypingIntoTextField(ke) ? QString() : m_shortcuts.commandForSeq(seq);
     if (!cmd.isEmpty() && isVisible() && window() && window()->isActiveWindow()) {
       if (event->type() == QEvent::KeyPress) {
         dispatchViewerCommand(cmd);
@@ -597,6 +615,8 @@ void MarkdownView::dispatchViewerCommand(const QString& cmd) {
     zoomBy(1);
   } else if (cmd == QLatin1String("viewer.markdown.zoom_out")) {
     zoomBy(-1);
+  } else if (cmd == QLatin1String("viewer.markdown.zoom_reset")) {
+    setZoomPercent(ViewerZoom::kDefaultPercent);
   } else if (cmd == QLatin1String("viewer.markdown.toggle_case")) {
     if (m_findCsButton) m_findCsButton->toggle();
   }

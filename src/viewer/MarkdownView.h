@@ -9,6 +9,7 @@
 #include <atomic>
 
 class QLabel;
+class QComboBox;
 class QLineEdit;
 class QSplitter;
 class QTextBrowser;
@@ -80,7 +81,8 @@ private slots:
 private:
   void setupUi();
   void dispatchViewerCommand(const QString& commandId);
-  void zoomBy(int delta);
+  void zoomBy(int direction);
+  void setZoomPercent(int percent);
   // 本体 (キーバインド設定) から push されるショートカット割り当てを保持する
   // (ローカル保持・ストレージは読まない)。QMetaObject::invokeMethod で本体から
   // 一様に呼べるよう Q_INVOKABLE。
@@ -97,9 +99,11 @@ private:
   QToolBar*     m_toolbar      = nullptr;
   QToolButton*  m_rawSourceButton = nullptr;
   QToolButton*  m_tocButton       = nullptr;
+  QComboBox*    m_zoomCombo      = nullptr;
   QToolButton*  m_zoomOutButton   = nullptr;
   QToolButton*  m_zoomInButton    = nullptr;
-  int           m_zoomSteps       = 0;  // 設定フォントからの pt 差
+  QToolButton*  m_zoomResetButton = nullptr;
+  int           m_zoomPercent     = 100;  // 設定フォントに対する倍率 (%)
 
   // 目次サイドバー。本文の左に並べる横スプリッタの子。見出しの無い文書と
   // 生ソース表示ではボタンを無効にし、パネルも閉じる。

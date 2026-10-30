@@ -590,6 +590,13 @@ bool MediaView::handleViewerKey(QKeyEvent* event) {
     return stepZoom(true);
   } else if (cmd == QLatin1String("viewer.media.zoom_out")) {
     return stepZoom(false);
+  } else if (cmd == QLatin1String("viewer.media.zoom_reset")) {
+    // 動画のみ (音声には拡大縮小が無い)。Fit 中は手動ズームのコンボが無効なので何もしない。
+    if (!m_zoomCombo || !m_player->hasVideo() || !m_zoomCombo->isEnabled()) {
+      return false;
+    }
+    m_zoomCombo->setCurrentText(QString::number(100) + QLatin1Char('%'));
+    return true;
   } else if (cmd == QLatin1String("viewer.media.toggle_mute")) {
     if (m_muteButton) m_muteButton->toggle();
   } else if (cmd == QLatin1String("viewer.media.toggle_loop")) {

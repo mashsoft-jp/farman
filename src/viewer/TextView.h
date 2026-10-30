@@ -75,6 +75,8 @@ public:
 
   // 内部 TextEditArea が paintEvent から呼び出すアクセサ群。
   bool   showLineNumbers() const { return m_showLineNumbers; }
+  // 拡大縮小 (direction > 0 で拡大、< 0 で縮小)。TextEditArea のホイール操作からも使う。
+  void   zoomBy(int direction);
   QColor lineNumberForeground() const;
   QColor lineNumberBackground() const;
 
@@ -97,6 +99,7 @@ private:
   // 一様に呼べるよう Q_INVOKABLE。
   Q_INVOKABLE void applyShortcutBindings(const QVariantMap& bindings);
   ViewerShortcutMap m_shortcuts;
+  void setZoomPercent(int percent);
   void syncFromSettings();
   void applyEditAreaSettings();
   void reloadFromBuffer();
@@ -111,8 +114,10 @@ private:
   // 行番号 / ワードラップは ON/OFF の二値なのでアイコンのチェック付きトグル。
   QToolButton*  m_lineNumbersButton = nullptr;
   QToolButton*  m_wordWrapButton    = nullptr;
+  QComboBox*    m_zoomCombo         = nullptr;
   QToolButton*  m_zoomOutButton     = nullptr;
   QToolButton*  m_zoomInButton      = nullptr;
+  QToolButton*  m_zoomResetButton   = nullptr;
 
   // 検索コントロール群 (ヘッダ常設)
   QLineEdit*    m_findEdit     = nullptr;

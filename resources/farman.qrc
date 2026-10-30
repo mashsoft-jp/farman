@@ -77,6 +77,7 @@
     <file alias="chevron-down.svg">icons/toolbar/chevron-down.svg</file>
     <file alias="zoom-in.svg">icons/toolbar/zoom-in.svg</file>
     <file alias="zoom-out.svg">icons/toolbar/zoom-out.svg</file>
+    <file alias="zoom-reset.svg">icons/toolbar/zoom-reset.svg</file>
     <file alias="fit-width.svg">icons/toolbar/fit-width.svg</file>
     <file alias="continuous.svg">icons/toolbar/continuous.svg</file>
     <file alias="list.svg">icons/toolbar/list.svg</file>

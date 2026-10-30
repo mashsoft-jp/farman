@@ -32,6 +32,11 @@ public:
   // キーイベントから照合用の QKeySequence を作る（修飾キー単独は空、Keypad 除去）。
   static QKeySequence sequenceForEvent(const QKeyEvent* ke);
 
+  // 文字入力中 (検索欄などの編集可能なテキスト欄にフォーカスがあり、Ctrl / Alt / Meta
+  // なしのキー) か。+ - 0 のような修飾なしキーのショートカットを、入力のために
+  // 手放すかどうかの判定に使う。
+  static bool isTypingIntoTextField(const QKeyEvent* ke);
+
 private:
   // key -> commandId（QKeySequence は operator< を持つので QMap）
   QMap<QKeySequence, QString> m_reverse;

@@ -77,6 +77,7 @@ private slots:
   void onNextPage();
   void onPageSpinChanged(int displayPage);   // 1-based
   void onZoomIn();
+  void onZoomReset();
   void onZoomOut();
   void onFitWidth(bool checked);
   void onFitPage(bool checked);
@@ -111,6 +112,7 @@ private:
   QLabel*       m_pageTotalLabel = nullptr;
   QToolButton*  m_zoomOutButton = nullptr;
   QToolButton*  m_zoomInButton  = nullptr;
+  QToolButton*  m_zoomResetButton = nullptr;
   QToolButton*  m_fitWidthButton = nullptr;
   QToolButton*  m_fitPageButton  = nullptr;
   QToolButton*  m_continuousButton = nullptr;

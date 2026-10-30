@@ -2,6 +2,7 @@
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
 #include "viewer/ViewerHints.h"
+#include "viewer/ViewerZoom.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
@@ -37,6 +38,7 @@
 #include <QStringConverter>
 #include <QStringDecoder>
 #include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 // uchardet: "Auto" のエンコード判定に使う (TextView と同じ)。
 #include <uchardet.h>
@@ -448,6 +450,9 @@ public:
     if (m_onCursorChanged) m_onCursorChanged();
   }
 
+  // Ctrl/Cmd + ホイールの拡大縮小は BinaryView 側へ委譲する (direction: +1 / -1)。
+  void setZoomCallback(std::function<void(int)> cb) { m_onZoom = std::move(cb); }
+
   void applyFont(const QFont& f) {
     QAbstractScrollArea::setFont(f);
     viewport()->setFont(f);
@@ -659,6 +664,18 @@ protected:
   void resizeEvent(QResizeEvent* e) override {
     QAbstractScrollArea::resizeEvent(e);
     updateScrollbars();
+  }
+
+  void wheelEvent(QWheelEvent* e) override {
+    if ((e->modifiers() & Qt::ControlModifier) && m_onZoom) {
+      const int dy = e->angleDelta().y();
+      if (dy != 0) {
+        m_onZoom(dy > 0 ? 1 : -1);
+      }
+      e->accept();
+      return;
+    }
+    QAbstractScrollArea::wheelEvent(e);
   }
 
   void scrollContentsBy(int dx, int dy) override {
@@ -889,6 +906,7 @@ private:
   bool   m_hasSel     = false;
   bool   m_dragging   = false;
   std::function<void()> m_onCursorChanged;  // カーソル移動時の通知
+  std::function<void(int)> m_onZoom;        // Ctrl/Cmd+ホイールの拡大縮小要求
   const ViewerShortcutMap* m_shortcutMap = nullptr;  // コピーキー判定用 (BinaryView 保有)
 
   BinaryViewerUnit   m_unit     = BinaryViewerUnit::Byte1;
@@ -965,6 +983,32 @@ void BinaryView::setupUi() {
     tr("Text encoding of the character column (%1)"));
   rebuildEncodingItems();
   toolbar->addWidget(m_encodingCombo);
+
+  // 拡大縮小 (倍率コンボ + 虫眼鏡 +/- と 100% へのリセット)。
+  toolbar->addSeparator();
+  m_zoomCombo = ViewerZoom::makeCombo(toolbar);
+  m_zoomCombo->setToolTip(tr("Zoom level"));
+  toolbar->addWidget(m_zoomCombo);
+  m_zoomOutButton = ViewerZoom::makeButton(toolbar, /*zoomIn=*/false);
+  ViewerHints::tag(m_zoomOutButton, QStringLiteral("viewer.binary.zoom_out"), tr("Zoom out (%1)"));
+  toolbar->addWidget(m_zoomOutButton);
+  m_zoomInButton = ViewerZoom::makeButton(toolbar, /*zoomIn=*/true);
+  ViewerHints::tag(m_zoomInButton, QStringLiteral("viewer.binary.zoom_in"), tr("Zoom in (%1)"));
+  toolbar->addWidget(m_zoomInButton);
+  m_zoomResetButton = ViewerZoom::makeResetButton(toolbar);
+  ViewerHints::tag(m_zoomResetButton, QStringLiteral("viewer.binary.zoom_reset"), tr("Reset zoom to 100% (%1)"));
+  toolbar->addWidget(m_zoomResetButton);
+  connect(m_zoomOutButton, &QToolButton::clicked, this, [this]() { zoomBy(-1); });
+  connect(m_zoomInButton, &QToolButton::clicked, this, [this]() { zoomBy(1); });
+  connect(m_zoomResetButton, &QToolButton::clicked, this,
+          [this]() { setZoomPercent(ViewerZoom::kDefaultPercent); });
+  // 直接入力は確定 (Enter / プリセット選択) 時に反映する (途中の値で飛ばないように)。
+  auto applyZoomText = [this]() {
+    const int pct = ViewerZoom::parsePercent(m_zoomCombo->currentText());
+    setZoomPercent(pct > 0 ? pct : m_zoomPercent);
+  };
+  connect(m_zoomCombo, QOverload<int>::of(&QComboBox::activated), this, applyZoomText);
+  connect(m_zoomCombo->lineEdit(), &QLineEdit::editingFinished, this, applyZoomText);
 
   // アドレスジャンプ (16 進オフセットへスクロール)。
   toolbar->addSeparator();
@@ -1093,11 +1137,22 @@ void BinaryView::setupUi() {
   // ローカルショートカット (Cmd/Ctrl+F 等) は eventFilter で処理する。本体
   // (HexView) 上でも効くように、HexView にも event filter を張る。
   m_hex->installEventFilter(this);
+  m_hex->setZoomCallback([this](int direction) { zoomBy(direction); });
 }
 
 void BinaryView::applyShortcutBindings(const QVariantMap& bindings) {
   m_shortcuts.applyBindings(bindings);
   ViewerHints::refresh(this, m_shortcuts);
+}
+
+void BinaryView::zoomBy(int direction) {
+  setZoomPercent(ViewerZoom::stepPercent(m_zoomPercent, direction > 0));
+}
+
+void BinaryView::setZoomPercent(int percent) {
+  m_zoomPercent = ViewerZoom::clampPercent(percent);
+  ViewerZoom::setComboPercent(m_zoomCombo, m_zoomPercent);
+  m_hex->applyFont(ViewerZoom::zoomedFont(Settings::instance().binaryViewerFont(), m_zoomPercent));
 }
 
 void BinaryView::dispatchViewerCommand(const QString& cmd) {
@@ -1131,6 +1186,12 @@ void BinaryView::dispatchViewerCommand(const QString& cmd) {
     setUnit(4);
   } else if (cmd == QLatin1String("viewer.binary.unit_8")) {
     setUnit(8);
+  } else if (cmd == QLatin1String("viewer.binary.zoom_in")) {
+    zoomBy(1);
+  } else if (cmd == QLatin1String("viewer.binary.zoom_out")) {
+    zoomBy(-1);
+  } else if (cmd == QLatin1String("viewer.binary.zoom_reset")) {
+    setZoomPercent(ViewerZoom::kDefaultPercent);
   }
 }
 
@@ -1151,7 +1212,9 @@ bool BinaryView::eventFilter(QObject* watched, QEvent* event) {
           || event->type() == QEvent::KeyPress)) {
     auto* ke = static_cast<QKeyEvent*>(event);
     const QKeySequence seq = ViewerShortcutMap::sequenceForEvent(ke);
-    const QString cmd = m_shortcuts.commandForSeq(seq);
+    // 検索欄などへの文字入力中は、+ - 0 などの修飾なしキーを入力に回す。
+    const QString cmd = ViewerShortcutMap::isTypingIntoTextField(ke)
+      ? QString() : m_shortcuts.commandForSeq(seq);
     // コピー (viewer.binary.copy) は本体 (HexView) 側で横取り処理するので、ここでは扱わない。
     if (!cmd.isEmpty() && cmd != QLatin1String("viewer.binary.copy")) {
       // アプリ側の Copy コマンドや表示モード (Cmd+1〜4) 等より先に取りたいので、
@@ -1204,7 +1267,7 @@ void BinaryView::syncFromSettings() {
   m_unit     = s.binaryViewerUnit();
   m_endian   = s.binaryViewerEndian();
   m_encoding = s.binaryViewerEncoding();
-  m_hex->applyFont(s.binaryViewerFont());
+  m_hex->applyFont(ViewerZoom::zoomedFont(s.binaryViewerFont(), m_zoomPercent));
   m_hex->setColors(s.binaryViewerAddressForeground(),
                    s.binaryViewerNormalForeground(),
                    s.binaryViewerNormalBackground(),

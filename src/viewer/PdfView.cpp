@@ -3,6 +3,7 @@
 #include "settings/Settings.h"
 #include "viewer/ViewerShortcutMap.h"
 #include "viewer/ViewerHints.h"
+#include "viewer/ViewerZoom.h"
 #include "keybinding/ViewerCommands.h"
 #include "utils/EnterClickFilter.h"
 
@@ -153,6 +154,11 @@ void PdfView::setupUi() {
   m_zoomInButton->setFocusPolicy(Qt::StrongFocus);
   connect(m_zoomInButton, &QToolButton::clicked, this, &PdfView::onZoomIn);
   m_toolbar->addWidget(m_zoomInButton);
+
+  m_zoomResetButton = ViewerZoom::makeResetButton(m_toolbar);
+  ViewerHints::tag(m_zoomResetButton, QStringLiteral("viewer.pdf.zoom_reset"), tr("Reset zoom to 100% (%1)"));
+  connect(m_zoomResetButton, &QToolButton::clicked, this, &PdfView::onZoomReset);
+  m_toolbar->addWidget(m_zoomResetButton);
 
   m_fitWidthButton = new QToolButton(m_toolbar);
   m_fitWidthButton->setIcon(QIcon(QStringLiteral(":/icons/toolbar/fit-width.svg")));
@@ -449,6 +455,14 @@ void PdfView::onZoomIn() {
   m_view->setZoomFactor(z);
 }
 
+void PdfView::onZoomReset() {
+  if (!m_view) return;
+  m_fitWidthButton->setChecked(false);
+  m_fitPageButton->setChecked(false);
+  m_view->setZoomMode(QPdfView::ZoomMode::Custom);
+  m_view->setZoomFactor(kDefaultZoom);
+}
+
 void PdfView::onZoomOut() {
   if (!m_view) return;
   m_fitWidthButton->setChecked(false);
@@ -716,6 +730,8 @@ void PdfView::dispatchViewerCommand(const QString& cmd) {
     onZoomOut();
   } else if (cmd == QLatin1String("viewer.pdf.zoom_in")) {
     onZoomIn();
+  } else if (cmd == QLatin1String("viewer.pdf.zoom_reset")) {
+    onZoomReset();
   } else if (cmd == QLatin1String("viewer.pdf.prev_page")) {
     onPrevPage();
   } else if (cmd == QLatin1String("viewer.pdf.next_page")) {

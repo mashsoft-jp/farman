@@ -32,9 +32,12 @@ QList<ViewerCommandDef> viewerCommandDefs() {
   add(d, "text", "viewer.text.toggle_case", QCoreApplication::translate("ViewerCommands", "Toggle case-sensitive search"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C)});
   add(d, "text", "viewer.text.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
-      {QKeySequence(QKeySequence::ZoomIn), QKeySequence(Qt::CTRL | Qt::Key_Equal)});
+      {QKeySequence(Qt::Key_Plus), QKeySequence(Qt::Key_Equal),
+       QKeySequence(Qt::SHIFT | Qt::Key_Equal), QKeySequence(Qt::SHIFT | Qt::Key_Plus)});
   add(d, "text", "viewer.text.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
-      {QKeySequence(QKeySequence::ZoomOut)});
+      {QKeySequence(Qt::Key_Minus), QKeySequence(Qt::SHIFT | Qt::Key_Minus)});
+  add(d, "text", "viewer.text.zoom_reset", QCoreApplication::translate("ViewerCommands", "Reset zoom to 100%"),
+      {QKeySequence(Qt::Key_0)});
   add(d, "text", "viewer.text.copy", QCoreApplication::translate("ViewerCommands", "Copy selection"),
       {QKeySequence(QKeySequence::Copy)});
 
@@ -49,6 +52,13 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_H)});
   add(d, "csv", "viewer.csv.toggle_case", QCoreApplication::translate("ViewerCommands", "Toggle case-sensitive search"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C)});
+  add(d, "csv", "viewer.csv.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
+      {QKeySequence(Qt::Key_Plus), QKeySequence(Qt::Key_Equal),
+       QKeySequence(Qt::SHIFT | Qt::Key_Equal), QKeySequence(Qt::SHIFT | Qt::Key_Plus)});
+  add(d, "csv", "viewer.csv.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
+      {QKeySequence(Qt::Key_Minus), QKeySequence(Qt::SHIFT | Qt::Key_Minus)});
+  add(d, "csv", "viewer.csv.zoom_reset", QCoreApplication::translate("ViewerCommands", "Reset zoom to 100%"),
+      {QKeySequence(Qt::Key_0)});
 
   // ── Markdown ビュアー ──
   add(d, "markdown", "viewer.markdown.find_focus", QCoreApplication::translate("ViewerCommands", "Focus search field"),
@@ -58,9 +68,12 @@ QList<ViewerCommandDef> viewerCommandDefs() {
   add(d, "markdown", "viewer.markdown.toggle_toc", QCoreApplication::translate("ViewerCommands", "Toggle table of contents sidebar"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B)});
   add(d, "markdown", "viewer.markdown.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
-      {QKeySequence(QKeySequence::ZoomIn), QKeySequence(Qt::CTRL | Qt::Key_Equal)});
+      {QKeySequence(Qt::Key_Plus), QKeySequence(Qt::Key_Equal),
+       QKeySequence(Qt::SHIFT | Qt::Key_Equal), QKeySequence(Qt::SHIFT | Qt::Key_Plus)});
   add(d, "markdown", "viewer.markdown.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
-      {QKeySequence(QKeySequence::ZoomOut)});
+      {QKeySequence(Qt::Key_Minus), QKeySequence(Qt::SHIFT | Qt::Key_Minus)});
+  add(d, "markdown", "viewer.markdown.zoom_reset", QCoreApplication::translate("ViewerCommands", "Reset zoom to 100%"),
+      {QKeySequence(Qt::Key_0)});
   add(d, "markdown", "viewer.markdown.toggle_case", QCoreApplication::translate("ViewerCommands", "Toggle case-sensitive search"),
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C)});
 
@@ -77,9 +90,11 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B)});
   add(d, "pdf", "viewer.pdf.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
       {QKeySequence(Qt::Key_Plus), QKeySequence(Qt::Key_Equal),
-       QKeySequence(Qt::SHIFT | Qt::Key_Equal)});
+       QKeySequence(Qt::SHIFT | Qt::Key_Equal), QKeySequence(Qt::SHIFT | Qt::Key_Plus)});
   add(d, "pdf", "viewer.pdf.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
       {QKeySequence(Qt::Key_Minus), QKeySequence(Qt::SHIFT | Qt::Key_Minus)});
+  add(d, "pdf", "viewer.pdf.zoom_reset", QCoreApplication::translate("ViewerCommands", "Reset zoom to 100%"),
+      {QKeySequence(Qt::Key_0)});
   add(d, "pdf", "viewer.pdf.prev_page", QCoreApplication::translate("ViewerCommands", "Previous page"),
       {QKeySequence(Qt::Key_Up)});
   add(d, "pdf", "viewer.pdf.next_page", QCoreApplication::translate("ViewerCommands", "Next page"),
@@ -104,9 +119,11 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::Key_I)});
   add(d, "image", "viewer.image.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
       {QKeySequence(Qt::Key_Plus), QKeySequence(Qt::Key_Equal),
-       QKeySequence(Qt::SHIFT | Qt::Key_Equal)});
+       QKeySequence(Qt::SHIFT | Qt::Key_Equal), QKeySequence(Qt::SHIFT | Qt::Key_Plus)});
   add(d, "image", "viewer.image.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
       {QKeySequence(Qt::Key_Minus), QKeySequence(Qt::SHIFT | Qt::Key_Minus)});
+  add(d, "image", "viewer.image.zoom_reset", QCoreApplication::translate("ViewerCommands", "Reset zoom to 100%"),
+      {QKeySequence(Qt::Key_0)});
   add(d, "image", "viewer.image.copy", QCoreApplication::translate("ViewerCommands", "Copy image to clipboard"),
       {QKeySequence(QKeySequence::Copy)});
 
@@ -132,6 +149,13 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::CTRL | Qt::Key_3)});
   add(d, "binary", "viewer.binary.unit_8", QCoreApplication::translate("ViewerCommands", "Unit: 8 bytes"),
       {QKeySequence(Qt::CTRL | Qt::Key_4)});
+  add(d, "binary", "viewer.binary.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
+      {QKeySequence(Qt::Key_Plus), QKeySequence(Qt::Key_Equal),
+       QKeySequence(Qt::SHIFT | Qt::Key_Equal), QKeySequence(Qt::SHIFT | Qt::Key_Plus)});
+  add(d, "binary", "viewer.binary.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
+      {QKeySequence(Qt::Key_Minus), QKeySequence(Qt::SHIFT | Qt::Key_Minus)});
+  add(d, "binary", "viewer.binary.zoom_reset", QCoreApplication::translate("ViewerCommands", "Reset zoom to 100%"),
+      {QKeySequence(Qt::Key_0)});
   add(d, "binary", "viewer.binary.copy", QCoreApplication::translate("ViewerCommands", "Copy selection"),
       {QKeySequence(QKeySequence::Copy)});
 
@@ -154,9 +178,11 @@ QList<ViewerCommandDef> viewerCommandDefs() {
       {QKeySequence(Qt::Key_BracketRight)});
   add(d, "media", "viewer.media.zoom_in", QCoreApplication::translate("ViewerCommands", "Zoom in"),
       {QKeySequence(Qt::Key_Plus), QKeySequence(Qt::Key_Equal),
-       QKeySequence(Qt::SHIFT | Qt::Key_Equal)});
+       QKeySequence(Qt::SHIFT | Qt::Key_Equal), QKeySequence(Qt::SHIFT | Qt::Key_Plus)});
   add(d, "media", "viewer.media.zoom_out", QCoreApplication::translate("ViewerCommands", "Zoom out"),
       {QKeySequence(Qt::Key_Minus), QKeySequence(Qt::SHIFT | Qt::Key_Minus)});
+  add(d, "media", "viewer.media.zoom_reset", QCoreApplication::translate("ViewerCommands", "Reset zoom to 100%"),
+      {QKeySequence(Qt::Key_0)});
   add(d, "media", "viewer.media.toggle_mute", QCoreApplication::translate("ViewerCommands", "Toggle mute"),
       {QKeySequence(Qt::Key_M)});
   add(d, "media", "viewer.media.toggle_loop", QCoreApplication::translate("ViewerCommands", "Toggle loop"),
